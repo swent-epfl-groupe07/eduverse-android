@@ -1,9 +1,9 @@
 package com.github.se.project.model.folder
 
 interface FolderRepository {
-  fun getFolders(): List<Folder>
-  fun addFolder(folder: Folder)
-  fun updateFolder(folder: Folder)
-  fun deleteFolder(folder: Folder)
+  fun getFolders(onSuccess: (List<Folder>) -> Unit, onFailure: (Exception) -> Unit): List<Folder>
+  fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
   fun getNewUid(): String
 }

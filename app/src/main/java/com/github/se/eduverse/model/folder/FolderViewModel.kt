@@ -1,5 +1,6 @@
 package com.github.se.project.model.folder
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,11 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   }*/
 
   private val _existingFolders: MutableStateFlow<MutableList<Folder>> =
-    MutableStateFlow(repository.getFolders().toMutableList())
+    MutableStateFlow(repository.getFolders(
+      {}, {
+        Log.e("FolderViewModel", "Exception $it while trying to load the folders")
+      }
+    ).toMutableList())
   val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
 
   var activeFolder: Folder? = null
@@ -50,7 +55,11 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun addFolder(folder: Folder) {
     _existingFolders.value.add(folder)
-    repository.addFolder(folder)
+    repository.addFolder(folder,
+      {}, {
+        Log.e("FolderViewModel",
+          "Exception $it while trying to add folder ${folder.name} to the repository")
+      })
   }
 
   /**
@@ -61,7 +70,10 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   fun deleteFolder(folder: Folder) {
     _existingFolders.value.remove(folder)
     if (activeFolder == folder) activeFolder = null
-    repository.deleteFolder(folder)
+    repository.deleteFolder(folder,
+      {}, {
+        Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}")
+      })
   }
 
   /**
@@ -74,7 +86,10 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
     try {
       _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
       if(activeFolder?.id == folder.id) activeFolder = folder
-      repository.updateFolder(folder)
+      repository.updateFolder(folder,
+        {}, {
+          Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
+        })
     } catch (_: IndexOutOfBoundsException) {
       addFolder(folder)
     }
