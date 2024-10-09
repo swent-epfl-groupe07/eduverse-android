@@ -34,16 +34,16 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun sortBy(filter: FilterTypes) {
     when (filter) {
-      FilterTypes.NAME -> activeFolder?.pdfFiles?.value?.sortBy { it.name }
+      FilterTypes.NAME -> activeFolder?.files?.value?.sortBy { it.name }
       FilterTypes.CREATION_UP ->
-          activeFolder?.pdfFiles?.value?.sortBy { it.creationTime.timeInMillis }
+          activeFolder?.files?.value?.sortBy { it.creationTime.timeInMillis }
       FilterTypes.CREATION_DOWN ->
-          activeFolder?.pdfFiles?.value?.sortBy { -it.creationTime.timeInMillis }
+          activeFolder?.files?.value?.sortBy { -it.creationTime.timeInMillis }
       FilterTypes.ACCESS_RECENT ->
-          activeFolder?.pdfFiles?.value?.sortBy { -it.lastAccess.timeInMillis }
-      FilterTypes.ACCESS_OLD -> activeFolder?.pdfFiles?.value?.sortBy { it.lastAccess.timeInMillis }
-      FilterTypes.ACCESS_MOST -> activeFolder?.pdfFiles?.value?.sortBy { -it.numberAccess }
-      FilterTypes.ACCESS_LEAST -> activeFolder?.pdfFiles?.value?.sortBy { it.numberAccess }
+          activeFolder?.files?.value?.sortBy { -it.lastAccess.timeInMillis }
+      FilterTypes.ACCESS_OLD -> activeFolder?.files?.value?.sortBy { it.lastAccess.timeInMillis }
+      FilterTypes.ACCESS_MOST -> activeFolder?.files?.value?.sortBy { -it.numberAccess }
+      FilterTypes.ACCESS_LEAST -> activeFolder?.files?.value?.sortBy { it.numberAccess }
       else -> throw NotImplementedError("The sort method is not up-to-date")
     }
   }

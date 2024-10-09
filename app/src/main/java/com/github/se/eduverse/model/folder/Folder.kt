@@ -4,7 +4,7 @@ import com.github.se.eduverse.model.folder.MyFile
 import kotlinx.coroutines.flow.MutableStateFlow
 
 data class Folder(
-    val pdfFiles: MutableStateFlow<MutableList<MyFile>>,
+    val files: MutableStateFlow<MutableList<MyFile>>,
     val name: String,
     val id: String,
     val timeTable: TimeTable
