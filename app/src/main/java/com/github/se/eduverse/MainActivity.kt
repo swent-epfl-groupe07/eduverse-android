@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.github.se.bootcamp.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.theme.EduverseTheme
 
 class MainActivity : ComponentActivity() {
 
