@@ -4,14 +4,14 @@ import com.github.se.project.model.widget.Widget
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class Folder(
+data class Folder(
     val pdfFiles: MutableStateFlow<MutableList<MyFile>>,
     val name: String,
     val id: String,
     val timeTable: TimeTable
 ) : Widget
 
-class MyFile(
+data class MyFile(
     val name: String,
     val creationTime: Calendar,
     var lastAccess: Calendar,
