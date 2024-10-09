@@ -1,6 +1,6 @@
 package com.github.se.project.model.folder
 
-import java.util.Calendar
+import com.github.se.eduverse.model.folder.MyFile
 import kotlinx.coroutines.flow.MutableStateFlow
 
 data class Folder(
@@ -8,13 +8,6 @@ data class Folder(
     val name: String,
     val id: String,
     val timeTable: TimeTable
-)
-
-data class MyFile(
-    val name: String,
-    val creationTime: Calendar,
-    var lastAccess: Calendar,
-    var numberAccess: Int
 )
 
 enum class FilterTypes {
