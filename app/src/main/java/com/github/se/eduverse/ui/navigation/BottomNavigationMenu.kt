@@ -1,4 +1,4 @@
-//This file was copied and adapted from the bootcamp solution
+// This file was copied and adapted from the bootcamp solution
 
 package com.github.se.eduverse.ui.navigation
 
@@ -25,18 +25,18 @@ fun BottomNavigationMenu(
     tabList: List<TopLevelDestination>,
     selectedItem: String
 ) {
-    BottomNavigation(
-        modifier = Modifier.fillMaxWidth().height(60.dp).testTag("bottomNavigationMenu"),
-        backgroundColor = MaterialTheme.colorScheme.surface,
-        content = {
-            tabList.forEach { tab ->
-                BottomNavigationItem(
-                    icon = { Icon(tab.icon, contentDescription = null) },
-                    label = { Text(tab.textId) },
-                    selected = tab.route == selectedItem,
-                    onClick = { onTabSelect(tab) },
-                    modifier = Modifier.clip(RoundedCornerShape(50.dp)).testTag(tab.textId))
-            }
-        },
-    )
+  BottomNavigation(
+      modifier = Modifier.fillMaxWidth().height(60.dp).testTag("bottomNavigationMenu"),
+      backgroundColor = MaterialTheme.colorScheme.surface,
+      content = {
+        tabList.forEach { tab ->
+          BottomNavigationItem(
+              icon = { Icon(tab.icon, contentDescription = null) },
+              label = { Text(tab.textId) },
+              selected = tab.route == selectedItem,
+              onClick = { onTabSelect(tab) },
+              modifier = Modifier.clip(RoundedCornerShape(50.dp)).testTag(tab.textId))
+        }
+      },
+  )
 }
