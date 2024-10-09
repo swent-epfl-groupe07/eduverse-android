@@ -1,11 +1,13 @@
 package com.github.se.project.model.folder
 
+import com.github.se.eduverse.model.folder.MyFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
+import java.util.Calendar
 
 class FolderViewModelTest {
   private lateinit var folderRepository: FolderRepository
@@ -15,7 +17,7 @@ class FolderViewModelTest {
   lateinit var folder2: Folder
 
   val file1 =
-      MyFile("name 1", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile("name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 =
       MyFile("name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
   val file3 =
@@ -61,9 +63,9 @@ class FolderViewModelTest {
   @Test
   fun addFolderTest() {
     folderViewModel.addFolder(folder2)
-    assertEquals(folderViewModel.existingFolders.size, 2)
-    assertSame(folderViewModel.existingFolders[0], folder)
-    assertSame(folderViewModel.existingFolders[1], folder2)
+    assertEquals(folderViewModel.existingFolders.value.size, 2)
+    assertSame(folderViewModel.existingFolders.value[0], folder)
+    assertSame(folderViewModel.existingFolders.value[1], folder2)
   }
 
   @Test
@@ -72,8 +74,8 @@ class FolderViewModelTest {
     folderViewModel.activeFolder = folder
 
     folderViewModel.deleteFolder(folder)
-    assertEquals(folderViewModel.existingFolders.size, 1)
-    assertSame(folderViewModel.existingFolders[0], folder2)
+    assertEquals(folderViewModel.existingFolders.value.size, 1)
+    assertSame(folderViewModel.existingFolders.value[0], folder2)
     assertNull(folderViewModel.activeFolder)
   }
 
@@ -88,8 +90,8 @@ class FolderViewModelTest {
     )
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder, folder3)
-    assertEquals(folderViewModel.existingFolders.size, 1)
-    assertSame(folderViewModel.existingFolders[0], folder3)
+    assertEquals(folderViewModel.existingFolders.value.size, 1)
+    assertSame(folderViewModel.existingFolders.value[0], folder3)
 
     val folder4 = Folder(
       MutableStateFlow(emptyList<MyFile>().toMutableList()),
@@ -99,8 +101,8 @@ class FolderViewModelTest {
     )
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
-    assertEquals(folderViewModel.existingFolders.size, 2)
-    assertSame(folderViewModel.existingFolders[1], folder4)
+    assertEquals(folderViewModel.existingFolders.value.size, 2)
+    assertSame(folderViewModel.existingFolders.value[1], folder4)
   }
 
   @Test
@@ -108,56 +110,60 @@ class FolderViewModelTest {
     folderViewModel.activeFolder = folder
 
     folderViewModel.sortBy(FilterTypes.NAME)
-    assertSame(folder.pdfFiles.value[0], file1)
-    assertSame(folder.pdfFiles.value[1], file2)
-    assertSame(folder.pdfFiles.value[2], file3)
+    assertSame(folder.files.value[0], file1)
+    assertSame(folder.files.value[1], file2)
+    assertSame(folder.files.value[2], file3)
 
     folderViewModel.sortBy(FilterTypes.CREATION_UP)
-    assertSame(folder.pdfFiles.value[0], file1)
-    assertSame(folder.pdfFiles.value[1], file2)
-    assertSame(folder.pdfFiles.value[2], file3)
+    assertSame(folder.files.value[0], file1)
+    assertSame(folder.files.value[1], file2)
+    assertSame(folder.files.value[2], file3)
 
     folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
-    assertSame(folder.pdfFiles.value[0], file3)
-    assertSame(folder.pdfFiles.value[1], file2)
-    assertSame(folder.pdfFiles.value[2], file1)
+    assertSame(folder.files.value[0], file3)
+    assertSame(folder.files.value[1], file2)
+    assertSame(folder.files.value[2], file1)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
-    assertSame(folder.pdfFiles.value[0], file2)
-    assertSame(folder.pdfFiles.value[1], file1)
-    assertSame(folder.pdfFiles.value[2], file3)
+    assertSame(folder.files.value[0], file2)
+    assertSame(folder.files.value[1], file1)
+    assertSame(folder.files.value[2], file3)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
-    assertSame(folder.pdfFiles.value[0], file3)
-    assertSame(folder.pdfFiles.value[1], file1)
-    assertSame(folder.pdfFiles.value[2], file2)
+    assertSame(folder.files.value[0], file3)
+    assertSame(folder.files.value[1], file1)
+    assertSame(folder.files.value[2], file2)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
-    assertSame(folder.pdfFiles.value[0], file1)
-    assertSame(folder.pdfFiles.value[1], file3)
-    assertSame(folder.pdfFiles.value[2], file2)
+    assertSame(folder.files.value[0], file1)
+    assertSame(folder.files.value[1], file3)
+    assertSame(folder.files.value[2], file2)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
-    assertSame(folder.pdfFiles.value[0], file2)
-    assertSame(folder.pdfFiles.value[1], file3)
-    assertSame(folder.pdfFiles.value[2], file1)
+    assertSame(folder.files.value[0], file2)
+    assertSame(folder.files.value[1], file3)
+    assertSame(folder.files.value[2], file1)
   }
 }
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
-  override fun getFolders(): List<Folder> {
+
+  override fun getFolders(
+    onSuccess: (List<Folder>) -> Unit,
+    onFailure: (Exception) -> Unit
+  ): List<Folder> {
     return List(1) {
       return@List folder
     }
   }
 
-  override fun addFolder(folder: Folder) {
+  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
   }
 
-  override fun updateFolder(folder: Folder) {
+  override fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
   }
 
-  override fun deleteFolder(folder: Folder) {
+  override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
   }
 
   override fun getNewUid(): String {
