@@ -1,6 +1,8 @@
 package com.github.se.project.model.folder
 
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   // TODO
@@ -14,7 +16,10 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
           }
   }*/
 
-  val existingFolders: MutableList<Folder> = repository.getFolders().toMutableList()
+  private val _existingFolders: MutableStateFlow<MutableList<Folder>> =
+    MutableStateFlow(repository.getFolders().toMutableList())
+  val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
+
   var activeFolder: Folder? = null
 
   /**
@@ -44,7 +49,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    * @param folder the folder to add
    */
   fun addFolder(folder: Folder) {
-    existingFolders.add(folder)
+    _existingFolders.value.add(folder)
     repository.addFolder(folder)
   }
 
@@ -54,7 +59,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    * @param folder the folder to remove
    */
   fun deleteFolder(folder: Folder) {
-    existingFolders.remove(folder)
+    _existingFolders.value.remove(folder)
     if (activeFolder == folder) activeFolder = null
     repository.deleteFolder(folder)
   }
@@ -67,7 +72,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun updateFolder(folder: Folder) {
     try {
-      existingFolders[existingFolders.indexOfFirst { it.id == folder.id }] = folder
+      _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
       if(activeFolder?.id == folder.id) activeFolder = folder
       repository.updateFolder(folder)
     } catch (_: IndexOutOfBoundsException) {
