@@ -1,7 +1,6 @@
 package com.github.se.project.model.folder
 
 import com.github.se.eduverse.model.folder.MyFile
-import kotlinx.coroutines.flow.MutableStateFlow
 
 data class Folder(
     val files: MutableList<MyFile>,

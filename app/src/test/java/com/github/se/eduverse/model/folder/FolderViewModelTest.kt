@@ -1,13 +1,12 @@
 package com.github.se.project.model.folder
 
 import com.github.se.eduverse.model.folder.MyFile
-import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
-import java.util.Calendar
 
 class FolderViewModelTest {
   private lateinit var folderRepository: FolderRepository
@@ -16,8 +15,7 @@ class FolderViewModelTest {
   lateinit var folder: Folder
   lateinit var folder2: Folder
 
-  val file1 =
-      MyFile("name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file1 = MyFile("name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 =
       MyFile("name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
   val file3 =
@@ -38,22 +36,17 @@ class FolderViewModelTest {
 
     folder =
         Folder(
-
-          MutableList(3) {
-            when (it) {
-              1 -> file1
-              2 -> file2
-              else -> file3
-            } },
+            MutableList(3) {
+              when (it) {
+                1 -> file1
+                2 -> file2
+                else -> file3
+              }
+            },
             "folder",
             "1",
             TimeTable())
-    folder2 = Folder(
-      emptyList<MyFile>().toMutableList(),
-      "folder2",
-      "2",
-      TimeTable()
-    )
+    folder2 = Folder(emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
 
     folderRepository = MockFolderRepository(folder)
     folderViewModel = FolderViewModel(folderRepository)
@@ -81,23 +74,18 @@ class FolderViewModelTest {
   @Test
   fun updateFolderTest() {
     folderViewModel.activeFolder = folder
-    val folder3 = Folder(
-      emptyList<MyFile>().toMutableList(),
-      "folder3",
-      "1",
-      TimeTable()
-    )
+    val folder3 = Folder(emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder, folder3)
     assertEquals(folderViewModel.existingFolders.value.size, 1)
     assertSame(folderViewModel.existingFolders.value[0], folder3)
 
-    val folder4 = Folder(
-      emptyList<MyFile>().toMutableList(),
-      "folder4",
-      folderViewModel.getNewUid(),
-      TimeTable()
-    )
+    val folder4 =
+        Folder(
+            emptyList<MyFile>().toMutableList(),
+            "folder4",
+            folderViewModel.getNewUid(),
+            TimeTable())
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.existingFolders.value.size, 2)
@@ -148,22 +136,27 @@ class FolderViewModelTest {
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
-    onSuccess: (List<Folder>) -> Unit,
-    onFailure: (Exception) -> Unit
+      onSuccess: (List<Folder>) -> Unit,
+      onFailure: (Exception) -> Unit
   ): List<Folder> {
     return List(1) {
       return@List folder
     }
   }
 
-  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-  }
+  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {}
 
-  override fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-  }
+  override fun updateFolder(
+      folder: Folder,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {}
 
-  override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-  }
+  override fun deleteFolder(
+      folder: Folder,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {}
 
   override fun getNewUid(): String {
     return "id test"

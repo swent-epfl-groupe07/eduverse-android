@@ -18,11 +18,12 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   }*/
 
   private val _existingFolders: MutableStateFlow<MutableList<Folder>> =
-    MutableStateFlow(repository.getFolders(
-      {}, {
-        Log.e("FolderViewModel", "Exception $it while trying to load the folders")
-      }
-    ).toMutableList())
+      MutableStateFlow(
+          repository
+              .getFolders(
+                  {},
+                  { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
+              .toMutableList())
   val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
 
   var activeFolder: Folder? = null
@@ -35,12 +36,9 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   fun sortBy(filter: FilterTypes) {
     when (filter) {
       FilterTypes.NAME -> activeFolder?.files?.sortBy { it.name }
-      FilterTypes.CREATION_UP ->
-          activeFolder?.files?.sortBy { it.creationTime.timeInMillis }
-      FilterTypes.CREATION_DOWN ->
-          activeFolder?.files?.sortBy { -it.creationTime.timeInMillis }
-      FilterTypes.ACCESS_RECENT ->
-          activeFolder?.files?.sortBy { -it.lastAccess.timeInMillis }
+      FilterTypes.CREATION_UP -> activeFolder?.files?.sortBy { it.creationTime.timeInMillis }
+      FilterTypes.CREATION_DOWN -> activeFolder?.files?.sortBy { -it.creationTime.timeInMillis }
+      FilterTypes.ACCESS_RECENT -> activeFolder?.files?.sortBy { -it.lastAccess.timeInMillis }
       FilterTypes.ACCESS_OLD -> activeFolder?.files?.sortBy { it.lastAccess.timeInMillis }
       FilterTypes.ACCESS_MOST -> activeFolder?.files?.sortBy { -it.numberAccess }
       FilterTypes.ACCESS_LEAST -> activeFolder?.files?.sortBy { it.numberAccess }
@@ -55,11 +53,14 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun addFolder(folder: Folder) {
     _existingFolders.value.add(folder)
-    repository.addFolder(folder,
-      {}, {
-        Log.e("FolderViewModel",
-          "Exception $it while trying to add folder ${folder.name} to the repository")
-      })
+    repository.addFolder(
+        folder,
+        {},
+        {
+          Log.e(
+              "FolderViewModel",
+              "Exception $it while trying to add folder ${folder.name} to the repository")
+        })
   }
 
   /**
@@ -70,35 +71,33 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   fun deleteFolder(folder: Folder) {
     _existingFolders.value.remove(folder)
     if (activeFolder == folder) activeFolder = null
-    repository.deleteFolder(folder,
-      {}, {
-        Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}")
-      })
+    repository.deleteFolder(
+        folder,
+        {},
+        { Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}") })
   }
 
   /**
-   * Update a folder in the list of existing folders.
-   * If it doesn't exist, create it.
+   * Update a folder in the list of existing folders. If it doesn't exist, create it.
    *
    * @param folder the folder to update
    */
   fun updateFolder(folder: Folder) {
     try {
       _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
-      if(activeFolder?.id == folder.id) activeFolder = folder
-      repository.updateFolder(folder,
-        {}, {
-          Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
-        })
+      if (activeFolder?.id == folder.id) activeFolder = folder
+      repository.updateFolder(
+          folder,
+          {},
+          {
+            Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
+          })
     } catch (_: IndexOutOfBoundsException) {
       addFolder(folder)
     }
   }
 
-  /**
-   * Get new ID for a folder.
-   *
-   */
+  /** Get new ID for a folder. */
   fun getNewUid(): String {
     return repository.getNewUid()
   }
