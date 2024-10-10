@@ -38,19 +38,18 @@ class FolderViewModelTest {
 
     folder =
         Folder(
-            MutableStateFlow(
-                MutableList(3) {
-                  when (it) {
-                    1 -> file1
-                    2 -> file2
-                    else -> file3
-                  }
-                }),
+
+          MutableList(3) {
+            when (it) {
+              1 -> file1
+              2 -> file2
+              else -> file3
+            } },
             "folder",
             "1",
             TimeTable())
     folder2 = Folder(
-      MutableStateFlow(emptyList<MyFile>().toMutableList()),
+      emptyList<MyFile>().toMutableList(),
       "folder2",
       "2",
       TimeTable()
@@ -83,7 +82,7 @@ class FolderViewModelTest {
   fun updateFolderTest() {
     folderViewModel.activeFolder = folder
     val folder3 = Folder(
-      MutableStateFlow(emptyList<MyFile>().toMutableList()),
+      emptyList<MyFile>().toMutableList(),
       "folder3",
       "1",
       TimeTable()
@@ -94,7 +93,7 @@ class FolderViewModelTest {
     assertSame(folderViewModel.existingFolders.value[0], folder3)
 
     val folder4 = Folder(
-      MutableStateFlow(emptyList<MyFile>().toMutableList()),
+      emptyList<MyFile>().toMutableList(),
       "folder4",
       folderViewModel.getNewUid(),
       TimeTable()
@@ -110,39 +109,39 @@ class FolderViewModelTest {
     folderViewModel.activeFolder = folder
 
     folderViewModel.sortBy(FilterTypes.NAME)
-    assertSame(folder.files.value[0], file1)
-    assertSame(folder.files.value[1], file2)
-    assertSame(folder.files.value[2], file3)
+    assertSame(folder.files[0], file1)
+    assertSame(folder.files[1], file2)
+    assertSame(folder.files[2], file3)
 
     folderViewModel.sortBy(FilterTypes.CREATION_UP)
-    assertSame(folder.files.value[0], file1)
-    assertSame(folder.files.value[1], file2)
-    assertSame(folder.files.value[2], file3)
+    assertSame(folder.files[0], file1)
+    assertSame(folder.files[1], file2)
+    assertSame(folder.files[2], file3)
 
     folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
-    assertSame(folder.files.value[0], file3)
-    assertSame(folder.files.value[1], file2)
-    assertSame(folder.files.value[2], file1)
+    assertSame(folder.files[0], file3)
+    assertSame(folder.files[1], file2)
+    assertSame(folder.files[2], file1)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
-    assertSame(folder.files.value[0], file2)
-    assertSame(folder.files.value[1], file1)
-    assertSame(folder.files.value[2], file3)
+    assertSame(folder.files[0], file2)
+    assertSame(folder.files[1], file1)
+    assertSame(folder.files[2], file3)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
-    assertSame(folder.files.value[0], file3)
-    assertSame(folder.files.value[1], file1)
-    assertSame(folder.files.value[2], file2)
+    assertSame(folder.files[0], file3)
+    assertSame(folder.files[1], file1)
+    assertSame(folder.files[2], file2)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
-    assertSame(folder.files.value[0], file1)
-    assertSame(folder.files.value[1], file3)
-    assertSame(folder.files.value[2], file2)
+    assertSame(folder.files[0], file1)
+    assertSame(folder.files[1], file3)
+    assertSame(folder.files[2], file2)
 
     folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
-    assertSame(folder.files.value[0], file2)
-    assertSame(folder.files.value[1], file3)
-    assertSame(folder.files.value[2], file1)
+    assertSame(folder.files[0], file2)
+    assertSame(folder.files[1], file3)
+    assertSame(folder.files[2], file1)
   }
 }
 
