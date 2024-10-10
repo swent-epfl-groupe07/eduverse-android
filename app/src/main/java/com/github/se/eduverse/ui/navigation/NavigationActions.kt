@@ -35,7 +35,7 @@ data class TopLevelDestination(val route: String, val icon: ImageVector, val tex
 
 object TopLevelDestinations {
   val DASHBOARD =
-      TopLevelDestination(route = Route.DASHBOARD, icon = Icons.Outlined.Home, textId = "Dashboard")
+      TopLevelDestination(route = Route.DASHBOARD, icon = Icons.Outlined.Home, textId = "Home")
   val VIDEOS =
       TopLevelDestination(route = Route.VIDEOS, icon = Icons.Outlined.PlayArrow, textId = "Videos")
   val CAMERA =
