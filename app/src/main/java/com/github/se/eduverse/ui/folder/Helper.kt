@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.project.model.folder.TimeTable
 
@@ -35,7 +36,9 @@ const val hoursInDay = lastHour - firstHour
 @Composable
 fun DisplayTimeTable(timeTable: TimeTable) {
     val scrollState = rememberScrollState()
-    Box(modifier = Modifier.fillMaxHeight(0.32.toFloat()).verticalScroll(scrollState)) {
+    Box(modifier =
+        Modifier.fillMaxHeight(0.32.toFloat()).verticalScroll(scrollState).testTag("timeTable")
+    ) {
         Row {
             Column(
                 modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 7.dp),

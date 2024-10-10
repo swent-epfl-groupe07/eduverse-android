@@ -92,7 +92,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
     floatingActionButton = {
       FloatingActionButton(
         onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
-        modifier = Modifier.testTag("create")) {
+        modifier = Modifier.testTag("createFile")) {
         Icon(Icons.Default.Add, contentDescription = "Create Folder")
       }
     }
@@ -109,10 +109,12 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Text("Files", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+        Text("Files", fontWeight = FontWeight.Bold, fontSize = 24.sp,
+          modifier = Modifier.testTag("textFiles"))
         Box {
           Button(
             onClick = { sorting = true },
+            modifier = Modifier.testTag("sortingButton"),
             colors = ButtonColors(
               Color.Transparent,
               Color.Black,
@@ -129,7 +131,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
           ) {
             DropdownMenuItem(
               text = {Text("Alphabetic")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode1"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.NAME)
                 sorting = false
@@ -137,7 +139,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             )
             DropdownMenuItem(
               text = {Text("Newest")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode2"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.CREATION_UP)
                 sorting = false
@@ -145,7 +147,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             )
             DropdownMenuItem(
               text = {Text("Oldest")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode3"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
                 sorting = false
@@ -153,7 +155,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             )
             DropdownMenuItem(
               text = {Text("Recently accessed")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode4"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
                 sorting = false
@@ -161,7 +163,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             )
             DropdownMenuItem(
               text = {Text("Oldest access")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode5"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
                 sorting = false
@@ -169,7 +171,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             )
             DropdownMenuItem(
               text = {Text("Most accessed")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode6"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
                 sorting = false
@@ -177,7 +179,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             )
             DropdownMenuItem(
               text = {Text("Least accessed")},
-              modifier = Modifier.fillMaxWidth(),
+              modifier = Modifier.fillMaxWidth().testTag("sortMode7"),
               onClick = {
                 folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
                 sorting = false
