@@ -20,11 +20,22 @@ import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
 
+  private lateinit var auth: FirebaseAuth
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    // Initialize Firebase Auth
+    auth = FirebaseAuth.getInstance()
+    auth.currentUser?.let {
+      // Sign out the user if they are already signed in
+      // This is useful for testing purposes
+      auth.signOut()
+    }
     setContent { EduverseTheme { Surface(modifier = Modifier.fillMaxSize()) { EduverseApp() } } }
   }
 }
