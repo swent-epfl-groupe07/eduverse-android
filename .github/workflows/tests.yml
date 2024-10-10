@@ -73,7 +73,13 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew check --parallel --build-cache
 
-      # Step 8: Run Android Instrumentation Tests on Emulator
+      # Step 8: Configure and Run Android Emulator
+      - name: Create AVD
+        run: echo "no" | avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
+
+      - name: Install Emulator System Image
+        run: sdkmanager --install "system-images;android-34;google_apis;x86_64"
+
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -85,6 +91,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1080x1920
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
+
 
       # Step 9: Generate the coverage report for tests
       - name: Generate Test Coverage
