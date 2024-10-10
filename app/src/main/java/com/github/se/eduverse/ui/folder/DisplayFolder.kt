@@ -25,7 +25,6 @@ import com.github.se.project.model.folder.FolderViewModel
 import com.github.se.project.model.folder.TimeTable
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
   if (folderViewModel.activeFolder == null) throw IllegalArgumentException(
@@ -69,7 +68,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
         Icon(Icons.Default.Add, contentDescription = "Create Folder")
       }
     }
-  ) {
-    DisplayTimeTable(folderViewModel.activeFolder!!.timeTable)
+  ) { padding ->
+    DisplayTimeTable(folderViewModel.activeFolder!!.timeTable, padding)
   }
 }

@@ -2,11 +2,14 @@ package com.github.se.eduverse.ui.folder
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.se.project.model.folder.TimeTable
@@ -24,25 +27,24 @@ const val hoursInDay = lastHour - firstHour
 /**
  * A method to create a composable to display a time table
  * @param timeTable the time table to display
- * @param startTime the hour at which the day begin on the time table
- * @param endTime the hour at which de day end on the time table
  */
 @Composable
-fun DisplayTimeTable(timeTable: TimeTable) {
-    Row {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun DisplayTimeTable(timeTable: TimeTable, padding: PaddingValues) {
+    Row(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 7.dp),
+            horizontalAlignment = Alignment.End)
+        {
             for (hour in firstHour..lastHour) {
                 Text("${hour}h")
             }
-            ColumnTimeTable(timeTable, 1, "Mon")
-            ColumnTimeTable(timeTable, 2, "Tue")
-            ColumnTimeTable(timeTable, 3, "Wed")
-            ColumnTimeTable(timeTable, 4, "Thu")
-            ColumnTimeTable(timeTable, 5, "Fri")
-            ColumnTimeTable(timeTable, 6, "Sat")
-            ColumnTimeTable(timeTable, 7, "Sun")
         }
-
+        ColumnTimeTable(timeTable, 1, "Mon")
+        ColumnTimeTable(timeTable, 2, "Tue")
+        ColumnTimeTable(timeTable, 3, "Wed")
+        ColumnTimeTable(timeTable, 4, "Thu")
+        ColumnTimeTable(timeTable, 5, "Fri")
+        ColumnTimeTable(timeTable, 6, "Sat")
+        ColumnTimeTable(timeTable, 7, "Sun")
     }
 }
 
@@ -52,9 +54,9 @@ private fun ColumnTimeTable(timeTable: TimeTable, dayN: Int, dayS: String) {
         Text(dayS)
         for (hour in firstHour..<lastHour) {
             Surface(
-                color = if(timeTable.isSelected(dayN, hour)) Color.Green else Color.LightGray,
+                color = if(timeTable.isSelected(dayN, hour)) Color.Green else Color.White,
                 border = BorderStroke(1.dp, Color.Black)
-            ) {  }
+            ) { Text("            ") }
         }
     }
 }
