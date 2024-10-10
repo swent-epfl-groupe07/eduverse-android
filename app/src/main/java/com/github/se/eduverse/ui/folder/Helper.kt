@@ -1,10 +1,14 @@
 package com.github.se.eduverse.ui.folder
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -29,22 +33,27 @@ const val hoursInDay = lastHour - firstHour
  * @param timeTable the time table to display
  */
 @Composable
-fun DisplayTimeTable(timeTable: TimeTable, padding: PaddingValues) {
-    Row(modifier = Modifier.padding(padding)) {
-        Column(modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 7.dp),
-            horizontalAlignment = Alignment.End)
-        {
-            for (hour in firstHour..lastHour) {
-                Text("${hour}h")
+fun DisplayTimeTable(timeTable: TimeTable) {
+    val scrollState = rememberScrollState()
+    Box(modifier = Modifier.fillMaxHeight(0.32.toFloat()).verticalScroll(scrollState)) {
+        Row {
+            Column(
+                modifier = Modifier.padding(top = 10.dp, start = 4.dp, end = 7.dp),
+                horizontalAlignment = Alignment.End
+            )
+            {
+                for (hour in firstHour..lastHour) {
+                    Text("${hour}h")
+                }
             }
+            ColumnTimeTable(timeTable, 1, "Mon")
+            ColumnTimeTable(timeTable, 2, "Tue")
+            ColumnTimeTable(timeTable, 3, "Wed")
+            ColumnTimeTable(timeTable, 4, "Thu")
+            ColumnTimeTable(timeTable, 5, "Fri")
+            ColumnTimeTable(timeTable, 6, "Sat")
+            ColumnTimeTable(timeTable, 7, "Sun")
         }
-        ColumnTimeTable(timeTable, 1, "Mon")
-        ColumnTimeTable(timeTable, 2, "Tue")
-        ColumnTimeTable(timeTable, 3, "Wed")
-        ColumnTimeTable(timeTable, 4, "Thu")
-        ColumnTimeTable(timeTable, 5, "Fri")
-        ColumnTimeTable(timeTable, 6, "Sat")
-        ColumnTimeTable(timeTable, 7, "Sun")
     }
 }
 
