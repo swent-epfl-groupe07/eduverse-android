@@ -1,11 +1,14 @@
 package com.github.se.project.model.folder
 
-private const val daysInWeek = 7
-private const val firstHour = 7
-private const val lastHour = 21
-private const val hoursInDay = lastHour - firstHour
+import com.github.se.eduverse.ui.folder.daysInWeek
+import com.github.se.eduverse.ui.folder.firstHour
+import com.github.se.eduverse.ui.folder.hoursInDay
+import com.github.se.eduverse.ui.folder.lastHour
+
 
 class TimeTable {
+
+
   private val selected: MutableList<MutableList<Boolean>> =
       MutableList(daysInWeek) { MutableList(hoursInDay) { false } }
 

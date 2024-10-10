@@ -15,6 +15,11 @@ import com.github.se.project.model.folder.TimeTable
 This file is meant to put all useful methods used in different files in a centralized way
 */
 
+const val daysInWeek = 7
+const val firstHour = 7
+const val lastHour = 21
+const val hoursInDay = lastHour - firstHour
+
 
 /**
  * A method to create a composable to display a time table
@@ -23,31 +28,29 @@ This file is meant to put all useful methods used in different files in a centra
  * @param endTime the hour at which de day end on the time table
  */
 @Composable
-fun DisplayTimeTable(timeTable: TimeTable, startTime: Int, endTime: Int) {
+fun DisplayTimeTable(timeTable: TimeTable) {
     Row {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            for (hour in startTime..endTime) {
+            for (hour in firstHour..lastHour) {
                 Text("${hour}h")
             }
-            ColumnTimeTable(timeTable, 1, "Mon", startTime, endTime)
-            ColumnTimeTable(timeTable, 2, "Tue", startTime, endTime)
-            ColumnTimeTable(timeTable, 3, "Wed", startTime, endTime)
-            ColumnTimeTable(timeTable, 4, "Thu", startTime, endTime)
-            ColumnTimeTable(timeTable, 5, "Fri", startTime, endTime)
-            ColumnTimeTable(timeTable, 6, "Sat", startTime, endTime)
-            ColumnTimeTable(timeTable, 7, "Sun", startTime, endTime)p
+            ColumnTimeTable(timeTable, 1, "Mon")
+            ColumnTimeTable(timeTable, 2, "Tue")
+            ColumnTimeTable(timeTable, 3, "Wed")
+            ColumnTimeTable(timeTable, 4, "Thu")
+            ColumnTimeTable(timeTable, 5, "Fri")
+            ColumnTimeTable(timeTable, 6, "Sat")
+            ColumnTimeTable(timeTable, 7, "Sun")
         }
 
     }
 }
 
 @Composable
-private fun ColumnTimeTable(
-    timeTable: TimeTable, dayN: Int, dayS: String, startTime: Int, endTime: Int
-) {
+private fun ColumnTimeTable(timeTable: TimeTable, dayN: Int, dayS: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(dayS)
-        for (hour in startTime..<endTime) {
+        for (hour in firstHour..<lastHour) {
             Surface(
                 color = if(timeTable.isSelected(dayN, hour)) Color.Green else Color.LightGray,
                 border = BorderStroke(1.dp, Color.Black)

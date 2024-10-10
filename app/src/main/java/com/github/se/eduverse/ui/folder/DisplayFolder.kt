@@ -16,11 +16,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
+import com.github.se.eduverse.ui.folder.DisplayTimeTable
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.project.model.folder.FolderViewModel
+import com.github.se.project.model.folder.TimeTable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -68,6 +70,6 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
       }
     }
   ) {
-    Text("Folder Screen")
+    DisplayTimeTable(folderViewModel.activeFolder!!.timeTable)
   }
 }
