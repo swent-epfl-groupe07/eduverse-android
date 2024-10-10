@@ -2,89 +2,88 @@ package com.github.se.eduverse.viewmodel
 
 import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.repository.DashboardRepository
-import com.github.se.eduverse.viewmodel.DashboardViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
-import org.junit.Before
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
 import org.mockito.kotlin.mock
-import org.junit.Assert.assertEquals
-import kotlinx.coroutines.flow.first
 
 @ExperimentalCoroutinesApi
 class DashboardViewModelTest {
 
-    // Create a TestCoroutineDispatcher
-    private val testDispatcher = StandardTestDispatcher()
+  // Create a TestCoroutineDispatcher
+  private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var viewModel: DashboardViewModel
-    private val mockRepository: DashboardRepository = mock(DashboardRepository::class.java)
+  private lateinit var viewModel: DashboardViewModel
+  private val mockRepository: DashboardRepository = mock(DashboardRepository::class.java)
 
-    @Before
-    fun setUp() {
-        // Set the Main dispatcher to the test dispatcher before the test starts
-        Dispatchers.setMain(testDispatcher)
-        viewModel = DashboardViewModel(mockRepository)
-    }
+  @Before
+  fun setUp() {
+    // Set the Main dispatcher to the test dispatcher before the test starts
+    Dispatchers.setMain(testDispatcher)
+    viewModel = DashboardViewModel(mockRepository)
+  }
 
-    @After
-    fun tearDown() {
-        // Reset the Main dispatcher after the test
-        Dispatchers.resetMain() // Reset to the original Main dispatcher
-    }
+  @After
+  fun tearDown() {
+    // Reset the Main dispatcher after the test
+    Dispatchers.resetMain() // Reset to the original Main dispatcher
+  }
 
-    @Test
-    fun `fetchWidgets should update widgetList from repository`() = runTest {
-        val widgetList = listOf(
+  @Test
+  fun `fetchWidgets should update widgetList from repository`() = runTest {
+    val widgetList =
+        listOf(
             Widget("1", "Type 1", "Title 1", "Content 1", "owner1"),
-            Widget("2", "Type 2", "Title 2", "Content 2", "owner2")
-        )
+            Widget("2", "Type 2", "Title 2", "Content 2", "owner2"))
 
-        // Mock the repository to return the widgetList
-        `when`(mockRepository.getWidgets("userId")).thenReturn(flowOf(widgetList))
+    // Mock the repository to return the widgetList
+    `when`(mockRepository.getWidgets("userId")).thenReturn(flowOf(widgetList))
 
-        // Call fetchWidgets in ViewModel
-        viewModel.fetchWidgets("userId")
+    // Call fetchWidgets in ViewModel
+    viewModel.fetchWidgets("userId")
 
-        // Advance until idle to allow coroutines to execute
-        advanceUntilIdle()
+    // Advance until idle to allow coroutines to execute
+    advanceUntilIdle()
 
-        // Verify that the repository method was called
-        verify(mockRepository).getWidgets("userId")
+    // Verify that the repository method was called
+    verify(mockRepository).getWidgets("userId")
 
-        // Assert that the ViewModel's widget list is updated correctly
-        assertEquals(widgetList, viewModel.widgetList.first())
-    }
+    // Assert that the ViewModel's widget list is updated correctly
+    assertEquals(widgetList, viewModel.widgetList.first())
+  }
 
-    @Test
-    fun `addWidget should call repository addWidget`() = runTest {
-        val newWidget = Widget("1", "Type", "Title", "Content", "ownerId")
+  @Test
+  fun `addWidget should call repository addWidget`() = runTest {
+    val newWidget = Widget("1", "Type", "Title", "Content", "ownerId")
 
-        // Call addWidget in ViewModel
-        viewModel.addWidget("userId", newWidget)
+    // Call addWidget in ViewModel
+    viewModel.addWidget("userId", newWidget)
 
-        // Advance until idle to allow coroutines to execute
-        advanceUntilIdle()
+    // Advance until idle to allow coroutines to execute
+    advanceUntilIdle()
 
-        // Verify that the repository's addWidget method is called
-        verify(mockRepository).addWidget("userId", newWidget)
-    }
+    // Verify that the repository's addWidget method is called
+    verify(mockRepository).addWidget("userId", newWidget)
+  }
 
-    @Test
-    fun `removeWidget should call repository removeWidget`() = runTest {
-        val widgetId = "widgetId"
+  @Test
+  fun `removeWidget should call repository removeWidget`() = runTest {
+    val widgetId = "widgetId"
 
-        // Call removeWidget in ViewModel
-        viewModel.removeWidget("userId", widgetId)
+    // Call removeWidget in ViewModel
+    viewModel.removeWidget("userId", widgetId)
 
-        // Advance until idle to allow coroutines to execute
-        advanceUntilIdle()
+    // Advance until idle to allow coroutines to execute
+    advanceUntilIdle()
 
-        // Verify that the repository's removeWidget method is called
-        verify(mockRepository).removeWidget("userId", widgetId)
-    }
+    // Verify that the repository's removeWidget method is called
+    verify(mockRepository).removeWidget("userId", widgetId)
+  }
 }
