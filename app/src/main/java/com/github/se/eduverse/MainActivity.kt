@@ -2,27 +2,14 @@ package com.github.se.eduverse
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.rememberNavController
-import com.github.se.eduverse.model.folder.MyFile
-import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.project.model.folder.Folder
 import com.github.se.project.model.folder.FolderRepository
-import com.github.se.project.model.folder.FolderViewModel
-import com.github.se.project.model.folder.TimeTable
-import com.github.se.project.ui.FolderScreen
-import kotlinx.coroutines.flow.MutableStateFlow
-import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    //setContent { EduverseTheme { Surface(modifier = Modifier.fillMaxSize()) {} } }
+    // setContent { EduverseTheme { Surface(modifier = Modifier.fillMaxSize()) {} } }
     /*val file1 =
       MyFile("name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
     val file2 =
@@ -48,27 +35,31 @@ class MainActivity : ComponentActivity() {
   }
 }
 
-
-//Temporary, to use only until we have a folder repo
+// Temporary, to use only until we have a folder repo
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
-    onSuccess: (List<Folder>) -> Unit,
-    onFailure: (Exception) -> Unit
+      onSuccess: (List<Folder>) -> Unit,
+      onFailure: (Exception) -> Unit
   ): List<Folder> {
     return List(1) {
       return@List folder
     }
   }
 
-  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-  }
+  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {}
 
-  override fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-  }
+  override fun updateFolder(
+      folder: Folder,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {}
 
-  override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-  }
+  override fun deleteFolder(
+      folder: Folder,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {}
 
   override fun getNewUid(): String {
     return "id test"

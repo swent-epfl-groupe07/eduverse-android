@@ -5,9 +5,7 @@ import com.github.se.eduverse.ui.folder.firstHour
 import com.github.se.eduverse.ui.folder.hoursInDay
 import com.github.se.eduverse.ui.folder.lastHour
 
-
 class TimeTable {
-
 
   private val selected: MutableList<MutableList<Boolean>> =
       MutableList(daysInWeek) { MutableList(hoursInDay) { false } }

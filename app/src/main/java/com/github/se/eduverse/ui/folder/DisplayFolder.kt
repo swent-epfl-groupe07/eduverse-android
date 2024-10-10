@@ -22,9 +22,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -52,154 +52,138 @@ import com.github.se.project.model.folder.FolderViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
-  if (folderViewModel.activeFolder == null) throw IllegalArgumentException(
-    "There is no active folder, select one before going to FolderScreen")
+  if (folderViewModel.activeFolder == null)
+      throw IllegalArgumentException(
+          "There is no active folder, select one before going to FolderScreen")
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
 
   Scaffold(
-    topBar = {
-      MediumTopAppBar(
-        modifier = Modifier.testTag("topAppBar"),
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.primaryContainer,
-          titleContentColor = MaterialTheme.colorScheme.primary,
-        ),
-        title = {
-          Text(
-            text = folderViewModel.activeFolder!!.name,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis)
-        },
-        navigationIcon = {
-          IconButton(
-            onClick = { navigationActions.goBack() }) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back Arrow")
-          }
-        },
-        scrollBehavior = scrollBehavior
-      )
-    },
-    bottomBar = {
-      BottomNavigationMenu(
-        { navigationActions.navigateTo(it) },
-        LIST_TOP_LEVEL_DESTINATION,
-        "" //No item is selected, as it is not one of the screens on the bottom bar
-      )
-    },
-    floatingActionButton = {
-      FloatingActionButton(
-        onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
-        modifier = Modifier.testTag("createFile")) {
-        Icon(Icons.Default.Add, contentDescription = "Create Folder")
-      }
-    }
-  ) { padding ->
-    Column(modifier = Modifier.padding(padding)) {
-      //The Time Table
-      DisplayTimeTable(folderViewModel.activeFolder!!.timeTable)
+      topBar = {
+        MediumTopAppBar(
+            modifier = Modifier.testTag("topAppBar"),
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+            title = {
+              Text(
+                  text = folderViewModel.activeFolder!!.name,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis)
+            },
+            navigationIcon = {
+              IconButton(onClick = { navigationActions.goBack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back Arrow")
+              }
+            },
+            scrollBehavior = scrollBehavior)
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            { navigationActions.navigateTo(it) },
+            LIST_TOP_LEVEL_DESTINATION,
+            "" // No item is selected, as it is not one of the screens on the bottom bar
+            )
+      },
+      floatingActionButton = {
+        FloatingActionButton(
+            onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
+            modifier = Modifier.testTag("createFile")) {
+              Icon(Icons.Default.Add, contentDescription = "Create Folder")
+            }
+      }) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+          // The Time Table
+          DisplayTimeTable(folderViewModel.activeFolder!!.timeTable)
 
-      //The text saying Files and the button to sort
-      Row(
-        modifier = Modifier
-          .padding(20.dp, 15.dp)
-          .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Text("Files", fontWeight = FontWeight.Bold, fontSize = 24.sp,
-          modifier = Modifier.testTag("textFiles"))
-        Box {
-          Button(
-            onClick = { sorting = true },
-            modifier = Modifier.testTag("sortingButton"),
-            colors = ButtonColors(
-              Color.Transparent,
-              Color.Black,
-              Color.Transparent,
-              Color.Transparent
-            ),
-            border = BorderStroke(1.dp, Color.Black)
-          ) { Icon(Icons.AutoMirrored.Filled.List, "Sort files") }
-          DropdownMenu(
-            expanded = sorting,
-            modifier = Modifier.width(IntrinsicSize.Min),
-            onDismissRequest = { sorting = false },
-            properties = PopupProperties(focusable = false)
-          ) {
-            DropdownMenuItem(
-              text = {Text("Alphabetic")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode1"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.NAME)
-                sorting = false
+          // The text saying Files and the button to sort
+          Row(
+              modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Files",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    modifier = Modifier.testTag("textFiles"))
+                Box {
+                  Button(
+                      onClick = { sorting = true },
+                      modifier = Modifier.testTag("sortingButton"),
+                      colors =
+                          ButtonColors(
+                              Color.Transparent, Color.Black, Color.Transparent, Color.Transparent),
+                      border = BorderStroke(1.dp, Color.Black)) {
+                        Icon(Icons.AutoMirrored.Filled.List, "Sort files")
+                      }
+                  DropdownMenu(
+                      expanded = sorting,
+                      modifier = Modifier.width(IntrinsicSize.Min),
+                      onDismissRequest = { sorting = false },
+                      properties = PopupProperties(focusable = false)) {
+                        DropdownMenuItem(
+                            text = { Text("Alphabetic") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode1"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.NAME)
+                              sorting = false
+                            })
+                        DropdownMenuItem(
+                            text = { Text("Newest") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode2"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.CREATION_UP)
+                              sorting = false
+                            })
+                        DropdownMenuItem(
+                            text = { Text("Oldest") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode3"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
+                              sorting = false
+                            })
+                        DropdownMenuItem(
+                            text = { Text("Recently accessed") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode4"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
+                              sorting = false
+                            })
+                        DropdownMenuItem(
+                            text = { Text("Oldest access") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode5"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
+                              sorting = false
+                            })
+                        DropdownMenuItem(
+                            text = { Text("Most accessed") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode6"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
+                              sorting = false
+                            })
+                        DropdownMenuItem(
+                            text = { Text("Least accessed") },
+                            modifier = Modifier.fillMaxWidth().testTag("sortMode7"),
+                            onClick = {
+                              folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
+                              sorting = false
+                            })
+                      }
+                }
               }
-            )
-            DropdownMenuItem(
-              text = {Text("Newest")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode2"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.CREATION_UP)
-                sorting = false
-              }
-            )
-            DropdownMenuItem(
-              text = {Text("Oldest")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode3"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
-                sorting = false
-              }
-            )
-            DropdownMenuItem(
-              text = {Text("Recently accessed")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode4"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
-                sorting = false
-              }
-            )
-            DropdownMenuItem(
-              text = {Text("Oldest access")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode5"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
-                sorting = false
-              }
-            )
-            DropdownMenuItem(
-              text = {Text("Most accessed")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode6"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
-                sorting = false
-              }
-            )
-            DropdownMenuItem(
-              text = {Text("Least accessed")},
-              modifier = Modifier.fillMaxWidth().testTag("sortMode7"),
-              onClick = {
-                folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
-                sorting = false
-              }
-            )
+
+          // The files
+          folderViewModel.activeFolder!!.files.forEach {
+            Button(onClick = {}, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+              Text(it.name, modifier = Modifier.fillMaxWidth())
+            }
           }
         }
       }
-
-      //The files
-      folderViewModel.activeFolder!!.files.forEach {
-        Button(
-          onClick = {  },
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-        ) {
-          Text(it.name, modifier = Modifier.fillMaxWidth())
-        }
-      }
-    }
-  }
 }
