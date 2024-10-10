@@ -12,9 +12,6 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
-      EduverseTheme { Surface(modifier = Modifier.fillMaxSize()) {} }
-    }
+    setContent { EduverseTheme { Surface(modifier = Modifier.fillMaxSize()) {} } }
   }
 }
-
