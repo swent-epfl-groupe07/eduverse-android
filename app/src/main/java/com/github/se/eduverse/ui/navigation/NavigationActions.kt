@@ -27,6 +27,7 @@ object Screen {
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
   const val FOLDER = "Folder screen"
+  const val CREATE_FOLDER = "CreateFolder screen"
   const val COURSES = "Courses screen"
 }
 
