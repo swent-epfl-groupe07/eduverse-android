@@ -11,7 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.github.se.eduverse.ui.authentication.LoginScreen
+import com.github.se.eduverse.ui.authentication.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -39,7 +39,7 @@ fun EduverseApp() {
         startDestination = Screen.AUTH,
         route = Route.AUTH,
     ) {
-      composable(Screen.AUTH) { LoginScreen(navigationActions) }
+      composable(Screen.AUTH) { SignInScreen(navigationActions) }
     }
 
     navigation(
