@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
   Scaffold(
     topBar = {
       MediumTopAppBar(
+        modifier = Modifier.testTag("topAppBar"),
         colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primaryContainer,
           titleContentColor = MaterialTheme.colorScheme.primary,
@@ -89,7 +91,8 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
     },
     floatingActionButton = {
       FloatingActionButton(
-        onClick = { navigationActions.navigateTo(Screen.CREATE_FOLDER) }) {
+        onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
+        modifier = Modifier.testTag("create")) {
         Icon(Icons.Default.Add, contentDescription = "Create Folder")
       }
     }
