@@ -11,7 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.github.se.eduverse.ui.authentication.SignInScreen
+import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
