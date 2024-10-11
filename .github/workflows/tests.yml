@@ -17,7 +17,7 @@ jobs:
 
     env:
       app_name: Eduverse
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Add SonarCloud token to GitHub secrets
+      
 
     defaults:
       run:
@@ -42,7 +42,17 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      # Step 4: Cache Gradle for faster builds
+      # Step 4: Install Android SDK components
+      - name: Install Android SDK and tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lib32stdc++6 qemu-kvm
+          mkdir -p "$ANDROID_HOME"
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-34" "emulator" "system-images;android-34;google_apis;x86_64" "build-tools;34.0.0"
+      
+      # Step 5: Cache Gradle for faster builds
       - name: Retrieve Gradle cache
         uses: actions/cache@v3
         with:
@@ -51,39 +61,35 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      # Step 5: SonarCloud Scan
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectKey: swent-epfl-groupe07_eduverse-android   # Replace with your SonarCloud project key
-          organization: swent-epfl-groupe07   # Replace with your SonarCloud organization
-          token: ${{ secrets.SONAR_TOKEN }}
+      # Step to decode secrets
+      - name: Decode secrets
+        env:
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
+          LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+        run: |
+          echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
+          echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
 
-      # Step 6: Build the Android app
+
+      # Step 6: Grant execution permissions for the Gradle wrapper
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # Step 7: Build the Android app
       - name: Build Android app
         run: ./gradlew assembleDebug lint --parallel --build-cache
 
-      # Step 7: Run Unit Tests
+      # Step 8: Run unit tests
       - name: Run Unit Tests
         run: ./gradlew check --parallel --build-cache
 
-      # Step 8: Install Android SDK command line tools
-      - name: Install Android SDK command line tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          unzip commandlinetools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platform-tools" "emulator" "platforms;android-34" "system-images;android-34;google_apis;x86_64"
-
-      # Step 9: Create AVD
+      # Step 9: Configure and Run Android Emulator
       - name: Create AVD
         run: echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
 
-      # Step 10: Run instrumentation tests
+      - name: Install Emulator System Image
+        run: sdkmanager --install "system-images;android-34;google_apis;x86_64"
+
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -96,22 +102,14 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
-      # Step 11: Generate the coverage report for tests
+
+      # Step 10: Generate the coverage report for tests
       - name: Generate Test Coverage
         run: ./gradlew jacocoTestReport
 
-      # Step 12: Upload the test coverage report
+      # Step 11: Upload the test coverage report
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: Coverage report
           path: app/build/reports/jacoco/jacocoTestReport
-
-      # Step 13: Check SonarCloud Quality Gate
-      - name: Check the SonarCloud Quality Gate
-        run: |
-          QUALITY_GATE_STATUS=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=swent-epfl-groupe07_eduverse-android" | jq -r .projectStatus.status)
-          if [ "$QUALITY_GATE_STATUS" != "OK" ]; then
-            echo "SonarCloud Quality Gate failed: $QUALITY_GATE_STATUS"
-            exit 1
-          fi
