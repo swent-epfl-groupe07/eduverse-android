@@ -64,7 +64,7 @@ jobs:
 
       - name: Load Google Service
         env:
-          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          DATA: ${{ secrets.GOOGLE_SERVICES }}
 
         run: |
           echo $DATA | base64 -di > app/google-services.json
