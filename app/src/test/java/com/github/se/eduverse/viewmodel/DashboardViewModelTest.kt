@@ -86,4 +86,41 @@ class DashboardViewModelTest {
     // Verify that the repository's removeWidget method is called
     verify(mockRepository).removeWidget("userId", widgetId)
   }
+
+  @Test
+  fun `fetchAvailableWidgets should update availableWidgets filtering out already added ones`() =
+      runTest {
+        val widgetList =
+            listOf(
+                Widget("1", "Type 1", "Title 1", "Content 1", "owner1"), // Already on the dashboard
+                Widget("2", "Type 2", "Title 2", "Content 2", "owner2") // Already on the dashboard
+                )
+        val availableWidgetList =
+            listOf(
+                Widget("1", "Type 1", "Title 1", "Content 1", "owner1"),
+                Widget("2", "Type 2", "Title 2", "Content 2", "owner2"),
+                Widget("3", "Type 3", "Title 3", "Content 3", "owner3") // New available widget
+                )
+
+        // Mock the repository to return available widgets and widgets already in the dashboard
+        `when`(mockRepository.getWidgets("userId")).thenReturn(flowOf(widgetList))
+        `when`(mockRepository.getAvailableWidgets()).thenReturn(flowOf(availableWidgetList))
+
+        // Call fetchWidgets in ViewModel to populate dashboard widgets
+        viewModel.fetchWidgets("userId")
+        advanceUntilIdle()
+
+        // Call fetchAvailableWidgets in ViewModel
+        viewModel.fetchAvailableWidgets()
+        advanceUntilIdle()
+
+        // Verify that the repository's getAvailableWidgets method is called
+        verify(mockRepository).getAvailableWidgets()
+
+        // Assert that the availableWidgets list is updated correctly (widget "1" and "2" filtered
+        // out)
+        val expectedFilteredWidgets =
+            listOf(Widget("3", "Type 3", "Title 3", "Content 3", "owner3"))
+        assertEquals(expectedFilteredWidgets, viewModel.availableWidgets.first())
+      }
 }

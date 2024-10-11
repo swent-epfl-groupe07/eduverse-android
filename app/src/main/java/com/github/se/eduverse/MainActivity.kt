@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 fun EduverseApp(viewModel: DashboardViewModel) {
   MaterialTheme {
     // You can replace this with your actual logic to get userId
-    val userId = remember { "exampleUserId123" }
+    val userId = remember { "exampleUserId1234" }
 
     // Pass the ViewModel to the DashboardScreen
     DashboardScreen(viewModel = viewModel, userId = userId)

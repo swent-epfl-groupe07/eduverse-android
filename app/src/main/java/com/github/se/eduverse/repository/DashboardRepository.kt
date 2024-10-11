@@ -13,6 +13,8 @@ interface DashboardRepository {
   suspend fun addWidget(userId: String, widget: Widget)
 
   suspend fun removeWidget(userId: String, widgetId: String)
+
+  fun getAvailableWidgets(): Flow<List<Widget>>
 }
 
 class DashboardRepositoryImpl(private val firestore: FirebaseFirestore) : DashboardRepository {
@@ -36,7 +38,7 @@ class DashboardRepositoryImpl(private val firestore: FirebaseFirestore) : Dashbo
 
   override suspend fun addWidget(userId: String, widget: Widget) {
     val widgetRef = firestore.collection("users").document(userId).collection("widgets")
-    widgetRef.add(widget)
+    widgetRef.document(widget.widgetId).set(widget) // Use widgetId as the document ID
   }
 
   override suspend fun removeWidget(userId: String, widgetId: String) {
@@ -44,4 +46,21 @@ class DashboardRepositoryImpl(private val firestore: FirebaseFirestore) : Dashbo
         firestore.collection("users").document(userId).collection("widgets").document(widgetId)
     widgetRef.delete()
   }
+
+  override fun getAvailableWidgets(): Flow<List<Widget>> =
+      callbackFlow {
+            val widgetRef = firestore.collection("widgets") // Collection of all widgets
+            val listener =
+                widgetRef.addSnapshotListener { snapshot, e ->
+                  if (e != null || snapshot == null) {
+                    trySend(emptyList()) // Send an empty list in case of error
+                    close(e)
+                  } else {
+                    val widgets = snapshot.documents.mapNotNull { it.toObject(Widget::class.java) }
+                    trySend(widgets).isSuccess
+                  }
+                }
+            awaitClose { listener.remove() }
+          }
+          .catch { emit(emptyList()) } // Handle exceptions
 }
