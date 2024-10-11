@@ -55,8 +55,8 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
-          projectKey: <your_project_key>   # Replace with your SonarCloud project key
-          organization: <your_organization>   # Replace with your SonarCloud organization
+          projectKey: swent-epfl-groupe07_eduverse-android   # Replace with your SonarCloud project key
+          organization: swent-epfl-groupe07   # Replace with your SonarCloud organization
           token: ${{ secrets.SONAR_TOKEN }}
 
       # Step 6: Build the Android app
