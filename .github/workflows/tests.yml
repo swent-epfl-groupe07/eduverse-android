@@ -17,6 +17,7 @@ jobs:
 
     env:
       app_name: Eduverse
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Add SonarCloud token to GitHub secrets
 
     defaults:
       run:
@@ -50,24 +51,19 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      # Step to decode secrets
-      - name: Decode secrets
-        env:
-          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
-          LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
-        run: |
-          echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
-          echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
-
-      # Step 5: Grant execution permissions for the Gradle wrapper
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
+      # Step 5: SonarCloud Scan
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectKey: swent-epfl-groupe07_eduverse-android   # Replace with your SonarCloud project key
+          organization: swent-epfl-groupe07   # Replace with your SonarCloud organization
+          token: ${{ secrets.SONAR_TOKEN }}
 
       # Step 6: Build the Android app
       - name: Build Android app
         run: ./gradlew assembleDebug lint --parallel --build-cache
 
-      # Step 7: Run unit tests
+      # Step 7: Run Unit Tests
       - name: Run Unit Tests
         run: ./gradlew check --parallel --build-cache
 
@@ -87,11 +83,7 @@ jobs:
       - name: Create AVD
         run: echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
 
-      # Step 10: Install Emulator System Image
-      - name: Install Emulator System Image
-        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64"
-
-      # Step 11: Run instrumentation tests
+      # Step 10: Run instrumentation tests
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -104,13 +96,22 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
-      # Step 12: Generate the coverage report for tests
+      # Step 11: Generate the coverage report for tests
       - name: Generate Test Coverage
         run: ./gradlew jacocoTestReport
 
-      # Step 13: Upload the test coverage report
+      # Step 12: Upload the test coverage report
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: Coverage report
           path: app/build/reports/jacoco/jacocoTestReport
+
+      # Step 13: Check SonarCloud Quality Gate
+      - name: Check the SonarCloud Quality Gate
+        run: |
+          QUALITY_GATE_STATUS=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=swent-epfl-groupe07_eduverse-android" | jq -r .projectStatus.status)
+          if [ "$QUALITY_GATE_STATUS" != "OK" ]; then
+            echo "SonarCloud Quality Gate failed: $QUALITY_GATE_STATUS"
+            exit 1
+          fi
