@@ -50,22 +50,20 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      # Step 5: Install SDK Tools including avdmanager and sdkmanager
-      - name: Install SDK Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk
-          sdkmanager --install "platform-tools" "emulator" "system-images;android-34;google_apis;x86_64"
-
-      # Step 6: Set up Android SDK
+      # Step 5: Install Android SDK and Emulator tools
       - name: Set up Android SDK
-        run: echo "export ANDROID_SDK_ROOT=$HOME/Android/Sdk" >> $GITHUB_ENV
+        uses: actions/setup-android@v3
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          emulator: true
 
-      # Step 7: Create AVD
+      # Step 6: Create AVD
       - name: Create AVD
         run: echo "no" | avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
 
-      # Step 8: Run instrumentation tests
+      # Step 7: Run instrumentation tests
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -78,11 +76,11 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
-      # Step 9: Generate the coverage report for tests
+      # Step 8: Generate the coverage report for tests
       - name: Generate Test Coverage
         run: ./gradlew jacocoTestReport
 
-      # Step 10: Upload the test coverage report
+      # Step 9: Upload the test coverage report
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
