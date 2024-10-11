@@ -57,26 +57,20 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Create Google Service and Keystore files
+      - name: Create Google Service file
         run: |
           cat /home/runner/work/feedme-android/app/google-services.json | base64
-          cat /home/runner/work/feedme-android/upload-keystore.jks | base64
-          cat /home/runner/work/feedme-android/keystore.properties | base64
 
-      - name: Load Google Service and Keystore files
+
+      - name: Load Google Service
         env:
           DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
-          ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_FILE }}
-          ENCODED_PASSWORDS: ${{ secrets.KEYSTORE_PASSWORDS }}
+
         run: |
           echo $DATA | base64 -di > app/google-services.json
-          echo $ENCODED_KEYSTORE | base64 -di > upload-keystore.jks
-          echo $ENCODED_PASSWORDS | base64 -di > keystore.properties
 
-      - name: Get local.properties from secrets
-        run:
-          echo "${{secrets.LOCAL_PROPERTIES }}" > $GITHUB_WORKSPACE/local.properties
 
+      
       # Caching is a very useful part of a CI, as a workflow is executed in a clean environment every time,
       # this means that one would need to re-download and re-process gradle files for every run. Which is very time consuming.
       #
