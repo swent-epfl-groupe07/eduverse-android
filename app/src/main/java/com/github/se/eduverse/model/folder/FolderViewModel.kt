@@ -26,7 +26,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
               .toMutableList())
   val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
 
-  var activeFolder: Folder? = null
+  var activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
 
   /**
    * Sort the array of files of the active folder.
@@ -35,13 +35,13 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun sortBy(filter: FilterTypes) {
     when (filter) {
-      FilterTypes.NAME -> activeFolder?.files?.sortBy { it.name }
-      FilterTypes.CREATION_UP -> activeFolder?.files?.sortBy { it.creationTime.timeInMillis }
-      FilterTypes.CREATION_DOWN -> activeFolder?.files?.sortBy { -it.creationTime.timeInMillis }
-      FilterTypes.ACCESS_RECENT -> activeFolder?.files?.sortBy { -it.lastAccess.timeInMillis }
-      FilterTypes.ACCESS_OLD -> activeFolder?.files?.sortBy { it.lastAccess.timeInMillis }
-      FilterTypes.ACCESS_MOST -> activeFolder?.files?.sortBy { -it.numberAccess }
-      FilterTypes.ACCESS_LEAST -> activeFolder?.files?.sortBy { it.numberAccess }
+      FilterTypes.NAME -> activeFolder.value?.files?.sortBy { it.name }
+      FilterTypes.CREATION_UP -> activeFolder.value?.files?.sortBy { it.creationTime.timeInMillis }
+      FilterTypes.CREATION_DOWN -> activeFolder.value?.files?.sortBy { -it.creationTime.timeInMillis }
+      FilterTypes.ACCESS_RECENT -> activeFolder.value?.files?.sortBy { -it.lastAccess.timeInMillis }
+      FilterTypes.ACCESS_OLD -> activeFolder.value?.files?.sortBy { it.lastAccess.timeInMillis }
+      FilterTypes.ACCESS_MOST -> activeFolder.value?.files?.sortBy { -it.numberAccess }
+      FilterTypes.ACCESS_LEAST -> activeFolder.value?.files?.sortBy { it.numberAccess }
       else -> throw NotImplementedError("The sort method is not up-to-date")
     }
   }
@@ -70,7 +70,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun deleteFolder(folder: Folder) {
     _existingFolders.value.remove(folder)
-    if (activeFolder == folder) activeFolder = null
+    if (activeFolder.value == folder) activeFolder.value = null
     repository.deleteFolder(
         folder,
         {},
@@ -85,7 +85,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   fun updateFolder(folder: Folder) {
     try {
       _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
-      if (activeFolder?.id == folder.id) activeFolder = folder
+      if (activeFolder.value?.id == folder.id) activeFolder.value = folder
       repository.updateFolder(
           folder,
           {},
