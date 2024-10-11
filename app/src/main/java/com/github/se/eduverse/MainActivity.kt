@@ -2,8 +2,11 @@ package com.github.se.eduverse
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.github.se.project.model.folder.Folder
-import com.github.se.project.model.folder.FolderRepository
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import com.github.se.eduverse.ui.theme.EduverseTheme
 
 class MainActivity : ComponentActivity() {
 
