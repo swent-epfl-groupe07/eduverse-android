@@ -37,7 +37,8 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
     when (filter) {
       FilterTypes.NAME -> activeFolder.value?.files?.sortBy { it.name }
       FilterTypes.CREATION_UP -> activeFolder.value?.files?.sortBy { it.creationTime.timeInMillis }
-      FilterTypes.CREATION_DOWN -> activeFolder.value?.files?.sortBy { -it.creationTime.timeInMillis }
+      FilterTypes.CREATION_DOWN ->
+          activeFolder.value?.files?.sortBy { -it.creationTime.timeInMillis }
       FilterTypes.ACCESS_RECENT -> activeFolder.value?.files?.sortBy { -it.lastAccess.timeInMillis }
       FilterTypes.ACCESS_OLD -> activeFolder.value?.files?.sortBy { it.lastAccess.timeInMillis }
       FilterTypes.ACCESS_MOST -> activeFolder.value?.files?.sortBy { -it.numberAccess }
