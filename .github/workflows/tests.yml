@@ -1,4 +1,4 @@
-name: CI Test Runner
+name: Eduverse CI-TestRunner
 
 # Run the workflow when commits are pushed on main or when a PR is modified
 on:
