@@ -17,7 +17,6 @@ jobs:
 
     env:
       app_name: Eduverse
-      
 
     defaults:
       run:
@@ -60,7 +59,6 @@ jobs:
           echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
           echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
 
-
       # Step 5: Grant execution permissions for the Gradle wrapper
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
@@ -73,13 +71,27 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew check --parallel --build-cache
 
-      # Step 8: Configure and Run Android Emulator
+      # Step 8: Install Android SDK command line tools
+      - name: Install Android SDK command line tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          unzip commandlinetools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platform-tools" "emulator" "platforms;android-34" "system-images;android-34;google_apis;x86_64"
+
+      # Step 9: Create AVD
       - name: Create AVD
-        run: echo "no" | avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
+        run: echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
 
+      # Step 10: Install Emulator System Image
       - name: Install Emulator System Image
-        run: sdkmanager --install "system-images;android-34;google_apis;x86_64"
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64"
 
+      # Step 11: Run instrumentation tests
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -92,15 +104,13 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
-
-      # Step 9: Generate the coverage report for tests
+      # Step 12: Generate the coverage report for tests
       - name: Generate Test Coverage
         run: ./gradlew jacocoTestReport
 
-      # Step 10: Upload the test coverage report
+      # Step 13: Upload the test coverage report
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: Coverage report
           path: app/build/reports/jacoco/jacocoTestReport
-
