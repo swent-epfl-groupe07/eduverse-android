@@ -3,36 +3,82 @@ package com.github.se.eduverse
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material.MaterialTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import com.github.se.eduverse.repository.DashboardRepositoryImpl
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
+import com.github.se.eduverse.ui.authentification.SignInScreen
+import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
-import com.github.se.eduverse.viewmodel.DashboardViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
+import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.others.OthersScreen
+import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.videos.VideosScreen
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+
+  private lateinit var auth: FirebaseAuth
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    // Using Jetpack Compose's viewModel function to instantiate DashboardViewModel
-    setContent {
-      val viewModel: DashboardViewModel =
-          DashboardViewModel(DashboardRepositoryImpl(firestore = Firebase.firestore))
-      EduverseApp(viewModel = viewModel)
+    // Initialize Firebase Auth
+    auth = FirebaseAuth.getInstance()
+    auth.currentUser?.let {
+      // Sign out the user if they are already signed in
+      // This is useful for testing purposes
+      auth.signOut()
     }
+    setContent { EduverseTheme { Surface(modifier = Modifier.fillMaxSize()) { EduverseApp() } } }
   }
 }
 
 @Composable
-fun EduverseApp(viewModel: DashboardViewModel) {
-  MaterialTheme {
-    // You can replace this with your actual logic to get userId
-    val userId = remember { "exampleUserId1234" }
+fun EduverseApp() {
+  val navController = rememberNavController()
+  val navigationActions = NavigationActions(navController)
 
-    // Pass the ViewModel to the DashboardScreen
-    DashboardScreen(viewModel = viewModel, userId = userId)
+  NavHost(navController = navController, startDestination = Route.AUTH) {
+    navigation(
+      startDestination = Screen.AUTH,
+      route = Route.AUTH,
+    ) {
+      composable(Screen.AUTH) { SignInScreen(navigationActions) }
+    }
+
+    navigation(
+      startDestination = Screen.DASHBOARD,
+      route = Route.DASHBOARD,
+    ) {
+      composable(Screen.DASHBOARD) { DashboardScreen(navigationActions) }
+    }
+
+    navigation(
+      startDestination = Screen.VIDEOS,
+      route = Route.VIDEOS,
+    ) {
+      composable(Screen.VIDEOS) { VideosScreen(navigationActions) }
+    }
+
+    navigation(
+      startDestination = Screen.CAMERA,
+      route = Route.CAMERA,
+    ) {
+      composable(Screen.CAMERA) { CameraScreen(navigationActions) }
+    }
+
+    navigation(
+      startDestination = Screen.OTHERS,
+      route = Route.OTHERS,
+    ) {
+      composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+    }
   }
 }
