@@ -16,8 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      app_name: Eduverse
-      
+      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
 
     defaults:
       run:
@@ -42,17 +41,22 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      # Step 4: Install Android SDK components
-      - name: Install Android SDK and tools
+      # Step 4: Download Android Command-line tools
+      - name: Set up Android SDK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y lib32stdc++6 qemu-kvm
-          mkdir -p "$ANDROID_HOME"
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-34" "emulator" "system-images;android-34;google_apis;x86_64" "build-tools;34.0.0"
-      
-      # Step 5: Cache Gradle for faster builds
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          rm cmdline-tools.zip
+
+      # Step 5: Install SDK components and licenses
+      - name: Install Android SDK components
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "platform-tools" "platforms;android-34" "emulator" "system-images;android-34;google_apis;x86_64" "build-tools;34.0.0"
+
+      # Step 6: Cache Gradle for faster builds
       - name: Retrieve Gradle cache
         uses: actions/cache@v3
         with:
@@ -71,24 +75,24 @@ jobs:
           echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
 
 
-      # Step 6: Grant execution permissions for the Gradle wrapper
+      # Step 7: Grant execution permissions for the Gradle wrapper
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      # Step 7: Build the Android app
+      # Step 8: Build the Android app
       - name: Build Android app
         run: ./gradlew assembleDebug lint --parallel --build-cache
 
-      # Step 8: Run unit tests
+      # Step 9: Run unit tests
       - name: Run Unit Tests
         run: ./gradlew check --parallel --build-cache
 
-      # Step 9: Configure and Run Android Emulator
+      # Step 10: Create and configure Android Virtual Device (AVD)
       - name: Create AVD
-        run: echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
+        run: echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
 
       - name: Install Emulator System Image
-        run: sdkmanager --install "system-images;android-34;google_apis;x86_64"
+        run: $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64"
 
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -102,12 +106,11 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
-
-      # Step 10: Generate the coverage report for tests
+      # Step 11: Generate the coverage report for tests
       - name: Generate Test Coverage
         run: ./gradlew jacocoTestReport
 
-      # Step 11: Upload the test coverage report
+      # Step 12: Upload the test coverage report
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
