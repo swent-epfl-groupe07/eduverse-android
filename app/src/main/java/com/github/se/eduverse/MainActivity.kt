@@ -47,36 +47,36 @@ fun EduverseApp() {
 
   NavHost(navController = navController, startDestination = Route.AUTH) {
     navigation(
-      startDestination = Screen.AUTH,
-      route = Route.AUTH,
+        startDestination = Screen.AUTH,
+        route = Route.AUTH,
     ) {
       composable(Screen.AUTH) { SignInScreen(navigationActions) }
     }
 
     navigation(
-      startDestination = Screen.DASHBOARD,
-      route = Route.DASHBOARD,
+        startDestination = Screen.DASHBOARD,
+        route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions) }
     }
 
     navigation(
-      startDestination = Screen.VIDEOS,
-      route = Route.VIDEOS,
+        startDestination = Screen.VIDEOS,
+        route = Route.VIDEOS,
     ) {
       composable(Screen.VIDEOS) { VideosScreen(navigationActions) }
     }
 
     navigation(
-      startDestination = Screen.CAMERA,
-      route = Route.CAMERA,
+        startDestination = Screen.CAMERA,
+        route = Route.CAMERA,
     ) {
       composable(Screen.CAMERA) { CameraScreen(navigationActions) }
     }
 
     navigation(
-      startDestination = Screen.OTHERS,
-      route = Route.OTHERS,
+        startDestination = Screen.OTHERS,
+        route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
     }
