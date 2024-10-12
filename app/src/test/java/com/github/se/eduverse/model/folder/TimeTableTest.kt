@@ -1,6 +1,5 @@
-package com.github.se.project.model.folder
+package com.github.se.eduverse.model.folder
 
-import com.github.se.eduverse.model.folder.TimeTable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
