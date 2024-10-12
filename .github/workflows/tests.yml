@@ -1,9 +1,11 @@
-name: Android CI - Test
+name: Eduverse CI-TestRunner
 
+# Run the workflow when commits are pushed on main or when a PR is modified
 on:
   push:
     branches:
       - main
+
   pull_request:
     types:
       - opened
@@ -11,107 +13,134 @@ on:
       - reopened
 
 jobs:
-  android-ci:
-    name: Android CI
+  ci:
+    name: CI
+    # Execute the CI on the course's runners
     runs-on: ubuntu-latest
 
-    env:
-      app_name: Eduverse
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Add SonarCloud token to GitHub secrets
-
-    defaults:
-      run:
-        working-directory: ./${{ env.base_folder }}
-
     steps:
-      # Step 1: Checkout the repository
+      # First step : Checkout the repository on the runner
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0  # Needed for a more complete Sonar analysis
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of Sonar analysis (if we use Sonar Later)
 
-      # Step 2: Remove current Gradle cache to avoid caching issues
-      - name: Remove current gradle cache
-        run: rm -rf ~/.gradle
+      - name: Free Disk Space (U
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
-      # Step 3: Set up JDK (Java 17)
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+          # commented because it's not needed for now, only slows the pipeline
+      #- name: Remove old artifacts
+        #  uses: c-hive/gha-remove-artifacts@v1
+          #with:
+          #age: '3 days'
+          #skip-recent: 3
+
+      # Kernel-based Virtual Machine (KVM) is an open source virtualization technology built into Linux. Enabling it allows the Android emulator to run faster.
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
-      # Step 4: Cache Gradle for faster builds
-      - name: Retrieve Gradle cache
-        uses: actions/cache@v3
+      - name: Create Google Service file
+        run: |
+          cat /home/runner/work/feedme-android/app/google-services.json | base64
+
+
+      - name: Load Google Service
+        env:
+          DATA: ${{ secrets.GOOGLE_SERVICES }}
+
+        run: |
+          echo $DATA | base64 -di > app/google-services.json
+
+
+      
+      # Caching is a very useful part of a CI, as a workflow is executed in a clean environment every time,
+      # this means that one would need to re-download and re-process gradle files for every run. Which is very time consuming.
+      #
+      # To avoid that, we cache the the gradle folder to reuse it later.
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+
+      # Cache the Emulator, if the cache does not hit, create the emulator
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34
 
-      # Step 5: SonarCloud Scan
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectKey: swent-epfl-groupe07_eduverse-android   # Replace with your SonarCloud project key
-          organization: swent-epfl-groupe07   # Replace with your SonarCloud organization
-          token: ${{ secrets.SONAR_TOKEN }}
-
-      # Step 6: Build the Android app
-      - name: Build Android app
-        run: ./gradlew assembleDebug lint --parallel --build-cache
-
-      # Step 7: Run Unit Tests
-      - name: Run Unit Tests
-        run: ./gradlew check --parallel --build-cache
-
-      # Step 8: Install Android SDK command line tools
-      - name: Install Android SDK command line tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          unzip commandlinetools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platform-tools" "emulator" "platforms;android-34" "system-images;android-34;google_apis;x86_64"
-
-      # Step 9: Create AVD
-      - name: Create AVD
-        run: echo "no" | $ANDROID_HOME/cmdline-tools/latest/bin/avdmanager create avd -n github_emulator -k "system-images;android-34;google_apis;x86_64" --device "pixel"
-
-      # Step 10: Run instrumentation tests
-      - name: Run instrumentation tests
+      - name: create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
-          avd-name: github_emulator
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated -camera-front emulated -skin 1080x1920 -sdcard 512M
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Grant execute permission for gradlew
+        run: |
+          chmod +x ./gradlew
+
+      # Check formatting
+      - name: KTFmt Check
+        run: |
+          ./gradlew ktfmtCheck
+
+      # This step runs gradle commands to build the application
+      - name: Assemble
+        run: |
+          # To run the CI with debug information, add --info
+          ./gradlew assemble lint --parallel --build-cache
+
+      # Run Unit tests
+      - name: Run tests
+        run: |
+          # To run the CI with debug information, add --info
+          ./gradlew check --parallel --build-cache
+
+      # Run connected tests on the emulator
+      - name: run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
           force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1080x1920
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated -camera-front emulated -skin 1080x1920 -sdcard 512M
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
-      # Step 11: Generate the coverage report for tests
-      - name: Generate Test Coverage
-        run: ./gradlew jacocoTestReport
-
-      # Step 12: Upload the test coverage report
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: Coverage report
-          path: app/build/reports/jacoco/jacocoTestReport
-
-      # Step 13: Check SonarCloud Quality Gate
-      - name: Check the SonarCloud Quality Gate
+      # This step generates the coverage report which will be uploaded to sonar
+      - name: Generate Coverage Report
         run: |
-          QUALITY_GATE_STATUS=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=swent-epfl-groupe07_eduverse-android" | jq -r .projectStatus.status)
-          if [ "$QUALITY_GATE_STATUS" != "OK" ]; then
-            echo "SonarCloud Quality Gate failed: $QUALITY_GATE_STATUS"
-            exit 1
-          fi
+          ./gradlew jacocoTestReport
+
+      # Upload the various reports to sonar
+      - name: Upload report to SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar --parallel --build-cache
