@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class FolderViewModel(val repository: FolderRepository) : ViewModel() {
-    
+
     private val _existingFolders: MutableStateFlow<MutableList<Folder>> =
         MutableStateFlow(
             repository
