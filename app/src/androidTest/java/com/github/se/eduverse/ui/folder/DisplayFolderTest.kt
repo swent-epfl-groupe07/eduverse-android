@@ -52,7 +52,7 @@ class DisplayFolderTest {
 
     `when`(folderRepository.getFolders(any(), any())).thenReturn(listOf(folder))
     folderViewModel = FolderViewModel(folderRepository)
-    folderViewModel.activeFolder = folder
+    folderViewModel.activeFolder.value = folder
 
     composeTestRule.setContent { FolderScreen(navigationActions, folderViewModel) }
   }
