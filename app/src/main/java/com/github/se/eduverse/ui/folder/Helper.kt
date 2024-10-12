@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.github.se.project.model.folder.TimeTable
+import com.github.se.eduverse.model.folder.TimeTable
 
 /*
 This file is meant to put all useful methods used in different files in a centralized way

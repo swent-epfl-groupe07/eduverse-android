@@ -1,4 +1,4 @@
-package com.github.se.project.model.folder
+package com.github.se.eduverse.model.folder
 
 import com.github.se.eduverse.ui.folder.daysInWeek
 import com.github.se.eduverse.ui.folder.firstHour

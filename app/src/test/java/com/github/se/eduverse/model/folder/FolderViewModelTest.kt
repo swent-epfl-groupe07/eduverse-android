@@ -1,6 +1,11 @@
 package com.github.se.project.model.folder
 
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.Folder
+import com.github.se.eduverse.model.folder.FolderRepository
+import com.github.se.eduverse.model.folder.FolderViewModel
 import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.folder.TimeTable
 import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -45,7 +50,8 @@ class FolderViewModelTest {
             },
             "folder",
             "1",
-            TimeTable())
+            TimeTable()
+        )
     folder2 = Folder(emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
 
     folderRepository = MockFolderRepository(folder)
@@ -85,7 +91,8 @@ class FolderViewModelTest {
             emptyList<MyFile>().toMutableList(),
             "folder4",
             folderViewModel.getNewUid(),
-            TimeTable())
+            TimeTable()
+        )
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.existingFolders.value.size, 2)

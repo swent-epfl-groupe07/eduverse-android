@@ -1,4 +1,4 @@
-package com.github.se.project.ui
+package com.github.se.eduverse.ui.folder
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -41,18 +41,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
-import com.github.se.eduverse.ui.folder.DisplayTimeTable
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.project.model.folder.FilterTypes
-import com.github.se.project.model.folder.FolderViewModel
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.FolderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
-  if (folderViewModel.activeFolder == null)
+  var activeFolder by remember { mutableStateOf(folderViewModel.activeFolder.value) }
+
+  if (activeFolder == null)
       throw IllegalArgumentException(
           "There is no active folder, select one before going to FolderScreen")
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -68,10 +69,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
             title = {
-              Text(
-                  text = folderViewModel.activeFolder!!.name,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis)
+              Text(text = activeFolder!!.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
             },
             navigationIcon = {
               IconButton(onClick = { navigationActions.goBack() }) {
@@ -98,7 +96,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
       }) { padding ->
         Column(modifier = Modifier.padding(padding)) {
           // The Time Table
-          DisplayTimeTable(folderViewModel.activeFolder!!.timeTable)
+          DisplayTimeTable(activeFolder!!.timeTable)
 
           // The text saying Files and the button to sort
           Row(
@@ -179,7 +177,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
               }
 
           // The files
-          folderViewModel.activeFolder!!.files.forEach {
+          activeFolder!!.files.forEach {
             Button(onClick = {}, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
               Text(it.name, modifier = Modifier.fillMaxWidth())
             }
