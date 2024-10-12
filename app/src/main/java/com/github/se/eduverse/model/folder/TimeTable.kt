@@ -8,7 +8,7 @@ import com.github.se.eduverse.ui.folder.lastHour
 class TimeTable {
 
   private val selected: MutableList<MutableList<Boolean>> =
-    MutableList(daysInWeek) { MutableList(hoursInDay) { false } }
+      MutableList(daysInWeek) { MutableList(hoursInDay) { false } }
 
   /**
    * Select an hour in the time table if it isn't selected already. Otherwise, do nothing.
@@ -51,5 +51,5 @@ class TimeTable {
 private fun checkValidTime(day: Int, hour: Int) {
   if (day !in 1..7) throw IllegalArgumentException("Invalid day: $day")
   if (hour !in firstHour until lastHour)
-    throw IllegalArgumentException("Invalid hour: $hour not in range $firstHour - $lastHour")
+      throw IllegalArgumentException("Invalid hour: $hour not in range $firstHour - $lastHour")
 }

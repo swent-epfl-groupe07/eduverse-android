@@ -8,11 +8,11 @@ data class Folder(
 )
 
 enum class FilterTypes {
-    NAME,
-    CREATION_UP,
-    CREATION_DOWN,
-    ACCESS_RECENT,
-    ACCESS_OLD,
-    ACCESS_MOST,
-    ACCESS_LEAST
+  NAME,
+  CREATION_UP,
+  CREATION_DOWN,
+  ACCESS_RECENT,
+  ACCESS_OLD,
+  ACCESS_MOST,
+  ACCESS_LEAST
 }
