@@ -1,6 +1,11 @@
 package com.github.se.project.model.folder
 
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.Folder
+import com.github.se.eduverse.model.folder.FolderRepository
+import com.github.se.eduverse.model.folder.FolderViewModel
 import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.folder.TimeTable
 import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -45,7 +50,8 @@ class FolderViewModelTest {
             },
             "folder",
             "1",
-            TimeTable())
+            TimeTable()
+        )
     folder2 = Folder(emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
 
     folderRepository = MockFolderRepository(folder)
@@ -85,7 +91,8 @@ class FolderViewModelTest {
             emptyList<MyFile>().toMutableList(),
             "folder4",
             folderViewModel.getNewUid(),
-            TimeTable())
+            TimeTable()
+        )
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.existingFolders.value.size, 2)
@@ -136,8 +143,8 @@ class FolderViewModelTest {
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
-      onSuccess: (List<Folder>) -> Unit,
-      onFailure: (Exception) -> Unit
+    onSuccess: (List<Folder>) -> Unit,
+    onFailure: (Exception) -> Unit
   ): List<Folder> {
     return List(1) {
       return@List folder
@@ -147,15 +154,15 @@ class MockFolderRepository(private val folder: Folder) : FolderRepository {
   override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {}
 
   override fun updateFolder(
-      folder: Folder,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
+    folder: Folder,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
   ) {}
 
   override fun deleteFolder(
-      folder: Folder,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
+    folder: Folder,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
   ) {}
 
   override fun getNewUid(): String {

@@ -1,4 +1,4 @@
-package com.github.se.project.model.folder
+package com.github.se.eduverse.model.folder
 
 private const val daysInWeek = 7
 private const val firstHour = 7

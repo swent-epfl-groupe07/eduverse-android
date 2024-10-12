@@ -1,4 +1,4 @@
-package com.github.se.project.model.folder
+package com.github.se.eduverse.model.folder
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
