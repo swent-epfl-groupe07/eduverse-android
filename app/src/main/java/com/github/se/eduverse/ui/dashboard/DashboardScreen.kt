@@ -12,90 +12,115 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.Widget
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
+import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.google.firebase.auth.FirebaseAuth
 
+var auth: FirebaseAuth = FirebaseAuth.getInstance()
+
+@OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel, userId: String) {
+fun DashboardScreen(
+    navigationActions: NavigationActions,
+    viewModel: DashboardViewModel,
+    userId: String = auth.currentUser!!.uid
+) {
   val widgetList by viewModel.widgetList.collectAsState()
-  val availableWidgets by viewModel.availableWidgets.collectAsState()
+  var showAddWidgetDialog by remember { mutableStateOf(false) }
 
   LaunchedEffect(userId) { viewModel.fetchWidgets(userId) }
 
-  var showDropdown by remember { mutableStateOf(false) }
-  var deleteWidgetId by remember {
-    mutableStateOf<String?>(null)
-  } // State to track which widget shows delete icon
+  var deleteWidgetId by remember { mutableStateOf<String?>(null) }
 
   Scaffold(
       floatingActionButton = {
         FloatingActionButton(
-            onClick = {
-              showDropdown = !showDropdown
-              if (showDropdown) {
-                viewModel.fetchAvailableWidgets()
-              }
-            },
+            onClick = { showAddWidgetDialog = true }, // Show dialog to add widget
             modifier = Modifier.testTag("add_widget_button")) {
               Icon(Icons.Default.Add, contentDescription = "Add Widget")
             }
       },
-      bottomBar = { BottomNavigationPlaceholder() },
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute())
+      },
       modifier = Modifier.testTag("dashboard_screen")) {
-        Column {
-          LazyColumn(modifier = Modifier.testTag("widget_list")) {
-            items(widgetList) { widget ->
-              WidgetCard(
-                  widget = widget,
-                  showDeleteIcon =
-                      deleteWidgetId ==
-                          widget.widgetId, // Only show delete icon for the long-pressed widget
-                  onLongPress = {
-                    deleteWidgetId =
-                        if (deleteWidgetId == widget.widgetId) null else widget.widgetId
-                  },
-                  onDeleteClick = {
-                    viewModel.removeWidget(userId, widget.widgetId)
-                    Log.d("DashboardScreen", "Widget removed: ${widget.widgetId}")
-                    viewModel.fetchWidgets(userId) // Fetch updated list after removing widget
-                    deleteWidgetId = null // Reset delete icon state after deletion
-                  })
-            }
-          }
-
-          if (showDropdown) {
-            LazyColumn(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-              items(availableWidgets) { widget ->
-                AvailableWidgetCard(
+        Box {
+          Column(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(modifier = Modifier.testTag("widget_list")) {
+              items(widgetList) { widget ->
+                WidgetCard(
                     widget = widget,
-                    onClick = {
-                      viewModel.addWidget(userId, widget)
-                      showDropdown = false
+                    showDeleteIcon = deleteWidgetId == widget.widgetId,
+                    onLongPress = {
+                      deleteWidgetId =
+                          if (deleteWidgetId == widget.widgetId) null else widget.widgetId
+                    },
+                    onDeleteClick = {
+                      viewModel.removeWidget(widget.widgetId)
+                      Log.d("DashboardScreen", "Widget removed: ${widget.widgetId}")
+                      viewModel.fetchWidgets(userId)
+                      deleteWidgetId = null
                     })
               }
             }
           }
+
+          if (showAddWidgetDialog) {
+            CommonWidgetDialog(
+                viewModel = viewModel, onDismiss = { showAddWidgetDialog = false }, userId = userId)
+          }
         }
       }
+}
+
+@Composable
+fun CommonWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit, userId: String) {
+  val commonWidgets = viewModel.getCommonWidgets()
+
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = { Text("Add Widget") },
+      text = {
+        Column {
+          commonWidgets.forEach { widget ->
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .clickable {
+                          viewModel.addWidget(
+                              widget.copy(
+                                  widgetId =
+                                      "${userId}_${widget.widgetId}", // Make ID unique per user
+                                  ownerUid = userId))
+                          onDismiss()
+                        }
+                        .testTag("add_common_widget_button")) {
+                  Text(text = widget.widgetTitle, style = MaterialTheme.typography.body1)
+                }
+          }
+        }
+      },
+      confirmButton = { Button(onClick = onDismiss) { Text("Cancel") } })
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WidgetCard(
     widget: Widget,
-    showDeleteIcon: Boolean, // Accept the state whether to show the delete icon
+    showDeleteIcon: Boolean,
     onLongPress: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -104,10 +129,7 @@ fun WidgetCard(
           Modifier.padding(8.dp)
               .fillMaxWidth()
               .combinedClickable(
-                  onClick = { /* Do nothing on normal click */},
-                  onLongClick = {
-                    onLongPress() // Toggle the long press action
-                  })
+                  onClick = { /* Do nothing on normal click */}, onLongClick = { onLongPress() })
               .testTag("widget_card"),
       elevation = 4.dp) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -116,7 +138,7 @@ fun WidgetCard(
             Text(text = widget.widgetContent)
           }
 
-          if (showDeleteIcon) { // Show delete icon if state is true
+          if (showDeleteIcon) {
             IconButton(
                 onClick = onDeleteClick,
                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).testTag("delete_icon")) {
@@ -128,26 +150,4 @@ fun WidgetCard(
           }
         }
       }
-}
-
-// Card to display available widgets
-@Composable
-fun AvailableWidgetCard(widget: Widget, onClick: () -> Unit) {
-  Card(
-      modifier =
-          Modifier.padding(8.dp)
-              .fillMaxWidth()
-              .clickable(onClick = onClick)
-              .testTag("available_widget_card")) {
-        Column(modifier = Modifier.padding(16.dp)) {
-          Text(text = widget.widgetTitle, style = MaterialTheme.typography.h6)
-        }
-      }
-}
-
-@Composable
-fun BottomNavigationPlaceholder() {
-  Box(modifier = Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
-    Text("Bottom Nav Placeholder")
-  }
 }

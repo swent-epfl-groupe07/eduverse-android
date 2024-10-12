@@ -3,10 +3,12 @@ package com.github.se.eduverse.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.se.eduverse.model.CommonWidgetType
 import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.repository.DashboardRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 open class DashboardViewModel(private val dashboardRepository: DashboardRepository) : ViewModel() {
@@ -15,39 +17,45 @@ open class DashboardViewModel(private val dashboardRepository: DashboardReposito
   open val widgetList: StateFlow<List<Widget>>
     get() = _widgetList
 
-  private val _availableWidgets = MutableStateFlow<List<Widget>>(emptyList())
-  open val availableWidgets: StateFlow<List<Widget>>
-    get() = _availableWidgets
-
   open fun fetchWidgets(userId: String) {
     viewModelScope.launch {
-      dashboardRepository.getWidgets(userId).collect { _widgetList.value = it }
+      dashboardRepository
+          .getWidgets(userId)
+          ?.catch { e ->
+            Log.e("DashboardViewModel", "Error fetching widgets", e)
+            _widgetList.value = emptyList()
+          }
+          ?.collect { widgets -> _widgetList.value = widgets }
+          ?: run {
+            Log.e("DashboardViewModel", "getWidgets returned null")
+            _widgetList.value = emptyList()
+          }
     }
   }
 
-  open fun addWidget(userId: String, widget: Widget) {
+  open fun addWidget(widget: Widget) {
     viewModelScope.launch {
-      dashboardRepository.addWidget(userId, widget)
+      dashboardRepository.addWidget(widget)
       Log.d("DashboardViewModel", "Widget added: ${widget.widgetId}")
     }
   }
 
-  open fun removeWidget(userId: String, widgetId: String) {
+  open fun removeWidget(widgetId: String) {
     viewModelScope.launch {
-      dashboardRepository.removeWidget(userId, widgetId)
+      dashboardRepository.removeWidget(widgetId)
       Log.d("DashboardViewModel", "Widget removed: $widgetId")
     }
   }
 
-  // New function to fetch available widgets that are not yet on the user's dashboard
-  open fun fetchAvailableWidgets() {
-    viewModelScope.launch {
-      dashboardRepository.getAvailableWidgets().collect { available ->
-        // Filter out widgets already in the dashboard
-        val widgetsNotOnDashboard =
-            available.filter { widget -> _widgetList.value.none { it.widgetId == widget.widgetId } }
-        _availableWidgets.value = widgetsNotOnDashboard
-      }
+  open fun getCommonWidgets(): List<Widget> {
+    return CommonWidgetType.values().map { commonWidget ->
+      Widget(
+          widgetId = commonWidget.name, // Unique identifier based on enum name
+          widgetType = "COMMON", // Indicating this is a common widget
+          widgetTitle = commonWidget.title,
+          widgetContent = commonWidget.content,
+          ownerUid = "" // No owner because it's a common widget template
+          )
     }
   }
 }

@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
@@ -20,7 +21,9 @@ import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
+import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
 
@@ -44,6 +47,8 @@ class MainActivity : ComponentActivity() {
 fun EduverseApp() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
+  val dashboardRepo = DashboardRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val dashboardViewModel = DashboardViewModel(dashboardRepo)
 
   NavHost(navController = navController, startDestination = Route.AUTH) {
     navigation(
@@ -57,7 +62,7 @@ fun EduverseApp() {
         startDestination = Screen.DASHBOARD,
         route = Route.DASHBOARD,
     ) {
-      composable(Screen.DASHBOARD) { DashboardScreen(navigationActions) }
+      composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
     }
 
     navigation(

@@ -1,13 +1,7 @@
 package com.github.se.eduverse.repository
 
 import com.github.se.eduverse.model.Widget
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.EventListener
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.*
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -37,10 +31,9 @@ class DashboardRepositoryTest {
             Widget("1", "Type 1", "Title 1", "Content 1", "owner1"),
             Widget("2", "Type 2", "Title 2", "Content 2", "owner2"))
 
-    // Mock Firestore collection and document references
-    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
-    whenever(mockCollectionRef.document("userId")).thenReturn(mockDocumentRef)
-    whenever(mockDocumentRef.collection("widgets")).thenReturn(mockCollectionRef)
+    // Mock Firestore collection reference
+    whenever(mockFirestore.collection("widgets")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("ownerUid", "userId")).thenReturn(mockCollectionRef)
 
     // Mock the Firestore snapshot documents
     val mockDocumentSnapshots =
@@ -64,9 +57,8 @@ class DashboardRepositoryTest {
     val result = repository.getWidgets("userId").first()
 
     // Verify that the correct Firestore methods were called
-    verify(mockFirestore).collection("users")
-    verify(mockCollectionRef).document("userId")
-    verify(mockDocumentRef).collection("widgets")
+    verify(mockFirestore).collection("widgets")
+    verify(mockCollectionRef).whereEqualTo("ownerUid", "userId")
 
     // Assert the result matches the mocked widget list
     assertEquals(widgetList, result)
@@ -74,22 +66,17 @@ class DashboardRepositoryTest {
 
   @Test
   fun `addWidget should add widget to Firestore`(): Unit = runBlocking {
-    val newWidget = Widget("1", "Type", "Title", "Content", "ownerId")
+    val newWidget = Widget("1", "Type", "Title", "Content", "userId")
 
     // Mock Firestore interactions
-    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
-    whenever(mockCollectionRef.document("userId")).thenReturn(mockDocumentRef)
-    whenever(mockDocumentRef.collection("widgets")).thenReturn(mockCollectionRef)
-
-    // Mock the DocumentReference for the specific widgetId
-    val mockWidgetDocRef: DocumentReference = mock(DocumentReference::class.java)
-    whenever(mockCollectionRef.document(newWidget.widgetId)).thenReturn(mockWidgetDocRef)
+    whenever(mockFirestore.collection("widgets")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(newWidget.widgetId)).thenReturn(mockDocumentRef)
 
     // Call the addWidget method
-    repository.addWidget("userId", newWidget)
+    repository.addWidget(newWidget)
 
     // Verify that the Firestore set method is called on the correct DocumentReference
-    verify(mockWidgetDocRef).set(newWidget)
+    verify(mockDocumentRef).set(newWidget)
   }
 
   @Test
@@ -97,54 +84,13 @@ class DashboardRepositoryTest {
     val widgetId = "widgetId"
 
     // Mock Firestore interactions
-    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
-    whenever(mockCollectionRef.document("userId")).thenReturn(mockDocumentRef)
-    whenever(mockDocumentRef.collection("widgets")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("widgets")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.document(widgetId)).thenReturn(mockDocumentRef)
 
     // Call the removeWidget method
-    repository.removeWidget("userId", widgetId)
+    repository.removeWidget(widgetId)
 
     // Verify that the Firestore delete method is called
     verify(mockDocumentRef).delete()
-  }
-
-  @Test
-  fun `getAvailableWidgets should return a flow of available widgets`() = runBlocking {
-    // Prepare mock data
-    val widgetList =
-        listOf(
-            Widget("1", "Type 1", "Title 1", "Content 1", "owner1"),
-            Widget("2", "Type 2", "Title 2", "Content 2", "owner2"))
-
-    // Mock Firestore collection reference
-    whenever(mockFirestore.collection("widgets")).thenReturn(mockCollectionRef)
-
-    // Mock the Firestore snapshot documents
-    val mockDocumentSnapshots =
-        widgetList.map { widget ->
-          val mockSnapshot = mock(DocumentSnapshot::class.java)
-          whenever(mockSnapshot.toObject(Widget::class.java)).thenReturn(widget)
-          mockSnapshot
-        }
-
-    // Mock the Firestore snapshot result
-    whenever(mockSnapshot.documents).thenReturn(mockDocumentSnapshots)
-
-    // Mock the SnapshotListener to simulate the callback
-    whenever(mockCollectionRef.addSnapshotListener(any())).thenAnswer { invocation ->
-      val listener = invocation.getArgument(0) as EventListener<QuerySnapshot>
-      listener.onEvent(mockSnapshot, null) // Pass the mock snapshot
-      mock(ListenerRegistration::class.java)
-    }
-
-    // Test the getAvailableWidgets method
-    val result = repository.getAvailableWidgets().first()
-
-    // Verify that the correct Firestore methods were called
-    verify(mockFirestore).collection("widgets")
-
-    // Assert that the result matches the mocked widget list
-    assertEquals(widgetList, result)
   }
 }
