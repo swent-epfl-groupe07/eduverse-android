@@ -41,12 +41,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.FolderViewModel
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.model.folder.FilterTypes
-import com.github.se.eduverse.model.folder.FolderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

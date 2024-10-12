@@ -50,8 +50,7 @@ class FolderViewModelTest {
             },
             "folder",
             "1",
-            TimeTable()
-        )
+            TimeTable())
     folder2 = Folder(emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
 
     folderRepository = MockFolderRepository(folder)
@@ -91,8 +90,7 @@ class FolderViewModelTest {
             emptyList<MyFile>().toMutableList(),
             "folder4",
             folderViewModel.getNewUid(),
-            TimeTable()
-        )
+            TimeTable())
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.existingFolders.value.size, 2)

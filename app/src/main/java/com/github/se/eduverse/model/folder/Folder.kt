@@ -1,8 +1,5 @@
 package com.github.se.eduverse.model.folder
 
-import com.github.se.eduverse.model.folder.MyFile
-import com.github.se.eduverse.model.folder.TimeTable
-
 data class Folder(
     val files: MutableList<MyFile>,
     val name: String,
