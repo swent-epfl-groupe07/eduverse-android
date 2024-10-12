@@ -1,13 +1,19 @@
 package com.github.se.eduverse.ui.camera
 
+import android.net.Uri
+import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -21,172 +27,141 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.camera.view.PreviewView
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Cameraswitch
-import androidx.compose.material.icons.filled.Close
+import com.github.se.eduverse.ui.navigation.NavigationActions
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
 
 @Composable
-fun CameraScreen() {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
+fun CameraScreen(navigationActions: NavigationActions) {
+  val context = LocalContext.current
+  val lifecycleOwner = LocalLifecycleOwner.current
+  val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
 
-    var imageCapture: ImageCapture? = remember { null }
-    val preview = remember { Preview.Builder().build() }
+  var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+  val preview = remember { Preview.Builder().build() }
+  var cameraSelector by remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
 
-    // State to store the selected camera
-    var cameraSelector by remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
+  LaunchedEffect(cameraSelector) {
+    val cameraProvider = cameraProviderFuture.get()
+    cameraProvider.unbindAll()
+    imageCapture = ImageCapture.Builder().build()
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        // Camera preview
-        AndroidView(
-            factory = { ctx ->
-                val cameraProvider = cameraProviderFuture.get()
-                val previewView = PreviewView(ctx).apply {
-                    id = android.R.id.content
-                }
-                preview.setSurfaceProvider(previewView.surfaceProvider)
+    try {
+      cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageCapture)
+    } catch (exc: Exception) {
+      exc.printStackTrace()
+    }
+  }
 
-                imageCapture = ImageCapture.Builder().build()
+  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    AndroidView(
+        factory = { ctx ->
+          val previewView = PreviewView(ctx).apply { id = android.R.id.content }
+          preview.setSurfaceProvider(previewView.surfaceProvider)
+          previewView
+        },
+        modifier = Modifier.fillMaxSize().testTag("cameraPreview"))
 
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner, cameraSelector, preview, imageCapture
-                )
-
-                previewView
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("cameraPreview") // Test tag pour la caméra
-        )
-
-        // Cross (Close) button at the top left
-        Icon(
-            imageVector = Icons.Default.Close,
-            contentDescription = "Close",
-            modifier = Modifier
-                .align(Alignment.TopStart)
+    Icon(
+        imageVector = Icons.Default.Close,
+        contentDescription = "Close",
+        modifier =
+            Modifier.align(Alignment.TopStart)
                 .padding(16.dp)
                 .size(24.dp)
-                .testTag("closeButton") // Test tag pour le bouton Close
-        )
+                .clickable { navigationActions.goBack() }
+                .testTag("closeButton"))
 
-        // Camera switch button at the top right
-        Icon(
-            imageVector = Icons.Default.Cameraswitch,
-            contentDescription = "Switch Camera",
-            modifier = Modifier
-                .align(Alignment.TopEnd)
+    Icon(
+        imageVector = Icons.Default.Cameraswitch,
+        contentDescription = "Switch Camera",
+        modifier =
+            Modifier.align(Alignment.TopEnd)
                 .padding(16.dp)
                 .size(24.dp)
                 .clickable {
-                    // Switch between front and back camera
-                    cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                  cameraSelector =
+                      if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
                         CameraSelector.DEFAULT_FRONT_CAMERA
-                    } else {
+                      } else {
                         CameraSelector.DEFAULT_BACK_CAMERA
+                      }
+                }
+                .testTag("switchCameraButton"))
+
+    Column(
+        modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
+          // Ajout des boutons Photo et Vidéo
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+              horizontalArrangement = Arrangement.Center) {
+                Button(
+                    onClick = { /* Logique pour le mode Photo */},
+                    modifier = Modifier.padding(horizontal = 8.dp).testTag("photoButton")) {
+                      Text("Photo Mode")
                     }
-
-                    // Re-bind the camera with the new selector
-                    cameraProviderFuture.get().unbindAll()
-                    cameraProviderFuture.get().bindToLifecycle(
-                        lifecycleOwner, cameraSelector, preview, imageCapture
-                    )
-                }
-                .testTag("switchCameraButton") // Test tag pour le bouton de switch
-        )
-
-        // Bottom row with buttons and placeholder rectangles
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Buttons to select between Photo and Video modes
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
                 Button(
-                    onClick = { /* Select Photo mode */ },
-                    modifier = Modifier.testTag("photoButton") // Test tag pour le bouton Photo
-                ) {
-                    Text("Photo")
-                }
-                Spacer(modifier = Modifier.width(24.dp))
-                Button(
-                    onClick = { /* Select Video mode */ },
-                    modifier = Modifier.testTag("videoButton") // Test tag pour le bouton Video
-                ) {
-                    Text("Video")
-                }
-            }
+                    onClick = { /* Logique pour le mode Vidéo */},
+                    modifier = Modifier.padding(horizontal = 8.dp).testTag("videoButton")) {
+                      Text("Video Mode")
+                    }
+              }
 
-            Spacer(modifier = Modifier.height(24.dp))
+          Spacer(modifier = Modifier.height(16.dp))
 
-            // Row with extreme spacing
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp) // Adjust padding as needed
-            ) {
-                // Rectangle on the left
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Gray).clickable { /*...*/ }
-                        .padding(8.dp)
-                        .testTag("rectangleLeft") // Test tag pour le rectangle gauche
-                )
+          // Bouton "Take Photo"
+          Button(
+              onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                  val photoFile = File(context.filesDir, "photo.jpg")
+                  val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-                // Button for taking a photo, centered between the rectangles
-                Button(
-                    onClick = {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val photoFile = File(context.filesDir, "photo.jpg")
-                            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-
-                            imageCapture?.takePicture(
-                                outputOptions,
-                                ContextCompat.getMainExecutor(context),
-                                object : ImageCapture.OnImageSavedCallback {
-                                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                        // Handle the saved image here
-                                    }
-
-                                    override fun onError(exception: ImageCaptureException) {
-                                        // Handle the error here
-                                    }
-                                }
-                            )
+                  imageCapture?.takePicture(
+                      outputOptions,
+                      ContextCompat.getMainExecutor(context),
+                      object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(
+                            outputFileResults: ImageCapture.OutputFileResults
+                        ) {
+                          Log.e("IMAGE SAVED", "IMAGE SAVED")
+                          val encodedPath = Uri.encode(photoFile.absolutePath)
+                          navigationActions.navigateTo("picTaken/$encodedPath")
                         }
-                    },
-                    modifier = Modifier.testTag("takePhotoButton") // Test tag pour le bouton Take Photo
-                ) {
-                    Text("Take Photo")
-                }
 
-                // Rectangle on the right
+                        override fun onError(exception: ImageCaptureException) {
+                          Log.e("IMAGE NOT SAVED", "IMAGE NOT SAVED")
+                        }
+                      })
+                }
+              },
+              modifier =
+                  Modifier.padding(horizontal = 32.dp).fillMaxWidth().testTag("takePhotoButton")) {
+                Text("Take Photo")
+              }
+
+          Spacer(modifier = Modifier.height(24.dp))
+
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Gray).clickable { /*...*/ }
-                        .padding(8.dp)
-                        .testTag("rectangleRight") // Test tag pour le rectangle droit
-                )
-            }
+                    modifier =
+                        Modifier.size(48.dp)
+                            .background(Color.Gray)
+                            .padding(8.dp)
+                            .testTag("rectangleLeft"))
+
+                Box(
+                    modifier =
+                        Modifier.size(48.dp)
+                            .background(Color.Gray)
+                            .padding(8.dp)
+                            .testTag("rectangleRight"))
+              }
         }
-    }
+  }
 }

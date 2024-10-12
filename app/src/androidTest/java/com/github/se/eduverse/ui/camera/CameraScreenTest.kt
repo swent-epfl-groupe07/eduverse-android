@@ -1,8 +1,11 @@
 package com.github.se.eduverse.ui.camera
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.ui.navigation.NavigationActions
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -10,134 +13,103 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CameraScreenTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun cameraPreview_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Composable
+  private fun createFakeNavigationActions(): NavigationActions {
+    val navController = rememberNavController()
+    return NavigationActions(navController)
+  }
 
-        // Vérifie que la vue de prévisualisation de la caméra est bien affichée
-        composeTestRule.onNodeWithTag("cameraPreview").assertIsDisplayed()
-    }
+  @Test
+  fun cameraPreview_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("cameraPreview").assertIsDisplayed()
+  }
 
-    @Test
-    fun closeButton_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Test
+  fun closeButton_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed()
+  }
 
-        // Vérifie que le bouton de fermeture est bien affiché
-        composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed()
-    }
+  @Test
+  fun switchCameraButton_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("switchCameraButton").assertIsDisplayed()
+  }
 
-    @Test
-    fun switchCameraButton_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Test
+  fun photoButton_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("photoButton").assertIsDisplayed()
+  }
 
-        // Vérifie que le bouton de switch de la caméra est bien affiché
-        composeTestRule.onNodeWithTag("switchCameraButton").assertIsDisplayed()
-    }
+  @Test
+  fun videoButton_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("videoButton").assertIsDisplayed()
+  }
 
-    @Test
-    fun photoButton_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Test
+  fun takePhotoButton_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("takePhotoButton").assertIsDisplayed()
+  }
 
-        // Vérifie que le bouton Photo est bien affiché
-        composeTestRule.onNodeWithTag("photoButton").assertIsDisplayed()
-    }
+  @Test
+  fun rectangleLeft_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("rectangleLeft").assertIsDisplayed()
+  }
 
-    @Test
-    fun videoButton_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Test
+  fun rectangleRight_isDisplayed() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("rectangleRight").assertIsDisplayed()
+  }
 
-        // Vérifie que le bouton Vidéo est bien affiché
-        composeTestRule.onNodeWithTag("videoButton").assertIsDisplayed()
-    }
+  @Test
+  fun takePhotoButton_clickAction() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("takePhotoButton").performClick()
+    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
+  }
 
-    @Test
-    fun takePhotoButton_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Test
+  fun switchCameraButton_clickAction() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("switchCameraButton").performClick()
+    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
+  }
 
-        // Vérifie que le bouton Take Photo est bien affiché
-        composeTestRule.onNodeWithTag("takePhotoButton").assertIsDisplayed()
-    }
+  @Test
+  fun photoButton_clickAction() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("photoButton").performClick()
+    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
+  }
 
-    @Test
-    fun rectangleLeft_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+  @Test
+  fun videoButton_clickAction() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+    composeTestRule.onNodeWithTag("videoButton").performClick()
+    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
+  }
 
-        // Vérifie que le rectangle gauche est bien affiché
-        composeTestRule.onNodeWithTag("rectangleLeft").assertIsDisplayed()
-    }
+  @Test
+  fun closeButton_clickAction() {
+    // Créer un faux NavigationActions avec un `goBack` capturé
 
-    @Test
-    fun rectangleRight_isDisplayed() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
 
-        // Vérifie que le rectangle droit est bien affiché
-        composeTestRule.onNodeWithTag("rectangleRight").assertIsDisplayed()
-    }
+    // Vérifie que le bouton est bien affiché et cliquable
+    composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed().performClick()
 
-    @Test
-    fun takePhotoButton_clickAction() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
-
-        // Simule un clic sur le bouton Take Photo
-        composeTestRule.onNodeWithTag("takePhotoButton").performClick()
-
-        // Ici, on pourrait ajouter des assertions pour vérifier le comportement après clic si nécessaire
-    }
-
-    @Test
-    fun switchCameraButton_clickAction() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
-
-        // Simule un clic sur le bouton de switch de la caméra
-        composeTestRule.onNodeWithTag("switchCameraButton").performClick()
-
-        // Ici, on pourrait ajouter des assertions pour vérifier le comportement après clic si nécessaire
-    }
-
-    @Test
-    fun photoButton_clickAction() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
-
-        // Simule un clic sur le bouton Photo
-        composeTestRule.onNodeWithTag("photoButton").performClick()
-
-        // Ici, on pourrait ajouter des assertions pour vérifier le comportement après clic si nécessaire
-    }
-
-    @Test
-    fun videoButton_clickAction() {
-        composeTestRule.setContent {
-            CameraScreen()
-        }
-
-        // Simule un clic sur le bouton Vidéo
-        composeTestRule.onNodeWithTag("videoButton").performClick()
-
-        // Ici, on pourrait ajouter des assertions pour vérifier le comportement après clic si nécessaire
-    }
+    // Vérifier que la fonction `goBack()` de NavigationActions est appelée
+    // Normalement, cela nécessiterait un mock de la fonction, mais ici on peut capturer l'appel
+    // en utilisant une structure de `verify` si possible dans le contexte de test actuel.
+    composeTestRule.waitForIdle() // S'assurer que l'action est exécutée
+    // Remarque : Vous pouvez également valider en fonction de l'état attendu après l'appel
+  }
 }

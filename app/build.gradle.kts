@@ -20,6 +20,8 @@ android {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         localProperties.load(FileInputStream(localPropertiesFile))
+
+        
     }
 
     val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
