@@ -5,12 +5,12 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import com.github.se.eduverse.model.folder.MyFile
-import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.model.folder.Folder
 import com.github.se.eduverse.model.folder.FolderRepository
 import com.github.se.eduverse.model.folder.FolderViewModel
+import com.github.se.eduverse.model.folder.MyFile
 import com.github.se.eduverse.model.folder.TimeTable
+import com.github.se.eduverse.ui.navigation.NavigationActions
 import java.util.Calendar
 import org.junit.Before
 import org.junit.Rule
@@ -41,8 +41,7 @@ class DisplayFolderTest {
           },
           "folder",
           "1",
-          TimeTable()
-      )
+          TimeTable())
 
   @get:Rule val composeTestRule = createComposeRule()
 
