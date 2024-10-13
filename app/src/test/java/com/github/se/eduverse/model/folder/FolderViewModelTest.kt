@@ -61,9 +61,9 @@ class FolderViewModelTest {
   @Test
   fun addFolderTest() {
     folderViewModel.addFolder(folder2)
-    assertEquals(folderViewModel.existingFolders.value.size, 2)
-    assertSame(folderViewModel.existingFolders.value[0], folder)
-    assertSame(folderViewModel.existingFolders.value[1], folder2)
+    assertEquals(folderViewModel.folders.value.size, 2)
+    assertSame(folderViewModel.folders.value[0], folder)
+    assertSame(folderViewModel.folders.value[1], folder2)
   }
 
   @Test
@@ -72,8 +72,8 @@ class FolderViewModelTest {
     folderViewModel.selectFolder(folder)
 
     folderViewModel.deleteFolder(folder)
-    assertEquals(folderViewModel.existingFolders.value.size, 1)
-    assertSame(folderViewModel.existingFolders.value[0], folder2)
+    assertEquals(folderViewModel.folders.value.size, 1)
+    assertSame(folderViewModel.folders.value[0], folder2)
     assertNull(folderViewModel.activeFolder.value)
   }
 
@@ -83,8 +83,8 @@ class FolderViewModelTest {
     val folder3 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder.value, folder3)
-    assertEquals(folderViewModel.existingFolders.value.size, 1)
-    assertSame(folderViewModel.existingFolders.value[0], folder3)
+    assertEquals(folderViewModel.folders.value.size, 1)
+    assertSame(folderViewModel.folders.value[0], folder3)
 
     val folder4 =
         Folder(
@@ -95,8 +95,8 @@ class FolderViewModelTest {
             TimeTable())
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
-    assertEquals(folderViewModel.existingFolders.value.size, 2)
-    assertSame(folderViewModel.existingFolders.value[1], folder4)
+    assertEquals(folderViewModel.folders.value.size, 2)
+    assertSame(folderViewModel.folders.value[1], folder4)
   }
 
   @Test

@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 class FolderViewModel(val repository: FolderRepository, val currentUser: FirebaseUser?) :
     ViewModel() {
 
-  private var _existingFolders: MutableStateFlow<MutableList<Folder>> =
+  private var _folders: MutableStateFlow<MutableList<Folder>> =
       MutableStateFlow(emptyList<Folder>().toMutableList())
-  val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
+  val folders: StateFlow<MutableList<Folder>> = _folders
 
   private var _activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
   val activeFolder: StateFlow<Folder?> = _activeFolder
@@ -57,8 +57,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   fun getUserFolders() {
     repository.getFolders(
         { folders ->
-          _existingFolders.value =
-              folders.filter { it.ownerID == currentUser!!.uid }.toMutableList()
+          _folders.value = folders.filter { it.ownerID == currentUser!!.uid }.toMutableList()
         },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
   }
@@ -69,7 +68,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    * @param folder the folder to add
    */
   fun addFolder(folder: Folder) {
-    _existingFolders.value.add(folder)
+    _folders.value.add(folder)
     repository.addFolder(
         folder,
         {},
@@ -86,7 +85,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    * @param folder the folder to remove
    */
   fun deleteFolder(folder: Folder) {
-    _existingFolders.value.remove(folder)
+    _folders.value.remove(folder)
     if (activeFolder.value == folder) selectFolder(null)
     repository.deleteFolder(
         folder,
@@ -101,7 +100,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    */
   fun updateFolder(folder: Folder) {
     try {
-      _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
+      _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
       if (activeFolder.value?.id == folder.id) selectFolder(folder)
       repository.updateFolder(
           folder,
