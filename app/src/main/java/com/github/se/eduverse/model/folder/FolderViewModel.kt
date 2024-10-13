@@ -129,4 +129,14 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
     _activeFolder.value!!.files.add(file)
     sortBy(_activeFolder.value!!.filterType)
   }
+
+  /**
+   * Add a new file to the active folder
+   *
+   * @param file the file to add
+   */
+  fun deleteFile(file: MyFile) {
+    if (_activeFolder.value == null) return
+    _activeFolder.value!!.files.remove(file)
+  }
 }

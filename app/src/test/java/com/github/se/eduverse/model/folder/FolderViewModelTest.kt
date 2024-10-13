@@ -146,6 +146,14 @@ class FolderViewModelTest {
     folderViewModel.addFile(file4)
     assertEquals(folder.files.count { it == file4 }, 1)
   }
+
+  @Test
+  fun deleteFileTest() {
+    folderViewModel.selectFolder(folder)
+    folderViewModel.deleteFile(file3)
+    assertEquals(folder.files.count { it == file3 }, 0)
+    assertEquals(folder.files.size, 2)
+  }
 }
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
