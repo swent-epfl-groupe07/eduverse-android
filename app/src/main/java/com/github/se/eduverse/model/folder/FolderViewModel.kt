@@ -24,6 +24,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    * @param filter the filter to apply, as defined in enum FilterTypes in model/folder/Folder.kt
    */
   fun sortBy(filter: FilterTypes) {
+    activeFolder.value?.filterType = filter
     when (filter) {
       FilterTypes.NAME -> activeFolder.value?.files?.sortBy { it.name }
       FilterTypes.CREATION_UP -> activeFolder.value?.files?.sortBy { it.creationTime.timeInMillis }

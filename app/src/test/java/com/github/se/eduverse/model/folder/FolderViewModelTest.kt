@@ -35,6 +35,7 @@ class FolderViewModelTest {
 
     folder =
         Folder(
+            "",
             MutableList(3) {
               when (it) {
                 1 -> file1
@@ -45,7 +46,7 @@ class FolderViewModelTest {
             "folder",
             "1",
             TimeTable())
-    folder2 = Folder(emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
+    folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
 
     folderRepository = MockFolderRepository(folder)
     folderViewModel = FolderViewModel(folderRepository)
@@ -73,7 +74,7 @@ class FolderViewModelTest {
   @Test
   fun updateFolderTest() {
     folderViewModel.activeFolder.value = folder
-    val folder3 = Folder(emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
+    val folder3 = Folder("", emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder.value, folder3)
     assertEquals(folderViewModel.existingFolders.value.size, 1)
@@ -81,6 +82,7 @@ class FolderViewModelTest {
 
     val folder4 =
         Folder(
+            "",
             emptyList<MyFile>().toMutableList(),
             "folder4",
             folderViewModel.getNewUid(),
