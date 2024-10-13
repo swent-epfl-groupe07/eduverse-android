@@ -167,7 +167,11 @@ class FolderViewModelTest {
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
-  override fun getFolders(onSuccess: (List<Folder>) -> Unit, onFailure: (Exception) -> Unit) {
+  override fun getFolders(
+      userId: String,
+      onSuccess: (List<Folder>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
     onSuccess(
         List(1) {
           return@List folder

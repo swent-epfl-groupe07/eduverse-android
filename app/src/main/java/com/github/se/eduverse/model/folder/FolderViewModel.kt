@@ -56,9 +56,8 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   /** Get the folders with owner id equivalent to the current user */
   fun getUserFolders() {
     repository.getFolders(
-        { folders ->
-          _folders.value = folders.filter { it.ownerID == currentUser!!.uid }.toMutableList()
-        },
+        currentUser!!.uid,
+        { _folders.value = it.toMutableList() },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
   }
 
