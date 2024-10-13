@@ -5,7 +5,6 @@ data class Folder(
     val files: MutableList<MyFile>,
     var name: String,
     val id: String,
-    val timeTable: TimeTable,
     var filterType: FilterTypes = FilterTypes.CREATION_UP
 )
 

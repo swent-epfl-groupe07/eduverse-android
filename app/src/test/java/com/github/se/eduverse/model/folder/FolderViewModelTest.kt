@@ -48,9 +48,8 @@ class FolderViewModelTest {
               }
             },
             "folder",
-            "1",
-            TimeTable())
-    folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
+            "1")
+    folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
 
     folderRepository = MockFolderRepository(folder)
     currentUser = mock(FirebaseUser::class.java)
@@ -80,19 +79,14 @@ class FolderViewModelTest {
   @Test
   fun updateFolderTest() {
     folderViewModel.selectFolder(folder)
-    val folder3 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
+    val folder3 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1")
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder.value, folder3)
     assertEquals(folderViewModel.folders.value.size, 1)
     assertSame(folderViewModel.folders.value[0], folder3)
 
     val folder4 =
-        Folder(
-            "uid",
-            emptyList<MyFile>().toMutableList(),
-            "folder4",
-            folderViewModel.getNewUid(),
-            TimeTable())
+        Folder("uid", emptyList<MyFile>().toMutableList(), "folder4", folderViewModel.getNewUid())
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.folders.value.size, 2)
