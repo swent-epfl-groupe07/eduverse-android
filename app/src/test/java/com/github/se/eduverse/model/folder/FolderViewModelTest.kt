@@ -154,6 +154,15 @@ class FolderViewModelTest {
     assertEquals(folder.files.count { it == file3 }, 0)
     assertEquals(folder.files.size, 2)
   }
+
+  @Test
+  fun renameFolderTest() {
+    folderViewModel.selectFolder(folder)
+    folderViewModel.renameFolder("test 1", folder)
+    assertEquals(folderViewModel.activeFolder.value!!.name, "test 1")
+    folderViewModel.renameFolder("test 2")
+    assertEquals(folderViewModel.activeFolder.value!!.name, "test 2")
+  }
 }
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {

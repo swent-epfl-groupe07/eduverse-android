@@ -120,6 +120,19 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   }
 
   /**
+   * Rename a folder. If no argument is specified for the folder, rename the active folder.
+   *
+   * @param name the new name to assign
+   * @param folder the folder to rename
+   */
+  fun renameFolder(name: String, folder: Folder = activeFolder.value!!) {
+    folder.name = name
+    if (folder.filterType == FilterTypes.NAME && folder == activeFolder.value) {
+      sortBy(FilterTypes.NAME)
+    }
+  }
+
+  /**
    * Add a new file to the active folder
    *
    * @param file the file to add
