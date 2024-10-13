@@ -2,21 +2,26 @@ package com.github.se.eduverse.model.folder
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FolderViewModel(val repository: FolderRepository) : ViewModel() {
+class FolderViewModel(val repository: FolderRepository, val currentUser: FirebaseUser?) :
+    ViewModel() {
 
-  private val _existingFolders: MutableStateFlow<MutableList<Folder>> =
-      MutableStateFlow(
-          repository
-              .getFolders(
-                  {},
-                  { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
-              .toMutableList())
+  private var _existingFolders: MutableStateFlow<MutableList<Folder>> =
+      MutableStateFlow(emptyList<Folder>().toMutableList())
   val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
 
   var activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
+
+  init {
+    try {
+      getUserFolders()
+    } catch (e: Exception) {
+      Log.e("FolderViewModel Initialisation", "Exception $e: ${e.message}")
+    }
+  }
 
   /**
    * Sort the array of files of the active folder.
@@ -36,6 +41,15 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
       FilterTypes.ACCESS_LEAST -> activeFolder.value?.files?.sortBy { it.numberAccess }
       else -> throw NotImplementedError("The sort method is not up-to-date")
     }
+  }
+
+  fun getUserFolders() {
+    repository.getFolders(
+        { folders ->
+          _existingFolders.value =
+              folders.filter { it.ownerID == currentUser!!.uid }.toMutableList()
+        },
+        { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
   }
 
   /**

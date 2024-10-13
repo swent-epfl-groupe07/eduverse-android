@@ -1,14 +1,18 @@
 package com.github.se.eduverse.model.folder
 
+import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 class FolderViewModelTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var currentUser: FirebaseUser
   private lateinit var folderViewModel: FolderViewModel
 
   lateinit var folder: Folder
@@ -35,7 +39,7 @@ class FolderViewModelTest {
 
     folder =
         Folder(
-            "",
+            "uid",
             MutableList(3) {
               when (it) {
                 1 -> file1
@@ -46,10 +50,12 @@ class FolderViewModelTest {
             "folder",
             "1",
             TimeTable())
-    folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
+    folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", TimeTable())
 
     folderRepository = MockFolderRepository(folder)
-    folderViewModel = FolderViewModel(folderRepository)
+    currentUser = mock(FirebaseUser::class.java)
+    `when`(currentUser.uid).thenReturn("uid")
+    folderViewModel = FolderViewModel(folderRepository, currentUser)
   }
 
   @Test
@@ -74,7 +80,7 @@ class FolderViewModelTest {
   @Test
   fun updateFolderTest() {
     folderViewModel.activeFolder.value = folder
-    val folder3 = Folder("", emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
+    val folder3 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder.value, folder3)
     assertEquals(folderViewModel.existingFolders.value.size, 1)
@@ -82,7 +88,7 @@ class FolderViewModelTest {
 
     val folder4 =
         Folder(
-            "",
+            "uid",
             emptyList<MyFile>().toMutableList(),
             "folder4",
             folderViewModel.getNewUid(),
@@ -136,13 +142,11 @@ class FolderViewModelTest {
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
-  override fun getFolders(
-      onSuccess: (List<Folder>) -> Unit,
-      onFailure: (Exception) -> Unit
-  ): List<Folder> {
-    return List(1) {
-      return@List folder
-    }
+  override fun getFolders(onSuccess: (List<Folder>) -> Unit, onFailure: (Exception) -> Unit) {
+    onSuccess(
+        List(1) {
+          return@List folder
+        })
   }
 
   override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {}
