@@ -138,6 +138,14 @@ class FolderViewModelTest {
     assertSame(folder.files[1], file3)
     assertSame(folder.files[2], file1)
   }
+
+  @Test
+  fun addFileTest() {
+    val file4 = MyFile("name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
+    folderViewModel.selectFolder(folder)
+    folderViewModel.addFile(file4)
+    assertEquals(folder.files.count { it == file4 }, 1)
+  }
 }
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {

@@ -26,7 +26,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
 
   /**
    * Set the active folder
-   * 
+   *
    * @param folder the value to set
    */
   fun selectFolder(folder: Folder?) {
@@ -117,5 +117,16 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   /** Get new ID for a folder. */
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  /**
+   * Add a new file to the active folder
+   *
+   * @param file the file to add
+   */
+  fun addFile(file: MyFile) {
+    if (_activeFolder.value == null) return
+    _activeFolder.value!!.files.add(file)
+    sortBy(_activeFolder.value!!.filterType)
   }
 }
