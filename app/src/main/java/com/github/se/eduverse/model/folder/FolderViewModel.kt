@@ -68,10 +68,9 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    * @param folder the folder to add
    */
   fun addFolder(folder: Folder) {
-    _folders.value.add(folder)
     repository.addFolder(
         folder,
-        {},
+        { _folders.value.add(folder) },
         {
           Log.e(
               "FolderViewModel",
@@ -85,11 +84,10 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    * @param folder the folder to remove
    */
   fun deleteFolder(folder: Folder) {
-    _folders.value.remove(folder)
     if (activeFolder.value == folder) selectFolder(null)
     repository.deleteFolder(
         folder,
-        {},
+        { _folders.value.remove(folder) },
         { Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}") })
   }
 
@@ -100,11 +98,12 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    */
   fun updateFolder(folder: Folder) {
     try {
-      _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
-      if (activeFolder.value?.id == folder.id) selectFolder(folder)
       repository.updateFolder(
           folder,
-          {},
+          {
+            _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
+            if (activeFolder.value?.id == folder.id) selectFolder(folder)
+          },
           {
             Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
           })
@@ -129,6 +128,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
     if (folder.filterType == FilterTypes.NAME && folder == activeFolder.value) {
       sortBy(FilterTypes.NAME)
     }
+    updateFolder(folder)
   }
 
   /**
@@ -140,6 +140,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
     if (_activeFolder.value == null) return
     _activeFolder.value!!.files.add(file)
     sortBy(_activeFolder.value!!.filterType)
+    updateFolder(_activeFolder.value!!)
   }
 
   /**
@@ -150,5 +151,6 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   fun deleteFile(file: MyFile) {
     if (_activeFolder.value == null) return
     _activeFolder.value!!.files.remove(file)
+    updateFolder(_activeFolder.value!!)
   }
 }
