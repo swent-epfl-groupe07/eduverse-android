@@ -174,19 +174,17 @@ class MockFolderRepository(private val folder: Folder) : FolderRepository {
         })
   }
 
-  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {}
+  override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    onSuccess()
+  }
 
-  override fun updateFolder(
-      folder: Folder,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {}
+  override fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    onSuccess()
+  }
 
-  override fun deleteFolder(
-      folder: Folder,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {}
+  override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    onSuccess()
+  }
 
   override fun getNewUid(): String {
     return "id test"
