@@ -32,7 +32,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
 
-
 class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
