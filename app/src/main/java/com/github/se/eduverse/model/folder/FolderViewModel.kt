@@ -13,7 +13,8 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
       MutableStateFlow(emptyList<Folder>().toMutableList())
   val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
 
-  var activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
+  private var _activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
+  val activeFolder: StateFlow<Folder?> = _activeFolder
 
   init {
     try {
@@ -21,6 +22,15 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
     } catch (e: Exception) {
       Log.e("FolderViewModel Initialisation", "Exception $e: ${e.message}")
     }
+  }
+
+  /**
+   * Set the active folder
+   * 
+   * @param folder the value to set
+   */
+  fun selectFolder(folder: Folder?) {
+    _activeFolder.value = folder
   }
 
   /**
@@ -43,6 +53,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
     }
   }
 
+  /** Get the folders with owner id equivalent to the current user */
   fun getUserFolders() {
     repository.getFolders(
         { folders ->
@@ -76,7 +87,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    */
   fun deleteFolder(folder: Folder) {
     _existingFolders.value.remove(folder)
-    if (activeFolder.value == folder) activeFolder.value = null
+    if (activeFolder.value == folder) selectFolder(null)
     repository.deleteFolder(
         folder,
         {},
@@ -91,7 +102,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   fun updateFolder(folder: Folder) {
     try {
       _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
-      if (activeFolder.value?.id == folder.id) activeFolder.value = folder
+      if (activeFolder.value?.id == folder.id) selectFolder(folder)
       repository.updateFolder(
           folder,
           {},

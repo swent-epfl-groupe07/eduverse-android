@@ -69,7 +69,7 @@ class FolderViewModelTest {
   @Test
   fun removeFolderTest() {
     folderViewModel.addFolder(folder2)
-    folderViewModel.activeFolder.value = folder
+    folderViewModel.selectFolder(folder)
 
     folderViewModel.deleteFolder(folder)
     assertEquals(folderViewModel.existingFolders.value.size, 1)
@@ -79,7 +79,7 @@ class FolderViewModelTest {
 
   @Test
   fun updateFolderTest() {
-    folderViewModel.activeFolder.value = folder
+    folderViewModel.selectFolder(folder)
     val folder3 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1", TimeTable())
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder.value, folder3)
@@ -101,7 +101,7 @@ class FolderViewModelTest {
 
   @Test
   fun sortFolderTest() {
-    folderViewModel.activeFolder.value = folder
+    folderViewModel.selectFolder(folder)
 
     folderViewModel.sortBy(FilterTypes.NAME)
     assertSame(folder.files[0], file1)
