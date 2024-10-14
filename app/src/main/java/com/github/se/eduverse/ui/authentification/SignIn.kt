@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,87 +44,92 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun SignInScreen(navigationActions: NavigationActions) {
-  val context = LocalContext.current
+    val context = LocalContext.current
 
-  val launcher =
-      rememberFirebaseAuthLauncher(
-          onAuthComplete = { result ->
-            Log.d("SignInScreen", "User signed in: ${result.user?.displayName}")
-            Toast.makeText(context, "Login successful!", Toast.LENGTH_LONG).show()
-            navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
-          },
-          onAuthError = {
-            Log.e("SignInScreen", "Failed to sign in: ${it.statusCode}")
-            Toast.makeText(context, "Login Failed!", Toast.LENGTH_LONG).show()
-          })
-  val token = stringResource(R.string.default_web_client_id)
+    val launcher =
+        rememberFirebaseAuthLauncher(
+            onAuthComplete = { result ->
+                Log.d("SignInScreen", "User signed in: ${result.user?.displayName}")
+                navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
+            },
+            onAuthError = {
+                Log.e("SignInScreen", "Failed to sign in: ${it.statusCode}")
+                Toast.makeText(context, "Login Failed!", Toast.LENGTH_LONG).show()
+            })
+    val token = stringResource(R.string.default_web_client_id)
 
-  Scaffold(
-      modifier = Modifier.fillMaxSize().background(color = Color.White),
-      content = { padding ->
-        Column(
-            modifier =
+    Scaffold(
+        modifier = Modifier.fillMaxSize().background(color = Color.White),
+        content = { padding ->
+            Column(
+                modifier =
                 Modifier.fillMaxSize()
                     .padding(padding)
                     .padding(16.dp)
                     .background(color = Color.White),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top) {
-              Spacer(modifier = Modifier.height(210.dp))
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top) {
+                Spacer(modifier = Modifier.height(130.dp))
 
-              Image(
-                  painter = painterResource(id = R.drawable.skouli_logo),
-                  contentDescription = "App Logo",
-                  modifier = Modifier.size(250.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.eduverse_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(330.dp))
 
-              GoogleSignInButton(
-                  onSignInClick = {
-                    val gso =
-                        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(token)
-                            .requestEmail()
-                            .build()
-                    val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                    launcher.launch(googleSignInClient.signInIntent)
-                  })
+                Spacer(modifier = Modifier.height(4.dp))
 
-              Spacer(modifier = Modifier.height(16.dp))
+                GoogleSignInButton(
+                    onSignInClick = {
+                        val gso =
+                            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestIdToken(token)
+                                .requestEmail()
+                                .build()
+                        val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                        launcher.launch(googleSignInClient.signInIntent)
+                    })
 
-              Text(
-                  text = "Login or Sign-Up via Google",
-                  style =
-                      MaterialTheme.typography.bodyLarge.copy(
-                          fontWeight = FontWeight.Light, fontSize = 14.sp),
-                  color = Color.Black,
-                  textAlign = TextAlign.Center,
-                  modifier = Modifier.padding(horizontal = 24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Login or Sign-Up via Google",
+                    style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Light, fontSize = 14.sp),
+                    color = Color.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp).testTag("loginText"))
             }
-      })
+        })
 }
 
 @Composable
 fun GoogleSignInButton(onSignInClick: () -> Unit) {
-  Button(
-      onClick = onSignInClick,
-      colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-      shape = RectangleShape,
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(48.dp)) {
+    Button(
+        onClick = onSignInClick,
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+        shape = RectangleShape,
+        modifier =
+        Modifier.fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .height(48.dp)
+            .testTag("loginButton")) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()) {
-              Image(
-                  painter = painterResource(id = R.drawable.google_logo),
-                  contentDescription = "Google Logo",
-                  modifier = Modifier.size(24.dp).padding(end = 8.dp))
+            Image(
+                painter = painterResource(id = R.drawable.google_logo),
+                contentDescription = "Google Logo",
+                modifier = Modifier.size(24.dp).padding(end = 8.dp))
 
-              Text(
-                  text = "Continue with Google",
-                  color = Color.White,
-                  fontSize = 16.sp,
-                  fontWeight = FontWeight.Medium)
-            }
-      }
+            Text(
+                text = "Continue with Google",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium)
+        }
+    }
 }
 
 @Composable
@@ -131,19 +137,19 @@ fun rememberFirebaseAuthLauncher(
     onAuthComplete: (AuthResult) -> Unit,
     onAuthError: (ApiException) -> Unit
 ): ManagedActivityResultLauncher<Intent, ActivityResult> {
-  val scope = rememberCoroutineScope()
-  return rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-      result ->
-    val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-    try {
-      val account = task.getResult(ApiException::class.java)!!
-      val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
-      scope.launch {
-        val authResult = Firebase.auth.signInWithCredential(credential).await()
-        onAuthComplete(authResult)
-      }
-    } catch (e: ApiException) {
-      onAuthError(e)
+    val scope = rememberCoroutineScope()
+    return rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)!!
+            val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
+            scope.launch {
+                val authResult = Firebase.auth.signInWithCredential(credential).await()
+                onAuthComplete(authResult)
+            }
+        } catch (e: ApiException) {
+            onAuthError(e)
+        }
     }
-  }
 }
