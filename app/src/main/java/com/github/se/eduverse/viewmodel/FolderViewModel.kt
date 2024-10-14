@@ -1,7 +1,11 @@
-package com.github.se.eduverse.model.folder
+package com.github.se.eduverse.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.github.se.eduverse.model.FilterTypes
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
+import com.github.se.eduverse.repository.FolderRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
