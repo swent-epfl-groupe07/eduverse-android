@@ -21,22 +21,10 @@ class FolderViewModelTest {
   val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 =
       MyFile(
-        "",
-        "",
-        "name 2",
-        java.util.Calendar.getInstance(),
-        java.util.Calendar.getInstance(),
-        0
-      )
+          "", "", "name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
   val file3 =
       MyFile(
-        "",
-        "",
-        "name 3",
-        java.util.Calendar.getInstance(),
-        java.util.Calendar.getInstance(),
-        0
-      )
+          "", "", "name 3", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
 
   @Before
   fun setUp() {
