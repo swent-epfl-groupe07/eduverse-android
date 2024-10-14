@@ -18,11 +18,25 @@ class FolderViewModelTest {
   lateinit var folder: Folder
   lateinit var folder2: Folder
 
-  val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 =
-      MyFile("", "name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile(
+        "",
+        "",
+        "name 2",
+        java.util.Calendar.getInstance(),
+        java.util.Calendar.getInstance(),
+        0
+      )
   val file3 =
-      MyFile("", "name 3", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile(
+        "",
+        "",
+        "name 3",
+        java.util.Calendar.getInstance(),
+        java.util.Calendar.getInstance(),
+        0
+      )
 
   @Before
   fun setUp() {
@@ -135,7 +149,7 @@ class FolderViewModelTest {
 
   @Test
   fun addFileTest() {
-    val file4 = MyFile("", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
+    val file4 = MyFile("", "", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
     folderViewModel.selectFolder(folder)
     folderViewModel.addFile(file4)
     assertEquals(folder.files.count { it == file4 }, 1)
