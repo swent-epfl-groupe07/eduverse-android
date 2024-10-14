@@ -147,7 +147,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
-  private fun convertFolder(document: DocumentSnapshot, onFailure: (Exception) -> Unit): Folder {
+  fun convertFolder(document: DocumentSnapshot, onFailure: (Exception) -> Unit): Folder {
     var files: List<MyFile> = emptyList()
     getFiles(document.id, { files = it }, onFailure)
     return Folder(
@@ -198,7 +198,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
-  private fun convertFile(document: DocumentSnapshot): MyFile {
+  fun convertFile(document: DocumentSnapshot): MyFile {
     val file =
         MyFile(
             id = document.id,

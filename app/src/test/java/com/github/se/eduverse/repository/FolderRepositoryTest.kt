@@ -69,6 +69,8 @@ class FolderRepositoryTest {
     `when`(mockFileCollectionReference.get()).thenReturn(Tasks.forResult(mockFileQuerySnapshot))
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
         .thenReturn(mockCollectionReference)
+    `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf())
+    `when`(mockFileQuerySnapshot.documents).thenReturn(listOf())
   }
 
   @Test
@@ -124,9 +126,6 @@ class FolderRepositoryTest {
 
   @Test
   fun getToDos_callsDocuments() {
-    `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf())
-    `when`(mockFileQuerySnapshot.documents).thenReturn(listOf())
-
     folderRepositoryImpl.getFolders(
         anyString(), onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
@@ -135,7 +134,7 @@ class FolderRepositoryTest {
   }
 
   @Test
-  fun helperMethodsTest() {
+  fun covertFolderTest() {
     val m =
         mapOf(
             "NAME" to FilterTypes.NAME,
@@ -149,31 +148,30 @@ class FolderRepositoryTest {
     val time0 = Calendar.getInstance()
     time0.timeInMillis = 0
 
-    `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf(mockFolderDocumentSnapshot))
-    `when`(mockFileQuerySnapshot.documents).thenReturn(listOf(mockFileDocumentSnapshot))
     `when`(mockFolderDocumentSnapshot.id).thenReturn("id")
     `when`(mockFolderDocumentSnapshot.getString(any())).thenReturn("field")
+
+    m.forEach {
+      `when`(mockFolderDocumentSnapshot.getString("filterType")).thenReturn(it.key)
+
+      val folder = folderRepositoryImpl.convertFolder(mockFolderDocumentSnapshot) {}
+
+      assertEquals(
+          folder, Folder("field", emptyList<MyFile>().toMutableList(), "field", "id", it.value))
+    }
+  }
+
+  @Test
+  fun convertFileTest() {
+    val time0 = Calendar.getInstance()
+    time0.timeInMillis = 0
 
     `when`(mockFileDocumentSnapshot.id).thenReturn("id_")
     `when`(mockFileDocumentSnapshot.getString(any())).thenReturn("field_")
     `when`(mockFileDocumentSnapshot.getLong(any())).thenReturn(0)
 
-    m.forEach {
-      `when`(mockFolderDocumentSnapshot.getString("filterType")).thenReturn(it.key)
+    val file = folderRepositoryImpl.convertFile(mockFileDocumentSnapshot)
 
-      folderRepositoryImpl.getFolders(
-          "",
-          { folders ->
-            assertEquals(
-                folders[0],
-                Folder(
-                    "field",
-                    mutableListOf(MyFile("id_", "field_", "field_", time0, time0, 0)),
-                    "field",
-                    "id",
-                    it.value))
-          },
-          {})
-    }
+    assertEquals(file, MyFile("id_", "field_", "field_", time0, time0, 0))
   }
 }
