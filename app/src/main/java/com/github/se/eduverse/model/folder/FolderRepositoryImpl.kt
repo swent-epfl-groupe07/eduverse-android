@@ -9,6 +9,13 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
 
   private val collectionPath = "folders"
 
+  /**
+   * Access the list of folders associated to a user.
+   *
+   * @param userId the id of the active user
+   * @param onSuccess code executed if the folders are successfully accessed
+   * @param onFailure code executed if the folders can't be accessed
+   */
   override fun getFolders(
       userId: String,
       onSuccess: (List<Folder>) -> Unit,
@@ -23,6 +30,13 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
+  /**
+   * Add a folder to the database.
+   *
+   * @param folder the folder to add
+   * @param onSuccess code executed if the folder is successfully added
+   * @param onFailure code executed if the folder can't be added
+   */
   override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     val mappedFolders =
         hashMapOf(
@@ -39,6 +53,13 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
+  /**
+   * Update the values of a folder inside the database.
+   *
+   * @param folder the folder to update
+   * @param onSuccess code executed if the folder is successfully updated
+   * @param onFailure code executed if the folder can't be updated
+   */
   override fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     val mappedFolders =
         mapOf(
@@ -55,6 +76,13 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
+  /**
+   * Remove a folder from the database.
+   *
+   * @param folder the folder to delete
+   * @param onSuccess code executed if the folder is successfully deleted
+   * @param onFailure code executed if the folder can't be deleted
+   */
   override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(collectionPath)
         .document(folder.id)
@@ -63,6 +91,11 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
+  /**
+   * Create a new document in the database.
+   *
+   * @return the id of the new document
+   */
   override fun getNewUid(): String {
     return db.collection(collectionPath).document().id
   }

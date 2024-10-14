@@ -114,11 +114,7 @@ class FolderRepositoryTest {
     `when`(mockFileQuerySnapshot.documents).thenReturn(listOf())
 
     folderRepositoryImpl.getFolders(
-        anyString(),
-        onSuccess = {
-
-        },
-        onFailure = { fail("Failure callback should not be called") })
+        anyString(), onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockFolderQuerySnapshot).documents }
     verify(timeout(100)) { (mockFileQuerySnapshot).documents }
