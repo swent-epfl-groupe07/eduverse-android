@@ -9,29 +9,32 @@ import com.github.se.eduverse.model.folder.Folder
 import com.github.se.eduverse.model.folder.FolderRepository
 import com.github.se.eduverse.model.folder.FolderViewModel
 import com.github.se.eduverse.model.folder.MyFile
-import com.github.se.eduverse.model.folder.TimeTable
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.whenever
 
 class DisplayFolderTest {
   private lateinit var folderRepository: FolderRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
 
-  val file1 = MyFile("name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 =
-      MyFile("name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile("", "name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
   val file3 =
-      MyFile("name 3", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile("", "name 3", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
 
   val folder =
       Folder(
+          "",
           MutableList(3) {
             when (it) {
               1 -> file1
@@ -40,8 +43,7 @@ class DisplayFolderTest {
             }
           },
           "folder",
-          "1",
-          TimeTable())
+          "1")
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -50,9 +52,18 @@ class DisplayFolderTest {
     folderRepository = mock(FolderRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
 
-    `when`(folderRepository.getFolders(any(), any())).thenReturn(listOf(folder))
-    folderViewModel = FolderViewModel(folderRepository)
-    folderViewModel.activeFolder.value = folder
+    doAnswer {
+          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          callback(listOf(folder))
+          null
+        }
+        .whenever(folderRepository)
+        .getFolders(any(), any(), any())
+
+    val currentUser = mock(FirebaseUser::class.java)
+    `when`(currentUser.uid).thenReturn("uid")
+    folderViewModel = FolderViewModel(folderRepository, currentUser)
+    folderViewModel.selectFolder(folder)
 
     composeTestRule.setContent { FolderScreen(navigationActions, folderViewModel) }
   }
@@ -61,7 +72,6 @@ class DisplayFolderTest {
   fun displayComponents() {
     composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("createFile").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("timeTable").assertIsDisplayed()
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()
     composeTestRule.onNodeWithTag("sortingButton").assertIsDisplayed()
   }

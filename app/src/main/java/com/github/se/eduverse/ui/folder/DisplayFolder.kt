@@ -95,9 +95,6 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
             }
       }) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-          // The Time Table
-          DisplayTimeTable(activeFolder!!.timeTable)
-
           // The text saying Files and the button to sort
           Row(
               modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
