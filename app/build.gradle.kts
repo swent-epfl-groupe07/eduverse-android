@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.gms)
+    alias(libs.plugins.sonar)
 }
 
 android {
@@ -112,6 +113,16 @@ android {
         java.setSrcDirs(emptyList<File>())
         res.setSrcDirs(emptyList<File>())
         resources.setSrcDirs(emptyList<File>())
+    }
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "swent-epfl-groupe07_eduverse-android")
+        property("sonar.projectName", "eduverse")
+        property("sonar.organization", "swent-epfl-groupe07")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
     }
 }
 
