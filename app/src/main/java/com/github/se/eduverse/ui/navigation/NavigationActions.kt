@@ -61,7 +61,7 @@ open class NavigationActions(
    *   navigating to a new destination This is useful when navigating to a new screen from the
    *   bottom navigation bar as we don't want to keep the previous screen in the back stack
    */
-  fun navigateTo(destination: TopLevelDestination) {
+  open fun navigateTo(destination: TopLevelDestination) {
 
     navController.navigate(destination.route) {
       // Pop up to the start destination of the graph to
@@ -86,12 +86,12 @@ open class NavigationActions(
    *
    * @param screen The screen to navigate to
    */
-  fun navigateTo(screen: String) {
+  open fun navigateTo(screen: String) {
     navController.navigate(screen)
   }
 
   /** Navigate back to the previous screen. */
-  fun goBack() {
+  open fun goBack() {
     navController.popBackStack()
   }
 
@@ -100,7 +100,7 @@ open class NavigationActions(
    *
    * @return The current route
    */
-  fun currentRoute(): String {
+  open fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
   }
 }

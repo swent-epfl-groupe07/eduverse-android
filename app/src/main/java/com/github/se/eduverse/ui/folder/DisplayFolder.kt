@@ -51,11 +51,8 @@ import com.github.se.eduverse.ui.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
-  var activeFolder by remember { mutableStateOf(folderViewModel.activeFolder.value) }
+  val activeFolder by remember { mutableStateOf(folderViewModel.activeFolder.value!!) }
 
-  if (activeFolder == null)
-      throw IllegalArgumentException(
-          "There is no active folder, select one before going to FolderScreen")
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
 
@@ -69,14 +66,15 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
             title = {
-              Text(text = activeFolder!!.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              Text(text = activeFolder.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
             },
             navigationIcon = {
-              IconButton(onClick = { navigationActions.goBack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back Arrow")
-              }
+              IconButton(
+                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back Arrow")
+                  }
             },
             scrollBehavior = scrollBehavior)
       },
@@ -174,7 +172,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
               }
 
           // The files
-          activeFolder!!.files.forEach {
+          activeFolder.files.forEach {
             Button(onClick = {}, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
               Text(it.name, modifier = Modifier.fillMaxWidth())
             }
