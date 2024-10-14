@@ -144,8 +144,7 @@ class FolderRepositoryTest {
             "ACCESS_RECENT" to FilterTypes.ACCESS_RECENT,
             "ACCESS_OLD" to FilterTypes.ACCESS_OLD,
             "ACCESS_MOST" to FilterTypes.ACCESS_MOST,
-            "ACCESS_LEAST" to FilterTypes.ACCESS_LEAST
-        )
+            "ACCESS_LEAST" to FilterTypes.ACCESS_LEAST)
 
     val time0 = Calendar.getInstance()
     time0.timeInMillis = 0
@@ -172,8 +171,7 @@ class FolderRepositoryTest {
                     mutableListOf(MyFile("id_", "field_", "field_", time0, time0, 0)),
                     "field",
                     "id",
-                    it.value)
-            )
+                    it.value))
           },
           {})
     }
