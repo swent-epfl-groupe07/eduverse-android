@@ -144,7 +144,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
-  private fun convertFolder(document: DocumentSnapshot, onFailure: (Exception) -> Unit): Folder {
+  fun convertFolder(document: DocumentSnapshot, onFailure: (Exception) -> Unit): Folder {
     var files: List<MyFile> = emptyList()
     getFiles(document.id, { files = it }, onFailure)
     return Folder(
@@ -155,7 +155,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         filterType = stringToFilter(document.getString("filterType")!!))
   }
 
-  private fun stringToFilter(string: String): FilterTypes {
+  fun stringToFilter(string: String): FilterTypes {
     return when (string) {
       "NAME" -> FilterTypes.NAME
       "CREATION_UP" -> FilterTypes.CREATION_UP
@@ -168,7 +168,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
     }
   }
 
-  private fun filterToString(filter: FilterTypes): String {
+  fun filterToString(filter: FilterTypes): String {
     return when (filter) {
       FilterTypes.NAME -> "NAME"
       FilterTypes.CREATION_UP -> "CREATION_UP"
@@ -180,7 +180,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
     }
   }
 
-  private fun getFiles(
+  fun getFiles(
       folderId: String,
       onSuccess: (List<MyFile>) -> Unit,
       onFailure: (Exception) -> Unit
@@ -195,7 +195,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .addOnFailureListener(onFailure)
   }
 
-  private fun convertFile(document: DocumentSnapshot): MyFile {
+  fun convertFile(document: DocumentSnapshot): MyFile {
     val file =
         MyFile(
             id = document.id,
