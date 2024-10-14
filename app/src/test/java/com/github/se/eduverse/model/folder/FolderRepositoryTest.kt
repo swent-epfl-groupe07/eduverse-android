@@ -56,12 +56,20 @@ class FolderRepositoryTest {
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
     `when`(mockDocumentReference.collection(any())).thenReturn(mockFileCollectionReference)
     `when`(mockFileCollectionReference.document(any())).thenReturn(mockFileDocumentReference)
+    `when`(mockFileCollectionReference.document()).thenReturn(mockFileDocumentReference)
   }
 
   @Test
-  fun getNewUidTest() {
+  fun getNewFolderUidTest() {
     `when`(mockDocumentReference.id).thenReturn("1")
-    val uid = folderRepositoryImpl.getNewUid()
+    val uid = folderRepositoryImpl.getNewFolderUid()
+    assert(uid == "1")
+  }
+
+  @Test
+  fun getNewFileUidTest() {
+    `when`(mockFileDocumentReference.id).thenReturn("1")
+    val uid = folderRepositoryImpl.getNewFileUid(folder)
     assert(uid == "1")
   }
 

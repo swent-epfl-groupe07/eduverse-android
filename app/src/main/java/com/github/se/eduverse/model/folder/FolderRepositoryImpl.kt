@@ -92,12 +92,22 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
   }
 
   /**
-   * Create a new document in the database.
+   * Create a new folder document in the database.
    *
    * @return the id of the new document
    */
-  override fun getNewUid(): String {
+  override fun getNewFolderUid(): String {
     return db.collection(collectionPath).document().id
+  }
+
+  /**
+   * Create a new file document in the database.
+   *
+   * @param folder the folder containing the file
+   * @return the id of the new document
+   */
+  override fun getNewFileUid(folder: Folder): String {
+    return db.collection(collectionPath).document(folder.id).collection("files").document().id
   }
 
   private fun addFileInFolder(file: MyFile, folder: Folder, onFailure: (Exception) -> Unit) {

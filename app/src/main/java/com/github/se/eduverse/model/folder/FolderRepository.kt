@@ -9,5 +9,7 @@ interface FolderRepository {
 
   fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
-  fun getNewUid(): String
+  fun getNewFolderUid(): String
+
+  fun getNewFileUid(folder: Folder): String
 }
