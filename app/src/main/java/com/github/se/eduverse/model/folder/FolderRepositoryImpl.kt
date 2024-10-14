@@ -2,13 +2,12 @@ package com.github.se.eduverse.model.folder
 
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
 import java.io.InvalidClassException
 import java.util.Calendar
 
 class FolderRepositoryImpl (private val db: FirebaseFirestore): FolderRepository {
 
-    private val collectionPath = "todos"
+    private val collectionPath = "folders"
 
     override fun getFolders(
         userId: String,
