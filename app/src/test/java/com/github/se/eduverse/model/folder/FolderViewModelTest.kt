@@ -76,6 +76,9 @@ class FolderViewModelTest {
     assertEquals(folderViewModel.folders.value.size, 1)
     assertSame(folderViewModel.folders.value[0], folder2)
     assertNull(folderViewModel.activeFolder.value)
+
+    folderViewModel.deleteFolder(folder2)
+    assertEquals(folderViewModel.folders.value.size, 0)
   }
 
   @Test
@@ -145,6 +148,10 @@ class FolderViewModelTest {
 
   @Test
   fun deleteFileTest() {
+    folderViewModel.deleteFile(file3)
+    assertEquals(folder.files.count { it == file3 }, 1)
+    assertEquals(folder.files.size, 3)
+
     folderViewModel.selectFolder(folder)
     folderViewModel.deleteFile(file3)
     assertEquals(folder.files.count { it == file3 }, 0)
