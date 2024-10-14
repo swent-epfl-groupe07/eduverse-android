@@ -39,16 +39,16 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    * @param filter the filter to apply, as defined in enum FilterTypes in model/folder/Folder.kt
    */
   fun sortBy(filter: FilterTypes) {
-    activeFolder.value?.filterType = filter
+    activeFolder.value!!.filterType = filter
     when (filter) {
-      FilterTypes.NAME -> activeFolder.value?.files?.sortBy { it.name }
-      FilterTypes.CREATION_UP -> activeFolder.value?.files?.sortBy { it.creationTime.timeInMillis }
+      FilterTypes.NAME -> activeFolder.value!!.files.sortBy { it.name }
+      FilterTypes.CREATION_UP -> activeFolder.value!!.files.sortBy { it.creationTime.timeInMillis }
       FilterTypes.CREATION_DOWN ->
-          activeFolder.value?.files?.sortBy { -it.creationTime.timeInMillis }
-      FilterTypes.ACCESS_RECENT -> activeFolder.value?.files?.sortBy { -it.lastAccess.timeInMillis }
-      FilterTypes.ACCESS_OLD -> activeFolder.value?.files?.sortBy { it.lastAccess.timeInMillis }
-      FilterTypes.ACCESS_MOST -> activeFolder.value?.files?.sortBy { -it.numberAccess }
-      FilterTypes.ACCESS_LEAST -> activeFolder.value?.files?.sortBy { it.numberAccess }
+          activeFolder.value!!.files.sortBy { -it.creationTime.timeInMillis }
+      FilterTypes.ACCESS_RECENT -> activeFolder.value!!.files.sortBy { -it.lastAccess.timeInMillis }
+      FilterTypes.ACCESS_OLD -> activeFolder.value!!.files.sortBy { it.lastAccess.timeInMillis }
+      FilterTypes.ACCESS_MOST -> activeFolder.value!!.files.sortBy { -it.numberAccess }
+      FilterTypes.ACCESS_LEAST -> activeFolder.value!!.files.sortBy { it.numberAccess }
       else -> throw NotImplementedError("The sort method is not up-to-date")
     }
   }
@@ -101,7 +101,8 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
           folder,
           {
             _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
-            if (activeFolder.value?.id == folder.id) selectFolder(folder)
+            if (activeFolder.value != null && activeFolder.value!!.id == folder.id)
+                selectFolder(folder)
           },
           {
             Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
@@ -124,9 +125,6 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
    */
   fun renameFolder(name: String, folder: Folder = activeFolder.value!!) {
     folder.name = name
-    if (folder.filterType == FilterTypes.NAME && folder == activeFolder.value) {
-      sortBy(FilterTypes.NAME)
-    }
     updateFolder(folder)
   }
 
