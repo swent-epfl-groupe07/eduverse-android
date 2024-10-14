@@ -77,6 +77,12 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("createFile").assertIsDisplayed()
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()
     composeTestRule.onNodeWithTag("sortingButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("scaffold").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("column").assertIsDisplayed()
+    composeTestRule.onNodeWithTag(file1.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(file2.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(file3.name).assertIsDisplayed()
   }
 
   @Test
