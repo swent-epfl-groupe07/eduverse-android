@@ -42,9 +42,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
 
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      auth.signOut()
-    }
+    auth.currentUser?.let { auth.signOut() }
 
     val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean
@@ -76,8 +74,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
-      startDestination = Screen.LOADING,
-      route = Route.LOADING,
+        startDestination = Screen.LOADING,
+        route = Route.LOADING,
     ) {
       composable(Screen.LOADING) { LoadingScreen(navigationActions) }
     }

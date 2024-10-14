@@ -31,43 +31,43 @@ import kotlinx.coroutines.delay
 @Composable
 fun LoadingScreen(navigationActions: NavigationActions) {
 
-    LaunchedEffect(Unit) {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        val isUserLoggedIn = (currentUser != null)
-        val destination =
-            if (isUserLoggedIn) {
-                TopLevelDestinations.DASHBOARD.route
-            } else {
-                Route.AUTH
-            }
-        delay(1300)
-        navigationActions.navigateTo(destination)
-    }
+  LaunchedEffect(Unit) {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val isUserLoggedIn = (currentUser != null)
+    val destination =
+        if (isUserLoggedIn) {
+          TopLevelDestinations.DASHBOARD.route
+        } else {
+          Route.AUTH
+        }
+    delay(1300)
+    navigationActions.navigateTo(destination)
+  }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize().background(color = Color.White),
-        content = { padding ->
-            Column(
-                modifier =
+  Scaffold(
+      modifier = Modifier.fillMaxSize().background(color = Color.White),
+      content = { padding ->
+        Column(
+            modifier =
                 Modifier.fillMaxSize()
                     .padding(padding)
                     .padding(16.dp)
                     .background(color = Color.White),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
-                Image(
-                    painter = painterResource(id = R.drawable.eduverse_logo),
-                    contentDescription = "App Logo alone",
-                    modifier = Modifier.size(250.dp))
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
+              Image(
+                  painter = painterResource(id = R.drawable.eduverse_logo),
+                  contentDescription = "App Logo alone",
+                  modifier = Modifier.size(250.dp))
 
-                Text(
-                    text = "Welcome in Eduverse!",
-                    style =
-                    MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Light, fontSize = 14.sp),
-                    color = Color.Black,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp).testTag("welcomeText"))
+              Text(
+                  text = "Welcome in Eduverse!",
+                  style =
+                      MaterialTheme.typography.bodyLarge.copy(
+                          fontWeight = FontWeight.Light, fontSize = 14.sp),
+                  color = Color.Black,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.padding(horizontal = 24.dp).testTag("welcomeText"))
             }
-        })
+      })
 }

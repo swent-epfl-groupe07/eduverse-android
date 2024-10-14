@@ -3,5 +3,5 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun PermissionDeniedScreen() {
-    Text("Camera permission is required to use this feature.")
+  Text("Camera permission is required to use this feature.")
 }
