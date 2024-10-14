@@ -93,7 +93,11 @@ class FolderViewModelTest {
     assertSame(folderViewModel.folders.value[0], folder3)
 
     val folder4 =
-        Folder("uid", emptyList<MyFile>().toMutableList(), "folder4", folderViewModel.getNewUid())
+        Folder(
+            "uid",
+            emptyList<MyFile>().toMutableList(),
+            "folder4",
+            folderViewModel.getNewFolderUid())
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.folders.value.size, 2)
@@ -199,7 +203,11 @@ class MockFolderRepository(private val folder: Folder) : FolderRepository {
     onSuccess()
   }
 
-  override fun getNewUid(): String {
+  override fun getNewFolderUid(): String {
     return "id test"
+  }
+
+  override fun getNewFileUid(folder: Folder): String {
+    return ""
   }
 }
