@@ -1,7 +1,10 @@
-package com.github.se.eduverse.model.folder
+package com.github.se.eduverse.repository
 
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.Folder
+import com.github.se.eduverse.model.folder.MyFile
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
@@ -141,7 +144,8 @@ class FolderRepositoryTest {
             "ACCESS_RECENT" to FilterTypes.ACCESS_RECENT,
             "ACCESS_OLD" to FilterTypes.ACCESS_OLD,
             "ACCESS_MOST" to FilterTypes.ACCESS_MOST,
-            "ACCESS_LEAST" to FilterTypes.ACCESS_LEAST)
+            "ACCESS_LEAST" to FilterTypes.ACCESS_LEAST
+        )
 
     val time0 = Calendar.getInstance()
     time0.timeInMillis = 0
@@ -168,7 +172,8 @@ class FolderRepositoryTest {
                     mutableListOf(MyFile("id_", "field_", "field_", time0, time0, 0)),
                     "field",
                     "id",
-                    it.value))
+                    it.value)
+            )
           },
           {})
     }
