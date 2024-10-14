@@ -2,12 +2,28 @@ package com.github.se.eduverse.model.folder
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class FolderViewModel(val repository: FolderRepository, val currentUser: FirebaseUser?) :
     ViewModel() {
+
+  companion object {
+    val Factory: ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+          @Suppress("UNCHECKED_CAST")
+          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return FolderViewModel(
+                FolderRepositoryImpl(Firebase.firestore), FirebaseAuth.getInstance().currentUser)
+                as T
+          }
+        }
+  }
 
   private var _folders: MutableStateFlow<MutableList<Folder>> =
       MutableStateFlow(emptyList<Folder>().toMutableList())
