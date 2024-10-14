@@ -10,11 +10,9 @@ plugins {
 }
 
 sonar {
-    properties {
-        property("sonar.projectKey", "swent-epfl-groupe07_eduverse-android")
-        property("sonar.organization", "swent-epfl-groupe07")
-        property("sonar.host.url", "https://sonarcloud.io")
-        property("sonar.login", System.getenv("SONAR_TOKEN"))
-        property("sonar.coverage.jacoco.xmlReportPaths", "app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
-    }
+  properties {
+    property "sonar.projectKey", "swent-epfl-groupe07_eduverse-android"
+    property "sonar.organization", "swent-epfl-groupe07"
+    property "sonar.host.url", "https://sonarcloud.io"
+  }
 }
