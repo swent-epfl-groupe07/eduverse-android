@@ -1,5 +1,9 @@
-package com.github.se.eduverse.model.folder
+package com.github.se.eduverse.viewmodel
 
+import com.github.se.eduverse.model.FilterTypes
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
+import com.github.se.eduverse.repository.FolderRepository
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Assert.assertEquals
@@ -20,9 +24,9 @@ class FolderViewModelTest {
 
   val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 =
-      MyFile("", "name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile("", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file3 =
-      MyFile("", "name 3", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+      MyFile("", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
 
   @Before
   fun setUp() {
@@ -173,9 +177,9 @@ class FolderViewModelTest {
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
-      userId: String,
-      onSuccess: (List<Folder>) -> Unit,
-      onFailure: (Exception) -> Unit
+    userId: String,
+    onSuccess: (List<Folder>) -> Unit,
+    onFailure: (Exception) -> Unit
   ) {
     onSuccess(
         List(1) {
