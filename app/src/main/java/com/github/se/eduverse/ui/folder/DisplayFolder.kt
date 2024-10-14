@@ -57,6 +57,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
   var sorting by remember { mutableStateOf(false) }
 
   Scaffold(
+      modifier = Modifier.testTag("scaffold"),
       topBar = {
         MediumTopAppBar(
             modifier = Modifier.testTag("topAppBar"),
@@ -66,7 +67,11 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
             title = {
-              Text(text = activeFolder.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+              Text(
+                  text = activeFolder.name,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis,
+                  modifier = Modifier.testTag("topBarText"))
             },
             navigationIcon = {
               IconButton(
@@ -82,17 +87,16 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
         BottomNavigationMenu(
             { navigationActions.navigateTo(it) },
             LIST_TOP_LEVEL_DESTINATION,
-            "" // No item is selected, as it is not one of the screens on the bottom bar
-            )
+            "") // No item is selected, as it is not one of the screens on the bottom bar
       },
       floatingActionButton = {
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
             modifier = Modifier.testTag("createFile")) {
-              Icon(Icons.Default.Add, contentDescription = "Create Folder")
+              Icon(Icons.Default.Add, contentDescription = "Create File")
             }
       }) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.padding(padding).testTag("column")) {
           // The text saying Files and the button to sort
           Row(
               modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
@@ -173,9 +177,11 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
 
           // The files
           activeFolder.files.forEach {
-            Button(onClick = {}, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-              Text(it.name, modifier = Modifier.fillMaxWidth())
-            }
+            Button(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {
+                  Text(it.name, modifier = Modifier.fillMaxWidth())
+                }
           }
         }
       }
