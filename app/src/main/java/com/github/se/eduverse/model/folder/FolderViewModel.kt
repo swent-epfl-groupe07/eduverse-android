@@ -2,31 +2,36 @@ package com.github.se.eduverse.model.folder
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FolderViewModel(val repository: FolderRepository) : ViewModel() {
-  // TODO
-  /*companion object {
-      val Factory: ViewModelProvider.Factory =
-          object : ViewModelProvider.Factory {
-              @Suppress("UNCHECKED_CAST")
-              override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                  return FolderViewModel( ... ) as T
-              }
-          }
-  }*/
+class FolderViewModel(val repository: FolderRepository, val currentUser: FirebaseUser?) :
+    ViewModel() {
 
-  private val _existingFolders: MutableStateFlow<MutableList<Folder>> =
-      MutableStateFlow(
-          repository
-              .getFolders(
-                  {},
-                  { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
-              .toMutableList())
-  val existingFolders: StateFlow<MutableList<Folder>> = _existingFolders
+  private var _folders: MutableStateFlow<MutableList<Folder>> =
+      MutableStateFlow(emptyList<Folder>().toMutableList())
+  val folders: StateFlow<MutableList<Folder>> = _folders
 
-  var activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
+  private var _activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
+  val activeFolder: StateFlow<Folder?> = _activeFolder
+
+  init {
+    try {
+      getUserFolders()
+    } catch (e: Exception) {
+      Log.e("FolderViewModel Initialisation", "Exception $e: ${e.message}")
+    }
+  }
+
+  /**
+   * Set the active folder
+   *
+   * @param folder the value to set
+   */
+  fun selectFolder(folder: Folder?) {
+    _activeFolder.value = folder
+  }
 
   /**
    * Sort the array of files of the active folder.
@@ -34,6 +39,7 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    * @param filter the filter to apply, as defined in enum FilterTypes in model/folder/Folder.kt
    */
   fun sortBy(filter: FilterTypes) {
+    activeFolder.value?.filterType = filter
     when (filter) {
       FilterTypes.NAME -> activeFolder.value?.files?.sortBy { it.name }
       FilterTypes.CREATION_UP -> activeFolder.value?.files?.sortBy { it.creationTime.timeInMillis }
@@ -47,16 +53,23 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
     }
   }
 
+  /** Get the folders with owner id equivalent to the current user */
+  fun getUserFolders() {
+    repository.getFolders(
+        currentUser!!.uid,
+        { _folders.value = it.toMutableList() },
+        { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
+  }
+
   /**
    * Add a folder to the list of existing folders.
    *
    * @param folder the folder to add
    */
   fun addFolder(folder: Folder) {
-    _existingFolders.value.add(folder)
     repository.addFolder(
         folder,
-        {},
+        { _folders.value.add(folder) },
         {
           Log.e(
               "FolderViewModel",
@@ -70,11 +83,10 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    * @param folder the folder to remove
    */
   fun deleteFolder(folder: Folder) {
-    _existingFolders.value.remove(folder)
-    if (activeFolder.value == folder) activeFolder.value = null
+    if (activeFolder.value == folder) selectFolder(null)
     repository.deleteFolder(
         folder,
-        {},
+        { _folders.value.remove(folder) },
         { Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}") })
   }
 
@@ -85,11 +97,12 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
    */
   fun updateFolder(folder: Folder) {
     try {
-      _existingFolders.value[_existingFolders.value.indexOfFirst { it.id == folder.id }] = folder
-      if (activeFolder.value?.id == folder.id) activeFolder.value = folder
       repository.updateFolder(
           folder,
-          {},
+          {
+            _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
+            if (activeFolder.value?.id == folder.id) selectFolder(folder)
+          },
           {
             Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
           })
@@ -101,5 +114,42 @@ class FolderViewModel(val repository: FolderRepository) : ViewModel() {
   /** Get new ID for a folder. */
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  /**
+   * Rename a folder. If no argument is specified for the folder, rename the active folder.
+   *
+   * @param name the new name to assign
+   * @param folder the folder to rename
+   */
+  fun renameFolder(name: String, folder: Folder = activeFolder.value!!) {
+    folder.name = name
+    if (folder.filterType == FilterTypes.NAME && folder == activeFolder.value) {
+      sortBy(FilterTypes.NAME)
+    }
+    updateFolder(folder)
+  }
+
+  /**
+   * Add a new file to the active folder
+   *
+   * @param file the file to add
+   */
+  fun addFile(file: MyFile) {
+    if (_activeFolder.value == null) return
+    _activeFolder.value!!.files.add(file)
+    sortBy(_activeFolder.value!!.filterType)
+    updateFolder(_activeFolder.value!!)
+  }
+
+  /**
+   * Add a new file to the active folder
+   *
+   * @param file the file to add
+   */
+  fun deleteFile(file: MyFile) {
+    if (_activeFolder.value == null) return
+    _activeFolder.value!!.files.remove(file)
+    updateFolder(_activeFolder.value!!)
   }
 }

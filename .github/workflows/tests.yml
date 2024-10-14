@@ -137,6 +137,12 @@ jobs:
       - name: Generate Coverage Report
         run: |
           ./gradlew jacocoTestReport
+      
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: Coverage report
+          path: app/build/reports/jacoco/jacocoTestReport
 
       # Upload the various reports to sonar
       - name: Upload report to SonarCloud
