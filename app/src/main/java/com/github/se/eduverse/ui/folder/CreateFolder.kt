@@ -37,139 +37,134 @@ import com.github.se.eduverse.ui.navigation.TopLevelDestinations
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import java.util.Calendar
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddFolderScreen(
-    navigationActions: NavigationActions, folderViewModel: FolderViewModel
-) {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var name by rememberSaveable { mutableStateOf("") }
-    var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
-    val folder = Folder(
-        ownerID = folderViewModel.currentUser!!.uid,
-        files = files.toMutableList(),
-        name = name,
-        id = folderViewModel.getNewFolderUid())
+fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
+  val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+  var name by rememberSaveable { mutableStateOf("") }
+  var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
+  val folder =
+      Folder(
+          ownerID = folderViewModel.auth.currentUser!!.uid,
+          files = files.toMutableList(),
+          name = name,
+          id = folderViewModel.getNewFolderUid())
 
-    Scaffold(
-        modifier = Modifier.testTag("scaffold"),
-        topBar = {
-            MediumTopAppBar(
-                modifier = Modifier.testTag("topAppBar"),
-                colors =
+  Scaffold(
+      modifier = Modifier.testTag("scaffold"),
+      topBar = {
+        MediumTopAppBar(
+            modifier = Modifier.testTag("topAppBar"),
+            colors =
                 TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
-                title = {
-                    Text(
-                        text = "Create Course",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.testTag("topBarText"))
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back Arrow")
-                    }
-                },
-                scrollBehavior = scrollBehavior)
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                { navigationActions.navigateTo(it) },
-                LIST_TOP_LEVEL_DESTINATION,
-                "") // No item is selected, as it is not one of the screens on the bottom bar
-        }) { padding ->
+            title = {
+              Text(
+                  text = "Create Course",
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis,
+                  modifier = Modifier.testTag("topBarText"))
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back Arrow")
+                  }
+            },
+            scrollBehavior = scrollBehavior)
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            { navigationActions.navigateTo(it) },
+            LIST_TOP_LEVEL_DESTINATION,
+            "") // No item is selected, as it is not one of the screens on the bottom bar
+      }) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Give a name to the course
-            Text(
-                "Course Name",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                modifier = Modifier.testTag("textFiles"))
-            OutlinedTextField(
-                value = name,
-                modifier =
-                Modifier.fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 10.dp)
-                    .testTag("inputTodoTitle"),
-                onValueChange = { name = it },
-                placeholder = { Text("Name of the course") })
+          // Give a name to the course
+          Text(
+              "Course Name",
+              fontWeight = FontWeight.Bold,
+              fontSize = 24.sp,
+              modifier = Modifier.testTag("textFiles"))
+          OutlinedTextField(
+              value = name,
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 15.dp, vertical = 10.dp)
+                      .testTag("inputTodoTitle"),
+              onValueChange = { name = it },
+              placeholder = { Text("Name of the course") })
 
-
-            // Add file to the course
-            Text(
-                "Files",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                modifier = Modifier.testTag("textFiles"))
-            files.forEach {
-                Button(
-                    onClick = {},
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {
-                    Text(it.name, modifier = Modifier.fillMaxWidth())
-                }
-            }
+          // Add file to the course
+          Text(
+              "Files",
+              fontWeight = FontWeight.Bold,
+              fontSize = 24.sp,
+              modifier = Modifier.testTag("textFiles"))
+          files.forEach {
             Button(
-                onClick = {
-                    navigationActions.navigateTo(Screen.CREATE_FILE)
-                    files += MyFile(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {
+                  Text(it.name, modifier = Modifier.fillMaxWidth())
+                }
+          }
+          Button(
+              onClick = {
+                navigationActions.navigateTo(Screen.CREATE_FILE)
+                files +=
+                    MyFile(
                         id = folderViewModel.getNewFileUid(folder),
                         fileId = "fileId",
                         name = "fileName",
                         creationTime = Calendar.getInstance(),
                         lastAccess = Calendar.getInstance(),
-                        numberAccess = 0
-                    )
-                },
-                modifier =
-                Modifier.fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 10.dp)
-                    .testTag("addFile")) {
+                        numberAccess = 0)
+              },
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 15.dp, vertical = 10.dp)
+                      .testTag("addFile")) {
                 Text("Add file")
-            }
+              }
 
-
-            // Create the folder
-            Button(
-                onClick = {
-                    folderViewModel.addFolder(folder)
-                    files = emptyList()
-                    name = ""
-                    navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
-                },
-                enabled = name.isNotEmpty(),
-                modifier =
-                Modifier.fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 10.dp)
-                    .testTag("folderSave")) {
+          // Create the folder
+          Button(
+              onClick = {
+                folderViewModel.addFolder(folder)
+                files = emptyList()
+                name = ""
+                navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
+              },
+              enabled = name.isNotEmpty(),
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 15.dp, vertical = 10.dp)
+                      .testTag("folderSave")) {
                 Text("Save")
-            }
+              }
 
+          // Cancel the folder creation
+          Button(
+              onClick = {
+                // Because we have created the folder in db when calling getNewFolderUid :
+                folderViewModel.deleteFolder(folder)
 
-            // Cancel the folder creation
-            Button(
-                onClick = {
-                    // Because we have created the folder in db when calling getNewFolderUid :
-                    folderViewModel.deleteFolder(folder)
+                // Because files and name are saveable :
+                files = emptyList()
+                name = ""
 
-                    // Because files and name are saveable :
-                    files = emptyList()
-                    name = ""
-
-                    navigationActions.goBack()
-                },
-                modifier =
-                Modifier.fillMaxWidth()
-                    .padding(horizontal = 15.dp, vertical = 10.dp)
-                    .testTag("folderCancel")) {
+                navigationActions.goBack()
+              },
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 15.dp, vertical = 10.dp)
+                      .testTag("folderCancel")) {
                 Text("Cancel")
-            }
+              }
         }
-    }
+      }
 }

@@ -4,6 +4,7 @@ import com.github.se.eduverse.model.folder.FilterTypes
 import com.github.se.eduverse.model.folder.Folder
 import com.github.se.eduverse.model.folder.MyFile
 import com.github.se.eduverse.repository.FolderRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Assert.assertEquals
@@ -16,6 +17,7 @@ import org.mockito.Mockito.`when`
 
 class FolderViewModelTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var auth: FirebaseAuth
   private lateinit var currentUser: FirebaseUser
   private lateinit var folderViewModel: FolderViewModel
 
@@ -54,9 +56,11 @@ class FolderViewModelTest {
     folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
 
     folderRepository = MockFolderRepository(folder)
+    auth = mock(FirebaseAuth::class.java)
     currentUser = mock(FirebaseUser::class.java)
+    `when`(auth.currentUser).thenReturn(currentUser)
     `when`(currentUser.uid).thenReturn("uid")
-    folderViewModel = FolderViewModel(folderRepository, currentUser)
+    folderViewModel = FolderViewModel(folderRepository, auth)
   }
 
   @Test
