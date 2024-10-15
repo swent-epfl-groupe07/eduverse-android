@@ -1,79 +1,112 @@
 package com.github.se.eduverse.ui.others.setting
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SettingsScreen(
-    onSaveClick: () -> Unit,
-    onCancelClick: () -> Unit
-) {
-    // Here you can add state for each setting if needed
-    var changePassword by remember { mutableStateOf("") }
-    var privacySettings by remember { mutableStateOf("") }
-    var themeSelection by remember { mutableStateOf("") }
-    var languagePreferences by remember { mutableStateOf("") }
+fun SettingsScreen(onSaveClick: () -> Unit, onCancelClick: () -> Unit) {
+  var privacySettings by remember { mutableStateOf("") }
+  var selectedTheme by remember { mutableStateOf("Light") }
+  var selectedLanguage by remember { mutableStateOf("English") }
+  var isThemeDropdownExpanded by remember { mutableStateOf(false) }
+  var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
+  Column(
+      modifier = Modifier.fillMaxSize().padding(16.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.SpaceBetween) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            OutlinedTextField(
-                value = changePassword,
-                onValueChange = { changePassword = it },
-                label = { Text(text = "Change Password") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = privacySettings,
-                onValueChange = { privacySettings = it },
-                label = { Text(text = "Privacy Settings") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = themeSelection,
-                onValueChange = { themeSelection = it },
-                label = { Text(text = "Theme Selection") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = languagePreferences,
-                onValueChange = { languagePreferences = it },
-                label = { Text(text = "Language Preferences") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              OutlinedTextField(
+                  value = privacySettings,
+                  onValueChange = { privacySettings = it },
+                  label = { Text(text = "Privacy Settings") },
+                  modifier = Modifier.fillMaxWidth().testTag("privacySettingsInput"))
+              Spacer(modifier = Modifier.height(8.dp))
+
+              // Dropdown for Theme Selection
+              Box(
+                  modifier =
+                      Modifier.fillMaxWidth().testTag("themeSelectionBox").clickable {
+                        isThemeDropdownExpanded = !isThemeDropdownExpanded
+                      } // Click handling here
+                  ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                          Text(text = selectedTheme, modifier = Modifier.weight(1f))
+                          Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = null)
+                        }
+                  }
+
+              DropdownMenu(
+                  expanded = isThemeDropdownExpanded,
+                  onDismissRequest = { isThemeDropdownExpanded = false },
+                  modifier = Modifier.testTag("themeDropdown")) {
+                    listOf("Light", "Dark", "System Default").forEach { theme ->
+                      DropdownMenuItem(
+                          text = { Text(theme) },
+                          onClick = {
+                            selectedTheme = theme
+                            isThemeDropdownExpanded = false
+                          },
+                          modifier = Modifier.testTag("themeOption_$theme"))
+                    }
+                  }
+
+              Spacer(modifier = Modifier.height(8.dp))
+              Box(
+                  modifier =
+                      Modifier.fillMaxWidth().testTag("languageSelectionBox").clickable {
+                        isLanguageDropdownExpanded = !isLanguageDropdownExpanded
+                      } // Click handling here
+                  ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                          Text(text = selectedLanguage, modifier = Modifier.weight(1f))
+                          Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = null)
+                        }
+                  }
+
+              DropdownMenu(
+                  expanded = isLanguageDropdownExpanded,
+                  onDismissRequest = { isLanguageDropdownExpanded = false },
+                  modifier = Modifier.testTag("languageDropdown")) {
+                    listOf("Français", "English").forEach { language ->
+                      DropdownMenuItem(
+                          text = { Text(language) },
+                          onClick = {
+                            selectedLanguage = language
+                            isLanguageDropdownExpanded = false
+                          },
+                          modifier = Modifier.testTag("languageOption_$language"))
+                    }
+                  }
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Row for Save and Cancel buttons
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = onSaveClick, modifier = Modifier.weight(1f)) {
+            modifier = Modifier.fillMaxWidth().testTag("settingsButtons"),
+            horizontalArrangement = Arrangement.SpaceEvenly) {
+              Button(onClick = onSaveClick, modifier = Modifier.weight(1f).testTag("saveButton")) {
                 Text(text = "Save")
+              }
+              Spacer(modifier = Modifier.width(8.dp))
+              Button(
+                  onClick = onCancelClick, modifier = Modifier.weight(1f).testTag("cancelButton")) {
+                    Text(text = "Cancel")
+                  }
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = onCancelClick, modifier = Modifier.weight(1f)) {
-                Text(text = "Cancel")
-            }
-        }
-    }
+      }
 }
