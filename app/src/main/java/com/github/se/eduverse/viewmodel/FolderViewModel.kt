@@ -2,16 +2,33 @@ package com.github.se.eduverse.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.github.se.eduverse.model.folder.FilterTypes
 import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.repository.FolderRepository
+import com.github.se.eduverse.repository.FolderRepositoryImpl
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class FolderViewModel(val repository: FolderRepository, val currentUser: FirebaseUser?) :
     ViewModel() {
+
+  companion object {
+    val Factory: ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+          @Suppress("UNCHECKED_CAST")
+          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return FolderViewModel(
+                FolderRepositoryImpl(Firebase.firestore), FirebaseAuth.getInstance().currentUser)
+                as T
+          }
+        }
+  }
 
   private var _folders: MutableStateFlow<MutableList<Folder>> =
       MutableStateFlow(emptyList<Folder>().toMutableList())
@@ -117,8 +134,13 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   }
 
   /** Get new ID for a folder. */
-  fun getNewUid(): String {
-    return repository.getNewUid()
+  fun getNewFolderUid(): String {
+    return repository.getNewFolderUid()
+  }
+
+  /** Get new ID for a file. */
+  fun getNewFileUid(folder: Folder): String {
+    return repository.getNewFileUid(folder)
   }
 
   /**

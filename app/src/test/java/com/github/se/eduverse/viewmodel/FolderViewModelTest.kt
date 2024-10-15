@@ -22,11 +22,9 @@ class FolderViewModelTest {
   lateinit var folder: Folder
   lateinit var folder2: Folder
 
-  val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file2 =
-      MyFile("", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file3 =
-      MyFile("", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file3 = MyFile("", "", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
 
   @Before
   fun setUp() {
@@ -93,7 +91,11 @@ class FolderViewModelTest {
     assertSame(folderViewModel.folders.value[0], folder3)
 
     val folder4 =
-        Folder("uid", emptyList<MyFile>().toMutableList(), "folder4", folderViewModel.getNewUid())
+        Folder(
+            "uid",
+            emptyList<MyFile>().toMutableList(),
+            "folder4",
+            folderViewModel.getNewFolderUid())
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.folders.value.size, 2)
@@ -142,7 +144,7 @@ class FolderViewModelTest {
 
   @Test
   fun addFileTest() {
-    val file4 = MyFile("", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
+    val file4 = MyFile("", "", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
 
     folderViewModel.addFile(file4)
     assertEquals(folder.files.count { it == file4 }, 0)
@@ -177,9 +179,9 @@ class FolderViewModelTest {
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
-    userId: String,
-    onSuccess: (List<Folder>) -> Unit,
-    onFailure: (Exception) -> Unit
+      userId: String,
+      onSuccess: (List<Folder>) -> Unit,
+      onFailure: (Exception) -> Unit
   ) {
     onSuccess(
         List(1) {
@@ -199,7 +201,11 @@ class MockFolderRepository(private val folder: Folder) : FolderRepository {
     onSuccess()
   }
 
-  override fun getNewUid(): String {
+  override fun getNewFolderUid(): String {
     return "id test"
+  }
+
+  override fun getNewFileUid(folder: Folder): String {
+    return ""
   }
 }
