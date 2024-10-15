@@ -1,7 +1,9 @@
 package com.github.se.eduverse.ui
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.model.Widget
@@ -11,6 +13,8 @@ import com.github.se.eduverse.viewmodel.DashboardViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,6 +72,51 @@ class DashboardScreenUiTest {
 
     composeTestRule.onNodeWithText("Cancel").performClick()
     composeTestRule.onAllNodesWithTag("add_common_widget_button").onFirst().assertDoesNotExist()
+  }
+
+  @Test
+  fun testDragCancellation() {
+    setupDashboardScreen()
+
+    val initialOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Start dragging but cancel before releasing
+    composeTestRule.onAllNodesWithTag("widget_card").onFirst().performTouchInput {
+      down(center)
+      moveBy(Offset(0f, 50f))
+      cancel()
+    }
+
+    composeTestRule.waitForIdle()
+
+    val newOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Assert that the order hasn't changed
+    assertEquals(initialOrder, newOrder)
+  }
+
+  @Test
+  fun testDragLastBeyondBounds() {
+    setupDashboardScreen()
+
+    val initialOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Attempt to drag beyond the bounds of the list
+    composeTestRule.onAllNodesWithTag("widget_card").onLast().performTouchInput {
+      down(center)
+      advanceEventTime(100)
+      moveBy(Offset(x = 1200f, y = 1180.dp.toPx()), 0)
+      advanceEventTime(1000)
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+
+    val newOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Assert that the order has changed, but the widget is still in the list
+    assertEquals(initialOrder, newOrder)
+    assertTrue(newOrder.containsAll(initialOrder))
   }
 
   private fun setupDashboardScreen() {
