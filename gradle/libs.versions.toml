@@ -5,6 +5,7 @@ json = "20240303"
 kotlin = "1.9.0"
 gms = "4.4.2"
 ktfmt = "0.17.0"
+sonar = "5.1.0.4882"
 
 # UI Compose
 mockitoAndroid = "5.13.0"
@@ -120,3 +121,4 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 gms = { id = "com.google.gms.google-services", version.ref = "gms" }
+sonar = { id = "org.sonarqube", version.ref = "sonar" }
