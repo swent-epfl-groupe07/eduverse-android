@@ -50,7 +50,7 @@ val LIST_TOP_LEVEL_DESTINATION =
         TopLevelDestinations.CAMERA,
         TopLevelDestinations.OTHERS)
 
-class NavigationActions(
+open class NavigationActions(
     private val navController: NavHostController,
 ) {
   /**

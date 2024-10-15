@@ -9,23 +9,23 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.gms)
-
+    alias(libs.plugins.sonar)
 }
 
 android {
     namespace = "com.github.se.eduverse"
     compileSdk = 34
 
-
     // Load the API key from local.properties
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         localProperties.load(FileInputStream(localPropertiesFile))
+
+        
     }
 
     val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
-
 
     defaultConfig {
         applicationId = "com.github.se.eduverse"
@@ -83,7 +83,6 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
-
             isReturnDefaultValues = true
         }
         packagingOptions {
@@ -92,7 +91,6 @@ android {
             }
         }
     }
-
 
     buildFeatures {
         compose = true
@@ -103,10 +101,6 @@ android {
         jvmTarget = "11"
     }
 
-    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set (test)
-    // The next lines transfers the src/test/* from shared to the testDebug one
-    //
-    // This prevent errors from occurring during unit tests
     sourceSets.getByName("testDebug") {
         val test = sourceSets.getByName("test")
 
@@ -122,82 +116,103 @@ android {
     }
 }
 
+sonar {
+    properties {
+        property("sonar.projectKey", "swent-epfl-groupe07_eduverse-android")
+        property("sonar.projectName", "eduverse")
+        property("sonar.organization", "swent-epfl-groupe07")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+    }
+}
 
 dependencies {
 
     // Core
     implementation(libs.core.ktx)
     implementation(libs.androidx.core.ktx)
-            implementation(libs.androidx.lifecycle.runtime.ktx)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.appcompat)
-            implementation(libs.androidx.constraintlayout)
-            implementation(libs.androidx.fragment.ktx)
-            implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.kotlinx.serialization.json)
 
-            // Jetpack Compose UI
-            implementation(libs.androidx.ui)
-            implementation(libs.androidx.ui.tooling.preview)
-            implementation(libs.androidx.ui.graphics)
-            implementation(libs.androidx.material)
-            implementation(libs.androidx.material3)
-            implementation(libs.androidx.navigation.compose)
-            implementation(platform(libs.androidx.compose.bom))
-            testImplementation(libs.test.core.ktx)
-            debugImplementation(libs.androidx.ui.tooling)
-            debugImplementation(libs.androidx.ui.test.manifest)
-            implementation(libs.material)
-            implementation(libs.material.icons.extended)
+    // Jetpack Compose UI
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.test.core.ktx)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.material)
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
 
-            // Navigation
-            implementation(libs.androidx.navigation.compose)
-            implementation(libs.androidx.navigation.fragment.ktx)
-            implementation(libs.androidx.navigation.ui.ktx)
+    // Google Service and Maps
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
+    implementation(libs.maps.compose.utils)
+    implementation(libs.play.services.auth)
 
-            // Google Service and Maps
-            implementation(libs.play.services.maps)
-            implementation(libs.maps.compose)
-            implementation(libs.maps.compose.utils)
-            implementation(libs.play.services.auth)
+    // Firebase
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.ui.auth)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
 
-            // Firebase
-            implementation(libs.firebase.database.ktx)
-            implementation(libs.firebase.firestore)
-            implementation(libs.firebase.ui.auth)
-            implementation(libs.firebase.auth.ktx)
-            implementation(libs.firebase.auth)
+    // Networking with OkHttp
+    implementation(libs.okhttp)
 
-            // Networking with OkHttp
-            implementation(libs.okhttp)
+    // Testing Unit
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.mockk.agent)
+    testImplementation(libs.json)
 
-            // Testing Unit
-            testImplementation(libs.junit)
-            androidTestImplementation(libs.mockk)
-            androidTestImplementation(libs.mockk.android)
-            androidTestImplementation(libs.mockk.agent)
-            testImplementation(libs.json)
-
-            // Test UI
+    // Test UI
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-            androidTestImplementation(libs.androidx.espresso.intents)
-            androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.androidx.espresso.intents)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-            testImplementation(libs.mockito.core)
-            testImplementation(libs.mockito.inline)
-            testImplementation(libs.mockito.kotlin)
-            androidTestImplementation(libs.mockito.android)
-            androidTestImplementation(libs.mockito.kotlin)
-            testImplementation(libs.robolectric)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.inline)
+    testImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.mockito.kotlin)
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     androidTestImplementation(libs.kaspresso.compose.support)
+    testImplementation(libs.kotlinx.coroutines.test)
 
-            testImplementation(libs.kotlinx.coroutines.test)
+    // CameraX
+    // CameraX
+    implementation("androidx.camera:camera-core:1.1.0")
+    implementation("androidx.camera:camera-camera2:1.1.0")
+    implementation("androidx.camera:camera-lifecycle:1.1.0")
+    implementation("androidx.camera:camera-view:1.0.0-alpha30")
+    implementation("androidx.camera:camera-video:1.1.0")
+    implementation ("com.google.guava:guava:31.1-android")
+
+    // Material 3
+    implementation("androidx.compose.material3:material3:1.1.0")
+
+    // Material Icons
+    implementation("androidx.compose.material:material-icons-core:1.4.3")
+    implementation("androidx.compose.material:material-icons-extended:1.4.3")
 
 }
-
 
 tasks.withType<Test> {
     // Configure Jacoco for each tests
@@ -236,8 +251,3 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
     })
 }
-
-
-
-
-
