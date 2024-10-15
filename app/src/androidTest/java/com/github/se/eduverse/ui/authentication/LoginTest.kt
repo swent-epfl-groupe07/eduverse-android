@@ -20,7 +20,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 
-
 @RunWith(AndroidJUnit4::class)
 class LoginTest {
 
@@ -36,9 +35,7 @@ class LoginTest {
     navController = Mockito.mock(NavHostController::class.java)
     navigationActions = NavigationActions(navController)
 
-    composeTestRule.setContent {
-      SignInScreen(navigationActions = navigationActions)
-    }
+    composeTestRule.setContent { SignInScreen(navigationActions = navigationActions) }
   }
 
   @After
