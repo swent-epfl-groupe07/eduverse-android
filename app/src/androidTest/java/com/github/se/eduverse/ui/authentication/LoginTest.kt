@@ -1,4 +1,4 @@
-package com.github.se.bootcamp.ui.authentication
+package com.github.se.eduverse.ui.authentication
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
