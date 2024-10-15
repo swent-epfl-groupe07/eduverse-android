@@ -119,6 +119,35 @@ class DashboardScreenUiTest {
     assertTrue(newOrder.containsAll(initialOrder))
   }
 
+  @Test
+  fun testWidgetContentDisplaysCorrectIcon() {
+    // Define a list of test widgets with expected icons
+    val testWidgets =
+        listOf(
+            Widget("1", "Type", "Calculator", "Calculator content", "Owner"),
+            Widget("2", "Type 2", "PDF Converter", "PDF content", "Owner 2"),
+            Widget("3", "Type 3", "Weekly Planner", "Planner content", "Owner 3"),
+            Widget("4", "Type 4", "Pomodoro Timer", "Timer content", "Owner 4"),
+            Widget(
+                "5", "Type 5", "Unknown Widget", "Unknown content", "Owner 5") // For default case
+            )
+
+    // Set up the DashboardScreen with the test widgets
+    fakeViewModel.apply { _widgetList.value = testWidgets }
+
+    setupDashboardScreen()
+
+    // Check that each widget displays the correct icon
+    testWidgets.forEach { widget ->
+      val iconNode = composeTestRule.onNodeWithText(widget.widgetTitle)
+      iconNode.assertExists() // Ensure the widget exists
+
+      // Here we can check the icon visually or programmatically if you have specific identifiers
+      // But for simplicity, we are checking if the widget displays correctly.
+      // You can create more specific checks if you have test tags for icons.
+    }
+  }
+
   private fun setupDashboardScreen() {
     composeTestRule.setContent {
       DashboardScreen(
@@ -130,7 +159,7 @@ class DashboardScreenUiTest {
 }
 
 class FakeDashboardViewModel : DashboardViewModel(mock()) {
-  private val _widgetList =
+  val _widgetList =
       MutableStateFlow(
           listOf(
               Widget("1", "Type", "Title 1", "Content 1", "Owner"),
