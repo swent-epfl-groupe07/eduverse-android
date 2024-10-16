@@ -5,7 +5,8 @@ data class Widget(
     val widgetType: String = "",
     val widgetTitle: String = "",
     val widgetContent: String = "",
-    val ownerUid: String = ""
+    val ownerUid: String = "",
+    val order: Int = 0
 )
 
 enum class CommonWidgetType(val title: String, val content: String) {
