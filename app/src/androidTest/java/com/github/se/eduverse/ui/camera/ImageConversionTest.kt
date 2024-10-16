@@ -9,45 +9,43 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ImageConversionTest {
 
-    @Test
-    fun imageBitmapToByteArray_convertsImageBitmap_toByteArray() {
-        // Arrange
-        val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-        val imageBitmap = bitmap.asImageBitmap()
+  @Test
+  fun imageBitmapToByteArray_convertsImageBitmap_toByteArray() {
+    // Arrange
+    val bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    val imageBitmap = bitmap.asImageBitmap()
 
-        // Act
-        val byteArray = imageBitmapToByteArray(imageBitmap)
+    // Act
+    val byteArray = imageBitmapToByteArray(imageBitmap)
 
-        // Assert
-        assertTrue(byteArray.isNotEmpty())
-    }
+    // Assert
+    assertTrue(byteArray.isNotEmpty())
+  }
 
-    @Test
-    fun imageBitmapToByteArray_convertsDifferentBitmapConfigs() {
-        // Arrange
-        val bitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.RGB_565)
-        val imageBitmap = bitmap.asImageBitmap()
+  @Test
+  fun imageBitmapToByteArray_convertsDifferentBitmapConfigs() {
+    // Arrange
+    val bitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.RGB_565)
+    val imageBitmap = bitmap.asImageBitmap()
 
-        // Act
-        val byteArray = imageBitmapToByteArray(imageBitmap)
+    // Act
+    val byteArray = imageBitmapToByteArray(imageBitmap)
 
-        // Assert
-        assertTrue(byteArray.isNotEmpty())
-    }
+    // Assert
+    assertTrue(byteArray.isNotEmpty())
+  }
 
-    @Test
-    fun imageBitmapToByteArray_generatesNonEmptyByteArray() {
-        // Arrange
-        val bitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.ARGB_8888)
-        val imageBitmap = bitmap.asImageBitmap()
+  @Test
+  fun imageBitmapToByteArray_generatesNonEmptyByteArray() {
+    // Arrange
+    val bitmap = Bitmap.createBitmap(50, 50, Bitmap.Config.ARGB_8888)
+    val imageBitmap = bitmap.asImageBitmap()
 
-        // Act
-        val byteArray = imageBitmapToByteArray(imageBitmap)
+    // Act
+    val byteArray = imageBitmapToByteArray(imageBitmap)
 
-        // Assert
-        assertTrue("Byte array should not be empty after compression", byteArray.isNotEmpty())
-        assertTrue("Byte array should contain compressed data", byteArray.size > 0)
-    }
-
-
+    // Assert
+    assertTrue("Byte array should not be empty after compression", byteArray.isNotEmpty())
+    assertTrue("Byte array should contain compressed data", byteArray.size > 0)
+  }
 }
