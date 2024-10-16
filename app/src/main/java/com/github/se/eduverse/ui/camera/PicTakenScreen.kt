@@ -19,23 +19,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.PhotoViewModel
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 fun adjustImageRotation(bitmap: Bitmap): Bitmap {
   val matrix = Matrix()
-  matrix.postRotate(90f) // Ajuste cette rotation si nécessaire
+  matrix.postRotate(90f)
   return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }
 
 @Composable
-fun PicTakenScreen(photoFile: File?, navigationActions: NavigationActions) {
+fun PicTakenScreen(
+    photoFile: File?,
+    navigationActions: NavigationActions,
+    viewModel: PhotoViewModel
+) {
+  val ownerId = "user123"
+  val path = "photos/$ownerId/${System.currentTimeMillis()}.jpg"
+
   val bitmap =
       if (photoFile != null && photoFile.exists()) {
         BitmapFactory.decodeFile(photoFile.path)?.let { adjustImageRotation(it) }?.asImageBitmap()
@@ -76,14 +88,14 @@ fun PicTakenScreen(photoFile: File?, navigationActions: NavigationActions) {
               contentDescription = "Crop Photo",
               modifier =
                   Modifier.size(40.dp)
-                      .clickable { /* Ajouter une action de recadrage ici */}
+                      .clickable {}
                       .testTag("cropIcon"))
           Icon(
               imageVector = Icons.Default.Tune,
               contentDescription = "Filters",
               modifier =
                   Modifier.size(40.dp)
-                      .clickable { /* Ajouter une action de filtre ici */}
+                      .clickable { }
                       .testTag("filterIcon"))
         }
 
@@ -94,14 +106,23 @@ fun PicTakenScreen(photoFile: File?, navigationActions: NavigationActions) {
                 .padding(horizontal = 32.dp, vertical = 32.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)) {
           Button(
-              onClick = { /* Ajouter une action de sauvegarde ici */},
+              onClick = {
+                bitmap?.let {
+                  val byteArray = imageBitmapToByteArray(it)
+                  val photo = Photo(ownerId, byteArray, path)
+                  viewModel.savePhoto(photo)
+                  navigationActions.goBack()
+                  navigationActions.goBack()
+                }
+              },
               modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton")) {
                 Text("Save")
               }
+
           Button(
-              onClick = { /* Ajouter une action de publication ici */},
+              onClick = {},
               modifier = Modifier.weight(1f).height(56.dp).testTag("publishButton")) {
-                Text("Publish")
+                Text("Next")
               }
         }
 
@@ -120,4 +141,11 @@ fun PicTakenScreen(photoFile: File?, navigationActions: NavigationActions) {
               modifier = Modifier.size(24.dp).align(Alignment.Center))
         }
   }
+}
+
+fun imageBitmapToByteArray(imageBitmap: ImageBitmap): ByteArray {
+  val bitmap = imageBitmap.asAndroidBitmap()
+  val byteArrayOutputStream = ByteArrayOutputStream()
+  bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+  return byteArrayOutputStream.toByteArray()
 }
