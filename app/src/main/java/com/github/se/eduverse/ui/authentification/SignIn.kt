@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +50,6 @@ fun SignInScreen(navigationActions: NavigationActions) {
       rememberFirebaseAuthLauncher(
           onAuthComplete = { result ->
             Log.d("SignInScreen", "User signed in: ${result.user?.displayName}")
-            Toast.makeText(context, "Login successful!", Toast.LENGTH_LONG).show()
             navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
           },
           onAuthError = {
@@ -69,12 +69,14 @@ fun SignInScreen(navigationActions: NavigationActions) {
                     .background(color = Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top) {
-              Spacer(modifier = Modifier.height(210.dp))
+              Spacer(modifier = Modifier.height(130.dp))
 
               Image(
                   painter = painterResource(id = R.drawable.skouli_logo),
                   contentDescription = "App Logo",
-                  modifier = Modifier.size(250.dp))
+                  modifier = Modifier.size(330.dp))
+
+              Spacer(modifier = Modifier.height(4.dp))
 
               GoogleSignInButton(
                   onSignInClick = {
@@ -96,7 +98,7 @@ fun SignInScreen(navigationActions: NavigationActions) {
                           fontWeight = FontWeight.Light, fontSize = 14.sp),
                   color = Color.Black,
                   textAlign = TextAlign.Center,
-                  modifier = Modifier.padding(horizontal = 24.dp))
+                  modifier = Modifier.padding(horizontal = 24.dp).testTag("loginText"))
             }
       })
 }
@@ -107,7 +109,11 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
       onClick = onSignInClick,
       colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
       shape = RectangleShape,
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(48.dp)) {
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 24.dp)
+              .height(48.dp)
+              .testTag("loginButton")) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
