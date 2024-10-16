@@ -33,13 +33,9 @@ class FolderRepositoryTest {
 
   @Mock private lateinit var mockFirestore: FirebaseFirestore
   @Mock private lateinit var mockDocumentReference: DocumentReference
-  @Mock private lateinit var mockFileDocumentReference: DocumentReference
   @Mock private lateinit var mockCollectionReference: CollectionReference
-  @Mock private lateinit var mockFileCollectionReference: CollectionReference
   @Mock private lateinit var mockFolderQuerySnapshot: QuerySnapshot
-  @Mock private lateinit var mockFileQuerySnapshot: QuerySnapshot
   @Mock private lateinit var mockFolderDocumentSnapshot: DocumentSnapshot
-  @Mock private lateinit var mockFileDocumentSnapshot: DocumentSnapshot
 
   private lateinit var folderRepositoryImpl: FolderRepositoryImpl
 
@@ -61,29 +57,16 @@ class FolderRepositoryTest {
     `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
-    `when`(mockDocumentReference.collection(any())).thenReturn(mockFileCollectionReference)
-    `when`(mockFileCollectionReference.document(any())).thenReturn(mockFileDocumentReference)
-    `when`(mockFileCollectionReference.document()).thenReturn(mockFileDocumentReference)
-
     `when`(mockCollectionReference.get()).thenReturn(Tasks.forResult(mockFolderQuerySnapshot))
-    `when`(mockFileCollectionReference.get()).thenReturn(Tasks.forResult(mockFileQuerySnapshot))
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
         .thenReturn(mockCollectionReference)
     `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf())
-    `when`(mockFileQuerySnapshot.documents).thenReturn(listOf())
   }
 
   @Test
-  fun getNewFolderUidTest() {
+  fun getNewUidTest() {
     `when`(mockDocumentReference.id).thenReturn("1")
-    val uid = folderRepositoryImpl.getNewFolderUid()
-    assert(uid == "1")
-  }
-
-  @Test
-  fun getNewFileUidTest() {
-    `when`(mockFileDocumentReference.id).thenReturn("1")
-    val uid = folderRepositoryImpl.getNewFileUid(folder)
+    val uid = folderRepositoryImpl.getNewUid()
     assert(uid == "1")
   }
 
@@ -101,27 +84,23 @@ class FolderRepositoryTest {
   @Test
   fun addFolder_shouldCallFirestoreCollection() {
     `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null)) // Simulate success
-    `when`(mockFileDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
 
     folderRepositoryImpl.addFolder(folder, onSuccess = {}, onFailure = {})
     shadowOf(Looper.getMainLooper()).idle()
 
     verify(mockDocumentReference).set(any())
-    verify(mockFileDocumentReference).set(any())
   }
 
   @Test
   fun updateFolder_shouldCallFirestoreCollection() {
     `when`(mockDocumentReference.update(any()))
         .thenReturn(Tasks.forResult(null)) // Simulate success
-    `when`(mockFileDocumentReference.update(any())).thenReturn(Tasks.forResult(null))
 
     folderRepositoryImpl.updateFolder(folder, onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
     verify(mockDocumentReference).update(any())
-    verify(mockFileDocumentReference).update(any())
   }
 
   @Test
@@ -130,11 +109,10 @@ class FolderRepositoryTest {
         anyString(), onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockFolderQuerySnapshot).documents }
-    verify(timeout(100)) { (mockFileQuerySnapshot).documents }
   }
 
   @Test
-  fun covertFolderTest() {
+  fun convertFolderTest() {
     val m =
         mapOf(
             "NAME" to FilterTypes.NAME,
@@ -150,28 +128,22 @@ class FolderRepositoryTest {
 
     `when`(mockFolderDocumentSnapshot.id).thenReturn("id")
     `when`(mockFolderDocumentSnapshot.getString(any())).thenReturn("field")
+    `when`(mockFolderDocumentSnapshot.get(anyString()))
+        .thenReturn(
+            listOf(
+                mapOf(
+                    "name" to file.name,
+                    "fileId" to file.fileId,
+                    "creationTime" to file.creationTime.timeInMillis.toString(),
+                    "lastAccess" to file.lastAccess.timeInMillis.toString(),
+                    "numberAccess" to file.numberAccess.toString())))
 
     m.forEach {
       `when`(mockFolderDocumentSnapshot.getString("filterType")).thenReturn(it.key)
 
-      val folder = folderRepositoryImpl.convertFolder(mockFolderDocumentSnapshot) {}
+      val folder = folderRepositoryImpl.convertFolder(mockFolderDocumentSnapshot)
 
-      assertEquals(
-          folder, Folder("field", emptyList<MyFile>().toMutableList(), "field", "id", it.value))
+      assertEquals(folder, Folder("field", mutableListOf(file), "field", "id", it.value))
     }
-  }
-
-  @Test
-  fun convertFileTest() {
-    val time0 = Calendar.getInstance()
-    time0.timeInMillis = 0
-
-    `when`(mockFileDocumentSnapshot.id).thenReturn("id_")
-    `when`(mockFileDocumentSnapshot.getString(any())).thenReturn("field_")
-    `when`(mockFileDocumentSnapshot.getLong(any())).thenReturn(0)
-
-    val file = folderRepositoryImpl.convertFile(mockFileDocumentSnapshot)
-
-    assertEquals(file, MyFile("id_", "field_", "field_", time0, time0, 0))
   }
 }
