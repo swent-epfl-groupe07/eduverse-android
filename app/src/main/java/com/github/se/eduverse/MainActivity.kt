@@ -114,7 +114,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, isUserLoggedIn: Boolean) {
         if (cameraPermissionGranted) {
           CameraScreen(navigationActions)
         } else {
-          PermissionDeniedScreen()
+          PermissionDeniedScreen(navigationActions)
         }
       }
     }
