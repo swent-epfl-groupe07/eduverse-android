@@ -51,7 +51,6 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
           id = folderViewModel.getNewFolderUid())
 
   Scaffold(
-      modifier = Modifier.testTag("scaffold"),
       topBar = {
         MediumTopAppBar(
             modifier = Modifier.testTag("topAppBar"),
@@ -89,11 +88,11 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
               "Course Name",
               fontWeight = FontWeight.Bold,
               fontSize = 24.sp,
-              modifier = Modifier.padding(vertical = 15.dp).testTag("textFiles"))
+              modifier = Modifier.padding(vertical = 15.dp).testTag("courseNameTitle"))
           OutlinedTextField(
               value = name,
               modifier =
-                  Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("inputTodoTitle"),
+                  Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("courseNameField"),
               onValueChange = { name = it },
               placeholder = { Text("Name of the course") })
 
@@ -103,9 +102,9 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
               fontWeight = FontWeight.Bold,
               fontSize = 24.sp,
               modifier = Modifier.padding(vertical = 15.dp).testTag("textFiles"))
-          Column(modifier = Modifier.fillMaxHeight(0.68f)) {
+          Column(modifier = Modifier.fillMaxHeight(0.65f)) {
             files.forEach {
-              Button(onClick = {}, modifier = Modifier.fillMaxWidth().testTag(it.name)) {
+              Button(onClick = {}, modifier = Modifier.fillMaxWidth().testTag("file")) {
                 Text(it.name, modifier = Modifier.fillMaxWidth())
               }
             }
@@ -134,7 +133,6 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
                 name = ""
                 navigationActions.goBack()
               },
-              enabled = name.isNotEmpty(),
               modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("folderSave")) {
                 Text("Save")
               }
