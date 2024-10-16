@@ -185,6 +185,6 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("name 2").performClick()
     composeTestRule.onNodeWithTag("name 3").performClick()
 
-    //click do nothing for now
+    // click do nothing for now
   }
 }
