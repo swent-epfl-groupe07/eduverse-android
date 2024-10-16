@@ -122,8 +122,8 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
   }
 
   fun convertFolder(document: DocumentSnapshot): Folder {
-    val rawFiles = document.get("items") as? List<Map<String, String>>
-    val files: List<MyFile> = rawFiles!!.map { mapToFile(it) }
+    val rawFiles = document.get("files") as? List<Map<String, String>>
+    val files: List<MyFile> = rawFiles?.map { mapToFile(it) } ?: emptyList()
 
     return Folder(
         ownerID = document.getString("ownerId")!!,
