@@ -132,13 +132,8 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
   }
 
   /** Get new ID for a folder. */
-  fun getNewFolderUid(): String {
-    return repository.getNewFolderUid()
-  }
-
-  /** Get new ID for a file. */
-  fun getNewFileUid(folder: Folder): String {
-    return repository.getNewFileUid(folder)
+  fun getNewUid(): String {
+    return repository.getNewUid()
   }
 
   /**
