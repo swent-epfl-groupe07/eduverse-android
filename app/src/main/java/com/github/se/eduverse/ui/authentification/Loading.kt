@@ -25,15 +25,12 @@ import com.github.se.eduverse.R
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.TopLevelDestinations
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoadingScreen(navigationActions: NavigationActions) {
+fun LoadingScreen(navigationActions: NavigationActions, isUserLoggedIn: Boolean) {
 
   LaunchedEffect(Unit) {
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val isUserLoggedIn = (currentUser != null)
     val destination =
         if (isUserLoggedIn) {
           TopLevelDestinations.DASHBOARD.route

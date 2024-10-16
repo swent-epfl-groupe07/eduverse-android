@@ -42,7 +42,10 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
 
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let { auth.signOut() }
+    val currentUser = auth.currentUser
+    currentUser?.let { auth.signOut() }
+
+    val isUserLoggedIn = (currentUser != null)
 
     val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean
@@ -59,14 +62,16 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
+        Surface(modifier = Modifier.fillMaxSize()) {
+          EduverseApp(cameraPermissionGranted, isUserLoggedIn)
+        }
       }
     }
   }
 }
 
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean) {
+fun EduverseApp(cameraPermissionGranted: Boolean, isUserLoggedIn: Boolean) {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = FirebaseFirestore.getInstance())
@@ -77,7 +82,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         startDestination = Screen.LOADING,
         route = Route.LOADING,
     ) {
-      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+      composable(Screen.LOADING) { LoadingScreen(navigationActions, isUserLoggedIn) }
     }
 
     navigation(
