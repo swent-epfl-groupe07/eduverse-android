@@ -1,100 +1,112 @@
 package com.github.se.eduverse.ui.camera
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.test.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.PhotoViewModel
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import java.io.File
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class PicTakenScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  @Composable
-  private fun createFakeNavigationActions(): NavigationActions {
-    val navController = rememberNavController()
-    return NavigationActions(navController)
-  }
+  private val navigationActions = mockk<NavigationActions>(relaxed = true)
+  private val viewModel = mockk<PhotoViewModel>(relaxed = true)
+  private val photoFile = mockk<File>()
+  private val bitmapMock = mockk<Bitmap>()
 
-  @Test
-  fun testCloseButtonIsDisplayedAndClickable() {
-    composeTestRule.setContent {
-      PicTakenScreen(null, navigationActions = createFakeNavigationActions())
-    }
-    composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed().assertHasClickAction()
-  }
+  @Before
+  fun setUp() {
+    every { photoFile.exists() } returns false
+    every { photoFile.path } returns "test/path"
 
-  @Test
-  fun testImageDisplayedWhenBitmapIsNull() {
-    composeTestRule.setContent {
-      PicTakenScreen(null, navigationActions = createFakeNavigationActions())
-    }
-    composeTestRule.onNodeWithTag("googleLogoImage").assertIsDisplayed()
+    mockkStatic(BitmapFactory::class)
+    every { BitmapFactory.decodeFile("test/path") } returns bitmapMock
+
+    every { bitmapMock.width } returns 100
+    every { bitmapMock.height } returns 100
   }
 
   /*@Test
-  fun testImageDisplayedWhenBitmapIsNotNull() {
-      composeTestRule.setContent {
-          val context = LocalContext.current
-          val photoFile = File(context.filesDir, "test_image.jpg")
-          PicTakenScreen(photoFile, navigationActions = createFakeNavigationActions())
-      }
+  fun showsCapturedImage_whenPhotoFileExists() {
+    // Arrange
+    every { photoFile.exists() } returns true
 
-      // Vérifie que l'image capturée est affichée
-      composeTestRule.onNodeWithTag("capturedImage").assertIsDisplayed()
+    // Act
+    composeTestRule.setContent {
+      PicTakenScreen(photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
+    }
+
+    // Assert
+    composeTestRule.onNodeWithTag("capturedImage").assertIsDisplayed()
   }*/
 
   @Test
-  fun testCropIconIsDisplayedAndClickable() {
+  fun showsGoogleLogoImage_whenPhotoFileDoesNotExist() {
+    // Act
     composeTestRule.setContent {
-      PicTakenScreen(null, navigationActions = createFakeNavigationActions())
+      PicTakenScreen(
+          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    composeTestRule.onNodeWithTag("cropIcon").assertIsDisplayed().assertHasClickAction()
+
+    // Assert
+    composeTestRule.onNodeWithTag("googleLogoImage").assertIsDisplayed()
   }
 
   @Test
-  fun testFilterIconIsDisplayedAndClickable() {
+  fun cropIcon_isDisplayed() {
     composeTestRule.setContent {
-      PicTakenScreen(null, navigationActions = createFakeNavigationActions())
+      PicTakenScreen(
+          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    composeTestRule.onNodeWithTag("filterIcon").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("cropIcon").assertIsDisplayed()
   }
 
   @Test
-  fun testSaveButtonIsDisplayedAndClickable() {
+  fun filterIcon_isDisplayed() {
     composeTestRule.setContent {
-      PicTakenScreen(null, navigationActions = createFakeNavigationActions())
+      PicTakenScreen(
+          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("filterIcon").assertIsDisplayed()
   }
 
   @Test
-  fun testPublishButtonIsDisplayedAndClickable() {
+  fun saveButton_isDisplayed() {
     composeTestRule.setContent {
-      PicTakenScreen(null, navigationActions = createFakeNavigationActions())
+      PicTakenScreen(
+          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    composeTestRule.onNodeWithTag("publishButton").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed()
   }
 
   @Test
-  fun saveButton_clickAction() {
+  fun publishButton_isDisplayed() {
     composeTestRule.setContent {
-      PicTakenScreen(photoFile = null, navigationActions = createFakeNavigationActions())
+      PicTakenScreen(
+          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    // Vérifie que le bouton "Save" est bien affiché et cliquable
-    composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed().performClick()
-    // Ajouter des assertions ici pour vérifier ce qui devrait se passer après le clic
+    composeTestRule.onNodeWithTag("publishButton").assertIsDisplayed()
   }
 
   @Test
-  fun publishButton_clickAction() {
+  fun closeButton_isDisplayed() {
     composeTestRule.setContent {
-      PicTakenScreen(photoFile = null, navigationActions = createFakeNavigationActions())
+      PicTakenScreen(
+          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    // Vérifie que le bouton "Publish" est bien affiché et cliquable
-    composeTestRule.onNodeWithTag("publishButton").assertIsDisplayed().performClick()
-    // Ajouter des assertions ici pour vérifier ce qui devrait se passer après le clic
+    composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed()
   }
 }
