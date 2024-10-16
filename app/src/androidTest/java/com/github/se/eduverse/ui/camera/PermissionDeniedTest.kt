@@ -1,6 +1,5 @@
 package com.github.se.eduverse.ui.camera
 
-
 import PermissionDeniedScreen
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,26 +16,23 @@ import org.mockito.Mockito
 @RunWith(AndroidJUnit4::class)
 class PermissionDeniedScreenTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    private lateinit var navController: NavHostController
-    private lateinit var navigationActions: NavigationActions
+  private lateinit var navController: NavHostController
+  private lateinit var navigationActions: NavigationActions
 
-    @Before
-    fun setUp() {
-        navController = Mockito.mock(NavHostController::class.java)
-        navigationActions = NavigationActions(navController)
+  @Before
+  fun setUp() {
+    navController = Mockito.mock(NavHostController::class.java)
+    navigationActions = NavigationActions(navController)
 
-        composeTestRule.setContent {
-            PermissionDeniedScreen(navigationActions)
-        }
-    }
+    composeTestRule.setContent { PermissionDeniedScreen(navigationActions) }
+  }
 
-    @Test
-    fun textAndBottomNavigationAreCorrectlyDisplayed() {
-        composeTestRule.onNodeWithTag("permissionText").assertIsDisplayed()
+  @Test
+  fun textAndBottomNavigationAreCorrectlyDisplayed() {
+    composeTestRule.onNodeWithTag("permissionText").assertIsDisplayed()
 
-        composeTestRule.onNodeWithTag("bottomNavigation").assertIsDisplayed()
-    }
+    composeTestRule.onNodeWithTag("bottomNavigation").assertIsDisplayed()
+  }
 }
