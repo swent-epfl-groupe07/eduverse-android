@@ -1,26 +1,36 @@
 package com.github.se.eduverse.ui.camera
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import java.io.File
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
+import io.mockk.mockkStatic
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.compose.ui.test.assertIsDisplayed
+import io.mockk.coVerify
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.runBlockingTest
 
 @RunWith(AndroidJUnit4::class)
 class PicTakenScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule
+  val instantExecutorRule = InstantTaskExecutorRule() // Helps with LiveData testing
 
   private val navigationActions = mockk<NavigationActions>(relaxed = true)
   private val viewModel = mockk<PhotoViewModel>(relaxed = true)
@@ -109,4 +119,29 @@ class PicTakenScreenTest {
     }
     composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed()
   }
+
+  /*@Test
+  fun saveButton_onClick_callsSavePhotoAndNavigatesBack() = runBlocking  {
+    // Arrange
+    composeTestRule.setContent {
+      PicTakenScreen(
+        photoFile = photoFile,
+        navigationActions = navigationActions,
+        viewModel = viewModel
+      )
+    }
+
+    // Act: Click on the save button
+    composeTestRule.onNodeWithTag("saveButton").performClick()
+
+    // Assert: Use coVerify for coroutines
+    coVerify(exactly = 1) {
+      viewModel.savePhoto(match { photo ->
+        photo.ownerId == "user123" &&
+                photo.path.startsWith("photos/user123/") &&
+                photo.photo.isNotEmpty()
+      })
+    }
+    coVerify(exactly = 2) { navigationActions.goBack() }
+  }*/
 }
