@@ -17,6 +17,7 @@ object Route {
   const val VIDEOS = "Videos"
   const val CAMERA = "Camera"
   const val OTHERS = "Others"
+  const val POMODORO = "Pomodoro"
 }
 
 object Screen {
@@ -28,6 +29,7 @@ object Screen {
   const val EDIT_PROFILE = "EditProfile screen"
   const val FOLDER = "Folder screen"
   const val COURSES = "Courses screen"
+  const val POMODORO = "Pomodoro screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)

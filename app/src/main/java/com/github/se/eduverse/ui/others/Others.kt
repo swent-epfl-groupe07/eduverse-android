@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 
 @Composable
 fun OthersScreen(navigationActions: NavigationActions) {
@@ -72,15 +73,15 @@ fun OthersScreen(navigationActions: NavigationActions) {
               Spacer(modifier = Modifier.height(16.dp))
 
               // Field #4 button
-              Button(
-                  onClick = { /* Placeholder for Field #4 */},
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .height(50.dp)
-                          .testTag("field4Button") // Test tag for Field #4 button
-                  ) {
-                    Text(text = "Field #4", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                  }
+            Button(
+                onClick = { navigationActions.navigateTo(Screen.POMODORO) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .testTag("pomodoroButton")
+            ) {
+                Text(text = "Pomodoro Timer", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            }
 
               Spacer(modifier = Modifier.height(16.dp))
 
