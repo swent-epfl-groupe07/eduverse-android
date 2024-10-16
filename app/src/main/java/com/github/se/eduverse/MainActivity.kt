@@ -25,6 +25,7 @@ import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.folder.CreateFIleScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
 import com.github.se.eduverse.ui.folder.FolderScreen
+import com.github.se.eduverse.ui.folder.ListFoldersScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
@@ -98,9 +99,6 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFIleScreen() }
     }
 
     navigation(
@@ -128,6 +126,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFIleScreen() }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen

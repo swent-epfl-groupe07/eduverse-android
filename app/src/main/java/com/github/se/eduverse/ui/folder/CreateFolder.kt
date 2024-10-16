@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.folder
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -33,7 +34,6 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.navigation.TopLevelDestinations
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import java.util.Calendar
 
@@ -83,19 +83,17 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
             LIST_TOP_LEVEL_DESTINATION,
             "") // No item is selected, as it is not one of the screens on the bottom bar
       }) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.padding(padding).padding(horizontal = 20.dp)) {
           // Give a name to the course
           Text(
               "Course Name",
               fontWeight = FontWeight.Bold,
               fontSize = 24.sp,
-              modifier = Modifier.testTag("textFiles"))
+              modifier = Modifier.padding(vertical = 15.dp).testTag("textFiles"))
           OutlinedTextField(
               value = name,
               modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 15.dp, vertical = 10.dp)
-                      .testTag("inputTodoTitle"),
+                  Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("inputTodoTitle"),
               onValueChange = { name = it },
               placeholder = { Text("Name of the course") })
 
@@ -104,13 +102,13 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
               "Files",
               fontWeight = FontWeight.Bold,
               fontSize = 24.sp,
-              modifier = Modifier.testTag("textFiles"))
-          files.forEach {
-            Button(
-                onClick = {},
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {
-                  Text(it.name, modifier = Modifier.fillMaxWidth())
-                }
+              modifier = Modifier.padding(vertical = 15.dp).testTag("textFiles"))
+          Column(modifier = Modifier.fillMaxHeight(0.68f)) {
+            files.forEach {
+              Button(onClick = {}, modifier = Modifier.fillMaxWidth().testTag(it.name)) {
+                Text(it.name, modifier = Modifier.fillMaxWidth())
+              }
+            }
           }
           Button(
               onClick = {
@@ -124,10 +122,7 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
                         lastAccess = Calendar.getInstance(),
                         numberAccess = 0)
               },
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 15.dp, vertical = 10.dp)
-                      .testTag("addFile")) {
+              modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("addFile")) {
                 Text("Add file")
               }
 
@@ -137,13 +132,10 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
                 folderViewModel.addFolder(folder)
                 files = emptyList()
                 name = ""
-                navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
+                navigationActions.goBack()
               },
               enabled = name.isNotEmpty(),
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 15.dp, vertical = 10.dp)
-                      .testTag("folderSave")) {
+              modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("folderSave")) {
                 Text("Save")
               }
 
@@ -159,10 +151,7 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
 
                 navigationActions.goBack()
               },
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 15.dp, vertical = 10.dp)
-                      .testTag("folderCancel")) {
+              modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("folderCancel")) {
                 Text("Cancel")
               }
         }
