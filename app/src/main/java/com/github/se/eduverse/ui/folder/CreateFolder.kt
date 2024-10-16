@@ -48,7 +48,7 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
           ownerID = folderViewModel.auth.currentUser!!.uid,
           files = files.toMutableList(),
           name = name,
-          id = folderViewModel.getNewFolderUid())
+          id = folderViewModel.getNewUid())
 
   Scaffold(
       topBar = {
@@ -114,7 +114,7 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
                 navigationActions.navigateTo(Screen.CREATE_FILE)
                 files +=
                     MyFile(
-                        id = folderViewModel.getNewFileUid(folder),
+                        id = "",
                         fileId = "fileId",
                         name = "fileName",
                         creationTime = Calendar.getInstance(),
