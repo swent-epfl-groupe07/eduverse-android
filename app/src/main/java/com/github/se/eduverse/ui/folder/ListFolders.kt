@@ -41,7 +41,6 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
 
   Scaffold(
-      modifier = Modifier.testTag("scaffold"),
       topBar = {
         MediumTopAppBar(
             modifier = Modifier.testTag("topAppBar"),
@@ -76,8 +75,8 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
       floatingActionButton = {
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FOLDER) },
-            modifier = Modifier.testTag("createFile")) {
-              Icon(Icons.Default.Add, contentDescription = "Create File")
+            modifier = Modifier.testTag("createFolder")) {
+              Icon(Icons.Default.Add, contentDescription = "Create Folder")
             }
       }) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
@@ -90,7 +89,7 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
                           folderViewModel.selectFolder(it)
                           navigationActions.navigateTo(Screen.FOLDER)
                         }
-                        .testTag("folderCard"),
+                        .testTag("folderCard${it.id}"),
                 elevation = 4.dp) {
                   Text(
                       text = it.name,
