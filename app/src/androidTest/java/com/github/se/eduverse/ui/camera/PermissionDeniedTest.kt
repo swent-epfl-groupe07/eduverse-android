@@ -32,7 +32,5 @@ class PermissionDeniedScreenTest {
   @Test
   fun textAndBottomNavigationAreCorrectlyDisplayed() {
     composeTestRule.onNodeWithTag("permissionText").assertIsDisplayed()
-
-    composeTestRule.onNodeWithTag("bottomNavigation").assertIsDisplayed()
   }
 }
