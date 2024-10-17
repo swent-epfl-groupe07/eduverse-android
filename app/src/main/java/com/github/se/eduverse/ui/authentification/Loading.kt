@@ -23,22 +23,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.R
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.navigation.Route
-import com.github.se.eduverse.ui.navigation.TopLevelDestinations
+import com.github.se.eduverse.ui.navigation.Screen
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoadingScreen(navigationActions: NavigationActions, isUserLoggedIn: Boolean) {
+fun LoadingScreen(navigationActions: NavigationActions) {
+
+  val auth = FirebaseAuth.getInstance()
 
   LaunchedEffect(Unit) {
-    val destination =
-        if (isUserLoggedIn) {
-          TopLevelDestinations.DASHBOARD.route
-        } else {
-          Route.AUTH
-        }
     delay(1300)
-    navigationActions.navigateTo(destination)
+    // Wait for Firebase Auth to initialize
+    if (auth.currentUser != null) {
+      navigationActions.navigateTo(Screen.DASHBOARD)
+    } else {
+      navigationActions.navigateTo(Screen.AUTH)
+    }
   }
 
   Scaffold(
