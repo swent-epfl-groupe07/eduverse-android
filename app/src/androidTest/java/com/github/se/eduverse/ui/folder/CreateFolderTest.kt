@@ -56,8 +56,7 @@ class CreateFolderTest {
     folderRepository = mock(FolderRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
 
-    `when`(folderRepository.getNewFolderUid()).thenReturn("")
-    `when`(folderRepository.getNewFileUid(any())).thenReturn("")
+    `when`(folderRepository.getNewUid()).thenReturn("")
 
     val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)
