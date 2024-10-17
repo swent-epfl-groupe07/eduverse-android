@@ -7,11 +7,15 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,107 +47,112 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileViewModel) {
-    fileViewModel.reset()
+@Composable
+fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileViewModel) {
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    var name by rememberSaveable { mutableStateOf("") }
+  val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+  var name by rememberSaveable { mutableStateOf("") }
+  val validNewFile by fileViewModel.validNewFile.collectAsState()
 
-    val filePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+  val filePickerLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            // Handle the selected file URI (e.g., update ViewModel or state)
-            fileViewModel.createFile(it)
+          // Handle the selected file URI (e.g., update ViewModel or state)
+          fileViewModel.createFile(it)
         }
-    }
+      }
 
-    Scaffold(
-        topBar = {
-            MediumTopAppBar(
-                modifier = Modifier.testTag("topAppBar"),
-                colors =
+  Scaffold(
+      topBar = {
+        MediumTopAppBar(
+            modifier = Modifier.testTag("topAppBar"),
+            colors =
                 TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
-                title = {
-                    Text(
-                        text = "Add file",
-                        modifier = Modifier.testTag("topBarText"))
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            fileViewModel.reset()
-                            navigationActions.goBack()
-                        }, modifier = Modifier.testTag("goBack")) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back Arrow")
-                    }
-                },
-                scrollBehavior = scrollBehavior)
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                { navigationActions.navigateTo(it) },
-                LIST_TOP_LEVEL_DESTINATION,
-                "") // No item is selected, as it is not one of the screens on the bottom bar
-        }) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(horizontal = 20.dp)) {
-            // Give a name to the course
-            Text(
-                "File Name",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(vertical = 15.dp).testTag("fileNameTitle")
-            )
-            OutlinedTextField(
-                value = name,
-                modifier =
-                Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("fileNameField"),
-                onValueChange = { name = it },
-                placeholder = { Text("Name of the file") })
-
-            Row(
-                modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "Upload file",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    modifier = Modifier.testTag("uploadFileText")
-                )
-                Button(
-                    onClick = {
-                        filePickerLauncher.launch("application/pdf")
-                    },
-                    modifier = Modifier.testTag("browseFile"),
-                    colors = ButtonColors(
-                        Color.Transparent, Color.Black, Color.Transparent, Color.Transparent
-                    ),
-                    border = BorderStroke(1.dp, Color.Black)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.InsertDriveFile, "Browse file")
-                }
-            }
-            Button(
-                onClick = {
-                    if (name.isNotEmpty()) fileViewModel.setName(name)
-                    navigationActions.goBack()
-                },
-                enabled = fileViewModel.newFile != null,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("fileSave")) {
-                Text("Save")
-            }
-            Button(
-                onClick = {
+            title = { Text(text = "Add file", modifier = Modifier.testTag("topBarText")) },
+            navigationIcon = {
+              IconButton(
+                  onClick = {
                     fileViewModel.reset()
                     navigationActions.goBack()
-                },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("fileCancel")) {
+                  },
+                  modifier = Modifier.testTag("goBack")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back Arrow")
+                  }
+            },
+            scrollBehavior = scrollBehavior)
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            { navigationActions.navigateTo(it) },
+            LIST_TOP_LEVEL_DESTINATION,
+            "") // No item is selected, as it is not one of the screens on the bottom bar
+      }) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(horizontal = 20.dp).fillMaxSize()) {
+          // Give a name to the course
+          Text(
+              "File Name",
+              fontWeight = FontWeight.Bold,
+              fontSize = 24.sp,
+              modifier = Modifier.padding(vertical = 15.dp).testTag("fileNameTitle"))
+          OutlinedTextField(
+              value = name,
+              modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("fileNameField"),
+              onValueChange = { name = it },
+              placeholder = { Text("Name of the file") })
+
+          Row(
+              modifier = Modifier.padding(vertical = 15.dp).fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                  Text(
+                      "Upload file",
+                      fontWeight = FontWeight.Bold,
+                      fontSize = 24.sp,
+                      modifier = Modifier.testTag("uploadFileText"))
+                  if (validNewFile) Icon(Icons.Default.Check, "File created", tint = Color.Green)
+                }
+                Button(
+                    onClick = { filePickerLauncher.launch("application/pdf") },
+                    modifier = Modifier.testTag("browseFile"),
+                    colors =
+                        ButtonColors(
+                            Color.Transparent, Color.Black, Color.Transparent, Color.Transparent),
+                    border = BorderStroke(1.dp, Color.Black)) {
+                      Icon(Icons.AutoMirrored.Filled.InsertDriveFile, "Browse file")
+                    }
+              }
+          Spacer(modifier = Modifier.fillMaxHeight(0.72f))
+          Button(
+              onClick = {
+                if (name.isNotEmpty()) fileViewModel.setName(name)
+                navigationActions.goBack()
+              },
+              enabled = validNewFile,
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(vertical = 2.dp)
+                      .align(Alignment.End)
+                      .testTag("fileSave")) {
+                Text("Save")
+              }
+          Button(
+              onClick = {
+                fileViewModel.reset()
+                navigationActions.goBack()
+              },
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(vertical = 2.dp)
+                      .align(Alignment.End)
+                      .testTag("fileCancel")) {
                 Text("Cancel")
-            }
+              }
         }
-    }
+      }
 }

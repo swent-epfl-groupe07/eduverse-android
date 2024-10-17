@@ -132,7 +132,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FOLDER) {
+        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+      }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
