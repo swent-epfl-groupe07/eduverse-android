@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 
 @Composable
 fun OthersScreen(navigationActions: NavigationActions) {
@@ -94,6 +95,16 @@ fun OthersScreen(navigationActions: NavigationActions) {
                   ) {
                     Text(text = "Field #5", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                   }
+
+                Button(
+                    onClick = { navigationActions.navigateTo(Screen.CALCULATOR)},
+                    modifier =
+                    Modifier.fillMaxWidth()
+                        .height(50.dp)
+                        .testTag("CalculatorButton")
+                ) {
+                    Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
             }
       })
 }
