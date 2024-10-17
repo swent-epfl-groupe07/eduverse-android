@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.tasks.await
 
 interface DashboardRepository {
   fun getWidgets(userId: String): Flow<List<Widget>>
@@ -14,6 +15,8 @@ interface DashboardRepository {
   suspend fun addWidget(widget: Widget)
 
   suspend fun removeWidget(widgetId: String)
+
+  suspend fun updateWidgets(widgets: List<Widget>)
 }
 
 class DashboardRepositoryImpl(private val firestore: FirebaseFirestore) : DashboardRepository {
@@ -34,15 +37,25 @@ class DashboardRepositoryImpl(private val firestore: FirebaseFirestore) : Dashbo
                 }
             awaitClose { listener.remove() }
           }
-          .catch { emit(emptyList()) } // Catch any exceptions and emit an empty list
+          .catch { emit(emptyList()) }
 
   override suspend fun addWidget(widget: Widget) {
     val widgetRef = firestore.collection("widgets")
-    widgetRef.document(widget.widgetId).set(widget) // Use widgetId as the document ID
+    widgetRef.document(widget.widgetId).set(widget)
   }
 
   override suspend fun removeWidget(widgetId: String) {
     val widgetRef = firestore.collection("widgets").document(widgetId)
     widgetRef.delete()
+  }
+
+  override suspend fun updateWidgets(widgets: List<Widget>) {
+    val batch = firestore.batch()
+    widgets.forEachIndexed { index, widget ->
+      val updatedWidget = widget.copy(order = index) // Update the order
+      val docRef = firestore.collection("widgets").document(widget.widgetId)
+      batch.set(docRef, updatedWidget)
+    }
+    batch.commit().await()
   }
 }
