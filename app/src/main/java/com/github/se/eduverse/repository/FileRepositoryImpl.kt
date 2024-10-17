@@ -26,17 +26,6 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
             .addOnFailureListener (onFailure)
     }
 
-    private fun savePDFUrlToFirestore(path: String, fileId: String, onSuccess: () -> Unit) {
-        val pdfData = hashMapOf("url" to path)
-        db.collection(collectionPath).document(fileId).set(pdfData)
-            .addOnSuccessListener {
-                onSuccess()
-            }
-            .addOnFailureListener {
-                Log.e("File Upload", "Can't store reference of file $path: $it")
-            }
-    }
-
     override fun modifiyFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         TODO("Not yet implemented")
     }
@@ -49,5 +38,16 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
         TODO("Not yet implemented")
     }
 
+
+    private fun savePDFUrlToFirestore(path: String, fileId: String, onSuccess: () -> Unit) {
+        val pdfData = hashMapOf("url" to path)
+        db.collection(collectionPath).document(fileId).set(pdfData)
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener {
+                Log.e("File Upload", "Can't store reference of file $path: $it")
+            }
+    }
 
 }
