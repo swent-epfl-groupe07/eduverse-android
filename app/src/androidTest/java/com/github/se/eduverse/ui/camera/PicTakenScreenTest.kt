@@ -34,18 +34,6 @@ class PicTakenScreenTest {
     composeTestRule.onNodeWithTag("googleLogoImage").assertIsDisplayed()
   }
 
-  /*@Test
-  fun testImageDisplayedWhenBitmapIsNotNull() {
-      composeTestRule.setContent {
-          val context = LocalContext.current
-          val photoFile = File(context.filesDir, "test_image.jpg")
-          PicTakenScreen(photoFile, navigationActions = createFakeNavigationActions())
-      }
-
-      // Vérifie que l'image capturée est affichée
-      composeTestRule.onNodeWithTag("capturedImage").assertIsDisplayed()
-  }*/
-
   @Test
   fun testCropIconIsDisplayedAndClickable() {
     composeTestRule.setContent {
@@ -83,9 +71,7 @@ class PicTakenScreenTest {
     composeTestRule.setContent {
       PicTakenScreen(photoFile = null, navigationActions = createFakeNavigationActions())
     }
-    // Vérifie que le bouton "Save" est bien affiché et cliquable
     composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed().performClick()
-    // Ajouter des assertions ici pour vérifier ce qui devrait se passer après le clic
   }
 
   @Test
@@ -93,8 +79,6 @@ class PicTakenScreenTest {
     composeTestRule.setContent {
       PicTakenScreen(photoFile = null, navigationActions = createFakeNavigationActions())
     }
-    // Vérifie que le bouton "Publish" est bien affiché et cliquable
     composeTestRule.onNodeWithTag("publishButton").assertIsDisplayed().performClick()
-    // Ajouter des assertions ici pour vérifier ce qui devrait se passer après le clic
   }
 }

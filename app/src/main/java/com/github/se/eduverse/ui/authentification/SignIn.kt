@@ -72,7 +72,7 @@ fun SignInScreen(navigationActions: NavigationActions) {
               Spacer(modifier = Modifier.height(130.dp))
 
               Image(
-                  painter = painterResource(id = R.drawable.skouli_logo),
+                  painter = painterResource(id = R.drawable.eduverse_logo),
                   contentDescription = "App Logo",
                   modifier = Modifier.size(330.dp))
 

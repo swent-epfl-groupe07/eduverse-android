@@ -73,43 +73,33 @@ class CameraScreenTest {
   fun takePhotoButton_clickAction() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
-    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
   }
 
   @Test
   fun switchCameraButton_clickAction() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
     composeTestRule.onNodeWithTag("switchCameraButton").performClick()
-    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
   }
 
   @Test
   fun photoButton_clickAction() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
     composeTestRule.onNodeWithTag("photoButton").performClick()
-    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
   }
 
   @Test
   fun videoButton_clickAction() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
     composeTestRule.onNodeWithTag("videoButton").performClick()
-    // Ajouter des assertions pour vérifier le comportement après clic, si nécessaire
   }
 
   @Test
   fun closeButton_clickAction() {
-    // Créer un faux NavigationActions avec un `goBack` capturé
 
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
 
-    // Vérifie que le bouton est bien affiché et cliquable
     composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed().performClick()
 
-    // Vérifier que la fonction `goBack()` de NavigationActions est appelée
-    // Normalement, cela nécessiterait un mock de la fonction, mais ici on peut capturer l'appel
-    // en utilisant une structure de `verify` si possible dans le contexte de test actuel.
-    composeTestRule.waitForIdle() // S'assurer que l'action est exécutée
-    // Remarque : Vous pouvez également valider en fonction de l'état attendu après l'appel
+    composeTestRule.waitForIdle()
   }
 }

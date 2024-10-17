@@ -29,11 +29,10 @@ import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.roundToInt
-
-var auth: FirebaseAuth = FirebaseAuth.getInstance()
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterialApi::class)
@@ -41,42 +40,60 @@ var auth: FirebaseAuth = FirebaseAuth.getInstance()
 fun DashboardScreen(
     navigationActions: NavigationActions,
     viewModel: DashboardViewModel,
-    userId: String = auth.currentUser!!.uid
 ) {
-  val widgetList by viewModel.widgetList.collectAsState()
-  var showAddWidgetDialog by remember { mutableStateOf(false) }
+  val auth = FirebaseAuth.getInstance()
 
-  LaunchedEffect(userId) { viewModel.fetchWidgets(userId) }
+  // Add authentication check
+  LaunchedEffect(Unit) {
+    if (auth.currentUser == null) {
+      navigationActions.navigateTo(Screen.AUTH)
+      return@LaunchedEffect
+    }
+  }
 
-  Scaffold(
-      floatingActionButton = {
-        FloatingActionButton(
-            onClick = { showAddWidgetDialog = true },
-            modifier = Modifier.padding(16.dp).testTag("add_widget_button"),
-            backgroundColor = Color(0xFF26A69A)) {
-              Icon(Icons.Default.Edit, contentDescription = "Add Widget", tint = Color.White)
+  // Only show dashboard content if user is authenticated
+  auth.currentUser?.let { user ->
+    val widgetList by viewModel.widgetList.collectAsState()
+    var showAddWidgetDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(user.uid) { viewModel.fetchWidgets(user.uid) }
+
+    Scaffold(
+        floatingActionButton = {
+          FloatingActionButton(
+              onClick = { showAddWidgetDialog = true },
+              modifier = Modifier.padding(16.dp).testTag("add_widget_button"),
+              backgroundColor = Color(0xFF26A69A)) {
+                Icon(Icons.Default.Edit, contentDescription = "Add Widget", tint = Color.White)
+              }
+        },
+        bottomBar = {
+          BottomNavigationMenu(
+              onTabSelect = { route -> navigationActions.navigateTo(route) },
+              tabList = LIST_TOP_LEVEL_DESTINATION,
+              selectedItem = navigationActions.currentRoute())
+        }) {
+          Box(modifier = Modifier.fillMaxSize()) {
+            ReorderableDashboard(
+                widgets = widgetList,
+                onReorder = { reorderedWidgets -> viewModel.updateWidgetOrder(reorderedWidgets) },
+                onDelete = { widgetId -> viewModel.removeWidget(widgetId) },
+                onWidgetClick = { widget ->
+                  // Handle widget click if needed
+                })
+
+            if (showAddWidgetDialog) {
+              CommonWidgetDialog(
+                  viewModel = viewModel,
+                  onDismiss = { showAddWidgetDialog = false },
+                  userId = user.uid)
             }
-      },
-      bottomBar = {
-        BottomNavigationMenu(
-            onTabSelect = { route -> navigationActions.navigateTo(route) },
-            tabList = LIST_TOP_LEVEL_DESTINATION,
-            selectedItem = navigationActions.currentRoute())
-      }) {
-        Box(modifier = Modifier.fillMaxSize()) {
-          ReorderableDashboard(
-              widgets = widgetList,
-              onReorder = { reorderedWidgets -> viewModel.updateWidgetOrder(reorderedWidgets) },
-              onDelete = { widgetId -> viewModel.removeWidget(widgetId) },
-              onWidgetClick = { widget ->
-                // Handle widget click if needed
-              })
-
-          if (showAddWidgetDialog) {
-            CommonWidgetDialog(
-                viewModel = viewModel, onDismiss = { showAddWidgetDialog = false }, userId = userId)
           }
         }
+  }
+      ?: run {
+        // Show loading or redirect to auth
+        LaunchedEffect(Unit) { navigationActions.navigateTo(Screen.AUTH) }
       }
 }
 

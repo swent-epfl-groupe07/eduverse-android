@@ -30,7 +30,7 @@ import java.io.File
 
 fun adjustImageRotation(bitmap: Bitmap): Bitmap {
   val matrix = Matrix()
-  matrix.postRotate(90f) // Ajuste cette rotation si nécessaire
+  matrix.postRotate(90f)
   return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }
 

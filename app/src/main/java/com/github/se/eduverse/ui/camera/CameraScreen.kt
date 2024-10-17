@@ -94,7 +94,6 @@ fun CameraScreen(navigationActions: NavigationActions) {
     Column(
         modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-          // Ajout des boutons Photo et Vidéo
           Row(
               modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
               horizontalArrangement = Arrangement.Center) {
@@ -112,7 +111,6 @@ fun CameraScreen(navigationActions: NavigationActions) {
 
           Spacer(modifier = Modifier.height(16.dp))
 
-          // Bouton "Take Photo"
           Button(
               onClick = {
                 CoroutineScope(Dispatchers.IO).launch {

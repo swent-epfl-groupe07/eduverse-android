@@ -1,5 +1,6 @@
 package com.github.se.eduverse
 
+import PermissionDeniedScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -8,7 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
@@ -43,21 +44,16 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    // Initialiser Firebase Auth
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      // Déconnexion de l'utilisateur si déjà connecté
-      auth.signOut()
-    }
+    val currentUser = auth.currentUser
+    currentUser?.let { auth.signOut() }
 
-    // Lanceur de demande de permission
     val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean
           ->
           cameraPermissionGranted = isGranted
         }
 
-    // Vérifier et demander la permission de la caméra
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
         PackageManager.PERMISSION_GRANTED) {
       cameraPermissionGranted = true
@@ -81,7 +77,14 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
   val pomodoroViewModel: TimerViewModel = viewModel()
 
-  NavHost(navController = navController, startDestination = Route.AUTH) {
+  NavHost(navController = navController, startDestination = Route.LOADING) {
+    navigation(
+        startDestination = Screen.LOADING,
+        route = Route.LOADING,
+    ) {
+      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+    }
+
     navigation(
         startDestination = Screen.AUTH,
         route = Route.AUTH,
@@ -111,7 +114,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         if (cameraPermissionGranted) {
           CameraScreen(navigationActions)
         } else {
-          PermissionDeniedScreen()
+          PermissionDeniedScreen(navigationActions)
         }
       }
     }
@@ -131,15 +134,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     }
 
     // Ajoute une route dynamique pour PicTakenScreen
+
     composable("picTaken/{photoPath}") { backStackEntry ->
       val photoPath = backStackEntry.arguments?.getString("photoPath")
       val photoFile = photoPath?.let { File(it) }
       PicTakenScreen(photoFile, navigationActions)
     }
   }
-}
-
-@Composable
-fun PermissionDeniedScreen() {
-  Text("Camera permission is required to use this feature.")
 }
