@@ -24,7 +24,6 @@ open class PdfConverterViewModel : ViewModel() {
   private val newFileName_ = MutableStateFlow<String>("")
   val newFileName: StateFlow<String> = newFileName_.asStateFlow()
 
-
   /**
    * Set the new file name for the PDF to be created
    *
@@ -49,7 +48,8 @@ open class PdfConverterViewModel : ViewModel() {
         val imageBitmap =
             context.contentResolver.openInputStream(imageUri!!)?.use { inputStream ->
               BitmapFactory.decodeStream(inputStream)
-            } ?: run {
+            }
+                ?: run {
                   withContext(Dispatchers.Main) {
                     Log.e("convertImageToPdf", "Failed to decode image")
                     context.showToast("Failed to open image")
@@ -81,15 +81,11 @@ open class PdfConverterViewModel : ViewModel() {
         // location
         FileOutputStream(file).use { outputStream -> pdfDocument.writeTo(outputStream) }
         pdfDocument.close()
-        withContext(Dispatchers.Main) {
-          context.showToast("PDF created successfully")
-        }
+        withContext(Dispatchers.Main) { context.showToast("PDF created successfully") }
       } catch (e: Exception) {
         // If an exception occurs during the conversion process, log the error and display a toast
         Log.e("convertImageToPdf", "Image conversion failed", e)
-        withContext(Dispatchers.Main) {
-          context.showToast("Failed to create PDF")
-        }
+        withContext(Dispatchers.Main) { context.showToast("Failed to create PDF") }
       }
     }
   }
@@ -217,15 +213,11 @@ open class PdfConverterViewModel : ViewModel() {
         val file = createUniqueFile(context.filesDir, "${newFileName_.value}.pdf")
         FileOutputStream(file).use { outputStream -> pdfDocument.writeTo(outputStream) }
         pdfDocument.close()
-        withContext(Dispatchers.Main) {
-          context.showToast("PDF created successfully")
-        }
+        withContext(Dispatchers.Main) { context.showToast("PDF created successfully") }
       } catch (e: Exception) {
         // If an exception occurs during the conversion process, log the error and display a toast
         Log.e("convertTextToPdf", "Text conversion failed", e)
-        withContext(Dispatchers.Main) {
-            context.showToast("Failed to create PDF")
-        }
+        withContext(Dispatchers.Main) { context.showToast("Failed to create PDF") }
       }
     }
   }

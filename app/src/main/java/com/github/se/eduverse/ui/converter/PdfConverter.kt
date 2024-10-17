@@ -35,7 +35,7 @@ enum class PdfConverterOption {
   SCANNER_TOOL,
   SUMMARIZE_FILE,
   EXTRACT_TEXT,
-    NONE
+  NONE
 }
 
 /**
@@ -122,7 +122,7 @@ fun PdfConverterScreen(
                   }
 
               OptionCard(
-                    testTag = PdfConverterOption.EXTRACT_TEXT.name,
+                  testTag = PdfConverterOption.EXTRACT_TEXT.name,
                   optionName = "Extract text",
                   icon = Icons.Default.Abc,
                   onClick = {
@@ -145,7 +145,8 @@ fun PdfConverterScreen(
         onConfirm = { name ->
           converterViewModel.setNewFileName(name)
           showNameInputDialog = false
-          when (currentPdfConverterOption) { // For each option, the corresponding actions are performed
+          when (currentPdfConverterOption) { // For each option, the corresponding actions are
+                                             // performed
             PdfConverterOption.TEXT_TO_PDF -> {
               converterViewModel.convertDocumentToPdf(selectedFileUri, context)
             }
@@ -190,7 +191,11 @@ fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (S
               Text("Create PDF")
             }
       },
-      dismissButton = { Button(onClick = onDismiss, modifier = Modifier.testTag("dismissCreatePdfButton")) { Text("Cancel") } })
+      dismissButton = {
+        Button(onClick = onDismiss, modifier = Modifier.testTag("dismissCreatePdfButton")) {
+          Text("Cancel")
+        }
+      })
 }
 
 /**
@@ -205,8 +210,7 @@ fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (S
 @Composable
 fun OptionCard(testTag: String, optionName: String, icon: ImageVector, onClick: () -> Unit) {
   Card(
-      modifier =
-          Modifier.padding(16.dp).size(150.dp).clickable(onClick = onClick).testTag(testTag),
+      modifier = Modifier.padding(16.dp).size(150.dp).clickable(onClick = onClick).testTag(testTag),
       elevation = CardDefaults.cardElevation(8.dp),
       colors = CardDefaults.cardColors(containerColor = Color(0xFFC2F5F0))) {
         Column(
