@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.github.se.eduverse.model.folder.Folder
 import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.repository.FileRepository
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -30,6 +31,7 @@ import org.mockito.kotlin.whenever
 
 class DisplayFolderTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var fileRepository: FileRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
   private lateinit var fileViewModel: FileViewModel
@@ -56,7 +58,8 @@ class DisplayFolderTest {
   @Before
   fun setUp() {
     folderRepository = mock(FolderRepository::class.java)
-    fileViewModel = mock(FileViewModel::class.java)
+    fileRepository = mock(FileRepository::class.java)
+    fileViewModel = FileViewModel(fileRepository)
     navigationActions = mock(NavigationActions::class.java)
 
     doAnswer {
@@ -73,8 +76,6 @@ class DisplayFolderTest {
     `when`(currentUser.uid).thenReturn("uid")
     folderViewModel = FolderViewModel(folderRepository, auth)
     folderViewModel.selectFolder(folder)
-
-    `when`(fileViewModel.validNewFile).thenReturn(MutableStateFlow(false))
 
     composeTestRule.setContent { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
   }

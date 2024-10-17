@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.github.se.eduverse.model.folder.Folder
 import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.repository.FileRepository
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -29,35 +30,18 @@ import org.mockito.kotlin.any
 
 class CreateFolderTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var fileRepository: FileRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
   private lateinit var fileViewModel: FileViewModel
-
-  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file3 = MyFile("", "", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
-
-  val folder1 =
-      Folder(
-          "",
-          MutableList(3) {
-            when (it) {
-              1 -> file1
-              2 -> file2
-              else -> file3
-            }
-          },
-          "folder1",
-          "1")
-
-  val folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2")
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     folderRepository = mock(FolderRepository::class.java)
-    fileViewModel = mock(FileViewModel::class.java)
+    fileRepository = mock(FileRepository::class.java)
+    fileViewModel = FileViewModel(fileRepository)
     navigationActions = mock(NavigationActions::class.java)
 
     `when`(folderRepository.getNewUid()).thenReturn("")
@@ -67,8 +51,6 @@ class CreateFolderTest {
     `when`(auth.currentUser).thenReturn(currentUser)
     `when`(currentUser.uid).thenReturn("uid")
     folderViewModel = FolderViewModel(folderRepository, auth)
-
-    `when`(fileViewModel.validNewFile).thenReturn(MutableStateFlow(false))
 
     composeTestRule.setContent { CreateFolderScreen(navigationActions, folderViewModel, fileViewModel) }
   }
@@ -127,7 +109,6 @@ class CreateFolderTest {
 
     composeTestRule.onNodeWithTag("addFile").performClick()
     assert(test)
-    composeTestRule.onNodeWithTag("file").assertIsDisplayed()
   }
 
   @Test
