@@ -32,9 +32,7 @@ class LoadingTest : TestCase() {
     navController = Mockito.mock(NavHostController::class.java)
     navigationActions = NavigationActions(navController)
 
-    composeTestRule.setContent {
-      LoadingScreen(navigationActions = navigationActions, isUserLoggedIn = true)
-    }
+    composeTestRule.setContent { LoadingScreen(navigationActions = navigationActions) }
   }
 
   @After
