@@ -72,7 +72,6 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               Spacer(modifier = Modifier.height(16.dp))
 
-
               Button(
                   onClick = { navigationActions.navigateTo(Screen.POMODORO) },
                   modifier = Modifier.fillMaxWidth().height(50.dp).testTag("pomodoroButton")) {
