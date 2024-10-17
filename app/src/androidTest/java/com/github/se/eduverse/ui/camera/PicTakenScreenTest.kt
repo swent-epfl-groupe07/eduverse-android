@@ -105,6 +105,6 @@ class PicTakenScreenTest {
     }
 
     composeTestRule.onNodeWithTag("cropIcon").assertIsDisplayed().assertHasClickAction()
-    composeTestRule.onNodeWithTag("filterIcon").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("settingsIcon").assertIsDisplayed().assertHasClickAction()
   }
 }
