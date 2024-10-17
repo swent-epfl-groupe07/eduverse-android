@@ -101,8 +101,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     }
 
     navigation(
-      startDestination = Screen.CALCULATOR,
-      route = Route.CALCULATOR,
+        startDestination = Screen.CALCULATOR,
+        route = Route.CALCULATOR,
     ) {
       composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
     }
