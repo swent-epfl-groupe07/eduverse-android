@@ -72,6 +72,16 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               Spacer(modifier = Modifier.height(16.dp))
 
+
+              Button(
+                  onClick = { navigationActions.navigateTo(Screen.POMODORO) },
+                  modifier = Modifier.fillMaxWidth().height(50.dp).testTag("pomodoroButton")) {
+                    Text(text = "Pomodoro Timer", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+                  }
+
+              Spacer(modifier = Modifier.height(16.dp))
+
               // List Folders button
               Button(
                   onClick = { navigationActions.navigateTo(Screen.LIST_FOLDERS) },
@@ -81,19 +91,14 @@ fun OthersScreen(navigationActions: NavigationActions) {
                           .testTag("field4Button") // Test tag for Field #4 button
                   ) {
                     Text(text = "Courses", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                  }
+              
 
               Spacer(modifier = Modifier.height(16.dp))
 
-              // Field #5 button
               Button(
-                  onClick = { /* Placeholder for Field #5 */},
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .height(50.dp)
-                          .testTag("field5Button") // Test tag for Field #5 button
-                  ) {
-                    Text(text = "Field #5", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                  onClick = { navigationActions.navigateTo(Screen.CALCULATOR) },
+                  modifier = Modifier.fillMaxWidth().height(50.dp).testTag("CalculatorButton")) {
+                    Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                   }
             }
       })
