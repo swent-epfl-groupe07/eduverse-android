@@ -72,7 +72,7 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               Spacer(modifier = Modifier.height(16.dp))
 
-              // Field #4 button
+
               Button(
                   onClick = { navigationActions.navigateTo(Screen.POMODORO) },
                   modifier = Modifier.fillMaxWidth().height(50.dp).testTag("pomodoroButton")) {
