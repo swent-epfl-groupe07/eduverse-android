@@ -1,139 +1,110 @@
-package com.github.se.eduverse.ui.camera
-
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.compose.ui.test.assertIsDisplayed
+import android.net.Uri
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.model.Photo
+import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
+import io.mockk.*
 import java.io.File
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class PicTakenScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
-  @get:Rule val instantExecutorRule = InstantTaskExecutorRule() // Helps with LiveData testing
 
-  private val navigationActions = mockk<NavigationActions>(relaxed = true)
-  private val viewModel = mockk<PhotoViewModel>(relaxed = true)
-  private val photoFile = mockk<File>()
-  private val bitmapMock = mockk<Bitmap>()
+  private lateinit var viewModel: PhotoViewModel
+  private lateinit var navigationActions: NavigationActions
+  private lateinit var testFile: File
+  private lateinit var mockBitmap: Bitmap
 
   @Before
   fun setUp() {
-    every { photoFile.exists() } returns false
-    every { photoFile.path } returns "test/path"
+    viewModel = mockk(relaxed = true)
+    navigationActions = mockk(relaxed = true)
 
-    mockkStatic(BitmapFactory::class)
-    every { BitmapFactory.decodeFile("test/path") } returns bitmapMock
-
-    every { bitmapMock.width } returns 100
-    every { bitmapMock.height } returns 100
+    // Création d'une image bitmap et d'un fichier temporaire simulant une photo capturée
+    mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    testFile =
+        File.createTempFile("test_image", ".jpg").apply {
+          outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+        }
   }
 
-  /*@Test
-  fun showsCapturedImage_whenPhotoFileExists() {
-    // Arrange
-    every { photoFile.exists() } returns true
-
-    // Act
+  @Test
+  fun testImageIsDisplayed() {
     composeTestRule.setContent {
-      PicTakenScreen(photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
+      PicTakenScreen(
+          photoFile = testFile, navigationActions = navigationActions, viewModel = viewModel)
     }
 
-    // Assert
     composeTestRule.onNodeWithTag("capturedImage").assertIsDisplayed()
-  }*/
-
-  @Test
-  fun showsGoogleLogoImage_whenPhotoFileDoesNotExist() {
-    // Act
-    composeTestRule.setContent {
-      PicTakenScreen(
-          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
-    }
-
-    // Assert
-    composeTestRule.onNodeWithTag("googleLogoImage").assertIsDisplayed()
   }
 
   @Test
-  fun cropIcon_isDisplayed() {
+  fun testGoogleLogoDisplayedWhenBitmapIsNull() {
+    // Reconfigurer le contenu avec un fichier `photoFile` nul
     composeTestRule.setContent {
-      PicTakenScreen(
-          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
+      PicTakenScreen(photoFile = null, navigationActions = navigationActions, viewModel = viewModel)
     }
-    composeTestRule.onNodeWithTag("cropIcon").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("googleLogoImage").assertExists().assertIsDisplayed()
   }
 
   @Test
-  fun filterIcon_isDisplayed() {
+  fun testSaveButtonFunctionality() {
     composeTestRule.setContent {
       PicTakenScreen(
-          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
-    }
-    composeTestRule.onNodeWithTag("filterIcon").assertIsDisplayed()
-  }
-
-  @Test
-  fun saveButton_isDisplayed() {
-    composeTestRule.setContent {
-      PicTakenScreen(
-          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
-    }
-    composeTestRule.onNodeWithTag("saveButton").assertIsDisplayed()
-  }
-
-  @Test
-  fun publishButton_isDisplayed() {
-    composeTestRule.setContent {
-      PicTakenScreen(
-          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
-    }
-    composeTestRule.onNodeWithTag("publishButton").assertIsDisplayed()
-  }
-
-  @Test
-  fun closeButton_isDisplayed() {
-    composeTestRule.setContent {
-      PicTakenScreen(
-          photoFile = photoFile, navigationActions = navigationActions, viewModel = viewModel)
-    }
-    composeTestRule.onNodeWithTag("closeButton").assertIsDisplayed()
-  }
-
-  /*@Test
-  fun saveButton_onClick_callsSavePhotoAndNavigatesBack() = runBlocking  {
-    // Arrange
-    composeTestRule.setContent {
-      PicTakenScreen(
-        photoFile = photoFile,
-        navigationActions = navigationActions,
-        viewModel = viewModel
-      )
+          photoFile = testFile, navigationActions = navigationActions, viewModel = viewModel)
     }
 
-    // Act: Click on the save button
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Assert: Use coVerify for coroutines
-    coVerify(exactly = 1) {
-      viewModel.savePhoto(match { photo ->
-        photo.ownerId == "user123" &&
-                photo.path.startsWith("photos/user123/") &&
-                photo.photo.isNotEmpty()
-      })
+    // Vérifier si `viewModel.savePhoto()` est appelé avec un objet `Photo`
+    verify { viewModel.savePhoto(any<Photo>()) }
+
+    // Vérifier si `navigationActions.goBack()` est appelé deux fois
+    verify(exactly = 2) { navigationActions.goBack() }
+  }
+
+  @Test
+  fun testNextButtonFunctionality() {
+    composeTestRule.setContent {
+      PicTakenScreen(
+          photoFile = testFile, navigationActions = navigationActions, viewModel = viewModel)
     }
-    coVerify(exactly = 2) { navigationActions.goBack() }
-  }*/
+
+    composeTestRule.onNodeWithTag("nextButton").performClick()
+
+    // Vérifier si la navigation vers l'écran suivant est déclenchée
+    val encodedPath = Uri.encode(testFile.absolutePath)
+    verify { navigationActions.navigateTo("nextScreen/$encodedPath") }
+  }
+
+  @Test
+  fun testCloseButtonFunctionality() {
+    composeTestRule.setContent {
+      PicTakenScreen(
+          photoFile = testFile, navigationActions = navigationActions, viewModel = viewModel)
+    }
+
+    composeTestRule.onNodeWithTag("closeButton").performClick()
+
+    // Vérifier si `navigationActions.goBack()` est appelé pour fermer l'écran
+    verify { navigationActions.goBack() }
+  }
+
+  @Test
+  fun testCropAndFilterIconsAreClickable() {
+    composeTestRule.setContent {
+      PicTakenScreen(
+          photoFile = testFile, navigationActions = navigationActions, viewModel = viewModel)
+    }
+
+    composeTestRule.onNodeWithTag("cropIcon").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("filterIcon").assertIsDisplayed().assertHasClickAction()
+  }
 }

@@ -3,6 +3,7 @@ package com.github.se.eduverse.ui.camera
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
 import java.io.File
 
@@ -45,14 +47,13 @@ fun PicTakenScreen(
     navigationActions: NavigationActions,
     viewModel: PhotoViewModel
 ) {
-  val ownerId = "user123"
+  val auth = FirebaseAuth.getInstance()
+  val ownerId = auth.currentUser?.uid ?: "anonymous"
   val path = "photos/$ownerId/${System.currentTimeMillis()}.jpg"
 
   val bitmap =
-      if (photoFile != null && photoFile.exists()) {
-        BitmapFactory.decodeFile(photoFile.path)?.let { adjustImageRotation(it) }?.asImageBitmap()
-      } else {
-        null
+      photoFile?.let {
+        BitmapFactory.decodeFile(it.path)?.let { adjustImageRotation(it) }?.asImageBitmap()
       }
 
   Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -114,7 +115,11 @@ fun PicTakenScreen(
               }
 
           Button(
-              onClick = {}, modifier = Modifier.weight(1f).height(56.dp).testTag("publishButton")) {
+              onClick = {
+                val encodedPath = photoFile?.absolutePath?.let { Uri.encode(it) }
+                encodedPath?.let { navigationActions.navigateTo("nextScreen/$it") }
+              },
+              modifier = Modifier.weight(1f).height(56.dp).testTag("nextButton")) {
                 Text("Next")
               }
         }

@@ -13,14 +13,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
+import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -136,6 +139,14 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
       val photoFile = photoPath?.let { File(it) }
       PicTakenScreen(photoFile, navigationActions, photoViewModel)
     }
+    composable(
+        "nextScreen/{photoPath}",
+        arguments = listOf(navArgument("photoPath") { type = NavType.StringType })) { backStackEntry
+          ->
+          val photoPath = backStackEntry.arguments?.getString("photoPath")
+          val photoFile = if (photoPath != null) File(photoPath) else null
+          NextScreen(photoFile = photoFile, navigationActions = navigationActions, photoViewModel)
+        }
   }
 }
 
