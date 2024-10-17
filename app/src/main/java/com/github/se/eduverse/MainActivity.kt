@@ -12,12 +12,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
+
 import com.github.se.eduverse.ui.authentification.LoadingScreen
+
+import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
+
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
@@ -29,6 +34,7 @@ import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
@@ -76,6 +82,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, isUserLoggedIn: Boolean) {
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = FirebaseFirestore.getInstance())
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
+  val pomodoroViewModel: TimerViewModel = viewModel()
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -125,6 +132,16 @@ fun EduverseApp(cameraPermissionGranted: Boolean, isUserLoggedIn: Boolean) {
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
     }
+
+
+    navigation(
+        startDestination = Screen.POMODORO,
+        route = Route.POMODORO,
+    ) {
+      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+    }
+
+    // Ajoute une route dynamique pour PicTakenScreen
 
     composable("picTaken/{photoPath}") { backStackEntry ->
       val photoPath = backStackEntry.arguments?.getString("photoPath")
