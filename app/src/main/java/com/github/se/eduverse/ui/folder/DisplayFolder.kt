@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
@@ -51,7 +52,7 @@ import com.github.se.eduverse.viewmodel.FolderViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
-  val activeFolder by remember { mutableStateOf(folderViewModel.activeFolder.value!!) }
+  val activeFolder by folderViewModel.activeFolder.collectAsState()
 
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
@@ -66,13 +67,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
-            title = {
-              Text(
-                  text = activeFolder.name,
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
-                  modifier = Modifier.testTag("topBarText"))
-            },
+            title = { Text(text = activeFolder!!.name, modifier = Modifier.testTag("topBarText")) },
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
@@ -96,7 +91,9 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
               Icon(Icons.Default.Add, contentDescription = "Create File")
             }
       }) { padding ->
-        Column(modifier = Modifier.padding(padding).testTag("column")) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).testTag("column"),
+        ) {
           // The text saying Files and the button to sort
           Row(
               modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
@@ -123,49 +120,51 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
                       onDismissRequest = { sorting = false },
                       properties = PopupProperties(focusable = false)) {
                         DropdownMenuItem(
-                            text = { Text("Alphabetic") },
+                            text = { Text("Alphabetic", modifier = Modifier.fillMaxWidth()) },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode1"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.NAME)
                               sorting = false
                             })
                         DropdownMenuItem(
-                            text = { Text("Newest") },
+                            text = { Text("Newest", modifier = Modifier.fillMaxWidth()) },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode2"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.CREATION_UP)
                               sorting = false
                             })
                         DropdownMenuItem(
-                            text = { Text("Oldest") },
+                            text = { Text("Oldest", modifier = Modifier.fillMaxWidth()) },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode3"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
                               sorting = false
                             })
                         DropdownMenuItem(
-                            text = { Text("Recently accessed") },
+                            text = {
+                              Text("Recently accessed", modifier = Modifier.fillMaxWidth())
+                            },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode4"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
                               sorting = false
                             })
                         DropdownMenuItem(
-                            text = { Text("Oldest access") },
+                            text = { Text("Oldest access", modifier = Modifier.fillMaxWidth()) },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode5"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
                               sorting = false
                             })
                         DropdownMenuItem(
-                            text = { Text("Most accessed") },
+                            text = { Text("Most accessed", modifier = Modifier.fillMaxWidth()) },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode6"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
                               sorting = false
                             })
                         DropdownMenuItem(
-                            text = { Text("Least accessed") },
+                            text = { Text("Least accessed", modifier = Modifier.fillMaxWidth()) },
                             modifier = Modifier.fillMaxWidth().testTag("sortMode7"),
                             onClick = {
                               folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
@@ -176,7 +175,7 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
               }
 
           // The files
-          activeFolder.files.forEach {
+          activeFolder!!.files.forEach {
             Button(
                 onClick = {},
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {

@@ -178,4 +178,13 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("sortMode7").performClick()
     composeTestRule.onNodeWithTag("sortMode7").assertIsNotDisplayed()
   }
+
+  @Test
+  fun clickOnFileHaveExpectedBehavior() {
+    composeTestRule.onNodeWithTag("name 1").performClick()
+    composeTestRule.onNodeWithTag("name 2").performClick()
+    composeTestRule.onNodeWithTag("name 3").performClick()
+
+    // click do nothing for now
+  }
 }
