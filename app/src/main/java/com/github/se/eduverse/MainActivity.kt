@@ -17,12 +17,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
+import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
-import com.github.se.eduverse.ui.folder.CreateFIleScreen
+import com.github.se.eduverse.ui.folder.CreateFileScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
 import com.github.se.eduverse.ui.folder.FolderScreen
 import com.github.se.eduverse.ui.folder.ListFoldersScreen
@@ -33,9 +34,11 @@ import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -85,8 +88,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
+  val fileViewModel = FileViewModel(fileRepo)
 
-  NavHost(navController = navController, startDestination = Route.AUTH) {
+  NavHost(navController = navController, startDestination = Route.OTHERS) {
     navigation(
         startDestination = Screen.AUTH,
         route = Route.AUTH,
@@ -127,9 +132,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFIleScreen() }
+      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen

@@ -213,6 +213,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:1.4.3")
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
 
+    // File access
+    implementation("androidx.activity:activity-ktx:1.6.0") // or the latest version
+    implementation("androidx.appcompat:appcompat:1.5.0") // or the latest version
+
 }
 
 tasks.withType<Test> {
