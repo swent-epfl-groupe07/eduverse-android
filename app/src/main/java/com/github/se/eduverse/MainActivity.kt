@@ -91,7 +91,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
 
-  NavHost(navController = navController, startDestination = Route.OTHERS) {
+  NavHost(navController = navController, startDestination = Route.AUTH) {
     navigation(
         startDestination = Screen.AUTH,
         route = Route.AUTH,
