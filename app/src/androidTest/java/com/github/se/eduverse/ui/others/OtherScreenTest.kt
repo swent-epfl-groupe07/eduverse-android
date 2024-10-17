@@ -36,6 +36,7 @@ class OthersScreenTest {
     composeTestRule.onNodeWithText("About").assertIsDisplayed()
     composeTestRule.onNodeWithText("Pomodoro Timer").assertIsDisplayed()
     composeTestRule.onNodeWithText("Field #5").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Calculator").assertIsDisplayed()
 
     // Check if the buttons are clickable (perform click actions)
     composeTestRule.onNodeWithText("Settings").performClick()
@@ -43,6 +44,7 @@ class OthersScreenTest {
     composeTestRule.onNodeWithText("About").performClick()
     composeTestRule.onNodeWithText("Pomodoro Timer").performClick()
     composeTestRule.onNodeWithText("Field #5").performClick()
+    composeTestRule.onNodeWithText("Calculator").performClick()
 
     // Assert that the buttons are present in the layout
     composeTestRule.onAllNodesWithText("Settings").assertCountEquals(1)
@@ -50,5 +52,6 @@ class OthersScreenTest {
     composeTestRule.onAllNodesWithText("About").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Pomodoro Timer").assertCountEquals(1)
     composeTestRule.onAllNodesWithText("Field #5").assertCountEquals(1)
+    composeTestRule.onAllNodesWithText("Calculator").assertCountEquals(1)
   }
 }

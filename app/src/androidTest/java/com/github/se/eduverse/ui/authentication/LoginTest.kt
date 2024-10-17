@@ -31,10 +31,8 @@ class LoginTest {
   @Before
   fun setUp() {
     Intents.init()
-
     navController = Mockito.mock(NavHostController::class.java)
     navigationActions = NavigationActions(navController)
-
     composeTestRule.setContent { SignInScreen(navigationActions = navigationActions) }
   }
 
@@ -47,7 +45,6 @@ class LoginTest {
   fun titleAndButtonAreCorrectlyDisplayed() {
     composeTestRule.onNodeWithTag("loginText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginText").assertTextEquals("Login or Sign-Up via Google")
-
     composeTestRule.onNodeWithTag("loginButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginButton").assertHasClickAction()
   }

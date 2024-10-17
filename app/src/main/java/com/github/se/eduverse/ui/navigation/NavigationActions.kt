@@ -17,6 +17,7 @@ object Route {
   const val VIDEOS = "Videos"
   const val CAMERA = "Camera"
   const val OTHERS = "Others"
+  const val CALCULATOR = "Calculator"
   const val POMODORO = "Pomodoro"
 }
 
@@ -31,6 +32,7 @@ object Screen {
   const val FOLDER = "Folder screen"
   const val CREATE_FILE = "CreateFile screen"
   const val COURSES = "Courses screen"
+  const val CALCULATOR = "Calculator screen"
   const val POMODORO = "Pomodoro screen"
 }
 
