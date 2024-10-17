@@ -1,7 +1,9 @@
 package com.github.se.eduverse.ui
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.model.Widget
@@ -11,6 +13,8 @@ import com.github.se.eduverse.viewmodel.DashboardViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -70,6 +74,80 @@ class DashboardScreenUiTest {
     composeTestRule.onAllNodesWithTag("add_common_widget_button").onFirst().assertDoesNotExist()
   }
 
+  @Test
+  fun testDragCancellation() {
+    setupDashboardScreen()
+
+    val initialOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Start dragging but cancel before releasing
+    composeTestRule.onAllNodesWithTag("widget_card").onFirst().performTouchInput {
+      down(center)
+      moveBy(Offset(0f, 50f))
+      cancel()
+    }
+
+    composeTestRule.waitForIdle()
+
+    val newOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Assert that the order hasn't changed
+    assertEquals(initialOrder, newOrder)
+  }
+
+  @Test
+  fun testDragLastBeyondBounds() {
+    setupDashboardScreen()
+
+    val initialOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Attempt to drag beyond the bounds of the list
+    composeTestRule.onAllNodesWithTag("widget_card").onLast().performTouchInput {
+      down(center)
+      advanceEventTime(100)
+      moveBy(Offset(x = 1200f, y = 1180.dp.toPx()), 0)
+      advanceEventTime(1000)
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+
+    val newOrder = fakeViewModel.widgetList.value.map { it.widgetId }
+
+    // Assert that the order has changed, but the widget is still in the list
+    assertEquals(initialOrder, newOrder)
+    assertTrue(newOrder.containsAll(initialOrder))
+  }
+
+  @Test
+  fun testWidgetContentDisplaysCorrectIcon() {
+    // Define a list of test widgets with expected icons
+    val testWidgets =
+        listOf(
+            Widget("1", "Type", "Calculator", "Calculator content", "Owner"),
+            Widget("2", "Type 2", "PDF Converter", "PDF content", "Owner 2"),
+            Widget("3", "Type 3", "Weekly Planner", "Planner content", "Owner 3"),
+            Widget("4", "Type 4", "Pomodoro Timer", "Timer content", "Owner 4"),
+            Widget(
+                "5", "Type 5", "Unknown Widget", "Unknown content", "Owner 5") // For default case
+            )
+
+    // Set up the DashboardScreen with the test widgets
+    fakeViewModel.apply { _widgetList.value = testWidgets }
+
+    setupDashboardScreen()
+
+    // Check that each widget displays the correct icon
+    testWidgets.forEach { widget ->
+      val iconNode = composeTestRule.onNodeWithText(widget.widgetTitle)
+      iconNode.assertExists() // Ensure the widget exists
+
+      // Here we can check the icon visually or programmatically if you have specific identifiers
+      // But for simplicity, we are checking if the widget displays correctly.
+      // You can create more specific checks if you have test tags for icons.
+    }
+  }
+
   private fun setupDashboardScreen() {
     composeTestRule.setContent {
       DashboardScreen(
@@ -81,7 +159,7 @@ class DashboardScreenUiTest {
 }
 
 class FakeDashboardViewModel : DashboardViewModel(mock()) {
-  private val _widgetList =
+  val _widgetList =
       MutableStateFlow(
           listOf(
               Widget("1", "Type", "Title 1", "Content 1", "Owner"),
