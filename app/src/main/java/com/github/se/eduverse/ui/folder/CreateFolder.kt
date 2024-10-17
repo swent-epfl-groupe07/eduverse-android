@@ -47,6 +47,7 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
   var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
 
   if (fileViewModel.newFile != null) files += fileViewModel.newFile
+  fileViewModel.reset()
 
   val folder =
       Folder(

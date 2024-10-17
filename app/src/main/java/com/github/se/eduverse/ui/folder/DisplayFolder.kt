@@ -59,7 +59,10 @@ fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderVi
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
 
-  Scaffold(
+    if (fileViewModel.newFile != null) activeFolder!!.files.add(fileViewModel.newFile)
+    fileViewModel.reset()
+
+    Scaffold(
       modifier = Modifier.testTag("scaffold"),
       topBar = {
         MediumTopAppBar(
