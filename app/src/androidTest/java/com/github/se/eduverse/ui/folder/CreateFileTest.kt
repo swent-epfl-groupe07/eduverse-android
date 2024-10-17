@@ -20,112 +20,111 @@ import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 
 class CreateFileTest {
-    private lateinit var fileRepository: FileRepository
-    private lateinit var navigationActions: NavigationActions
-    private lateinit var fileViewModel: FileViewModel
+  private lateinit var fileRepository: FileRepository
+  private lateinit var navigationActions: NavigationActions
+  private lateinit var fileViewModel: FileViewModel
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Before
-    fun setUp() {
-        fileRepository = mock(FileRepository::class.java)
-        navigationActions = mock(NavigationActions::class.java)
-        fileViewModel = FileViewModel(fileRepository)
+  @Before
+  fun setUp() {
+    fileRepository = mock(FileRepository::class.java)
+    navigationActions = mock(NavigationActions::class.java)
+    fileViewModel = FileViewModel(fileRepository)
 
-            `when`(fileRepository.getNewUid()).thenReturn("uid")
-        `when`(fileRepository.saveFile(any(), any(), any(), any())).then {
-            val callback = it.getArgument<() -> Unit>(2)
-            callback()
-        }
-
-        composeTestRule.setContent { CreateFileScreen(navigationActions, fileViewModel) }
+    `when`(fileRepository.getNewUid()).thenReturn("uid")
+    `when`(fileRepository.saveFile(any(), any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(2)
+      callback()
     }
 
-    @Test
-    fun displayComponents() {
-        composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("fileNameTitle").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("fileNameField").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("uploadFileText").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("browseFile").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("iconCheck").assertIsNotDisplayed()
-        composeTestRule.onNodeWithTag("fileSave").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("fileCancel").assertIsDisplayed()
+    composeTestRule.setContent { CreateFileScreen(navigationActions, fileViewModel) }
+  }
+
+  @Test
+  fun displayComponents() {
+    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("fileNameTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("fileNameField").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("uploadFileText").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("browseFile").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("iconCheck").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("fileSave").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("fileCancel").assertIsDisplayed()
+  }
+
+  @Test
+  fun goBackWorks() {
+    var test = false
+    `when`(navigationActions.goBack()).then {
+      test = true
+      null
     }
 
-    @Test
-    fun goBackWorks() {
-        var test = false
-        `when`(navigationActions.goBack()).then {
-            test = true
-            null
-        }
+    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBack").performClick()
+    assert(test)
+  }
 
-        composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("goBack").performClick()
-        assert(test)
+  @Test
+  fun bottomBarWorks() {
+    var test: Boolean
+    `when`(navigationActions.navigateTo(any<TopLevelDestination>())).then {
+      test = true
+      null
+    }
+    LIST_TOP_LEVEL_DESTINATION.forEach {
+      test = false
+
+      composeTestRule.onNodeWithText(it.textId).assertIsDisplayed()
+      composeTestRule.onNodeWithText(it.textId).performClick()
+
+      assert(test)
+    }
+  }
+
+  @Test
+  fun asserIconDisplayWhenShould() {
+    composeTestRule.onNodeWithTag("iconCheck").assertIsNotDisplayed()
+
+    fileViewModel.createFile(Uri.EMPTY)
+
+    composeTestRule.onNodeWithTag("iconCheck").assertIsDisplayed()
+  }
+
+  @Test
+  fun assertSaveWorks() {
+    var test = false
+    `when`(navigationActions.goBack()).then {
+      test = true
+      null
     }
 
-    @Test
-    fun bottomBarWorks() {
-        var test: Boolean
-        `when`(navigationActions.navigateTo(any<TopLevelDestination>())).then {
-            test = true
-            null
-        }
-        LIST_TOP_LEVEL_DESTINATION.forEach {
-            test = false
+    fileViewModel.createFile(Uri.EMPTY)
 
-            composeTestRule.onNodeWithText(it.textId).assertIsDisplayed()
-            composeTestRule.onNodeWithText(it.textId).performClick()
+    composeTestRule.onNodeWithTag("fileSave").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("fileSave").performClick()
+    assert(test)
+    assert(fileViewModel.validNewFile.value)
+    assert(fileViewModel.getNewFile() != null)
+  }
 
-            assert(test)
-        }
+  @Test
+  fun assertCancelWorks() {
+    var test = false
+    `when`(navigationActions.goBack()).then {
+      test = true
+      null
     }
 
-    @Test
-    fun asserIconDisplayWhenShould() {
-        composeTestRule.onNodeWithTag("iconCheck").assertIsNotDisplayed()
+    fileViewModel.createFile(Uri.EMPTY)
 
-        fileViewModel.createFile(Uri.EMPTY)
-
-        composeTestRule.onNodeWithTag("iconCheck").assertIsDisplayed()
-    }
-
-    @Test
-    fun assertSaveWorks() {
-        var test = false
-        `when`(navigationActions.goBack()).then {
-            test = true
-            null
-        }
-
-        fileViewModel.createFile(Uri.EMPTY)
-
-        composeTestRule.onNodeWithTag("fileSave").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("fileSave").performClick()
-        assert(test)
-        assert(fileViewModel.validNewFile.value)
-        assert(fileViewModel.getNewFile() != null)
-    }
-
-    @Test
-    fun assertCancelWorks() {
-        var test = false
-        `when`(navigationActions.goBack()).then {
-            test = true
-            null
-        }
-
-        fileViewModel.createFile(Uri.EMPTY)
-
-        composeTestRule.onNodeWithTag("fileCancel").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("fileCancel").performClick()
-        assert(test)
-        assert(!fileViewModel.validNewFile.value)
-        assert(fileViewModel.getNewFile() == null)
-    }
+    composeTestRule.onNodeWithTag("fileCancel").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("fileCancel").performClick()
+    assert(test)
+    assert(!fileViewModel.validNewFile.value)
+    assert(fileViewModel.getNewFile() == null)
+  }
 }

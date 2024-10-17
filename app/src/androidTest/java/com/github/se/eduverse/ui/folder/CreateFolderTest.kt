@@ -6,8 +6,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.model.folder.MyFile
 import com.github.se.eduverse.repository.FileRepository
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -18,8 +16,6 @@ import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.flow.MutableStateFlow
-import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -52,7 +48,9 @@ class CreateFolderTest {
     `when`(currentUser.uid).thenReturn("uid")
     folderViewModel = FolderViewModel(folderRepository, auth)
 
-    composeTestRule.setContent { CreateFolderScreen(navigationActions, folderViewModel, fileViewModel) }
+    composeTestRule.setContent {
+      CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+    }
   }
 
   @Test

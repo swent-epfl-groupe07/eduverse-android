@@ -115,12 +115,12 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
                       fontWeight = FontWeight.Bold,
                       fontSize = 24.sp,
                       modifier = Modifier.testTag("uploadFileText"))
-                  if (validNewFile) Icon(
-                      Icons.Default.Check,
-                      contentDescription = "File created",
-                      modifier = Modifier.testTag("iconCheck"),
-                      tint = Color.Green
-                  )
+                  if (validNewFile)
+                      Icon(
+                          Icons.Default.Check,
+                          contentDescription = "File created",
+                          modifier = Modifier.testTag("iconCheck"),
+                          tint = Color.Green)
                 }
                 Button(
                     onClick = { filePickerLauncher.launch("application/pdf") },
