@@ -17,6 +17,7 @@ object Route {
   const val VIDEOS = "Videos"
   const val CAMERA = "Camera"
   const val OTHERS = "Others"
+  const val POMODORO = "Pomodoro"
 }
 
 object Screen {
@@ -28,7 +29,9 @@ object Screen {
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
   const val FOLDER = "Folder screen"
+  const val CREATE_FILE = "CreateFile screen"
   const val COURSES = "Courses screen"
+  const val POMODORO = "Pomodoro screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -61,7 +64,7 @@ open class NavigationActions(
    *   navigating to a new destination This is useful when navigating to a new screen from the
    *   bottom navigation bar as we don't want to keep the previous screen in the back stack
    */
-  fun navigateTo(destination: TopLevelDestination) {
+  open fun navigateTo(destination: TopLevelDestination) {
 
     navController.navigate(destination.route) {
       // Pop up to the start destination of the graph to
@@ -86,12 +89,12 @@ open class NavigationActions(
    *
    * @param screen The screen to navigate to
    */
-  fun navigateTo(screen: String) {
+  open fun navigateTo(screen: String) {
     navController.navigate(screen)
   }
 
   /** Navigate back to the previous screen. */
-  fun goBack() {
+  open fun goBack() {
     navController.popBackStack()
   }
 
@@ -100,7 +103,7 @@ open class NavigationActions(
    *
    * @return The current route
    */
-  fun currentRoute(): String {
+  open fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
   }
 }
