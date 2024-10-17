@@ -7,12 +7,12 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.model.folder.FolderRepository
-import com.github.se.eduverse.model.folder.FolderViewModel
 import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Before
@@ -30,9 +30,9 @@ class DisplayFolderTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
 
-  val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file2 = MyFile("", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file3 = MyFile("", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file3 = MyFile("", "", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
 
   val folder =
       Folder(
