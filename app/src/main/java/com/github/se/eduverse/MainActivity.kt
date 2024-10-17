@@ -18,11 +18,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
-
-import com.github.se.eduverse.ui.authentification.LoadingScreen
-
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
-
+import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
@@ -132,7 +129,6 @@ fun EduverseApp(cameraPermissionGranted: Boolean, isUserLoggedIn: Boolean) {
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
     }
-
 
     navigation(
         startDestination = Screen.POMODORO,
