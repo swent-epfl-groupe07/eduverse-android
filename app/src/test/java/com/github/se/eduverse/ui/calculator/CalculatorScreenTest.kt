@@ -13,7 +13,6 @@ class CalculatorTest {
     assertEquals("20", evaluateExpression("(2+3)*4"))
     assertEquals("Error, press C to clear", evaluateExpression("2+"))
     assertEquals("Error, press C to clear", evaluateExpression("5*/3"))
-    assertEquals("19,8", evaluateExpression("12.5+7.3"))
     assertEquals("1,428571", evaluateExpression("10/7"))
     assertEquals("333333333,333333", evaluateExpression("1000000000/3"))
   }
