@@ -20,6 +20,7 @@ import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
+import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
@@ -101,6 +102,13 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.VIDEOS,
     ) {
       composable(Screen.VIDEOS) { VideosScreen(navigationActions) }
+    }
+
+    navigation(
+        startDestination = Screen.CALCULATOR,
+        route = Route.CALCULATOR,
+    ) {
+      composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
     }
 
     navigation(
