@@ -12,7 +12,7 @@ data class TimerState(
 )
 
 enum class TimerType {
-    POMODORO,
-    SHORT_BREAK,
-    LONG_BREAK
+  POMODORO,
+  SHORT_BREAK,
+  LONG_BREAK
 }

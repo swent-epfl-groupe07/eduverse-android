@@ -1,126 +1,134 @@
 package com.github.se.eduverse.viewmodel
 
-import android.os.CountDownTimer
 import androidx.lifecycle.ViewModel
 import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class TimerViewModel : ViewModel() {
-    private val _timerState = MutableStateFlow(TimerState())
-    val timerState = _timerState.asStateFlow()
-    private var pomodoroTimer: CountDownTimer? = null
+open class TimerViewModel(
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default
+) : ViewModel() {
+  private val _timerState =
+      MutableStateFlow(
+          TimerState(
+              isPaused = true,
+              remainingSeconds = DEFAULT_FOCUS_TIME,
+              currentTimerType = TimerType.POMODORO,
+              focusTime = DEFAULT_FOCUS_TIME,
+              shortBreakTime = DEFAULT_SHORT_BREAK_TIME,
+              longBreakTime = DEFAULT_LONG_BREAK_TIME,
+              cycles = DEFAULT_CYCLES,
+              currentCycle = 1))
+  open val timerState = _timerState.asStateFlow()
 
-    init {
-        resetTimer()
-    }
+  private var timerJob: Job? = null
 
-    fun startTimer() {
-        _timerState.update { it.copy(isPaused = false) }
-        pomodoroTimer = object : CountDownTimer(
-            _timerState.value.remainingSeconds * MILLISECONDS_IN_A_SECOND,
-            MILLISECONDS_IN_A_SECOND
-        ) {
-            override fun onTick(millisUntilFinished: Long) {
-                _timerState.update {
-                    it.copy(remainingSeconds = millisUntilFinished / MILLISECONDS_IN_A_SECOND)
-                }
+  open fun startTimer() {
+    if (timerJob?.isActive == true) return
+
+    _timerState.update { it.copy(isPaused = false) }
+    timerJob =
+        coroutineScope.launch(dispatcher) {
+          while (_timerState.value.remainingSeconds > 0) {
+            delay(1000)
+            _timerState.update { currentState ->
+              currentState.copy(
+                  remainingSeconds = (currentState.remainingSeconds - 1).coerceAtLeast(0))
             }
-
-            override fun onFinish() {
-                pomodoroTimer?.cancel()
-                moveToNextTimer()
-            }
+          }
+          delay(100)
+          // Only proceed with transition if we actually reached zero
+          if (_timerState.value.remainingSeconds == 0L) {
+            skipToNextTimer()
+          }
         }
-        pomodoroTimer?.start()
-    }
+  }
 
-    fun stopTimer() {
-        _timerState.update { it.copy(isPaused = true) }
-        pomodoroTimer?.cancel()
-    }
+  open fun stopTimer() {
+    _timerState.update { it.copy(isPaused = true) }
+    timerJob?.cancel()
+  }
 
-    fun resetTimer() {
-        pomodoroTimer?.cancel()
-        _timerState.update {
-            it.copy(
-                isPaused = true,
-                remainingSeconds = it.focusTime,
+  open fun resetTimer() {
+    timerJob?.cancel()
+    _timerState.update {
+      it.copy(
+          isPaused = true,
+          remainingSeconds = it.focusTime,
+          currentTimerType = TimerType.POMODORO,
+          currentCycle = 1)
+    }
+  }
+
+  open fun skipToNextTimer() {
+    timerJob?.cancel()
+    moveToNextTimer()
+  }
+
+  private fun moveToNextTimer() {
+    val currentState = _timerState.value
+    val newState =
+        when (currentState.currentTimerType) {
+          TimerType.POMODORO -> {
+            if (currentState.currentCycle >= currentState.cycles) {
+              currentState.copy(
+                  currentTimerType = TimerType.LONG_BREAK,
+                  remainingSeconds = currentState.longBreakTime,
+                  isPaused = true,
+                  currentCycle = 1)
+            } else {
+              currentState.copy(
+                  currentTimerType = TimerType.SHORT_BREAK,
+                  remainingSeconds = currentState.shortBreakTime,
+                  isPaused = false,
+                  currentCycle = currentState.currentCycle)
+            }
+          }
+          TimerType.SHORT_BREAK -> {
+            currentState.copy(
                 currentTimerType = TimerType.POMODORO,
-                currentCycle = 1
-            )
+                remainingSeconds = currentState.focusTime,
+                isPaused = false,
+                currentCycle = currentState.currentCycle + 1)
+          }
+          TimerType.LONG_BREAK -> {
+            currentState.copy(
+                currentTimerType = TimerType.POMODORO,
+                remainingSeconds = currentState.focusTime,
+                isPaused = true,
+                currentCycle = 1)
+          }
         }
-    }
+    _timerState.update { newState }
 
-    fun skipToNextTimer() {
-        pomodoroTimer?.cancel()
-        moveToNextTimer()
+    // Only start the timer if the new state isn't paused
+    if (!newState.isPaused) {
+      startTimer()
     }
+  }
 
-    private fun moveToNextTimer() {
-        val currentState = _timerState.value
-        val newState = when (currentState.currentTimerType) {
-            TimerType.POMODORO -> {
-                if (currentState.currentCycle == currentState.cycles) {
-                    // All cycles completed, move to long break and stop
-                    currentState.copy(
-                        currentTimerType = TimerType.LONG_BREAK,
-                        remainingSeconds = currentState.longBreakTime,
-                        isPaused = true // Stop the timer
-                    )
-                } else if (currentState.currentCycle % currentState.cycles == 0) {
-                    currentState.copy(
-                        currentTimerType = TimerType.LONG_BREAK,
-                        remainingSeconds = currentState.longBreakTime
-                    )
-                } else {
-                    currentState.copy(
-                        currentTimerType = TimerType.SHORT_BREAK,
-                        remainingSeconds = currentState.shortBreakTime
-                    )
-                }
-            }
-            TimerType.SHORT_BREAK, TimerType.LONG_BREAK -> {
-                if (currentState.currentCycle == currentState.cycles) {
-                    // All cycles completed, stop the timer
-                    currentState.copy(
-                        isPaused = true,
-                        remainingSeconds = currentState.focusTime,
-                        currentTimerType = TimerType.POMODORO
-                    )
-                } else {
-                    currentState.copy(
-                        currentTimerType = TimerType.POMODORO,
-                        remainingSeconds = currentState.focusTime,
-                        currentCycle = currentState.currentCycle + 1
-                    )
-                }
-            }
-        }
-        _timerState.update { newState }
-        if (!newState.isPaused) {
-            startTimer()
-        }
+  open fun updateSettings(focusTime: Long, shortBreakTime: Long, longBreakTime: Long, cycles: Int) {
+    _timerState.update {
+      it.copy(
+          focusTime = focusTime,
+          shortBreakTime = shortBreakTime,
+          longBreakTime = longBreakTime,
+          cycles = cycles)
     }
-
-    fun updateSettings(
-        focusTime: Long,
-        shortBreakTime: Long,
-        longBreakTime: Long,
-        cycles: Int
-    ) {
-        _timerState.update {
-            it.copy(
-                focusTime = focusTime,
-                shortBreakTime = shortBreakTime,
-                longBreakTime = longBreakTime,
-                cycles = cycles
-            )
-        }
-        resetTimer()
-    }
+    resetTimer()
+  }
 }
 
-private const val MILLISECONDS_IN_A_SECOND = 1000L
+private const val DEFAULT_FOCUS_TIME = 1500L // Default 25 minutes
+private const val DEFAULT_SHORT_BREAK_TIME = 300L // Default 5 minutes
+private const val DEFAULT_LONG_BREAK_TIME = 900L // Default 15 minutes
+private const val DEFAULT_CYCLES = 4

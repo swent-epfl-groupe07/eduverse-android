@@ -18,7 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
-import com.github.se.eduverse.ui.PomodoroScreen
+import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
@@ -124,10 +124,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     }
 
     navigation(
-      startDestination = Screen.POMODORO,
-      route = Route.POMODORO,
+        startDestination = Screen.POMODORO,
+        route = Route.POMODORO,
     ) {
-      composable(Screen.POMODORO) { PomodoroScreen(navigationActions,pomodoroViewModel) }
+      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen
