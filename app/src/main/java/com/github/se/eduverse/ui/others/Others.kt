@@ -95,6 +95,16 @@ fun OthersScreen(navigationActions: NavigationActions) {
                   ) {
                     Text(text = "Field #5", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                   }
+
+                Button(
+                    onClick = { navigationActions.navigateTo(Screen.CALCULATOR)},
+                    modifier =
+                    Modifier.fillMaxWidth()
+                        .height(50.dp)
+                        .testTag("CalculatorButton")
+                ) {
+                    Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
             }
       })
 }
