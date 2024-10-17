@@ -13,9 +13,11 @@ import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -29,6 +31,7 @@ class CreateFolderTest {
   private lateinit var folderRepository: FolderRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
+  private lateinit var fileViewModel: FileViewModel
 
   val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
@@ -54,6 +57,7 @@ class CreateFolderTest {
   @Before
   fun setUp() {
     folderRepository = mock(FolderRepository::class.java)
+    fileViewModel = mock(FileViewModel::class.java)
     navigationActions = mock(NavigationActions::class.java)
 
     `when`(folderRepository.getNewUid()).thenReturn("")
@@ -64,7 +68,9 @@ class CreateFolderTest {
     `when`(currentUser.uid).thenReturn("uid")
     folderViewModel = FolderViewModel(folderRepository, auth)
 
-    composeTestRule.setContent { CreateFolderScreen(navigationActions, folderViewModel) }
+    `when`(fileViewModel.validNewFile).thenReturn(MutableStateFlow(false))
+
+    composeTestRule.setContent { CreateFolderScreen(navigationActions, folderViewModel, fileViewModel) }
   }
 
   @Test
