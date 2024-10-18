@@ -38,9 +38,9 @@ jobs:
           KEYSTORE_PATH: "custom-debug.keystore"
         run: |
           ./gradlew assembleDebug -Pandroid.injected.signing.store.file=$KEYSTORE_PATH \
-                                  -Pandroid.injected.signing.store.password="your_password" \
+                                  -Pandroid.injected.signing.store.password="TESTTEST" \
                                   -Pandroid.injected.signing.key.alias="androiddebugkey" \
-                                  -Pandroid.injected.signing.key.password="your_password"
+                                  -Pandroid.injected.signing.key.password="TESTTEST"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
