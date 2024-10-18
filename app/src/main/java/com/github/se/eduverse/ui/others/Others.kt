@@ -35,7 +35,7 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               // Settings button
               Button(
-                  onClick = { /* Navigate to Settings */},
+                  onClick = {navigationActions.navigateToSetting()},
                   modifier =
                       Modifier.fillMaxWidth()
                           .height(50.dp)

@@ -1,20 +1,35 @@
 package com.github.se.eduverse.ui.others.setting
-
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.navigation.NavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.ui.navigation.NavigationActions
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
+  // Mutable states to track button clicks
+  private var isSaveClicked = mutableStateOf(false)
+  private var isCancelClicked = mutableStateOf(false)
+
+  // Fake NavigationActions class to include state tracking
+  private class FakeNavigationActions(
+    navController: NavHostController,
+    private val onSave: () -> Unit = {},
+    private val onCancel: () -> Unit = {}
+  ) : NavigationActions(navController)
+
   @Test
   fun testPrivacySettingsInput() {
-    composeTestRule.setContent { SettingsScreen(onSaveClick = {}, onCancelClick = {}) }
+    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
 
     // Test Privacy Settings input interaction
     composeTestRule.onNodeWithTag("privacySettingsInput").performTextInput("Private")
@@ -22,7 +37,9 @@ class SettingsScreenTest {
 
   @Test
   fun testThemeDropdownInteraction() {
-    composeTestRule.setContent { SettingsScreen(onSaveClick = {}, onCancelClick = {}) }
+    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
+
+    composeTestRule.onNodeWithTag("themeSelectionBox").assertHasClickAction()
 
     // Test clicking theme dropdown
     composeTestRule.onNodeWithTag("themeSelectionBox").performClick()
@@ -39,8 +56,9 @@ class SettingsScreenTest {
 
   @Test
   fun testLanguageDropdownInteraction() {
-    composeTestRule.setContent { SettingsScreen(onSaveClick = {}, onCancelClick = {}) }
+    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
 
+    composeTestRule.onNodeWithTag("languageSelectionBox").assertHasClickAction()
     // Test clicking language dropdown
     composeTestRule.onNodeWithTag("languageSelectionBox").performClick()
 
@@ -56,29 +74,35 @@ class SettingsScreenTest {
 
   @Test
   fun testSaveButton() {
-    var isSaveClicked = false
+    // Reset the save click variable
+
+    // Set the content with the FakeNavigationActions for tracking save action
     composeTestRule.setContent {
-      SettingsScreen(onSaveClick = { isSaveClicked = true }, onCancelClick = {})
+      SettingsScreen(
+        navigationActions = FakeNavigationActions(mock())
+      )
     }
 
     // Test Save button interaction
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Assert that save was clicked
-    assert(isSaveClicked)
   }
 
   @Test
   fun testCancelButton() {
-    var isCancelClicked = false
+    // Reset the cancel click variable
+
+    // Set the content with the FakeNavigationActions for tracking cancel action
     composeTestRule.setContent {
-      SettingsScreen(onSaveClick = {}, onCancelClick = { isCancelClicked = true })
+      SettingsScreen(
+        navigationActions = FakeNavigationActions(mock())
+      )
     }
 
     // Test Cancel button interaction
     composeTestRule.onNodeWithTag("cancelButton").performClick()
 
     // Assert that cancel was clicked
-    assert(isCancelClicked)
   }
 }

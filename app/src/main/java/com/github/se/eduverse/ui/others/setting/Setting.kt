@@ -10,9 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.github.se.eduverse.ui.navigation.NavigationActions
 
 @Composable
-fun SettingsScreen(onSaveClick: () -> Unit, onCancelClick: () -> Unit) {
+fun SettingsScreen(navigationActions: NavigationActions) {
   var privacySettings by remember { mutableStateOf("") }
   var selectedTheme by remember { mutableStateOf("Light") }
   var selectedLanguage by remember { mutableStateOf("English") }
@@ -99,12 +100,12 @@ fun SettingsScreen(onSaveClick: () -> Unit, onCancelClick: () -> Unit) {
         Row(
             modifier = Modifier.fillMaxWidth().testTag("settingsButtons"),
             horizontalArrangement = Arrangement.SpaceEvenly) {
-              Button(onClick = onSaveClick, modifier = Modifier.weight(1f).testTag("saveButton")) {
+              Button(onClick = {navigationActions.goBack()}, modifier = Modifier.weight(1f).testTag("saveButton")) {
                 Text(text = "Save")
               }
               Spacer(modifier = Modifier.width(8.dp))
               Button(
-                  onClick = onCancelClick, modifier = Modifier.weight(1f).testTag("cancelButton")) {
+                  onClick = {navigationActions.goBack()}, modifier = Modifier.weight(1f).testTag("cancelButton")) {
                     Text(text = "Cancel")
                   }
             }

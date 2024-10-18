@@ -29,6 +29,7 @@ object Screen {
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
   const val LIST_FOLDERS = "ListFolders screen"
+  const val SETTING = "Setting screen"
   const val FOLDER = "Folder screen"
   const val CREATE_FOLDER = "CreateFolder screen"
   const val CREATE_FILE = "CreateFile screen"
@@ -85,6 +86,9 @@ open class NavigationActions(
         restoreState = true
       }
     }
+  }
+  fun navigateToSetting() {
+    navController.navigate(Screen.SETTING)
   }
 
   /**
