@@ -127,8 +127,11 @@ sonar {
 }
 
 dependencies {
-    testImplementation ("org.mockito:mockito-inline:4.0.0")
-    testImplementation ("androidx.arch.core:core-testing:2.1.0")
+    implementation("io.coil-kt:coil-compose:2.1.0")
+
+
+
+
     // Core
     implementation(libs.core.ktx)
     implementation(libs.androidx.core.ktx)
