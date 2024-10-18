@@ -20,6 +20,7 @@ import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
+import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
@@ -117,6 +118,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen
