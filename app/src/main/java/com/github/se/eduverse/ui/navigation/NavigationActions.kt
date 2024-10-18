@@ -92,6 +92,7 @@ open class NavigationActions(
       }
     }
   }
+
   fun navigateToSetting() {
     navController.navigate(Screen.SETTING)
   }

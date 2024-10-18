@@ -171,8 +171,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
 
-        composable(Screen.SETTING) { SettingsScreen(navigationActions) }
-        composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }

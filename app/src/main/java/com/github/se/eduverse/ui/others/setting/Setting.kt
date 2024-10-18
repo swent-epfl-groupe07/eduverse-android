@@ -100,12 +100,15 @@ fun SettingsScreen(navigationActions: NavigationActions) {
         Row(
             modifier = Modifier.fillMaxWidth().testTag("settingsButtons"),
             horizontalArrangement = Arrangement.SpaceEvenly) {
-              Button(onClick = {navigationActions.goBack()}, modifier = Modifier.weight(1f).testTag("saveButton")) {
-                Text(text = "Save")
-              }
+              Button(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.weight(1f).testTag("saveButton")) {
+                    Text(text = "Save")
+                  }
               Spacer(modifier = Modifier.width(8.dp))
               Button(
-                  onClick = {navigationActions.goBack()}, modifier = Modifier.weight(1f).testTag("cancelButton")) {
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.weight(1f).testTag("cancelButton")) {
                     Text(text = "Cancel")
                   }
             }

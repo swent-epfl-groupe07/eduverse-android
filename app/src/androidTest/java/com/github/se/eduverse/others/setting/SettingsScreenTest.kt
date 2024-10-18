@@ -1,6 +1,6 @@
 package com.github.se.eduverse.ui.others.setting
+
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
@@ -22,9 +22,9 @@ class SettingsScreenTest {
 
   // Fake NavigationActions class to include state tracking
   private class FakeNavigationActions(
-    navController: NavHostController,
-    private val onSave: () -> Unit = {},
-    private val onCancel: () -> Unit = {}
+      navController: NavHostController,
+      private val onSave: () -> Unit = {},
+      private val onCancel: () -> Unit = {}
   ) : NavigationActions(navController)
 
   @Test
@@ -77,11 +77,7 @@ class SettingsScreenTest {
     // Reset the save click variable
 
     // Set the content with the FakeNavigationActions for tracking save action
-    composeTestRule.setContent {
-      SettingsScreen(
-        navigationActions = FakeNavigationActions(mock())
-      )
-    }
+    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
 
     // Test Save button interaction
     composeTestRule.onNodeWithTag("saveButton").performClick()
@@ -94,11 +90,7 @@ class SettingsScreenTest {
     // Reset the cancel click variable
 
     // Set the content with the FakeNavigationActions for tracking cancel action
-    composeTestRule.setContent {
-      SettingsScreen(
-        navigationActions = FakeNavigationActions(mock())
-      )
-    }
+    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
 
     // Test Cancel button interaction
     composeTestRule.onNodeWithTag("cancelButton").performClick()
