@@ -80,23 +80,24 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               Spacer(modifier = Modifier.height(16.dp))
 
-              // Field #5 button
+              // List Folders button
               Button(
-                  onClick = { /* Placeholder for Field #5 */},
+                  onClick = { navigationActions.navigateTo(Screen.LIST_FOLDERS) },
                   modifier =
                       Modifier.fillMaxWidth()
                           .height(50.dp)
-                          .testTag("field5Button") // Test tag for Field #5 button
+                          .testTag("field4Button") // Test tag for Field #4 button
                   ) {
-                    Text(text = "Field #5", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                  }
+                    Text(text = "Courses", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-              Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-              Button(
-                  onClick = { navigationActions.navigateTo(Screen.CALCULATOR) },
-                  modifier = Modifier.fillMaxWidth().height(50.dp).testTag("CalculatorButton")) {
-                    Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = { navigationActions.navigateTo(Screen.CALCULATOR) },
+                        modifier =
+                            Modifier.fillMaxWidth().height(50.dp).testTag("CalculatorButton")) {
+                          Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        }
                   }
             }
       })

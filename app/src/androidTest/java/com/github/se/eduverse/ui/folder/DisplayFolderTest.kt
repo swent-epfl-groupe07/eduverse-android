@@ -13,6 +13,7 @@ import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Before
@@ -62,9 +63,11 @@ class DisplayFolderTest {
         .whenever(folderRepository)
         .getFolders(any(), any(), any())
 
+    val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)
+    `when`(auth.currentUser).thenReturn(currentUser)
     `when`(currentUser.uid).thenReturn("uid")
-    folderViewModel = FolderViewModel(folderRepository, currentUser)
+    folderViewModel = FolderViewModel(folderRepository, auth)
     folderViewModel.selectFolder(folder)
 
     composeTestRule.setContent { FolderScreen(navigationActions, folderViewModel) }
