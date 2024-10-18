@@ -26,6 +26,7 @@ object Screen {
   const val CAMERA = "Camera screen"
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
+  const val SETTING = "Setting screen"
   const val FOLDER = "Folder screen"
   const val COURSES = "Courses screen"
 }
@@ -80,6 +81,10 @@ open class NavigationActions(
     }
   }
 
+  /** Navigate to the Profile screen. */
+  fun navigateToProfile() {
+    navController.navigate(Screen.EDIT_PROFILE)
+  }
   /**
    * Navigate to the specified screen.
    *

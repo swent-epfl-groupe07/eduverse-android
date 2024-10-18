@@ -1,6 +1,7 @@
 package com.github.se.eduverse
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
+import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
@@ -25,9 +27,11 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
+import com.github.se.eduverse.ui.others.profile.ProfileScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
@@ -70,13 +74,15 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@SuppressLint("ComposableDestinationInComposeScope")
 @Composable
 fun EduverseApp(cameraPermissionGranted: Boolean) {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = FirebaseFirestore.getInstance())
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
-
+  val profileRepo = ProfileRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val profileViewModel = ProfileViewModel(profileRepo)
   NavHost(navController = navController, startDestination = Route.AUTH) {
     navigation(
         startDestination = Screen.AUTH,
@@ -117,6 +123,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen

@@ -47,7 +47,7 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               // Profile button
               Button(
-                  onClick = { /* Navigate to Profile */},
+                  onClick = { navigationActions.navigateToProfile() },
                   modifier =
                       Modifier.fillMaxWidth()
                           .height(50.dp)
