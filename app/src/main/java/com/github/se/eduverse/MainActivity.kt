@@ -1,6 +1,8 @@
 package com.github.se.eduverse
 
+import PermissionDeniedScreen
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -24,12 +26,15 @@ import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
+import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
+import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.folder.CreateFIleScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
@@ -40,12 +45,15 @@ import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.screens.GalleryScreen
+import com.github.se.eduverse.ui.others.profile.ProfileScreen
+import com.github.se.eduverse.ui.others.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
+import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -96,6 +104,7 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@SuppressLint("ComposableDestinationInComposeScope")
 @Composable
 fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel) {
   val firestore = FirebaseFirestore.getInstance()
@@ -103,11 +112,20 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
+  val profileRepo = ProfileRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val profileViewModel = ProfileViewModel(profileRepo)
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
   val pomodoroViewModel: TimerViewModel = viewModel()
 
-  NavHost(navController = navController, startDestination = Route.AUTH) {
+  NavHost(navController = navController, startDestination = Route.LOADING) {
+    navigation(
+        startDestination = Screen.LOADING,
+        route = Route.LOADING,
+    ) {
+      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+    }
+
     navigation(
         startDestination = Screen.AUTH,
         route = Route.AUTH,
@@ -154,7 +172,13 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+
+      composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+
       composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FILE) { CreateFIleScreen() }
@@ -163,6 +187,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 
     // Écran pour afficher la photo prise
@@ -171,6 +196,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.POMODORO,
     ) {
       composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen
@@ -192,5 +218,5 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
 @Composable
 fun PermissionDeniedScreen() {
-  Text("Camera permission is required to use this feature.")
+  Text("Permission Denied")
 }

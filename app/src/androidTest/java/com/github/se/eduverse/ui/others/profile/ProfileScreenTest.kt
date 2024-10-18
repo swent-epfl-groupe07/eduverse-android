@@ -2,83 +2,135 @@ package com.github.se.eduverse.ui.others.profile
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.navigation.NavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.repository.Profile
+import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.ProfileViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
-class ProfileScreenTest {
+class ProfileScreenUiTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  @Test
-  fun profileScreen_displaysAllFields() {
-    composeTestRule.setContent { ProfileScreen(onSaveClick = {}, onCancelClick = {}) }
+  private val fakeViewModel = FakeProfileViewModel()
+  private val mockNavigationActions = FakeNavigationActions(navController = mock())
 
-    // Assert that all input fields are displayed with correct labels
-    composeTestRule.onNodeWithText("Name").assertExists()
-    composeTestRule.onNodeWithText("School").assertExists()
-    composeTestRule.onNodeWithText("Courses Selected").assertExists()
-    composeTestRule.onNodeWithText("# Videos Watched").assertExists()
-    composeTestRule.onNodeWithText("# Quizzes Completed").assertExists()
-    composeTestRule.onNodeWithText("Study Time Tracker").assertExists()
-    composeTestRule.onNodeWithText("Study Goals").assertExists()
+  @Test
+  fun testProfileScreenDisplaysFields() {
+    setupProfileScreen()
+
+    composeTestRule.onNodeWithTag("profileColumn").assertExists()
+    composeTestRule.onNodeWithTag("nameField").assertExists()
+    composeTestRule.onNodeWithTag("schoolInput").assertExists()
+    composeTestRule.onNodeWithTag("coursesSelectedInput").assertExists()
+    composeTestRule.onNodeWithTag("videosWatchedInput").assertExists()
+    composeTestRule.onNodeWithTag("quizzesCompletedInput").assertExists()
+    composeTestRule.onNodeWithTag("studyTimeInput").assertExists()
+    composeTestRule.onNodeWithTag("studyGoalsInput").assertExists()
   }
 
   @Test
-  fun profileScreen_inputFields_areEditable() {
-    composeTestRule.setContent { ProfileScreen(onSaveClick = {}, onCancelClick = {}) }
+  fun testProfileFieldsInput() {
+    setupProfileScreen()
 
-    // Enter text in each field and assert the text is correctly entered
-    composeTestRule.onNodeWithText("Name").performTextInput("John Doe")
-    composeTestRule.onNodeWithText("John Doe").assertExists()
+    // Simulate user input in fields
+    composeTestRule.onNodeWithTag("nameField").performTextInput("John Doe")
+    composeTestRule.onNodeWithTag("schoolInput").performTextInput("University of Test")
+    composeTestRule.onNodeWithTag("coursesSelectedInput").performTextInput("5")
+    composeTestRule.onNodeWithTag("videosWatchedInput").performTextInput("10")
+    composeTestRule.onNodeWithTag("quizzesCompletedInput").performTextInput("7")
+    composeTestRule.onNodeWithTag("studyTimeInput").performTextInput("15.5")
+    composeTestRule.onNodeWithTag("studyGoalsInput").performTextInput("Complete all tests")
 
-    composeTestRule.onNodeWithText("School").performTextInput("Harvard University")
-    composeTestRule.onNodeWithText("Harvard University").assertExists()
-
-    composeTestRule.onNodeWithText("Courses Selected").performTextInput("Math, Science")
-    composeTestRule.onNodeWithText("Math, Science").assertExists()
-
-    composeTestRule.onNodeWithText("# Videos Watched").performTextInput("10")
-    composeTestRule.onNodeWithText("10").assertExists()
-
-    composeTestRule.onNodeWithText("# Quizzes Completed").performTextInput("5")
-    composeTestRule.onNodeWithText("5").assertExists()
-
-    composeTestRule.onNodeWithText("Study Time Tracker").performTextInput("30 hours")
-    composeTestRule.onNodeWithText("30 hours").assertExists()
-
-    composeTestRule.onNodeWithText("Study Goals").performTextInput("Complete 2 courses")
-    composeTestRule.onNodeWithText("Complete 2 courses").assertExists()
+    // Assert inputs have been updated
+    composeTestRule.onNodeWithTag("nameField").assertTextContains("John Doe")
+    composeTestRule.onNodeWithTag("schoolInput").assertTextContains("University of Test")
+    composeTestRule.onNodeWithTag("coursesSelectedInput").assertTextContains("5")
+    composeTestRule.onNodeWithTag("videosWatchedInput").assertTextContains("10")
+    composeTestRule.onNodeWithTag("quizzesCompletedInput").assertTextContains("7")
+    composeTestRule.onNodeWithTag("studyTimeInput").assertTextContains("15.5")
+    composeTestRule.onNodeWithTag("studyGoalsInput").assertTextContains("Complete all tests")
   }
 
   @Test
-  fun profileScreen_buttons_areClickable() {
-    var saveClicked = false
-    var cancelClicked = false
+  fun testSaveButtonFunctionality() {
+    setupProfileScreen()
 
+    // Simulate user input
+    composeTestRule.onNodeWithTag("nameField").performTextInput("John Doe")
+    composeTestRule.onNodeWithTag("saveButton").performClick()
+
+    // Verify the ViewModel's saveProfile function was called with updated inputs
+    assert(fakeViewModel.savedProfile != null)
+    assert(fakeViewModel.savedProfile!!.name == "John Doe")
+  }
+
+  @Test
+  fun testCancelButtonFunctionality() {
+    setupProfileScreen()
+
+    // Assert the cancel button exists and performs the back action
+    composeTestRule.onNodeWithTag("cancelButton").assertExists().performClick()
+    // Add any additional verification for the navigation action, if necessary
+  }
+
+  private fun setupProfileScreen() {
     composeTestRule.setContent {
-      ProfileScreen(onSaveClick = { saveClicked = true }, onCancelClick = { cancelClicked = true })
+      ProfileScreen(
+          viewModel = fakeViewModel,
+          navigationActions = mockNavigationActions,
+          userId = "testUserId")
     }
+  }
+}
 
-    // Assert that Save button is clickable
-    composeTestRule.onNodeWithText("Save").performClick()
-    assert(saveClicked)
+class FakeProfileViewModel : ProfileViewModel(mock()) {
+  private val _profileState =
+      MutableStateFlow(
+          Profile(
+              name = "",
+              school = "",
+              coursesSelected = "",
+              videosWatched = "",
+              quizzesCompleted = "",
+              studyTime = "",
+              studyGoals = ""))
 
-    // Assert that Cancel button is clickable
-    composeTestRule.onNodeWithText("Cancel").performClick()
-    assert(cancelClicked)
+  override val profileState: StateFlow<Profile> = _profileState.asStateFlow()
+
+  var savedProfile: Profile? = null
+
+  override fun saveProfile(
+      userId: String,
+      name: String,
+      school: String,
+      coursesSelected: String,
+      videosWatched: String,
+      quizzesCompleted: String,
+      studyTime: String,
+      studyGoals: String
+  ) {
+    savedProfile =
+        Profile(
+            name, school, coursesSelected, videosWatched, quizzesCompleted, studyTime, studyGoals)
+    _profileState.value = savedProfile!!
   }
 
-  @Test
-  fun profileScreen_layout_isCorrect() {
-    composeTestRule.setContent { ProfileScreen(onSaveClick = {}, onCancelClick = {}) }
+  override fun loadProfile(userId: String) {
+    // No-op for this test
+  }
+}
 
-    // Assert that the Column layout is displayed correctly
-    composeTestRule.onNode(hasTestTag("profileColumn")).assert(hasAnyChild(hasTestTag("nameField")))
-
-    // Assert that buttons are horizontally aligned
-    composeTestRule.onNodeWithText("Save").assert(hasAnySibling(hasText("Cancel")))
+class FakeNavigationActions(navController: NavHostController) : NavigationActions(navController) {
+  fun navigate(route: String) {
+    // No-op for testing
   }
 }
