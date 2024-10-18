@@ -8,4 +8,6 @@ interface IPhotoRepository {
   suspend fun updatePhoto(photoId: String, photo: Photo): Boolean
 
   suspend fun deletePhoto(photoId: String): Boolean
+
+  suspend fun getPhotosByOwner(ownerId: String): List<Photo>
 }

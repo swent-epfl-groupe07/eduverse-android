@@ -23,6 +23,7 @@ object Route {
 }
 
 object Screen {
+  const val GALLERY = "Gallery Screen"
   const val LOADING = "Loading Screen"
   const val NEXT_SCREEN = "Next Screen"
   const val AUTH = "Auth Screen"
