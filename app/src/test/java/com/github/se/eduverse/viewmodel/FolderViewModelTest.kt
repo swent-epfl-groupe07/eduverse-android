@@ -1,9 +1,10 @@
-package com.github.se.eduverse.viewmodel
+package com.github.se.eduverse.model.folder
 
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
@@ -24,11 +25,9 @@ class FolderViewModelTest {
   lateinit var folder: Folder
   lateinit var folder2: Folder
 
-  val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file2 =
-      MyFile("", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file3 =
-      MyFile("", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file3 = MyFile("", "", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
 
   @Before
   fun setUp() {
@@ -146,7 +145,7 @@ class FolderViewModelTest {
 
   @Test
   fun addFileTest() {
-    val file4 = MyFile("", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
+    val file4 = MyFile("", "", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
 
     folderViewModel.addFile(file4)
     assertEquals(folder.files.count { it == file4 }, 0)
@@ -181,9 +180,9 @@ class FolderViewModelTest {
 class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
-    userId: String,
-    onSuccess: (List<Folder>) -> Unit,
-    onFailure: (Exception) -> Unit
+      userId: String,
+      onSuccess: (List<Folder>) -> Unit,
+      onFailure: (Exception) -> Unit
   ) {
     onSuccess(
         List(1) {
