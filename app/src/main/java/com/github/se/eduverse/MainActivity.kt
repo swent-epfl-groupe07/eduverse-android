@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
   private lateinit var photoViewModel: PhotoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
+
     super.onCreate(savedInstanceState)
 
     // Initialiser Firebase Auth
