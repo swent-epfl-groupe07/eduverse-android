@@ -72,18 +72,18 @@ fun OthersScreen(navigationActions: NavigationActions) {
 
               Spacer(modifier = Modifier.height(16.dp))
 
-            // Pdf Converter
-            Button(
-                onClick = { navigationActions.navigateTo(Screen.PDF_CONVERTER)},
-                modifier =
-                Modifier.fillMaxWidth()
-                    .height(50.dp)
-                    .testTag("pdfConverterButton") // Test tag for Field #4 button
-            ) {
-                Text(text = "Pdf Converter", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
+              // Pdf Converter
+              Button(
+                  onClick = { navigationActions.navigateTo(Screen.PDF_CONVERTER) },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .height(50.dp)
+                          .testTag("pdfConverterButton") // Test tag for Field #4 button
+                  ) {
+                    Text(text = "Pdf Converter", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                  }
 
-            Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(16.dp))
 
               Button(
                   onClick = { navigationActions.navigateTo(Screen.POMODORO) },
@@ -103,13 +103,12 @@ fun OthersScreen(navigationActions: NavigationActions) {
                   ) {
                     Text(text = "Courses", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                   }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { navigationActions.navigateTo(Screen.CALCULATOR) },
-                modifier =
-                Modifier.fillMaxWidth().height(50.dp).testTag("CalculatorButton")) {
-                Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
+              Spacer(modifier = Modifier.height(16.dp))
+              Button(
+                  onClick = { navigationActions.navigateTo(Screen.CALCULATOR) },
+                  modifier = Modifier.fillMaxWidth().height(50.dp).testTag("CalculatorButton")) {
+                    Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                  }
             }
       })
 }

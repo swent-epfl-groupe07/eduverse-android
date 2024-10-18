@@ -24,6 +24,7 @@ import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
+import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.folder.CreateFIleScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
@@ -142,6 +143,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FILE) { CreateFIleScreen() }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 
     navigation(

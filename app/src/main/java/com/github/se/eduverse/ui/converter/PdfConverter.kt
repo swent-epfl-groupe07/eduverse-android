@@ -146,7 +146,7 @@ fun PdfConverterScreen(
           converterViewModel.setNewFileName(name)
           showNameInputDialog = false
           when (currentPdfConverterOption) { // For each option, the corresponding actions are
-                                             // performed
+            // performed
             PdfConverterOption.TEXT_TO_PDF -> {
               converterViewModel.convertDocumentToPdf(selectedFileUri, context)
             }
