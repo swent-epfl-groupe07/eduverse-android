@@ -12,9 +12,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.se.eduverse.ui.dashboard.auth
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.google.firebase.auth.FirebaseAuth
+
+var auth = FirebaseAuth.getInstance()
 
 @SuppressLint("SuspiciousIndentation")
 @Composable

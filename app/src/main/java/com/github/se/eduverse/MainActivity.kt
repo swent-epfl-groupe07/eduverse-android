@@ -23,9 +23,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
-import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
+import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
@@ -46,10 +46,10 @@ import com.github.se.eduverse.ui.others.profile.ProfileScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
-import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
+import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -110,7 +110,6 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
   val profileRepo = ProfileRepositoryImpl(firestore = FirebaseFirestore.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
-  NavHost(navController = navController, startDestination = Route.AUTH) {
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
   val pomodoroViewModel: TimerViewModel = viewModel()
