@@ -1,0 +1,25 @@
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # Use the appropriate Java version for your project
+          distribution: 'adopt'
+
+      - name: Build APK
+        run: ./gradlew build
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release.apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
