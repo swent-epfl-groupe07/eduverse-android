@@ -1,8 +1,8 @@
 package com.github.se.eduverse.repository
 
-import com.github.se.eduverse.model.folder.FilterTypes
-import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.FilterTypes
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.InvalidClassException

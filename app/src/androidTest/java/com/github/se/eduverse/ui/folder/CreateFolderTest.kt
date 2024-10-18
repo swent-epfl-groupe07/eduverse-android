@@ -6,8 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions

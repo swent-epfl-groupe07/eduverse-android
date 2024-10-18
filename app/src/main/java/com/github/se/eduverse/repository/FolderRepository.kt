@@ -1,6 +1,6 @@
 package com.github.se.eduverse.repository
 
-import com.github.se.eduverse.model.folder.Folder
+import com.github.se.eduverse.model.Folder
 
 interface FolderRepository {
   fun getFolders(userId: String, onSuccess: (List<Folder>) -> Unit, onFailure: (Exception) -> Unit)

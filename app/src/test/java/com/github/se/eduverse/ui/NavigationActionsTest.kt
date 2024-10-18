@@ -1,8 +1,12 @@
-package com.github.se.eduverse.ui.navigation
+package com.github.se.eduverse.ui
 
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
+import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
+import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.navigation.TopLevelDestinations
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before

@@ -37,7 +37,7 @@ okhttp = "4.12.0"
 
 # Testing Unit
 junit = "4.13.2"
-mockitoCore = "3.12.4"
+mockitoCore = "5.13.0"
 mockitoInline = "3.12.4"
 mockitoKotlin = "5.4.0"
 mockk = "1.13.7"

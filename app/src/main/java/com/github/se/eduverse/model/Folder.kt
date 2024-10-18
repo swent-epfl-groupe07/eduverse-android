@@ -1,4 +1,4 @@
-package com.github.se.eduverse.model.folder
+package com.github.se.eduverse.model
 
 data class Folder(
     val ownerID: String,

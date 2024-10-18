@@ -1,8 +1,8 @@
 package com.github.se.eduverse.viewmodel
 
-import com.github.se.eduverse.model.folder.FilterTypes
-import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.FilterTypes
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser

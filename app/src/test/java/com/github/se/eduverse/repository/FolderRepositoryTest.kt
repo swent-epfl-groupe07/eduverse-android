@@ -2,9 +2,9 @@ package com.github.se.eduverse.repository
 
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
-import com.github.se.eduverse.model.folder.FilterTypes
-import com.github.se.eduverse.model.folder.Folder
-import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.FilterTypes
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
