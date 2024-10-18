@@ -1,6 +1,12 @@
 package com.github.se.eduverse.ui.others
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -108,6 +114,14 @@ fun OthersScreen(navigationActions: NavigationActions) {
                   onClick = { navigationActions.navigateTo(Screen.CALCULATOR) },
                   modifier = Modifier.fillMaxWidth().height(50.dp).testTag("CalculatorButton")) {
                     Text(text = "Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                  }
+
+              Spacer(modifier = Modifier.height(16.dp))
+
+              Button(
+                  onClick = { navigationActions.navigateTo(Screen.GALLERY) },
+                  modifier = Modifier.fillMaxWidth().height(50.dp).testTag("GALLERYSCREENBTTN")) {
+                    Text(text = "GALLERY", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                   }
             }
       })

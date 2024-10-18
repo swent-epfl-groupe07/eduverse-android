@@ -1,5 +1,6 @@
 package com.github.se.eduverse.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,16 +10,28 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class PhotoViewModel(private val photoRepository: IPhotoRepository) : ViewModel() {
+open class PhotoViewModel(private val photoRepository: IPhotoRepository) : ViewModel() {
 
   private val _savePhotoState = MutableStateFlow(false)
-  val savePhotoState: StateFlow<Boolean>
+  open val savePhotoState: StateFlow<Boolean>
     get() = _savePhotoState
+
+  open val _photos = MutableStateFlow<List<Photo>>(emptyList())
+  open val photos: StateFlow<List<Photo>>
+    get() = _photos
 
   fun savePhoto(photo: Photo) {
     viewModelScope.launch {
       val success = photoRepository.savePhoto(photo)
       _savePhotoState.value = success
+    }
+  }
+
+  open fun getPhotosByOwner(ownerId: String) {
+    viewModelScope.launch {
+      val photos = photoRepository.getPhotosByOwner(ownerId)
+      Log.d("GalleryScreen", "Photos fetched: ${photos.size}")
+      _photos.value = photos
     }
   }
 

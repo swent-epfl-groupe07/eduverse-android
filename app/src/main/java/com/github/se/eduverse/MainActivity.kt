@@ -5,6 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +46,7 @@ import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.others.profile.ProfileScreen
 import com.github.se.eduverse.ui.others.setting.SettingsScreen
+import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -65,6 +67,7 @@ class MainActivity : ComponentActivity() {
   private lateinit var photoViewModel: PhotoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
+
     super.onCreate(savedInstanceState)
 
     // Initialiser Firebase Auth
@@ -180,6 +183,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
       composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FILE) { CreateFIleScreen() }
+      composable(Screen.GALLERY) {
+        val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
+        Log.d("GalleryScreen", "Current Owner ID: $ownerId")
+      }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 

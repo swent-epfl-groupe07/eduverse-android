@@ -229,8 +229,4 @@ class MockFirebaseAuth {
   }
 }
 
-class FakeNavigationActions(navController: NavHostController) : NavigationActions(navController) {
-  fun navigate(route: String) {
-    // No-op for testing
-  }
-}
+class FakeNavigationActions(navController: NavHostController) : NavigationActions(navController) {}

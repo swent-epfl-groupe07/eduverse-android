@@ -4,7 +4,9 @@ import android.util.Log
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.model.repository.IPhotoRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.tasks.await
 
 class PhotoRepository(private val db: FirebaseFirestore, private val storage: FirebaseStorage) :
@@ -35,6 +37,32 @@ class PhotoRepository(private val db: FirebaseFirestore, private val storage: Fi
 
   override suspend fun deletePhoto(photoId: String): Boolean {
     return true
+  }
+
+  override suspend fun getPhotosByOwner(ownerId: String): List<Photo> {
+    val storageRef = Firebase.storage.reference
+
+    return try {
+      val snapshot = db.collection("photos").whereEqualTo("ownerId", ownerId).get().await()
+
+      snapshot.documents.map { document ->
+        val path = document.getString("path") ?: ""
+        val photoRef = storageRef.child(path)
+
+        // Récupérer l'URL de téléchargement
+        val downloadUrl = photoRef.downloadUrl.await()
+        Log.d("GalleryScreen", "Download URL: $downloadUrl")
+
+        Photo(
+            ownerId = document.getString("ownerId") ?: "",
+            photo = ByteArray(0), // Vous pouvez ignorer ceci si vous utilisez uniquement l'URL
+            path = downloadUrl.toString() // Utilisez l'URL ici
+            )
+      }
+    } catch (e: Exception) {
+      Log.e("PhotoRepository", "Error retrieving photos", e)
+      emptyList()
+    }
   }
 }
 
