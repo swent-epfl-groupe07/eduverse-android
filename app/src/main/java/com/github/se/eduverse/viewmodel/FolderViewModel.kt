@@ -1,13 +1,32 @@
-package com.github.se.eduverse.model.folder
+package com.github.se.eduverse.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseUser
+import androidx.lifecycle.ViewModelProvider
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.Folder
+import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.repository.FolderRepository
+import com.github.se.eduverse.repository.FolderRepositoryImpl
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FolderViewModel(val repository: FolderRepository, val currentUser: FirebaseUser?) :
-    ViewModel() {
+class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) : ViewModel() {
+
+  companion object {
+    val Factory: ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+          @Suppress("UNCHECKED_CAST")
+          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return FolderViewModel(
+                FolderRepositoryImpl(Firebase.firestore), FirebaseAuth.getInstance())
+                as T
+          }
+        }
+  }
 
   private var _folders: MutableStateFlow<MutableList<Folder>> =
       MutableStateFlow(emptyList<Folder>().toMutableList())
@@ -56,7 +75,7 @@ class FolderViewModel(val repository: FolderRepository, val currentUser: Firebas
   /** Get the folders with owner id equivalent to the current user */
   fun getUserFolders() {
     repository.getFolders(
-        currentUser!!.uid,
+        auth.currentUser!!.uid,
         { _folders.value = it.toMutableList() },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
   }

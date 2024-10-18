@@ -12,15 +12,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
+import com.github.se.eduverse.repository.FolderRepositoryImpl
+import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
+import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
+import com.github.se.eduverse.ui.folder.CreateFIleScreen
+import com.github.se.eduverse.ui.folder.CreateFolderScreen
+import com.github.se.eduverse.ui.folder.FolderScreen
+import com.github.se.eduverse.ui.folder.ListFoldersScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
@@ -28,6 +36,8 @@ import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
@@ -72,10 +82,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun EduverseApp(cameraPermissionGranted: Boolean) {
+  val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-  val dashboardRepo = DashboardRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
+  val folderRepo = FolderRepositoryImpl(db = firestore)
+  val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val pomodoroViewModel: TimerViewModel = viewModel()
 
   NavHost(navController = navController, startDestination = Route.AUTH) {
     navigation(
@@ -100,6 +114,13 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     }
 
     navigation(
+        startDestination = Screen.CALCULATOR,
+        route = Route.CALCULATOR,
+    ) {
+      composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
+    }
+
+    navigation(
         startDestination = Screen.CAMERA,
         route = Route.CAMERA,
     ) {
@@ -117,6 +138,17 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFIleScreen() }
+    }
+
+    navigation(
+        startDestination = Screen.POMODORO,
+        route = Route.POMODORO,
+    ) {
+      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen
