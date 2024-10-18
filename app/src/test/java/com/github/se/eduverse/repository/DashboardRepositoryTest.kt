@@ -1,6 +1,7 @@
 package com.github.se.eduverse.repository
 
 import com.github.se.eduverse.model.Widget
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.*
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.first
@@ -18,6 +19,7 @@ class DashboardRepositoryTest {
   private val mockCollectionRef: CollectionReference = mock(CollectionReference::class.java)
   private val mockDocumentRef: DocumentReference = mock(DocumentReference::class.java)
   private val mockSnapshot: QuerySnapshot = mock(QuerySnapshot::class.java)
+  private val mockBatch: WriteBatch = mock(WriteBatch::class.java)
 
   @Before
   fun setUp() {
@@ -92,5 +94,28 @@ class DashboardRepositoryTest {
 
     // Verify that the Firestore delete method is called
     verify(mockDocumentRef).delete()
+  }
+
+  @Test
+  fun `updateWidgets should update widget order in Firestore`(): Unit = runBlocking {
+    val widgets =
+        listOf(
+            Widget("1", "Type 1", "Title 1", "Content 1", "owner1", 0),
+            Widget("2", "Type 2", "Title 2", "Content 2", "owner2", 1))
+
+    // Mock Firestore interactions
+    whenever(mockFirestore.collection("widgets")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document("1")).thenReturn(mockDocumentRef)
+    whenever(mockCollectionRef.document("2")).thenReturn(mockDocumentRef)
+    whenever(mockFirestore.batch()).thenReturn(mockBatch)
+    whenever(mockBatch.commit()).thenReturn(Tasks.forResult(null))
+
+    // Call the updateWidgets method
+    repository.updateWidgets(widgets)
+
+    // Verify that the Firestore batch operations are called correctly
+    verify(mockFirestore).batch()
+    verify(mockBatch, times(2)).set(any(), any())
+    verify(mockBatch).commit()
   }
 }

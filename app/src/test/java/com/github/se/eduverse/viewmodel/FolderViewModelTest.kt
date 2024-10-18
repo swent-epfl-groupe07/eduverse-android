@@ -1,5 +1,10 @@
-package com.github.se.eduverse.model.folder
+package com.github.se.eduverse.viewmodel
 
+import com.github.se.eduverse.model.folder.FilterTypes
+import com.github.se.eduverse.model.folder.Folder
+import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.repository.FolderRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import org.junit.Assert.assertEquals
@@ -12,17 +17,16 @@ import org.mockito.Mockito.`when`
 
 class FolderViewModelTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var auth: FirebaseAuth
   private lateinit var currentUser: FirebaseUser
   private lateinit var folderViewModel: FolderViewModel
 
   lateinit var folder: Folder
   lateinit var folder2: Folder
 
-  val file1 = MyFile("", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file2 =
-      MyFile("", "name 2", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
-  val file3 =
-      MyFile("", "name 3", java.util.Calendar.getInstance(), java.util.Calendar.getInstance(), 0)
+  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
+  val file3 = MyFile("", "", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
 
   @Before
   fun setUp() {
@@ -52,9 +56,11 @@ class FolderViewModelTest {
     folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
 
     folderRepository = MockFolderRepository(folder)
+    auth = mock(FirebaseAuth::class.java)
     currentUser = mock(FirebaseUser::class.java)
+    `when`(auth.currentUser).thenReturn(currentUser)
     `when`(currentUser.uid).thenReturn("uid")
-    folderViewModel = FolderViewModel(folderRepository, currentUser)
+    folderViewModel = FolderViewModel(folderRepository, auth)
   }
 
   @Test
@@ -138,7 +144,7 @@ class FolderViewModelTest {
 
   @Test
   fun addFileTest() {
-    val file4 = MyFile("", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
+    val file4 = MyFile("", "", "name 4", Calendar.getInstance(), Calendar.getInstance(), 0)
 
     folderViewModel.addFile(file4)
     assertEquals(folder.files.count { it == file4 }, 0)

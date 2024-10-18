@@ -12,14 +12,19 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 
 object Route {
+  const val LOADING = "Loading"
   const val AUTH = "Auth"
   const val DASHBOARD = "Dashboard"
   const val VIDEOS = "Videos"
   const val CAMERA = "Camera"
   const val OTHERS = "Others"
+  const val CALCULATOR = "Calculator"
+  const val POMODORO = "Pomodoro"
 }
 
 object Screen {
+  const val LOADING = "Loading Screen"
+  const val NEXT_SCREEN = "Next Screen"
   const val AUTH = "Auth Screen"
   const val DASHBOARD = "Dashboard screen"
   const val VIDEOS = "Videos screen"
@@ -27,8 +32,13 @@ object Screen {
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
   const val SETTING = "Setting screen"
+  const val LIST_FOLDERS = "ListFolders screen"
   const val FOLDER = "Folder screen"
+  const val CREATE_FOLDER = "CreateFolder screen"
+  const val CREATE_FILE = "CreateFile screen"
   const val COURSES = "Courses screen"
+  const val CALCULATOR = "Calculator screen"
+  const val POMODORO = "Pomodoro screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -61,7 +71,7 @@ open class NavigationActions(
    *   navigating to a new destination This is useful when navigating to a new screen from the
    *   bottom navigation bar as we don't want to keep the previous screen in the back stack
    */
-  fun navigateTo(destination: TopLevelDestination) {
+  open fun navigateTo(destination: TopLevelDestination) {
 
     navController.navigate(destination.route) {
       // Pop up to the start destination of the graph to
@@ -90,12 +100,12 @@ open class NavigationActions(
    *
    * @param screen The screen to navigate to
    */
-  fun navigateTo(screen: String) {
+  open fun navigateTo(screen: String) {
     navController.navigate(screen)
   }
 
   /** Navigate back to the previous screen. */
-  fun goBack() {
+  open fun goBack() {
     navController.popBackStack()
   }
 
@@ -104,7 +114,7 @@ open class NavigationActions(
    *
    * @return The current route
    */
-  fun currentRoute(): String {
+  open fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
   }
 }
