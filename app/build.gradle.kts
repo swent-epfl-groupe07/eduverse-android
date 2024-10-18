@@ -128,7 +128,8 @@ sonar {
 }
 
 dependencies {
-
+    testImplementation ("org.mockito:mockito-inline:4.0.0")
+    testImplementation ("androidx.arch.core:core-testing:2.1.0")
     // Core
     implementation(libs.core.ktx)
     implementation(libs.androidx.core.ktx)
@@ -148,6 +149,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.test.core.ktx)
+    androidTestImplementation(libs.androidx.core.testing)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.material)
@@ -169,6 +171,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
+    implementation("com.google.firebase:firebase-storage-ktx:20.2.0")
 
     // Networking with OkHttp
     implementation(libs.okhttp)
@@ -220,6 +223,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:1.4.3")
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
 
+    testImplementation ("junit:junit:4.13.2")
+    testImplementation ("org.mockito:mockito-core:4.5.1")
+    testImplementation ("org.mockito:mockito-inline:4.5.1")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
 }
 
 tasks.withType<Test> {
