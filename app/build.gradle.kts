@@ -154,6 +154,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.firebase.storage.ktx)
     testImplementation(libs.test.core.ktx)
     androidTestImplementation(libs.androidx.core.testing)
     debugImplementation(libs.androidx.ui.tooling)
@@ -229,10 +230,15 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:1.4.3")
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
 
+    // File access
+    implementation("androidx.activity:activity-ktx:1.6.0") // or the latest version
+    implementation("androidx.appcompat:appcompat:1.5.0") // or the latest version
+
     testImplementation ("junit:junit:4.13.2")
     testImplementation ("org.mockito:mockito-core:4.5.1")
     testImplementation ("org.mockito:mockito-inline:4.5.1")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+
 }
 
 tasks.withType<Test> {

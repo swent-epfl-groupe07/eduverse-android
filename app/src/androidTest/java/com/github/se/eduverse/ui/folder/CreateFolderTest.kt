@@ -6,17 +6,16 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.github.se.eduverse.model.Folder
-import com.github.se.eduverse.model.MyFile
+import com.github.se.eduverse.repository.FileRepository
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,33 +26,18 @@ import org.mockito.kotlin.any
 
 class CreateFolderTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var fileRepository: FileRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
-
-  val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
-  val file3 = MyFile("", "", "name 3", Calendar.getInstance(), Calendar.getInstance(), 0)
-
-  val folder1 =
-      Folder(
-          "",
-          MutableList(3) {
-            when (it) {
-              1 -> file1
-              2 -> file2
-              else -> file3
-            }
-          },
-          "folder1",
-          "1")
-
-  val folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2")
+  private lateinit var fileViewModel: FileViewModel
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     folderRepository = mock(FolderRepository::class.java)
+    fileRepository = mock(FileRepository::class.java)
+    fileViewModel = FileViewModel(fileRepository)
     navigationActions = mock(NavigationActions::class.java)
 
     `when`(folderRepository.getNewUid()).thenReturn("")
@@ -64,7 +48,9 @@ class CreateFolderTest {
     `when`(currentUser.uid).thenReturn("uid")
     folderViewModel = FolderViewModel(folderRepository, auth)
 
-    composeTestRule.setContent { CreateFolderScreen(navigationActions, folderViewModel) }
+    composeTestRule.setContent {
+      CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+    }
   }
 
   @Test
@@ -121,7 +107,6 @@ class CreateFolderTest {
 
     composeTestRule.onNodeWithTag("addFile").performClick()
     assert(test)
-    composeTestRule.onNodeWithTag("file").assertIsDisplayed()
   }
 
   @Test

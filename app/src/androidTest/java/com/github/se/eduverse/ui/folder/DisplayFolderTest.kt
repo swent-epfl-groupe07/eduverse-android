@@ -8,10 +8,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
+import com.github.se.eduverse.repository.FileRepository
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -28,8 +30,10 @@ import org.mockito.kotlin.whenever
 
 class DisplayFolderTest {
   private lateinit var folderRepository: FolderRepository
+  private lateinit var fileRepository: FileRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var folderViewModel: FolderViewModel
+  private lateinit var fileViewModel: FileViewModel
 
   val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
   val file2 = MyFile("", "", "name 2", Calendar.getInstance(), Calendar.getInstance(), 0)
@@ -53,6 +57,8 @@ class DisplayFolderTest {
   @Before
   fun setUp() {
     folderRepository = mock(FolderRepository::class.java)
+    fileRepository = mock(FileRepository::class.java)
+    fileViewModel = FileViewModel(fileRepository)
     navigationActions = mock(NavigationActions::class.java)
 
     doAnswer {
@@ -70,7 +76,7 @@ class DisplayFolderTest {
     folderViewModel = FolderViewModel(folderRepository, auth)
     folderViewModel.selectFolder(folder)
 
-    composeTestRule.setContent { FolderScreen(navigationActions, folderViewModel) }
+    composeTestRule.setContent { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
   }
 
   @Test

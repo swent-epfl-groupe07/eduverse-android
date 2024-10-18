@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
+import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
@@ -36,7 +37,7 @@ import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
-import com.github.se.eduverse.ui.folder.CreateFIleScreen
+import com.github.se.eduverse.ui.folder.CreateFileScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
 import com.github.se.eduverse.ui.folder.FolderScreen
 import com.github.se.eduverse.ui.folder.ListFoldersScreen
@@ -50,6 +51,7 @@ import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
@@ -118,6 +120,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
   val pomodoroViewModel: TimerViewModel = viewModel()
+  val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
+  val fileViewModel = FileViewModel(fileRepo)
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -176,13 +180,14 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) {
+        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+      }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
-      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
 
-      composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFIleScreen() }
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
