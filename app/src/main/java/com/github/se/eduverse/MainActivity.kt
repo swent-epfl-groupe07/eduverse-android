@@ -188,7 +188,6 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
 
-
       composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FILE) { CreateFIleScreen() }
