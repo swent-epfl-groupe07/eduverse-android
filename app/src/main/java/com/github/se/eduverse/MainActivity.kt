@@ -191,3 +191,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         }
   }
 }
+
+@Composable
+fun PermissionDeniedScreen() {
+    Text("Permission Denied")
+}
