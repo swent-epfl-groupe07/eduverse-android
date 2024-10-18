@@ -1,6 +1,6 @@
 on:
-  workflow_dispatch:
-
+  workflow_dispatch:  # Allows manual triggering of the workflow
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,24 +26,23 @@ jobs:
         run: |
           echo $DATA | base64 -di > app/google-services.json
 
-      # New step: Download and set up custom keystore
-      - name: Download Custom Keystore
+      # Updated step: Ensure proper location of custom keystore
+      - name: Prepare Custom Keystore
         env:
           BASE64_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          echo $BASE64_KEYSTORE | base64 --decode > custom-debug.keystore
+          echo $BASE64_KEYSTORE | base64 --decode > app/custom-debug.keystore
 
+      # Specify paths and passwords directly in the build step
       - name: Build APK
-        env:
-          KEYSTORE_PATH: "custom-debug.keystore"
         run: |
-          ./gradlew assembleDebug -Pandroid.injected.signing.store.file=$KEYSTORE_PATH \
-                                  -Pandroid.injected.signing.store.password="TESTTEST" \
-                                  -Pandroid.injected.signing.key.alias="androiddebugkey" \
-                                  -Pandroid.injected.signing.key.password="TESTTEST"
+          ./gradlew assembleDebug -Pandroid.injected.signing.store.file=app/custom-debug.keystore \
+                                   -Pandroid.injected.signing.store.password="TESTTEST" \
+                                   -Pandroid.injected.signing.key.alias="androiddebugkey" \
+                                   -Pandroid.injected.signing.key.password="TESTTEST"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release.apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/app-debug.apk
