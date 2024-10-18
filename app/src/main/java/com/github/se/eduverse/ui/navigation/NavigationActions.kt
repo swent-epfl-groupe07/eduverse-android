@@ -92,6 +92,10 @@ open class NavigationActions(
     }
   }
 
+  fun navigateToSetting() {
+    navController.navigate(Screen.SETTING)
+  }
+
   /** Navigate to the Profile screen. */
   fun navigateToProfile() {
     navController.navigate(Screen.EDIT_PROFILE)

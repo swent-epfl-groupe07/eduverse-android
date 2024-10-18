@@ -44,6 +44,7 @@ import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
 import com.github.se.eduverse.ui.others.profile.ProfileScreen
+import com.github.se.eduverse.ui.others.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -169,8 +170,13 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+
       composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+
       composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FILE) { CreateFIleScreen() }
@@ -183,6 +189,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.POMODORO,
     ) {
       composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
 
     // Ajoute une route dynamique pour PicTakenScreen
