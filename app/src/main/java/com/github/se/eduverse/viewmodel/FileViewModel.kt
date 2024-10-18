@@ -2,7 +2,7 @@ package com.github.se.eduverse.viewmodel
 
 import android.net.Uri
 import android.util.Log
-import com.github.se.eduverse.model.folder.MyFile
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
