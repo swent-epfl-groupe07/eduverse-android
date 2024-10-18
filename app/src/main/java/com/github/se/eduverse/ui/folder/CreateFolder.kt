@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,15 +35,23 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
-import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
+fun CreateFolderScreen(
+    navigationActions: NavigationActions,
+    folderViewModel: FolderViewModel,
+    fileViewModel: FileViewModel
+) {
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var name by rememberSaveable { mutableStateOf("") }
   var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
+  val validNewFile by fileViewModel.validNewFile.collectAsState()
+
+  if (validNewFile) files += fileViewModel.getNewFile()!!
+
   val folder =
       Folder(
           ownerID = folderViewModel.auth.currentUser!!.uid,
@@ -110,17 +119,7 @@ fun CreateFolderScreen(navigationActions: NavigationActions, folderViewModel: Fo
             }
           }
           Button(
-              onClick = {
-                navigationActions.navigateTo(Screen.CREATE_FILE)
-                files +=
-                    MyFile(
-                        id = "",
-                        fileId = "fileId",
-                        name = "fileName",
-                        creationTime = Calendar.getInstance(),
-                        lastAccess = Calendar.getInstance(),
-                        numberAccess = 0)
-              },
+              onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
               modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("addFile")) {
                 Text("Add file")
               }

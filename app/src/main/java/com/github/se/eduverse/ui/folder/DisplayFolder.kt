@@ -47,15 +47,23 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FolderScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
+fun FolderScreen(
+    navigationActions: NavigationActions,
+    folderViewModel: FolderViewModel,
+    fileViewModel: FileViewModel
+) {
   val activeFolder by folderViewModel.activeFolder.collectAsState()
 
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
+  val validNewFile by fileViewModel.validNewFile.collectAsState()
+
+  if (validNewFile) activeFolder!!.files.add(fileViewModel.getNewFile()!!)
 
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
