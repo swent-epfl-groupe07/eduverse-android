@@ -39,6 +39,7 @@ object Screen {
   const val COURSES = "Courses screen"
   const val CALCULATOR = "Calculator screen"
   const val POMODORO = "Pomodoro screen"
+  const val PDF_CONVERTER = "PdfConverter screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
