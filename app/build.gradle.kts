@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.Packaging
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
 import java.io.FileInputStream
 import java.util.Properties
@@ -127,7 +128,8 @@ sonar {
 }
 
 dependencies {
-
+    testImplementation ("org.mockito:mockito-inline:4.0.0")
+    testImplementation ("androidx.arch.core:core-testing:2.1.0")
     // Core
     implementation(libs.core.ktx)
     implementation(libs.androidx.core.ktx)
@@ -147,6 +149,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.test.core.ktx)
+    androidTestImplementation(libs.androidx.core.testing)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.material)
@@ -168,6 +171,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
+    implementation("com.google.firebase:firebase-storage-ktx:20.2.0")
 
     // Networking with OkHttp
     implementation(libs.okhttp)
@@ -178,6 +182,7 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.json)
+    testImplementation("androidx.arch.core:core-testing:2.1.0")
 
     // Test UI
     androidTestImplementation(libs.androidx.junit)
@@ -197,13 +202,19 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
     // CameraX
-    // CameraX
     implementation("androidx.camera:camera-core:1.1.0")
     implementation("androidx.camera:camera-camera2:1.1.0")
     implementation("androidx.camera:camera-lifecycle:1.1.0")
     implementation("androidx.camera:camera-view:1.0.0-alpha30")
     implementation("androidx.camera:camera-video:1.1.0")
-    implementation ("com.google.guava:guava:31.1-android")
+    implementation("com.google.guava:guava:31.1-android")
+
+    // Apache Poi
+    implementation("org.apache.poi:poi-ooxml:5.2.3") {
+        exclude(group = "org.apache.poi", module = "poi-ooxml-lite")
+    }
+    implementation("org.apache.poi:poi-ooxml-schemas:4.1.2")
+    implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
 
     // Material 3
     implementation("androidx.compose.material3:material3:1.1.0")
@@ -212,6 +223,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core:1.4.3")
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
 
+    testImplementation ("junit:junit:4.13.2")
+    testImplementation ("org.mockito:mockito-core:4.5.1")
+    testImplementation ("org.mockito:mockito-inline:4.5.1")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
 }
 
 tasks.withType<Test> {
