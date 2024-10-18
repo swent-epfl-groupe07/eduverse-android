@@ -2,6 +2,7 @@ package com.github.se.eduverse
 
 import PermissionDeniedScreen
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -24,6 +25,7 @@ import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
+import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
@@ -40,12 +42,14 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
+import com.github.se.eduverse.ui.others.profile.ProfileScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
+import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -96,6 +100,7 @@ class MainActivity : ComponentActivity() {
   }
 }
 
+@SuppressLint("ComposableDestinationInComposeScope")
 @Composable
 fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel) {
   val firestore = FirebaseFirestore.getInstance()
@@ -103,6 +108,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
+  val profileRepo = ProfileRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val profileViewModel = ProfileViewModel(profileRepo)
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
   val pomodoroViewModel: TimerViewModel = viewModel()
@@ -161,6 +168,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.OTHERS,
     ) {
       composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FOLDER) { CreateFolderScreen(navigationActions, folderViewModel) }
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel) }
