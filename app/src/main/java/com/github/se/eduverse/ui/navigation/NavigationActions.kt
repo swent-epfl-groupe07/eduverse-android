@@ -1,3 +1,5 @@
+// This file was copied and adapted from the bootcamp solution
+
 package com.github.se.eduverse.ui.navigation
 
 import androidx.compose.material.icons.Icons
@@ -16,20 +18,25 @@ object Route {
   const val VIDEOS = "Videos"
   const val CAMERA = "Camera"
   const val OTHERS = "Others"
+  const val CALCULATOR = "Calculator"
   const val POMODORO = "Pomodoro"
 }
 
 object Screen {
   const val LOADING = "Loading Screen"
+  const val NEXT_SCREEN = "Next Screen"
   const val AUTH = "Auth Screen"
   const val DASHBOARD = "Dashboard screen"
   const val VIDEOS = "Videos screen"
   const val CAMERA = "Camera screen"
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
+  const val LIST_FOLDERS = "ListFolders screen"
   const val FOLDER = "Folder screen"
+  const val CREATE_FOLDER = "CreateFolder screen"
   const val CREATE_FILE = "CreateFile screen"
   const val COURSES = "Courses screen"
+  const val CALCULATOR = "Calculator screen"
   const val POMODORO = "Pomodoro screen"
 }
 

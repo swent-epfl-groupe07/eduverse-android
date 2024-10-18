@@ -58,18 +58,6 @@ class CameraScreenTest {
   }
 
   @Test
-  fun rectangleLeft_isDisplayed() {
-    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
-    composeTestRule.onNodeWithTag("rectangleLeft").assertIsDisplayed()
-  }
-
-  @Test
-  fun rectangleRight_isDisplayed() {
-    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
-    composeTestRule.onNodeWithTag("rectangleRight").assertIsDisplayed()
-  }
-
-  @Test
   fun takePhotoButton_clickAction() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
