@@ -22,6 +22,7 @@ object Route {
 }
 
 object Screen {
+  const val NEXT_SCREEN = "Next Screen"
   const val AUTH = "Auth Screen"
   const val DASHBOARD = "Dashboard screen"
   const val VIDEOS = "Videos screen"
