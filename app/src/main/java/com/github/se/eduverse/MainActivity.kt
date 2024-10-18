@@ -1,5 +1,6 @@
 package com.github.se.eduverse
 
+import PermissionDeniedScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -24,6 +25,7 @@ import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
@@ -105,7 +107,14 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
   val pomodoroViewModel: TimerViewModel = viewModel()
 
-  NavHost(navController = navController, startDestination = Route.AUTH) {
+  NavHost(navController = navController, startDestination = Route.LOADING) {
+    navigation(
+        startDestination = Screen.LOADING,
+        route = Route.LOADING,
+    ) {
+      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+    }
+
     navigation(
         startDestination = Screen.AUTH,
         route = Route.AUTH,
@@ -185,5 +194,5 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
 @Composable
 fun PermissionDeniedScreen() {
-  Text("Camera permission is required to use this feature.")
+  Text("Permission Denied")
 }

@@ -10,15 +10,23 @@ import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.DashboardViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class DashboardScreenUiTest {
@@ -28,9 +36,22 @@ class DashboardScreenUiTest {
   private val fakeViewModel = FakeDashboardViewModel()
   private val mockNavigationActions = FakeNavigationActions(navController = mock())
 
+  @Before
+  fun setUp() {
+    MockFirebaseAuth.setup()
+  }
+
+  @After
+  fun tearDown() {
+    unmockkAll()
+  }
+
   @Test
   fun testDashboardScreenDisplaysWidgets() {
     setupDashboardScreen()
+
+    // Wait for the initial auth check to complete
+    composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag("add_widget_button").assertExists()
     composeTestRule.onNodeWithTag("widget_list").assertExists()
@@ -41,6 +62,7 @@ class DashboardScreenUiTest {
   fun testAddWidget() {
     setupDashboardScreen()
 
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("add_widget_button").performClick()
     composeTestRule.onAllNodesWithTag("add_common_widget_button").assertCountEquals(1)
 
@@ -52,6 +74,7 @@ class DashboardScreenUiTest {
   fun testRemoveWidget() {
     setupDashboardScreen()
 
+    composeTestRule.waitForIdle()
     composeTestRule.onAllNodesWithTag("widget_card").onFirst().performTouchInput { longClick() }
     composeTestRule.waitForIdle()
 
@@ -65,6 +88,7 @@ class DashboardScreenUiTest {
   fun testCommonWidgetDialogVisibility() {
     setupDashboardScreen()
 
+    composeTestRule.waitForIdle()
     composeTestRule.onAllNodesWithTag("add_common_widget_button").onFirst().assertDoesNotExist()
 
     composeTestRule.onNodeWithTag("add_widget_button").performClick()
@@ -78,6 +102,7 @@ class DashboardScreenUiTest {
   fun testDragCancellation() {
     setupDashboardScreen()
 
+    composeTestRule.waitForIdle()
     val initialOrder = fakeViewModel.widgetList.value.map { it.widgetId }
 
     // Start dragging but cancel before releasing
@@ -99,6 +124,7 @@ class DashboardScreenUiTest {
   fun testDragLastBeyondBounds() {
     setupDashboardScreen()
 
+    composeTestRule.waitForIdle()
     val initialOrder = fakeViewModel.widgetList.value.map { it.widgetId }
 
     // Attempt to drag beyond the bounds of the list
@@ -136,6 +162,7 @@ class DashboardScreenUiTest {
     fakeViewModel.apply { _widgetList.value = testWidgets }
 
     setupDashboardScreen()
+    composeTestRule.waitForIdle()
 
     // Check that each widget displays the correct icon
     testWidgets.forEach { widget ->
@@ -150,10 +177,7 @@ class DashboardScreenUiTest {
 
   private fun setupDashboardScreen() {
     composeTestRule.setContent {
-      DashboardScreen(
-          viewModel = fakeViewModel,
-          navigationActions = mockNavigationActions,
-          userId = "testUserId")
+      DashboardScreen(viewModel = fakeViewModel, navigationActions = mockNavigationActions)
     }
   }
 }
@@ -176,6 +200,32 @@ class FakeDashboardViewModel : DashboardViewModel(mock()) {
 
   override fun getCommonWidgets(): List<Widget> {
     return listOf(Widget("3", "Type 3", "Title 3", "Content 3", "Owner 3"))
+  }
+}
+
+class MockFirebaseAuth {
+  companion object {
+    private val mockUser: FirebaseUser =
+        mock(FirebaseUser::class.java).apply {
+          `when`(getUid()).thenReturn("test_user_id")
+          `when`(getEmail()).thenReturn("test@example.com")
+          `when`(getDisplayName()).thenReturn("Test User")
+          `when`(getPhoneNumber()).thenReturn(null)
+          `when`(getPhotoUrl()).thenReturn(null)
+          `when`(getProviderId()).thenReturn("firebase")
+          `when`(isEmailVerified).thenReturn(true)
+          `when`(isAnonymous).thenReturn(false)
+          `when`(getMetadata()).thenReturn(null)
+          `when`(getProviderData()).thenReturn(mutableListOf())
+          `when`(getTenantId()).thenReturn(null)
+        }
+
+    fun setup(isAuthenticated: Boolean = true) {
+      mockkStatic(FirebaseAuth::class)
+      val mockAuth = mock(FirebaseAuth::class.java)
+      every { FirebaseAuth.getInstance() } returns mockAuth
+      `when`(mockAuth.currentUser).thenReturn(if (isAuthenticated) mockUser else null)
+    }
   }
 }
 

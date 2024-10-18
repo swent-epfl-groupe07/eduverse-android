@@ -12,6 +12,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 
 object Route {
+  const val LOADING = "Loading"
   const val AUTH = "Auth"
   const val DASHBOARD = "Dashboard"
   const val VIDEOS = "Videos"
@@ -22,6 +23,7 @@ object Route {
 }
 
 object Screen {
+  const val LOADING = "Loading Screen"
   const val NEXT_SCREEN = "Next Screen"
   const val AUTH = "Auth Screen"
   const val DASHBOARD = "Dashboard screen"
