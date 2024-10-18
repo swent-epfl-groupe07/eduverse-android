@@ -44,9 +44,9 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.others.OthersScreen
-import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.others.profile.ProfileScreen
 import com.github.se.eduverse.ui.others.setting.SettingsScreen
+import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
