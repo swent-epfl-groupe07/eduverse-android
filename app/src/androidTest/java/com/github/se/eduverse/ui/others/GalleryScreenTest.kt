@@ -22,7 +22,7 @@ class GalleryScreenUiTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  private val mockNavigationActions = fakeNavigationActions(navController = mock())
+  private val mockNavigationActions = aliBouiri(navController = mock())
   private lateinit var fakeViewModel: FakePhotoViewModel
 
   @Before
@@ -161,7 +161,7 @@ private fun mockRepository() =
     }
 
 // Faux NavigationActions pour les tests de navigation
-class fakeNavigationActions(navController: NavHostController) : NavigationActions(navController) {
+class aliBouiri(navController: NavHostController) : NavigationActions(navController) {
   var backCalled = false
 
   override fun goBack() {
