@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.Packaging
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
 import java.io.FileInputStream
 import java.util.Properties
@@ -182,6 +183,7 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.json)
+    testImplementation("androidx.arch.core:core-testing:2.1.0")
 
     // Test UI
     androidTestImplementation(libs.androidx.junit)
@@ -201,13 +203,19 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
     // CameraX
-    // CameraX
     implementation("androidx.camera:camera-core:1.1.0")
     implementation("androidx.camera:camera-camera2:1.1.0")
     implementation("androidx.camera:camera-lifecycle:1.1.0")
     implementation("androidx.camera:camera-view:1.0.0-alpha30")
     implementation("androidx.camera:camera-video:1.1.0")
-    implementation ("com.google.guava:guava:31.1-android")
+    implementation("com.google.guava:guava:31.1-android")
+
+    // Apache Poi
+    implementation("org.apache.poi:poi-ooxml:5.2.3") {
+        exclude(group = "org.apache.poi", module = "poi-ooxml-lite")
+    }
+    implementation("org.apache.poi:poi-ooxml-schemas:4.1.2")
+    implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
 
     // Material 3
     implementation("androidx.compose.material3:material3:1.1.0")

@@ -31,6 +31,7 @@ object Screen {
   const val CAMERA = "Camera screen"
   const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
+  const val SETTING = "Setting screen"
   const val LIST_FOLDERS = "ListFolders screen"
   const val FOLDER = "Folder screen"
   const val CREATE_FOLDER = "CreateFolder screen"
@@ -38,6 +39,7 @@ object Screen {
   const val COURSES = "Courses screen"
   const val CALCULATOR = "Calculator screen"
   const val POMODORO = "Pomodoro screen"
+  const val PDF_CONVERTER = "PdfConverter screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -90,6 +92,14 @@ open class NavigationActions(
     }
   }
 
+  fun navigateToSetting() {
+    navController.navigate(Screen.SETTING)
+  }
+
+  /** Navigate to the Profile screen. */
+  fun navigateToProfile() {
+    navController.navigate(Screen.EDIT_PROFILE)
+  }
   /**
    * Navigate to the specified screen.
    *
