@@ -12,18 +12,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
+import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
+import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.folder.CreateFileScreen
@@ -39,6 +44,8 @@ import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -49,25 +56,29 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
+  private lateinit var photoViewModel: PhotoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     // Initialiser Firebase Auth
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      // Déconnexion de l'utilisateur si déjà connecté
+    if (auth.currentUser != null) {
       auth.signOut()
     }
 
-    // Lanceur de demande de permission
+    // Instanciez le repository et le ViewModel
+    val photoRepository =
+        PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+    val photoViewModelFactory = PhotoViewModelFactory(photoRepository)
+    photoViewModel = ViewModelProvider(this, photoViewModelFactory)[PhotoViewModel::class.java]
+
+    // Gestion des permissions de la caméra
     val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean
-          ->
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
           cameraPermissionGranted = isGranted
         }
 
-    // Vérifier et demander la permission de la caméra
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
         PackageManager.PERMISSION_GRANTED) {
       cameraPermissionGranted = true
@@ -77,14 +88,16 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
+        Surface(modifier = Modifier.fillMaxSize()) {
+          EduverseApp(cameraPermissionGranted, photoViewModel)
+        }
       }
     }
   }
 }
 
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean) {
+fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -151,6 +164,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
 
+    // Écran pour afficher la photo prise
     navigation(
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
@@ -162,8 +176,16 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     composable("picTaken/{photoPath}") { backStackEntry ->
       val photoPath = backStackEntry.arguments?.getString("photoPath")
       val photoFile = photoPath?.let { File(it) }
-      PicTakenScreen(photoFile, navigationActions)
+      PicTakenScreen(photoFile, navigationActions, photoViewModel)
     }
+    composable(
+        "nextScreen/{photoPath}",
+        arguments = listOf(navArgument("photoPath") { type = NavType.StringType })) { backStackEntry
+          ->
+          val photoPath = backStackEntry.arguments?.getString("photoPath")
+          val photoFile = if (photoPath != null) File(photoPath) else null
+          NextScreen(photoFile = photoFile, navigationActions = navigationActions, photoViewModel)
+        }
   }
 }
 
