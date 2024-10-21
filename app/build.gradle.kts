@@ -130,9 +130,18 @@ sonar {
 dependencies {
     //implementation("io.coil-kt:coil-compose:2.1.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.androidx.junit.ktx)
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.test:runner:1.5.2")
+
+
+    implementation("com.google.android.exoplayer:exoplayer:2.15.1")
+    implementation("androidx.media3:media3-exoplayer:1.0.0")
+    implementation("androidx.media3:media3-ui:1.0.0")
+
+    implementation("com.arthenica:ffmpeg-kit-full:4.5.LTS")
+
 
 
 
@@ -190,6 +199,15 @@ dependencies {
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.json)
     testImplementation("androidx.arch.core:core-testing:2.1.0")
+    androidTestImplementation ("org.hamcrest:hamcrest-library:2.2")
+    androidTestImplementation ("androidx.test.espresso:espresso-contrib:3.5.1")
+    androidTestImplementation("io.mockk:mockk-android:1.12.0")
+    androidTestImplementation("org.hamcrest:hamcrest-all:1.3")
+
+
+
+
+
 
     // Test UI
     androidTestImplementation(libs.androidx.junit)
@@ -207,6 +225,7 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     androidTestImplementation(libs.kaspresso.compose.support)
     testImplementation(libs.kotlinx.coroutines.test)
+
 
     // CameraX
     implementation("androidx.camera:camera-core:1.1.0")

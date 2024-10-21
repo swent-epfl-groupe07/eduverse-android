@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.view.ViewGroup
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,7 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +34,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -40,49 +49,77 @@ import com.google.firebase.auth.FirebaseAuth
 import java.io.File
 import java.io.FileOutputStream
 
+@OptIn(UnstableApi::class)
 @Composable
-fun NextScreen(photoFile: File?, navigationActions: NavigationActions, viewModel: PhotoViewModel) {
+fun NextScreen(
+    photoFile: File?,
+    videoFile: File?,
+    navigationActions: NavigationActions,
+    viewModel: PhotoViewModel
+) {
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
-  val path = "photos/$ownerId/${System.currentTimeMillis()}.jpg"
+  val path = "media/$ownerId/${System.currentTimeMillis()}.jpg"
 
   val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
 
   Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEBF1F4)).padding(16.dp)) {
-    bitmap?.let {
-      Column(
+    if (bitmap != null) {
+      // Affichage de l'image
+      Image(
+          bitmap = adjustImageRotation(bitmap.asAndroidBitmap()).asImageBitmap(),
+          contentDescription = "Preview Image",
+          contentScale = ContentScale.Crop,
           modifier =
               Modifier.align(Alignment.TopStart)
                   .padding(top = 56.dp, start = 16.dp)
-                  .background(color = Color(0xFFD9D9D9), shape = RoundedCornerShape(size = 10.dp))
                   .width(133.dp)
                   .height(164.dp)
-                  .testTag("imagePreviewContainer"),
-          verticalArrangement = Arrangement.Center,
-          horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                bitmap = adjustImageRotation(it.asAndroidBitmap()).asImageBitmap(),
-                contentDescription = "Preview",
-                contentScale = ContentScale.Crop,
-                modifier =
-                    Modifier.fillMaxSize()
-                        .clip(RoundedCornerShape(size = 15.dp))
-                        .background(color = Color(0xFFD9D9D9))
-                        .testTag("previewImage"))
+                  .clip(RoundedCornerShape(15.dp))
+                  .background(color = Color(0xFFD9D9D9))
+                  .testTag("previewImage"))
+    } else if (videoFile != null) {
+      // Affichage de la vidéo dans le rectangle défini avec une meilleure gestion du scaling
+      val videoUri = Uri.fromFile(videoFile)
+      val player = remember {
+        ExoPlayer.Builder(context).build().apply {
+          setMediaItem(MediaItem.fromUri(videoUri))
+          repeatMode = ExoPlayer.REPEAT_MODE_ONE // Répéter la vidéo
+          prepare()
+          playWhenReady = true
+        }
+      }
 
-            /*Text(
-                text = "Edit cover",
-                color = Color.Gray,
-                modifier = Modifier
-                    .background(Color.White, shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .testTag("editCoverText")
-            )*/
-            // the button edit cover will be implemented later
-          }
+      DisposableEffect(Unit) {
+        player.playWhenReady = true
+        player.prepare()
+
+        onDispose { player.release() }
+      }
+
+      AndroidView(
+          factory = {
+            PlayerView(context).apply {
+              this.player = player
+              useController = false // Cacher les contrôles vidéo
+              layoutParams =
+                  ViewGroup.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+              resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM // Ajuste la vidéo au cadre
+            }
+          },
+          modifier =
+              Modifier.align(Alignment.TopStart)
+                  .padding(top = 56.dp, start = 16.dp)
+                  .width(133.dp)
+                  .height(164.dp)
+                  .clip(RoundedCornerShape(15.dp))
+                  .background(color = Color(0xFFD9D9D9))
+                  .testTag("previewVideo"))
     }
 
+    // Autres composants inchangés
     Text(
         text = "Add description...",
         color = Color.Gray,
