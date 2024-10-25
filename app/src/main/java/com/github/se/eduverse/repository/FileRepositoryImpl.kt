@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 
 class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage: FirebaseStorage) :
     FileRepository {
@@ -74,14 +75,14 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    */
   override fun accessFile(
       fileId: String,
-      onSuccess: (Uri) -> Unit,
+      onSuccess: (StorageReference) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(collectionPath)
         .document(fileId)
         .get()
         .addOnSuccessListener {
-            onSuccess(Uri.parse(it.getString("url")))
+            onSuccess(storage.reference.child(it.getString("url")!!))
         }
         .addOnFailureListener(onFailure)
   }

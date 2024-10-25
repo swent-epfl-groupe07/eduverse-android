@@ -110,13 +110,24 @@ class FileRepositoryTest {
 
   @Test
   fun accessFileTest() {
-    var test = false
-    try {
-      fileRepository.accessFile("", {}, {})
-    } catch (e: NotImplementedError) {
-      test = true
+    var test1 = false
+    var test2 = false
+    `when`(mockStorage.reference).thenReturn(mockStorageReference)
+    `when`(mockStorageReference.child(any())).thenReturn(mockStorageReference)
+    `when`(mockStorageReference.putFile(any())).thenReturn(mockUploadTask)
+    `when`(mockUploadTask.addOnSuccessListener(any())).then {
+      test1 = true
+      mockUploadTask
     }
-    assert(test)
+    `when`(mockUploadTask.addOnFailureListener(any())).then {
+      test2 = true
+      null
+    }
+
+    fileRepository.saveFile(Uri.EMPTY, "", {}, {})
+
+    assert(test1)
+    assert(test2)
   }
 
   @Test
