@@ -2,7 +2,4 @@
     <cache-path
         name="shared_images"
         path="." />
-    <external-path
-        name="external_files"
-        path="." />
 </paths>

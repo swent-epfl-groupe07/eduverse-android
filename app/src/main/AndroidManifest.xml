@@ -37,6 +37,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+                <data android:scheme="content" /> <!-- For content URIs -->
+                <data android:scheme="file" />    <!-- For file URIs -->
+            </intent-filter>
         </activity>
 
         <!-- API Key for Google Maps -->

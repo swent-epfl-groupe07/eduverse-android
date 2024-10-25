@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.core.content.ContextCompat.startActivity
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.model.MyFile
@@ -82,15 +82,19 @@ class FileViewModel(val fileRepository: FileRepository) {
     fileRepository.accessFile(
         fileId = fileId,
         onSuccess = { pdfRef ->
-          val localFile = File.createTempFile("tempFile", "pdf")
+          val localFile = File.createTempFile("tempFile", ".pdf")
           pdfRef
               .getFile(localFile)
               .addOnSuccessListener { openPDF(localFile, context) }
               .addOnFailureListener {
                 Log.e("Open File", "Opening of file ${pdfRef.name} failed: $it")
+                Toast.makeText(context, "Can't open file", Toast.LENGTH_SHORT).show()
               }
         },
-        onFailure = { Log.e("Access File", "Access of file at $fileId failed: $it") })
+        onFailure = {
+          Log.e("Access File", "Access of file at $fileId failed: $it")
+          Toast.makeText(context, "Can't access file", Toast.LENGTH_SHORT).show()
+        })
   }
 
   private fun openPDF(file: File, context: Context) {
@@ -103,7 +107,7 @@ class FileViewModel(val fileRepository: FileRepository) {
     if (intent.resolveActivity(context.packageManager) != null) {
       context.startActivity(intent)
     } else {
-      // No application to handle the PDF
+      Toast.makeText(context, "No application to open PDF", Toast.LENGTH_SHORT).show()
     }
   }
 }
