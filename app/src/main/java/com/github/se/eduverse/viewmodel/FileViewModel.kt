@@ -96,7 +96,7 @@ class FileViewModel(val fileRepository: FileRepository) {
   private fun openPDF(file: File, context: Context) {
     val intent = Intent(Intent.ACTION_VIEW)
     intent.setDataAndType(
-        FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.provider", file),
+        FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", file),
         "application/pdf")
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
