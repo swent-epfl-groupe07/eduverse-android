@@ -131,7 +131,7 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun savePDFUrlToFirestore() {
+  fun savePDFUrlToFirestoreTest() {
     `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
 
     fileRepository.savePDFUrlToFirestore("", "", {})
