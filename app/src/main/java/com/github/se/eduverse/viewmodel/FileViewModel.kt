@@ -1,12 +1,18 @@
 package com.github.se.eduverse.viewmodel
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
+import androidx.core.content.FileProvider
+import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 class FileViewModel(val fileRepository: FileRepository) {
   private var _newFile: MutableStateFlow<MyFile?> = MutableStateFlow(null)
@@ -71,4 +77,33 @@ class FileViewModel(val fileRepository: FileRepository) {
     _validNewFile.value = false
     _newFile.value = null
   }
+
+    fun openFile(fileId: String, context: Context) {
+        fileRepository.accessFile(
+            fileId = fileId,
+            onSuccess = { pdfRef ->
+                val localFile = File.createTempFile("tempFile", "pdf")
+                pdfRef.getFile(localFile)
+                    .addOnSuccessListener {
+                        openPDF(localFile, context)
+                    }
+                    .addOnFailureListener {
+                        Log.e("Open File", "Opening of file ${pdfRef.name} failed: $it")
+                    }
+            },
+            onFailure = { Log.e("Access File", "Access of file at $fileId failed: $it") }
+        )
+    }
+
+    private fun openPDF(file: File, context: Context) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.provider", file), "application/pdf")
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            // No application to handle the PDF
+        }
+    }
 }
