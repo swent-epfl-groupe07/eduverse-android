@@ -187,10 +187,15 @@ class DisplayFolderTest {
 
   @Test
   fun clickOnFileHaveExpectedBehavior() {
-    composeTestRule.onNodeWithTag("name 1").performClick()
-    composeTestRule.onNodeWithTag("name 2").performClick()
-    composeTestRule.onNodeWithTag("name 3").performClick()
+    var test = false
 
-    // click do nothing for now
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      test = true
+      null
+    }
+
+    composeTestRule.onNodeWithTag("name 1").performClick()
+
+    assert(test)
   }
 }

@@ -78,6 +78,12 @@ class FileViewModel(val fileRepository: FileRepository) {
     _newFile.value = null
   }
 
+  /**
+   * Open a pdf file using an specialized app on the device
+   *
+   * @param fileId the id of the file as stored in firestore
+   * @param context the context in which this method is used
+   */
   fun openFile(fileId: String, context: Context) {
     fileRepository.accessFile(
         fileId = fileId,
@@ -97,11 +103,22 @@ class FileViewModel(val fileRepository: FileRepository) {
         })
   }
 
-  private fun openPDF(file: File, context: Context) {
-    val intent = Intent(Intent.ACTION_VIEW)
-    intent.setDataAndType(
-        FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", file),
-        "application/pdf")
+  /**
+   * Open a pdf file. Parameters intent and uri are there to make the function testable
+   *
+   * @param file the file to open
+   * @param context the context in which the file is opened
+   * @param intent the intent that is created and then executed with an appropriate activity
+   * @param uri the uri of the file in specified context
+   */
+  fun openPDF(
+      file: File,
+      context: Context,
+      intent: Intent = Intent(Intent.ACTION_VIEW),
+      uri: Uri =
+          FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.fileprovider", file)
+  ) {
+    intent.setDataAndType(uri, "application/pdf")
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
     if (intent.resolveActivity(context.packageManager) != null) {
