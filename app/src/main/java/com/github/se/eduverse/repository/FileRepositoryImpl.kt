@@ -65,13 +65,25 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
     TODO("Not yet implemented")
   }
 
-  /** Does nothing for now */
+  /**
+   * Access a file in the firebase storage and execute some given code with it
+   *
+   * @param fileId the id of the file as stored in the database (!= storage)
+   * @param onSuccess the code to execute with the accessed code
+   * @param onFailure error management method
+   */
   override fun accessFile(
       fileId: String,
-      onSuccess: () -> Unit,
+      onSuccess: (Uri) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    TODO("Not yet implemented")
+    db.collection(collectionPath)
+        .document(fileId)
+        .get()
+        .addOnSuccessListener {
+            onSuccess(Uri.parse(it.getString("url")))
+        }
+        .addOnFailureListener(onFailure)
   }
 
   /**
