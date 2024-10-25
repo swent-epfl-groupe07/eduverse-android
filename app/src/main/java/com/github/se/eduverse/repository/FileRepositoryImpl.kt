@@ -34,15 +34,12 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
       onFailure: (Exception) -> Unit
   ) {
     val storageReference = storage.reference
-    val pdfRef = storageReference.child("pdfs/${file.lastPathSegment}")
+    val path = "pdfs/${file.lastPathSegment}"
+    val pdfRef = storageReference.child(path)
 
     pdfRef
         .putFile(file)
-        .addOnSuccessListener { taskSnapshot ->
-          pdfRef.downloadUrl.addOnSuccessListener { downloadUri ->
-            savePDFUrlToFirestore(downloadUri.toString(), fileId, onSuccess)
-          }
-        }
+        .addOnSuccessListener { savePDFUrlToFirestore(path, fileId, onSuccess) }
         .addOnFailureListener(onFailure)
   }
 
