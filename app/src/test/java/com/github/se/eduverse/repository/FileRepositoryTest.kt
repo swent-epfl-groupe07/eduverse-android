@@ -112,7 +112,7 @@ class FileRepositoryTest {
   fun accessFileTest() {
     var test = false
     try {
-      fileRepository.accessFile(Uri.EMPTY, "", {}, {})
+      fileRepository.accessFile("", {}, {})
     } catch (e: NotImplementedError) {
       test = true
     }

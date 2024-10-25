@@ -67,7 +67,6 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
 
   /** Does nothing for now */
   override fun accessFile(
-      file: Uri,
       fileId: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
