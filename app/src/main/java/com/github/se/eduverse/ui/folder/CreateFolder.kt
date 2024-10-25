@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +46,7 @@ fun CreateFolderScreen(
     folderViewModel: FolderViewModel,
     fileViewModel: FileViewModel
 ) {
+    val context = LocalContext.current
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var name by rememberSaveable { mutableStateOf("") }
   var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
@@ -113,7 +115,9 @@ fun CreateFolderScreen(
               modifier = Modifier.padding(vertical = 15.dp).testTag("textFiles"))
           Column(modifier = Modifier.fillMaxHeight(0.65f)) {
             files.forEach {
-              Button(onClick = {}, modifier = Modifier.fillMaxWidth().testTag("file")) {
+              Button(
+                  onClick = { fileViewModel.openFile(it.fileId, context) },
+                  modifier = Modifier.fillMaxWidth().testTag("file")) {
                 Text(it.name, modifier = Modifier.fillMaxWidth())
               }
             }
