@@ -81,9 +81,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
     db.collection(collectionPath)
         .document(fileId)
         .get()
-        .addOnSuccessListener {
-            onSuccess(storage.reference.child(it.getString("url")!!))
-        }
+        .addOnSuccessListener { onSuccess(storage.reference.child(it.getString("url")!!)) }
         .addOnFailureListener(onFailure)
   }
 

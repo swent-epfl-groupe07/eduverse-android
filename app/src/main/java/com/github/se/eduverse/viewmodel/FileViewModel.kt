@@ -9,10 +9,10 @@ import androidx.core.content.FileProvider
 import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
+import java.io.File
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.io.File
 
 class FileViewModel(val fileRepository: FileRepository) {
   private var _newFile: MutableStateFlow<MyFile?> = MutableStateFlow(null)
@@ -78,32 +78,32 @@ class FileViewModel(val fileRepository: FileRepository) {
     _newFile.value = null
   }
 
-    fun openFile(fileId: String, context: Context) {
-        fileRepository.accessFile(
-            fileId = fileId,
-            onSuccess = { pdfRef ->
-                val localFile = File.createTempFile("tempFile", "pdf")
-                pdfRef.getFile(localFile)
-                    .addOnSuccessListener {
-                        openPDF(localFile, context)
-                    }
-                    .addOnFailureListener {
-                        Log.e("Open File", "Opening of file ${pdfRef.name} failed: $it")
-                    }
-            },
-            onFailure = { Log.e("Access File", "Access of file at $fileId failed: $it") }
-        )
-    }
+  fun openFile(fileId: String, context: Context) {
+    fileRepository.accessFile(
+        fileId = fileId,
+        onSuccess = { pdfRef ->
+          val localFile = File.createTempFile("tempFile", "pdf")
+          pdfRef
+              .getFile(localFile)
+              .addOnSuccessListener { openPDF(localFile, context) }
+              .addOnFailureListener {
+                Log.e("Open File", "Opening of file ${pdfRef.name} failed: $it")
+              }
+        },
+        onFailure = { Log.e("Access File", "Access of file at $fileId failed: $it") })
+  }
 
-    private fun openPDF(file: File, context: Context) {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.setDataAndType(FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.provider", file), "application/pdf")
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+  private fun openPDF(file: File, context: Context) {
+    val intent = Intent(Intent.ACTION_VIEW)
+    intent.setDataAndType(
+        FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.provider", file),
+        "application/pdf")
+    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            // No application to handle the PDF
-        }
+    if (intent.resolveActivity(context.packageManager) != null) {
+      context.startActivity(intent)
+    } else {
+      // No application to handle the PDF
     }
+  }
 }

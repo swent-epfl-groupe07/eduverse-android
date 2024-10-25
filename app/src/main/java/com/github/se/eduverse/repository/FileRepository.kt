@@ -12,5 +12,9 @@ interface FileRepository {
 
   fun deleteFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
-  fun accessFile(fileId: String, onSuccess: (StorageReference) -> Unit, onFailure: (Exception) -> Unit)
+  fun accessFile(
+      fileId: String,
+      onSuccess: (StorageReference) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }

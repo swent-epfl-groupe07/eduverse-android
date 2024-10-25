@@ -60,7 +60,7 @@ fun FolderScreen(
 ) {
   val activeFolder by folderViewModel.activeFolder.collectAsState()
 
-    val context = LocalContext.current
+  val context = LocalContext.current
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
   val validNewFile by fileViewModel.validNewFile.collectAsState()

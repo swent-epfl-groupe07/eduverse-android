@@ -46,7 +46,7 @@ fun CreateFolderScreen(
     folderViewModel: FolderViewModel,
     fileViewModel: FileViewModel
 ) {
-    val context = LocalContext.current
+  val context = LocalContext.current
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var name by rememberSaveable { mutableStateOf("") }
   var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
@@ -118,8 +118,8 @@ fun CreateFolderScreen(
               Button(
                   onClick = { fileViewModel.openFile(it.fileId, context) },
                   modifier = Modifier.fillMaxWidth().testTag("file")) {
-                Text(it.name, modifier = Modifier.fillMaxWidth())
-              }
+                    Text(it.name, modifier = Modifier.fillMaxWidth())
+                  }
             }
           }
           Button(
