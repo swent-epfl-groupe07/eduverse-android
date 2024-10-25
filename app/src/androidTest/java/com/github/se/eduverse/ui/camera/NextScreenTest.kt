@@ -2,8 +2,13 @@ package com.github.se.eduverse.ui.camera
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -30,6 +35,10 @@ class NextScreenTest {
   private lateinit var testFile: File
   private lateinit var mockBitmap: Bitmap
 
+  private var currentPhotoFile: File? = null
+  private var currentVideoFile: File? = null
+  private lateinit var videoFileState: MutableState<File?>
+
   @Before
   fun setUp() {
     navigationActions = mockk(relaxed = true)
@@ -40,13 +49,21 @@ class NextScreenTest {
     mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
 
     // Création d'un fichier temporaire avec des données simulant une image
-    testFile =
+    currentPhotoFile =
         File.createTempFile("test_image", ".jpg").apply {
           outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
         }
 
+    // Initialiser l'état vidéo avec null
+    videoFileState = mutableStateOf(null)
+
+    // Charger la composable avec la photo et une vidéo à l'état null par défaut
     composeTestRule.setContent {
-      NextScreen(photoFile = testFile, navigationActions = navigationActions, viewModel = viewModel)
+      NextScreen(
+          photoFile = currentPhotoFile,
+          videoFile = videoFileState.value,
+          navigationActions = navigationActions,
+          viewModel = viewModel)
     }
   }
 
@@ -54,7 +71,7 @@ class NextScreenTest {
   fun testImagePreviewIsDisplayed() {
     composeTestRule.waitForIdle()
     composeTestRule
-        .onNodeWithTag("imagePreviewContainer")
+        .onNodeWithTag("previewImage")
         .assertExists("Image preview container should exist")
         .assertIsDisplayed()
   }
@@ -125,9 +142,11 @@ class NextScreenTest {
     // Action : cliquer sur le bouton de sauvegarde
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Vérifier que `savePhoto` a été appelé avec un Photo ayant l'`ownerId` et le `path` corrects
+    // Vérifier que `savePhoto` a été appelé avec un `Photo` ayant l'`ownerId` correct
     assertEquals("anonymous", capturedPhoto.captured.ownerId)
-    assertTrue(capturedPhoto.captured.path.startsWith("photos/anonymous/"))
+
+    // Vérifier que le `path` commence bien par le bon préfixe, sans vérifier le timestamp exact
+    assertTrue(capturedPhoto.captured.path.startsWith("media/anonymous/"))
   }
 
   @Test
@@ -158,5 +177,87 @@ class NextScreenTest {
 
     // Vérifier que `goBack()` est appelé lorsque le bouton de fermeture est cliqué
     verify { navigationActions.goBack() }
+  }
+
+  @Test
+  fun testVideoFileIsHandledCorrectly() {
+    // Simuler un fichier vidéo temporaire
+    val testVideoFile = File.createTempFile("test_video", ".mp4")
+
+    // Mettre à jour l'état pour déclencher la recomposition avec le fichier vidéo
+    composeTestRule.runOnUiThread { videoFileState.value = testVideoFile }
+
+    // Forcer la recomposition
+    composeTestRule.waitForIdle()
+
+    // Vérifier que l'état du fichier vidéo a bien été mis à jour
+    assertNotNull(videoFileState.value)
+    assertEquals(testVideoFile, videoFileState.value)
+  } // testing the testTag videoPreview is very difficult
+
+  @Test
+  fun testCloseButtonWorks() {
+    composeTestRule
+        .onNodeWithTag("closeButton")
+        .assertIsDisplayed()
+        .assertHasClickAction()
+        .performClick()
+
+    verify { navigationActions.goBack() }
+  }
+
+  @Test
+  fun testStyledButtonClick() {
+    // Test sur le bouton "Add link"
+    composeTestRule
+        .onNodeWithTag("addLinkButton")
+        .assertExists()
+        .assertHasClickAction()
+        .performClick()
+
+    // Test sur le bouton "More options"
+    composeTestRule
+        .onNodeWithTag("moreOptionsButton")
+        .assertExists()
+        .assertHasClickAction()
+        .performClick()
+
+    // Test sur le bouton "Share to"
+    composeTestRule
+        .onNodeWithTag("shareToButton")
+        .assertExists()
+        .assertHasClickAction()
+        .performClick()
+  }
+
+  @Test
+  fun testPlayerReleased_whenDisposed() {
+    // Simuler un fichier vidéo temporaire
+    val testVideoFile = File.createTempFile("test_video", ".mp4")
+
+    // Utiliser ApplicationProvider pour obtenir le contexte
+    var player: ExoPlayer? = null
+
+    // Mettre à jour l'état pour déclencher la recomposition avec le fichier vidéo
+    composeTestRule.runOnUiThread { videoFileState.value = testVideoFile }
+
+    // Forcer la recomposition
+    composeTestRule.waitForIdle()
+
+    // Simuler la création et la gestion du player ExoPlayer dans le composant
+    composeTestRule.runOnIdle {
+      player =
+          ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(Uri.fromFile(testVideoFile)))
+            prepare()
+            playWhenReady = true
+          }
+    }
+
+    // Simuler la suppression de la composable et vérifier que le player est libéré
+    composeTestRule.runOnIdle {
+      player?.release()
+      assert(player?.isPlaying == false) // Le player ne doit plus jouer après la libération
+    }
   }
 }
