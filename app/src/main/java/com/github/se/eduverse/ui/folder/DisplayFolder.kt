@@ -65,6 +65,8 @@ fun FolderScreen(
 
   if (validNewFile) activeFolder!!.files.add(fileViewModel.getNewFile()!!)
 
+  folderViewModel.updateFolder(activeFolder!!)
+
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
       topBar = {
