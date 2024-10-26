@@ -9,7 +9,6 @@ import androidx.core.content.FileProvider
 import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
-import com.github.se.eduverse.showToast
 import java.io.File
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -100,7 +99,7 @@ class FileViewModel(val fileRepository: FileRepository) {
         },
         onFailure = {
           Log.e("Access File", "Access of file at $fileId failed: $it")
-          context.showToast("Can't access file", Toast.LENGTH_SHORT)
+          Toast.makeText(context, "Can't access file", Toast.LENGTH_SHORT).show()
         })
   }
 
