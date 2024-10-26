@@ -9,18 +9,22 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import java.lang.Exception
 import java.util.Calendar
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -109,25 +113,32 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun accessFileTest() {
-    var test1 = false
-    var test2 = false
-    `when`(mockStorage.reference).thenReturn(mockStorageReference)
-    `when`(mockStorageReference.child(any())).thenReturn(mockStorageReference)
-    `when`(mockStorageReference.putFile(any())).thenReturn(mockUploadTask)
-    `when`(mockUploadTask.addOnSuccessListener(any())).then {
-      test1 = true
-      mockUploadTask
-    }
-    `when`(mockUploadTask.addOnFailureListener(any())).then {
-      test2 = true
-      null
-    }
+  fun accessFileTest_onSuccess() {
+    val documentSnapshot = mock(DocumentSnapshot::class.java)
 
-    fileRepository.saveFile(Uri.EMPTY, "", {}, {})
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
 
-    assert(test1)
-    assert(test2)
+    fileRepository.accessFile("", {}, {})
+
+    verify(timeout(100)) { (documentSnapshot).getString("url") }
+  }
+
+  @Test
+  fun accessFileTest_onFailure() {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forException(Exception("message")))
+    var test = false
+
+    fileRepository.accessFile(
+        "",
+        {},
+        {
+          test = true
+          assert(it.message == "message")
+        })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assert(test)
   }
 
   @Test
