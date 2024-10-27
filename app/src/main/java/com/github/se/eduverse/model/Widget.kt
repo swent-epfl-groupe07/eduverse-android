@@ -11,13 +11,9 @@ data class Widget(
     val order: Int = 0
 )
 
-enum class CommonWidgetType(
-    val title: String,
-    val content: String,
-    val route: String? = null
-) {
-    TIMER("Study Timer", "Track your study sessions.", Screen.POMODORO),
-    CALCULATOR("Calculator", "Perform basic calculations.", Screen.CALCULATOR),
-    PDF_CONVERTER("PDF Converter", "Convert images to PDFs.", Screen.PDF_CONVERTER),
-    FOLDERS("Folders", "Access your personal space", Screen.LIST_FOLDERS)
+enum class CommonWidgetType(val title: String, val content: String, val route: String? = null) {
+  TIMER("Study Timer", "Track your study sessions.", Screen.POMODORO),
+  CALCULATOR("Calculator", "Perform basic calculations.", Screen.CALCULATOR),
+  PDF_CONVERTER("PDF Converter", "Convert images to PDFs.", Screen.PDF_CONVERTER),
+  FOLDERS("Folders", "Access your personal space", Screen.LIST_FOLDERS)
 }

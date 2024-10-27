@@ -116,7 +116,7 @@ private fun ReorderableWidgetList(
     items: List<Widget>,
     onReorder: (List<Widget>) -> Unit,
     onDelete: (String) -> Unit,
-    navigationActions: NavigationActions  // Add navigation actions parameter
+    navigationActions: NavigationActions // Add navigation actions parameter
 ) {
   val listState = rememberLazyListState()
   val scope = rememberCoroutineScope()
@@ -247,12 +247,13 @@ private fun ReorderableWidgetList(
                       }
                       .zIndex(if (isDragging) 1f else 0f)
                       .testTag("widget_card")
-                      .clickable { val route = CommonWidgetType.values()
-                          .find { it.name == item.widgetType }
-                          ?.route
+                      .clickable {
+                        val route =
+                            CommonWidgetType.values().find { it.name == item.widgetType }?.route
 
-                          // Navigate if route exists
-                          route?.let { navigationActions.navigateTo(it) } },
+                        // Navigate if route exists
+                        route?.let { navigationActions.navigateTo(it) }
+                      },
               elevation = elevation.dp,
               shape = RoundedCornerShape(8.dp)) {
                 Box(modifier = Modifier.fillMaxWidth()) {
