@@ -60,16 +60,6 @@ class DashboardViewModelTest {
   }
 
   @Test
-  fun `removeWidget should call repository removeWidget`() = runTest {
-    val widgetId = "widgetId"
-
-    viewModel.removeWidget(widgetId)
-    advanceUntilIdle()
-
-    verify(mockRepository).removeWidget(widgetId)
-  }
-
-  @Test
   fun `getCommonWidgets should return list of common widgets`() {
     val commonWidgets = viewModel.getCommonWidgets()
     assertEquals(4, commonWidgets.size) // Assuming there are 4 CommonWidgetTypes

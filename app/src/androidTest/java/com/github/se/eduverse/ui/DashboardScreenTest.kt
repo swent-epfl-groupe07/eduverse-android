@@ -194,7 +194,7 @@ class FakeDashboardViewModel : DashboardViewModel(mock()) {
     _widgetList.value = _widgetList.value + widget
   }
 
-  override fun removeWidget(widgetId: String) {
+  fun removeWidget(widgetId: String) {
     _widgetList.value = _widgetList.value.filter { it.widgetId != widgetId }
   }
 
