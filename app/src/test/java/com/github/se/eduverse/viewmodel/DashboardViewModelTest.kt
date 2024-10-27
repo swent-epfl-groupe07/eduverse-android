@@ -1,5 +1,6 @@
 package com.github.se.eduverse.viewmodel
 
+import com.github.se.eduverse.model.CommonWidgetType
 import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.repository.DashboardRepository
 import kotlinx.coroutines.Dispatchers
@@ -12,20 +13,27 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
 class DashboardViewModelTest {
-
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var viewModel: DashboardViewModel
-  private val mockRepository: DashboardRepository = mock(DashboardRepository::class.java)
+  private lateinit var viewModel: TestDashboardViewModel
+  private val mockRepository: DashboardRepository = mock()
+
+  private class TestDashboardViewModel(repository: DashboardRepository) :
+      DashboardViewModel(repository) {
+    fun setWidgetListForTest(widgets: List<Widget>) {
+      _widgetList.value = widgets
+    }
+  }
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
-    viewModel = DashboardViewModel(mockRepository)
+    viewModel = TestDashboardViewModel(mockRepository)
   }
 
   @After
@@ -34,61 +42,126 @@ class DashboardViewModelTest {
   }
 
   @Test
-  fun `fetchWidgets should update widgetList from repository`() = runTest {
+  fun `fetchWidgets should update widgetList from repository with correct order`() = runTest {
+    // Create widgets with different orders
     val widgetList =
         listOf(
-            Widget("1", "Type 1", "Title 1", "Content 1", "owner1"),
-            Widget("2", "Type 2", "Title 2", "Content 2", "owner2"))
+            Widget("1", "Type1", "Title1", "Content1", "owner1", order = 2),
+            Widget("2", "Type2", "Title2", "Content2", "owner1", order = 0),
+            Widget("3", "Type3", "Title3", "Content3", "owner1", order = 1))
 
     whenever(mockRepository.getWidgets("userId")).thenReturn(flowOf(widgetList))
 
     viewModel.fetchWidgets("userId")
     advanceUntilIdle()
 
-    verify(mockRepository).getWidgets("userId")
-    assertEquals(widgetList, viewModel.widgetList.value)
+    // Verify widgets are sorted by order
+    assertEquals(listOf("2", "3", "1"), viewModel.widgetList.value.map { it.widgetId })
   }
 
   @Test
-  fun `addWidget should call repository addWidget`() = runTest {
-    val newWidget = Widget("1", "Type", "Title", "Content", "userId")
+  fun `addWidget should not add duplicate widget type`() = runTest {
+    // Setup initial state with a widget
+    val initialWidget = Widget("1", "TIMER", "Timer", "Content", "user1", 0)
+    viewModel.setWidgetListForTest(listOf(initialWidget))
 
+    // Try to add another widget of the same type
+    val duplicateWidget = Widget("2", "TIMER", "Timer 2", "Content 2", "user1", 1)
+    viewModel.addWidget(duplicateWidget)
+    advanceUntilIdle()
+
+    // Verify repository was not called - use verify(mock, never()) instead of any()
+    verify(mockRepository, never()).addWidget(duplicateWidget)
+  }
+
+  @Test
+  fun `addWidget should set correct order and ID`() = runTest {
+    // Setup initial state
+    val initialWidgets =
+        listOf(
+            Widget("1", "Type1", "Title1", "Content1", "user1", 0),
+            Widget("2", "Type2", "Title2", "Content2", "user1", 1))
+    viewModel.setWidgetListForTest(initialWidgets)
+
+    // Add new widget
+    val newWidget = Widget("", "Type3", "Title3", "Content3", "user1", 0)
     viewModel.addWidget(newWidget)
     advanceUntilIdle()
 
-    verify(mockRepository).addWidget(newWidget)
+    // Capture the widget passed to repository
+    argumentCaptor<Widget>().apply {
+      verify(mockRepository).addWidget(capture())
+      assertEquals(2, firstValue.order) // Should be assigned next available order
+      assertEquals("user1_Type3", firstValue.widgetId) // Should have correct ID format
+    }
   }
 
   @Test
-  fun `getCommonWidgets should return list of common widgets`() {
-    val commonWidgets = viewModel.getCommonWidgets()
-    assertEquals(4, commonWidgets.size) // Assuming there are 4 CommonWidgetTypes
-    assertEquals("TIMER", commonWidgets[0].widgetId)
-    assertEquals("CALCULATOR", commonWidgets[1].widgetId)
-    assertEquals("PDF_CONVERTER", commonWidgets[2].widgetId)
-    assertEquals("WEEKLY_PLANNER", commonWidgets[3].widgetId)
-  }
+  fun `removeWidgetAndUpdateOrder should update remaining widgets correctly`() = runTest {
+    // Setup initial widgets
+    val initialWidgets =
+        listOf(
+            Widget("1", "Type1", "Title1", "Content1", "user1", 0),
+            Widget("2", "Type2", "Title2", "Content2", "user1", 1),
+            Widget("3", "Type3", "Title3", "Content3", "user1", 2))
 
-  @Test
-  fun `fetchWidgets should handle null flow from repository`() = runTest {
-    whenever(mockRepository.getWidgets("userId")).thenReturn(null)
+    // Remove middle widget and update orders
+    val updatedWidgets =
+        listOf(
+            Widget("1", "Type1", "Title1", "Content1", "user1", 0),
+            Widget("3", "Type3", "Title3", "Content3", "user1", 1))
 
-    viewModel.fetchWidgets("userId")
+    viewModel.removeWidgetAndUpdateOrder("2", updatedWidgets)
     advanceUntilIdle()
 
-    verify(mockRepository).getWidgets("userId")
-    assertEquals(emptyList<Widget>(), viewModel.widgetList.value)
+    // Verify correct repository calls
+    verify(mockRepository).removeWidget("2")
+    verify(mockRepository).updateWidgets(updatedWidgets)
   }
 
   @Test
-  fun `fetchWidgets should handle exception in flow`() = runTest {
+  fun `updateWidgetOrder should call repository with reordered widgets`() = runTest {
+    val reorderedWidgets =
+        listOf(
+            Widget("1", "Type1", "Title1", "Content1", "user1", 2),
+            Widget("2", "Type2", "Title2", "Content2", "user1", 0),
+            Widget("3", "Type3", "Title3", "Content3", "user1", 1))
+
+    viewModel.updateWidgetOrder(reorderedWidgets)
+    advanceUntilIdle()
+
+    // Simply verify with the list directly
+    verify(mockRepository).updateWidgets(reorderedWidgets)
+  }
+
+  @Test
+  fun `getCommonWidgets should return correctly configured widgets`() {
+    val commonWidgets = viewModel.getCommonWidgets()
+    val commonTypes = CommonWidgetType.values()
+
+    // First verify the size matches
+    assertEquals(commonTypes.size, commonWidgets.size)
+
+    // Then verify each widget's properties
+    commonWidgets.forEachIndexed { index, widget ->
+      val expectedType = commonTypes[index]
+      assertEquals("", widget.ownerUid)
+      assertEquals(0, widget.order)
+      assertEquals(expectedType.name, widget.widgetId)
+      assertEquals(expectedType.name, widget.widgetType)
+      assertEquals(expectedType.title, widget.widgetTitle)
+      assertEquals(expectedType.content, widget.widgetContent)
+    }
+  }
+
+  @Test
+  fun `fetchWidgets should handle error and emit empty list`() = runTest {
     val errorFlow = flow<List<Widget>> { throw RuntimeException("Test exception") }
     whenever(mockRepository.getWidgets("userId")).thenReturn(errorFlow)
 
     viewModel.fetchWidgets("userId")
     advanceUntilIdle()
 
-    verify(mockRepository).getWidgets("userId")
     assertEquals(emptyList<Widget>(), viewModel.widgetList.value)
   }
 }

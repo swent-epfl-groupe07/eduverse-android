@@ -18,10 +18,10 @@ open class DashboardViewModel
 @Inject
 constructor(private val dashboardRepository: DashboardRepository) : ViewModel() {
 
-  private val _widgetList = MutableStateFlow<List<Widget>>(emptyList())
-  open val widgetList: StateFlow<List<Widget>> = _widgetList
+  protected val _widgetList = MutableStateFlow<List<Widget>>(emptyList())
+  val widgetList: StateFlow<List<Widget>> = _widgetList
 
-  fun fetchWidgets(userId: String) {
+  open fun fetchWidgets(userId: String) {
     viewModelScope.launch {
       dashboardRepository
           .getWidgets(userId)
@@ -48,7 +48,7 @@ constructor(private val dashboardRepository: DashboardRepository) : ViewModel() 
     }
   }
 
-  fun removeWidgetAndUpdateOrder(widgetId: String, updatedWidgets: List<Widget>) {
+  open fun removeWidgetAndUpdateOrder(widgetId: String, updatedWidgets: List<Widget>) {
     viewModelScope.launch {
       // First remove the widget
       dashboardRepository.removeWidget(widgetId)
@@ -58,7 +58,7 @@ constructor(private val dashboardRepository: DashboardRepository) : ViewModel() 
     }
   }
 
-  fun updateWidgetOrder(reorderedWidgets: List<Widget>) {
+  open fun updateWidgetOrder(reorderedWidgets: List<Widget>) {
     viewModelScope.launch { dashboardRepository.updateWidgets(reorderedWidgets) }
   }
 

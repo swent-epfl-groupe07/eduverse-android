@@ -2,6 +2,7 @@ package com.github.se.eduverse.ui.dashboard
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
@@ -17,10 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.github.se.eduverse.model.CommonWidgetType
 import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -55,6 +58,7 @@ fun DashboardScreen(
       floatingActionButton = {
         FloatingActionButton(
             onClick = { showAddWidgetDialog = true },
+            modifier = Modifier.testTag("add_widget_button"),
             backgroundColor = MaterialTheme.colors.primary) {
               Icon(Icons.Default.Add, "Add Widget")
             }
@@ -94,7 +98,8 @@ fun DashboardScreen(
                         }
 
                 viewModel.removeWidgetAndUpdateOrder(widgetId, remainingWidgets)
-              })
+              },
+              navigationActions = navigationActions)
 
           if (showAddWidgetDialog) {
             AddWidgetDialog(
@@ -110,7 +115,8 @@ fun DashboardScreen(
 private fun ReorderableWidgetList(
     items: List<Widget>,
     onReorder: (List<Widget>) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    navigationActions: NavigationActions  // Add navigation actions parameter
 ) {
   val listState = rememberLazyListState()
   val scope = rememberCoroutineScope()
@@ -134,7 +140,7 @@ private fun ReorderableWidgetList(
   LazyColumn(
       state = listState,
       modifier =
-          Modifier.fillMaxSize().pointerInput(items) {
+          Modifier.fillMaxSize().testTag("widget_list").pointerInput(items) {
             detectDragGesturesAfterLongPress(
                 onDragStart = { offset ->
                   listState.layoutInfo.visibleItemsInfo
@@ -239,7 +245,14 @@ private fun ReorderableWidgetList(
                           shadowElevation = elevation
                         }
                       }
-                      .zIndex(if (isDragging) 1f else 0f),
+                      .zIndex(if (isDragging) 1f else 0f)
+                      .testTag("widget_card")
+                      .clickable { val route = CommonWidgetType.values()
+                          .find { it.name == item.widgetType }
+                          ?.route
+
+                          // Navigate if route exists
+                          route?.let { navigationActions.navigateTo(it) } },
               elevation = elevation.dp,
               shape = RoundedCornerShape(8.dp)) {
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -267,7 +280,7 @@ private fun ReorderableWidgetList(
 
                         IconButton(
                             onClick = { onDelete(item.widgetId) },
-                            modifier = Modifier.size(24.dp)) {
+                            modifier = Modifier.size(24.dp).testTag("delete_icon")) {
                               Icon(
                                   Icons.Default.Close,
                                   contentDescription = "Delete",
@@ -296,7 +309,10 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                 viewModel.addWidget(widget.copy(ownerUid = userId))
                 onDismiss()
               },
-              modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(vertical = 4.dp)
+                      .testTag("add_common_widget_button")) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically) {
