@@ -43,7 +43,9 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
   val auth = FirebaseAuth.getInstance()
+
   val widgets by viewModel.widgetList.collectAsState()
+
   var showAddWidgetDialog by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) {
