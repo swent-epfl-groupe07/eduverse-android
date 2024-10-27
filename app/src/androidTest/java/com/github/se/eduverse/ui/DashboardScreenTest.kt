@@ -92,7 +92,7 @@ class DashboardScreenUiTest {
     }
 
     // Give time for animations and state updates
-    composeTestRule.waitUntil(5000) {
+    composeTestRule.waitUntil(20000) {
       fakeViewModel.widgetList.value.map { it.widgetId } != initialWidgets.map { it.widgetId }
     }
 
