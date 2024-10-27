@@ -50,6 +50,7 @@ fun DashboardScreen(
 
   LaunchedEffect(Unit) {
     if (auth.currentUser == null) {
+
       navigationActions.navigateTo(Screen.AUTH)
       return@LaunchedEffect
     }
