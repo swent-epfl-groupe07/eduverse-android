@@ -89,13 +89,17 @@ class FileViewModel(val fileRepository: FileRepository) {
         fileId = fileId,
         onSuccess = { pdfRef ->
           val localFile = File.createTempFile("tempFile", ".pdf")
-          pdfRef
-              .getFile(localFile)
-              .addOnSuccessListener { openPDF(localFile, context) }
-              .addOnFailureListener {
-                Log.e("Open File", "Opening of file ${pdfRef.name} failed: $it")
-                Toast.makeText(context, "Can't open file", Toast.LENGTH_SHORT).show()
-              }
+          try {
+            pdfRef
+                .getFile(localFile)
+                .addOnSuccessListener { openPDF(localFile, context) }
+                .addOnFailureListener {
+                  Log.e("Open File", "Opening of file ${pdfRef.name} failed: $it")
+                  Toast.makeText(context, "Can't open file", Toast.LENGTH_SHORT).show()
+                }
+          } finally {
+            localFile.delete()
+          }
         },
         onFailure = {
           Log.e("Access File", "Access of file at $fileId failed: $it")
