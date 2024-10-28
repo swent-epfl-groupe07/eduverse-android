@@ -131,4 +131,18 @@ class FileViewModel(val fileRepository: FileRepository) {
       Toast.makeText(context, "No application to open PDF", Toast.LENGTH_SHORT).show()
     }
   }
+
+  /**
+   * Delete a file from firebase
+   *
+   * @param fileId the id of the file to delete
+   * @param onSuccess some code to execute upon deletion, typically suppressing the file
+   *   representation in the caller
+   */
+  fun deleteFile(fileId: String, onSuccess: () -> Unit) {
+    fileRepository.deleteFile(
+        fileId = fileId,
+        onSuccess = onSuccess,
+        onFailure = { Log.e("Delete File", "Can't delete file at $fileId: $it") })
+  }
 }

@@ -53,14 +53,31 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
     TODO("Not yet implemented")
   }
 
-  /** Does nothing for now */
-  override fun deleteFile(
-      file: Uri,
-      fileId: String,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    TODO("Not yet implemented")
+  /**
+   * Delete a file on firebase, both in storage and in firestore
+   *
+   * @param fileId the id of the file to delete
+   * @param onSuccess the code to execute if the deletion is successful
+   * @param onFailure error management method
+   */
+  override fun deleteFile(fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    db.collection(collectionPath)
+        .document(fileId)
+        .get()
+        .addOnSuccessListener {
+          storage.reference
+              .child(it.getString("url")!!)
+              .delete()
+              .addOnSuccessListener {
+                db.collection(collectionPath)
+                    .document(fileId)
+                    .delete()
+                    .addOnSuccessListener { onSuccess() }
+                    .addOnFailureListener(onFailure)
+              }
+              .addOnFailureListener(onFailure)
+        }
+        .addOnFailureListener(onFailure)
   }
 
   /**

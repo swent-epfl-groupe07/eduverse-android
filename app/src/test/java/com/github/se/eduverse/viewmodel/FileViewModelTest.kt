@@ -110,4 +110,11 @@ class FileViewModelTest {
     fileViewModel.openPDF(file, context, intent, uri)
     assert(test)
   }
+
+  @Test
+  fun deleteFileTest() {
+    fileViewModel.deleteFile("fileId", {})
+
+    verify(fileRepository, times(1)).deleteFile(any(), any(), any())
+  }
 }
