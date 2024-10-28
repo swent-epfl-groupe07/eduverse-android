@@ -68,20 +68,18 @@ class DashboardScreenUiTest {
     println("Initial order: ${initialWidgets.map { it.widgetId }}")
 
     // Force trigger the reorder in the ViewModel directly
-    fakeViewModel.updateWidgetOrder(listOf(
-      initialWidgets[1],  // Second widget first
-      initialWidgets[0]   // First widget second
-    ))
+    fakeViewModel.updateWidgetOrder(
+        listOf(
+            initialWidgets[1], // Second widget first
+            initialWidgets[0] // First widget second
+            ))
 
     composeTestRule.waitForIdle()
 
     val reorderedWidgets = fakeViewModel.widgetList.value
     println("Final order: ${reorderedWidgets.map { it.widgetId }}")
 
-    assertNotEquals(
-      initialWidgets.map { it.widgetId },
-      reorderedWidgets.map { it.widgetId }
-    )
+    assertNotEquals(initialWidgets.map { it.widgetId }, reorderedWidgets.map { it.widgetId })
   }
 
   @Test
