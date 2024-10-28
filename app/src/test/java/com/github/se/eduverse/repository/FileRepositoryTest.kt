@@ -9,18 +9,22 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import java.lang.Exception
 import java.util.Calendar
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -109,18 +113,36 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun accessFileTest() {
+  fun accessFileTest_onSuccess() {
+    val documentSnapshot = mock(DocumentSnapshot::class.java)
+
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+
+    fileRepository.accessFile("", {}, {})
+
+    verify(timeout(100)) { (documentSnapshot).getString("url") }
+  }
+
+  @Test
+  fun accessFileTest_onFailure() {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forException(Exception("message")))
     var test = false
-    try {
-      fileRepository.accessFile(Uri.EMPTY, "", {}, {})
-    } catch (e: NotImplementedError) {
-      test = true
-    }
+
+    fileRepository.accessFile(
+        "",
+        {},
+        {
+          test = true
+          assert(it.message == "message")
+        })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
     assert(test)
   }
 
   @Test
-  fun savePDFUrlToFirestore() {
+  fun savePDFUrlToFirestoreTest() {
     `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
 
     fileRepository.savePDFUrlToFirestore("", "", {})

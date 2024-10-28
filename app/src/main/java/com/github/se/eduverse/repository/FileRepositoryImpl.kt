@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 
 class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage: FirebaseStorage) :
     FileRepository {
@@ -33,15 +34,12 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
       onFailure: (Exception) -> Unit
   ) {
     val storageReference = storage.reference
-    val pdfRef = storageReference.child("pdfs/${file.lastPathSegment}")
+    val path = "pdfs/${file.lastPathSegment}"
+    val pdfRef = storageReference.child(path)
 
     pdfRef
         .putFile(file)
-        .addOnSuccessListener { taskSnapshot ->
-          pdfRef.downloadUrl.addOnSuccessListener { downloadUri ->
-            savePDFUrlToFirestore(downloadUri.toString(), fileId, onSuccess)
-          }
-        }
+        .addOnSuccessListener { savePDFUrlToFirestore(path, fileId, onSuccess) }
         .addOnFailureListener(onFailure)
   }
 
@@ -65,14 +63,23 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
     TODO("Not yet implemented")
   }
 
-  /** Does nothing for now */
+  /**
+   * Access a file in the firebase storage and execute some given code with it
+   *
+   * @param fileId the id of the file as stored in the database (!= storage)
+   * @param onSuccess the code to execute with the accessed code
+   * @param onFailure error management method
+   */
   override fun accessFile(
-      file: Uri,
       fileId: String,
-      onSuccess: () -> Unit,
+      onSuccess: (StorageReference) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    TODO("Not yet implemented")
+    db.collection(collectionPath)
+        .document(fileId)
+        .get()
+        .addOnSuccessListener { onSuccess(storage.reference.child(it.getString("url")!!)) }
+        .addOnFailureListener(onFailure)
   }
 
   /**
