@@ -1,6 +1,5 @@
 package com.github.se.eduverse
 
-import PermissionDeniedScreen
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -12,7 +11,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
@@ -205,19 +207,55 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
 
-    // Ajoute une route dynamique pour PicTakenScreen
-    composable("picTaken/{photoPath}") { backStackEntry ->
-      val photoPath = backStackEntry.arguments?.getString("photoPath")
-      val photoFile = photoPath?.let { File(it) }
-      PicTakenScreen(photoFile, navigationActions, photoViewModel)
-    }
+    // Ajoute une route dynamique pour PicTakenScreen avec des arguments optionnels pour photo et
+    // vidéo
     composable(
-        "nextScreen/{photoPath}",
-        arguments = listOf(navArgument("photoPath") { type = NavType.StringType })) { backStackEntry
-          ->
+        "picTaken/{photoPath}?videoPath={videoPath}",
+        arguments =
+            listOf(
+                navArgument("photoPath") {
+                  type = NavType.StringType
+                  nullable = true
+                },
+                navArgument("videoPath") {
+                  type = NavType.StringType
+                  nullable = true
+                })) { backStackEntry ->
+          // Récupère les chemins de photo et de vidéo depuis les arguments
           val photoPath = backStackEntry.arguments?.getString("photoPath")
+          val videoPath = backStackEntry.arguments?.getString("videoPath")
+
+          // Crée les fichiers correspondants si les chemins existent
+          val photoFile = photoPath?.let { File(it) }
+          val videoFile = videoPath?.let { File(it) }
+
+          // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
+          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel)
+        }
+
+    composable(
+        "nextScreen/{photoPath}/{videoPath}",
+        arguments =
+            listOf(
+                navArgument("photoPath") {
+                  nullable = true
+                  type = NavType.StringType
+                },
+                navArgument("videoPath") {
+                  nullable = true
+                  type = NavType.StringType
+                })) { backStackEntry ->
+          val photoPath = backStackEntry.arguments?.getString("photoPath")
+          val videoPath = backStackEntry.arguments?.getString("videoPath")
+
           val photoFile = if (photoPath != null) File(photoPath) else null
-          NextScreen(photoFile = photoFile, navigationActions = navigationActions, photoViewModel)
+          val videoFile = if (videoPath != null) File(videoPath) else null
+
+          NextScreen(
+              photoFile = photoFile,
+              videoFile = videoFile,
+              navigationActions = navigationActions,
+              photoViewModel)
         }
   }
 }
