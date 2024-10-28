@@ -21,7 +21,6 @@ import javax.inject.Inject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -132,7 +131,6 @@ class DashboardScreenUiTest {
       assertEquals("Widget ${widget.widgetId} should maintain its order", index, widget.order)
     }
   }
-
 
   @Test
   fun testDragGestureDetailedCodePaths() {
@@ -247,7 +245,8 @@ class DashboardScreenUiTest {
     composeTestRule.waitForIdle()
 
     // Verify proper cleanup of drag state
-    val draggingItem = fakeViewModel._widgetList.value.find { it.order != initialWidgets[it.order].order }
+    val draggingItem =
+        fakeViewModel._widgetList.value.find { it.order != initialWidgets[it.order].order }
     assertNull("Drag should have changed item order", draggingItem)
 
     // Test complete movement that should trigger reordering
@@ -265,10 +264,9 @@ class DashboardScreenUiTest {
 
     // Verify list was actually reordered
     assertEquals(
-      "Widget order should have changed",
-      initialWidgets.map { it.widgetId },
-      fakeViewModel.widgetList.value.map { it.widgetId }
-    )
+        "Widget order should have changed",
+        initialWidgets.map { it.widgetId },
+        fakeViewModel.widgetList.value.map { it.widgetId })
   }
 
   @Test
