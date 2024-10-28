@@ -508,6 +508,203 @@ class DashboardScreenUiTest {
   }
 
   @Test
+  fun testDragEndScenarios() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+    println("Initial state: ${initialWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    // Test Case 1: Drag that results in same position (no reorder)
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000) // Long press to initiate drag
+
+      // Small movement that won't trigger reorder
+      moveBy(Offset(0f, 10f))
+      advanceEventTime(50)
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+    val afterSmallMoveWidgets = fakeViewModel.widgetList.value
+    println("After small move: ${afterSmallMoveWidgets.map { "${it.widgetId}:${it.order}" }}")
+    assertEquals(
+        "Order should not change for small movement",
+        initialWidgets.map { it.widgetId },
+        afterSmallMoveWidgets.map { it.widgetId })
+
+    // Test Case 2: Simulate reordering by directly calling updateWidgetOrder
+    val reorderedList =
+        initialWidgets.toMutableList().apply {
+          val first = removeAt(0)
+          add(1, first)
+        }
+    fakeViewModel.updateWidgetOrder(reorderedList)
+
+    composeTestRule.waitForIdle()
+    val afterDirectReorderWidgets = fakeViewModel.widgetList.value
+    println(
+        "After direct reorder: ${afterDirectReorderWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    assertTrue(
+        "Widget order should have changed after direct reorder",
+        initialWidgets.map { it.widgetId } != afterDirectReorderWidgets.map { it.widgetId })
+
+    // Verify order integrity after reordering
+    afterDirectReorderWidgets.forEachIndexed { index, widget ->
+      assertEquals("Widget order should match index after reorder", index, widget.order)
+    }
+
+    // Test Case 3: Verify cleanup of drag state by adding a new widget
+    composeTestRule.onNodeWithTag("add_widget_button").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onAllNodesWithTag("add_common_widget_button").onFirst().performClick()
+
+    composeTestRule.waitForIdle()
+    val finalWidgets = fakeViewModel.widgetList.value
+    println("Final state: ${finalWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    assertTrue(
+        "Orders should be sequential",
+        finalWidgets.mapIndexed { index, widget -> widget.order == index }.all { it })
+  }
+
+  // Add this separate test for actual drag and drop behavior
+  @Test
+  fun testActualDragAndDropBehavior() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+    println("Initial widget state: ${initialWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    try {
+      composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+        val startPoint = center
+        val endPoint = Offset(center.x, center.y + 300f)
+
+        down(startPoint)
+        advanceEventTime(1000) // Long press
+
+        // Perform drag in smaller steps
+        val steps = 20
+        val xStep = (endPoint.x - startPoint.x) / steps
+        val yStep = (endPoint.y - startPoint.y) / steps
+
+        // Move in multiple small steps
+        for (i in 1..steps) {
+          val currentX = startPoint.x + (xStep * i)
+          val currentY = startPoint.y + (yStep * i)
+          moveTo(Offset(currentX, currentY))
+          advanceEventTime(32) // ~30fps
+        }
+
+        // Hold at final position
+        advanceEventTime(500)
+        up()
+      }
+
+      // Wait for reordering to complete
+      composeTestRule.waitForIdle()
+    } catch (e: Exception) {
+      println("Drag operation failed: ${e.message}")
+      throw e
+    }
+
+    val finalWidgets = fakeViewModel.widgetList.value
+    println("Final widget state: ${finalWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    // Verify the widgets still have valid orders
+    finalWidgets.forEachIndexed { index, widget ->
+      assertEquals("Widget order should be valid after drag attempt", index, widget.order)
+    }
+  }
+
+  @Test
+  fun testDragEndPositionCalculation() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+    println("Initial state: ${initialWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    // Perform a more controlled drag operation
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      val startPoint = center
+      down(startPoint)
+      advanceEventTime(1000) // Long press
+
+      // Simulate natural dragging motion with multiple small movements
+      var totalOffset = 0f
+      while (totalOffset < 200f) { // Move until we exceed item height
+        moveBy(Offset(0f, 20f))
+        totalOffset += 20f
+        advanceEventTime(16) // ~60fps
+      }
+
+      // Hold final position
+      advanceEventTime(100)
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+    val afterDragWidgets = fakeViewModel.widgetList.value
+    println("After drag: ${afterDragWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    // Verify the change occurred
+    val firstWidgetMoved = initialWidgets[0].widgetId != afterDragWidgets[0].widgetId
+    assertTrue("First widget should have moved to new position", firstWidgetMoved)
+
+    // Verify order integrity
+    afterDragWidgets.forEachIndexed { index, widget ->
+      assertEquals("Widget order should match position", index, widget.order)
+    }
+
+    // Verify total count hasn't changed
+    assertEquals("Widget count should remain the same", initialWidgets.size, afterDragWidgets.size)
+  }
+
+  // Helper test to verify drag threshold calculation
+  @Test
+  fun testDragThresholdCalculation() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+    println("Initial state: ${initialWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    // Test dragging with exact threshold movements
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      val startPoint = center
+      down(startPoint)
+      advanceEventTime(1000) // Long press
+
+      // Move just over 50% of estimated item height
+      var totalOffset = 0f
+      val targetOffset = 160f // Slightly over typical item height/2
+
+      while (totalOffset < targetOffset) {
+        moveBy(Offset(0f, 10f))
+        totalOffset += 10f
+        advanceEventTime(16)
+      }
+
+      advanceEventTime(100)
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+    val afterDragWidgets = fakeViewModel.widgetList.value
+    println("After threshold drag: ${afterDragWidgets.map { "${it.widgetId}:${it.order}" }}")
+
+    // Verify the change occurred
+    assertTrue(
+        "Widgets should reorder after exceeding threshold",
+        initialWidgets.map { it.widgetId } != afterDragWidgets.map { it.widgetId })
+  }
+
+  @Test
   fun testWidgetDragAndDropGestureFake() {
     setupDashboardScreen()
     composeTestRule.waitForIdle()
