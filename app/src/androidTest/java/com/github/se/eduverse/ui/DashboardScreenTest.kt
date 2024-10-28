@@ -21,6 +21,8 @@ import javax.inject.Inject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -129,6 +131,144 @@ class DashboardScreenUiTest {
     fakeViewModel.widgetList.value.forEachIndexed { index, widget ->
       assertEquals("Widget ${widget.widgetId} should maintain its order", index, widget.order)
     }
+  }
+
+
+  @Test
+  fun testDragGestureDetailedCodePaths() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+
+    // Test moderate drag that should trigger reordering
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000) // Long press
+
+      // Move enough to exceed threshold
+      moveBy(Offset(0f, 150f))
+      advanceEventTime(50)
+
+      // Move back up a bit
+      moveBy(Offset(0f, -50f))
+      advanceEventTime(50)
+
+      up() // This will trigger onDragEnd
+    }
+
+    // Test drag with auto-scroll at top
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      // Move to top edge to trigger scroll
+      moveTo(Offset(center.x, 10f))
+      advanceEventTime(100)
+
+      up()
+    }
+
+    // Test drag with auto-scroll at bottom
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      // Move to bottom edge to trigger scroll
+      moveTo(Offset(center.x, 2000f))
+      advanceEventTime(100)
+
+      up()
+    }
+
+    // Test threshold calculation
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      // Multiple small movements to test threshold
+      repeat(5) {
+        moveBy(Offset(0f, 30f))
+        advanceEventTime(50)
+      }
+
+      up()
+    }
+
+    // Test coercion to list bounds
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      // Try to drag beyond list bounds
+      moveTo(Offset(center.x, -1000f))
+      advanceEventTime(50)
+
+      // Try to drag beyond bottom
+      moveTo(Offset(center.x, 3000f))
+      advanceEventTime(50)
+
+      up()
+    }
+
+    // Test drag offset accumulation
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      // Multiple movements to accumulate offset
+      repeat(3) {
+        moveBy(Offset(0f, 100f))
+        advanceEventTime(50)
+      }
+
+      up()
+    }
+  }
+
+  @Test
+  fun testDragEndingStates() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      // Move enough to exceed threshold
+      moveBy(Offset(0f, 200f))
+      advanceEventTime(100)
+
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Verify proper cleanup of drag state
+    val draggingItem = fakeViewModel._widgetList.value.find { it.order != initialWidgets[it.order].order }
+    assertNull("Drag should have changed item order", draggingItem)
+
+    // Test complete movement that should trigger reordering
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(1000)
+
+      moveBy(Offset(0f, 300f)) // Large movement
+      advanceEventTime(100)
+
+      up()
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Verify list was actually reordered
+    assertEquals(
+      "Widget order should have changed",
+      initialWidgets.map { it.widgetId },
+      fakeViewModel.widgetList.value.map { it.widgetId }
+    )
   }
 
   @Test

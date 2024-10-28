@@ -18,7 +18,7 @@ open class DashboardViewModel
 @Inject
 constructor(private val dashboardRepository: DashboardRepository) : ViewModel() {
 
-  protected val _widgetList = MutableStateFlow<List<Widget>>(emptyList())
+  val _widgetList = MutableStateFlow<List<Widget>>(emptyList())
   val widgetList: StateFlow<List<Widget>> = _widgetList
 
   open fun fetchWidgets(userId: String) {
