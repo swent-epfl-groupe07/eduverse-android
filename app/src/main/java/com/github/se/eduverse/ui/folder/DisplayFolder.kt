@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -122,28 +123,33 @@ fun FolderScreen(
                             .padding(16.dp)
                             .testTag("confirm")) {
                       Text("Are you sure you want to delete this file ?")
-                      Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                        Button(
-                            onClick = {
-                              fileViewModel.deleteFile(suppressFile!!.fileId) {
-                                activeFolder!!.files.remove(suppressFile!!)
-                                folderViewModel.updateFolder(activeFolder!!)
-                                suppressFile = null
-                              }
-                              dialogOpen = false
-                            },
-                            modifier = Modifier.testTag("yes")) {
-                              Text("Yes")
-                            }
-                        Button(
-                            onClick = {
-                              suppressFile = null
-                              dialogOpen = false
-                            },
-                            modifier = Modifier.testTag("no")) {
-                              Text("No")
-                            }
-                      }
+                      Row(
+                          horizontalArrangement = Arrangement.SpaceBetween,
+                          modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = {
+                                  fileViewModel.deleteFile(suppressFile!!.fileId) {
+                                    folderViewModel.updateFolder(
+                                        activeFolder!!.apply { files.remove(suppressFile!!) })
+                                    suppressFile = null
+                                  }
+                                  dialogOpen = false
+                                },
+                                modifier = Modifier.testTag("yes"),
+                                colors =
+                                    ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                                  Text("Yes")
+                                }
+                            Button(
+                                onClick = {
+                                  suppressFile = null
+                                  dialogOpen = false
+                                },
+                                modifier = Modifier.testTag("no"),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                                  Text("No")
+                                }
+                          }
                     }
               }
         }

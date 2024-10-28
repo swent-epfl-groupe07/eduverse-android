@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -119,27 +120,32 @@ fun CreateFolderScreen(
                             .padding(16.dp)
                             .testTag("confirm")) {
                       Text("Are you sure you want to delete this file ?")
-                      Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                        Button(
-                            onClick = {
-                              fileViewModel.deleteFile(suppressFile!!.fileId) {
-                                files -= suppressFile!!
-                                suppressFile = null
-                              }
-                              dialogOpen = false
-                            },
-                            modifier = Modifier.testTag("yes")) {
-                              Text("Yes")
-                            }
-                        Button(
-                            onClick = {
-                              suppressFile = null
-                              dialogOpen = false
-                            },
-                            modifier = Modifier.testTag("no")) {
-                              Text("No")
-                            }
-                      }
+                      Row(
+                          horizontalArrangement = Arrangement.SpaceBetween,
+                          modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = {
+                                  fileViewModel.deleteFile(suppressFile!!.fileId) {
+                                    files -= suppressFile!!
+                                    suppressFile = null
+                                  }
+                                  dialogOpen = false
+                                },
+                                modifier = Modifier.testTag("yes"),
+                                colors =
+                                    ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                                  Text("Yes")
+                                }
+                            Button(
+                                onClick = {
+                                  suppressFile = null
+                                  dialogOpen = false
+                                },
+                                modifier = Modifier.testTag("no"),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                                  Text("No")
+                                }
+                          }
                     }
               }
         }
