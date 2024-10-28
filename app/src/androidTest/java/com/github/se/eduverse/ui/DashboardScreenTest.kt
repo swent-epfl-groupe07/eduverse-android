@@ -60,6 +60,78 @@ class DashboardScreenUiTest {
   }
 
   @Test
+  fun testDragGestureCodePaths() {
+    setupDashboardScreen()
+    composeTestRule.waitForIdle()
+
+    val initialWidgets = fakeViewModel.widgetList.value
+    println("Initial state: ${initialWidgets.map { it.widgetId }}")
+
+    // Test drag start without movement should not change order
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      advanceEventTime(100)
+      up()
+    }
+    assertEquals(
+        "Order should not change after simple touch",
+        initialWidgets.map { it.widgetId },
+        fakeViewModel.widgetList.value.map { it.widgetId })
+
+    // Test small movements that shouldn't trigger reorder
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      moveBy(Offset(0f, 5f)) // Very small movement
+      moveBy(Offset(0f, -5f)) // Move back
+      up()
+    }
+    assertEquals(
+        "Order should not change after small movements",
+        initialWidgets.map { it.widgetId },
+        fakeViewModel.widgetList.value.map { it.widgetId })
+
+    // Test drag cancellation
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      moveBy(Offset(0f, 50f))
+      cancel()
+    }
+    assertEquals(
+        "Order should not change after cancelled drag",
+        initialWidgets.map { it.widgetId },
+        fakeViewModel.widgetList.value.map { it.widgetId })
+
+    // Test edge cases
+    composeTestRule.onAllNodesWithTag("widget_card")[0].performTouchInput {
+      down(center)
+      // Try to move beyond list bounds
+      moveTo(Offset(center.x, -1000f))
+      up()
+    }
+    assertEquals(
+        "Order should not change after out-of-bounds movement",
+        initialWidgets.map { it.widgetId },
+        fakeViewModel.widgetList.value.map { it.widgetId })
+
+    // Verify widget count hasn't changed
+    composeTestRule.onAllNodesWithTag("widget_card").fetchSemanticsNodes().size.let { count ->
+      assertEquals("Widget count should remain the same", initialWidgets.size, count)
+    }
+
+    // Verify all widgets still exist
+    initialWidgets.forEach { widget ->
+      assertTrue(
+          "Widget ${widget.widgetId} should still exist",
+          fakeViewModel.widgetList.value.any { it.widgetId == widget.widgetId })
+    }
+
+    // Verify orders are still valid
+    fakeViewModel.widgetList.value.forEachIndexed { index, widget ->
+      assertEquals("Widget ${widget.widgetId} should maintain its order", index, widget.order)
+    }
+  }
+
+  @Test
   fun testWidgetReordering() {
     setupDashboardScreen()
     composeTestRule.waitForIdle()
