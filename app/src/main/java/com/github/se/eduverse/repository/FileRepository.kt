@@ -1,6 +1,7 @@
 package com.github.se.eduverse.repository
 
 import android.net.Uri
+import com.google.firebase.storage.StorageReference
 
 interface FileRepository {
   fun getNewUid(): String
@@ -11,5 +12,9 @@ interface FileRepository {
 
   fun deleteFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
-  fun accessFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun accessFile(
+      fileId: String,
+      onSuccess: (StorageReference) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }

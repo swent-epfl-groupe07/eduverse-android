@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,11 +60,14 @@ fun FolderScreen(
 ) {
   val activeFolder by folderViewModel.activeFolder.collectAsState()
 
+  val context = LocalContext.current
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
   val validNewFile by fileViewModel.validNewFile.collectAsState()
 
   if (validNewFile) activeFolder!!.files.add(fileViewModel.getNewFile()!!)
+
+  folderViewModel.updateFolder(activeFolder!!)
 
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
@@ -185,7 +189,7 @@ fun FolderScreen(
           // The files
           activeFolder!!.files.forEach {
             Button(
-                onClick = {},
+                onClick = { fileViewModel.openFile(it.fileId, context) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {
                   Text(it.name, modifier = Modifier.fillMaxWidth())
                 }
