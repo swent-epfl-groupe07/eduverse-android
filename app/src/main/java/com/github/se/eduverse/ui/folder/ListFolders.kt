@@ -74,7 +74,7 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
             LIST_TOP_LEVEL_DESTINATION,
             Route
                 .LIST_FOLDERS) // No item is selected, as it is not one of the screens on the bottom
-                               // bar
+        // bar
       },
       floatingActionButton = {
         FloatingActionButton(
