@@ -147,6 +147,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 
     navigation(
@@ -177,18 +178,12 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
     }
 
     navigation(
-        startDestination = Screen.OTHERS,
-        route = Route.OTHERS,
+        startDestination = Screen.PROFILE,
+        route = Route.PROFILE,
     ) {
-      composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.PROFILE) { OthersScreen(navigationActions) }
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
-      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FOLDER) {
-        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
-      }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
 
@@ -197,7 +192,15 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+    }
+
+    navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) {
+        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+      }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
 
     // Écran pour afficher la photo prise
