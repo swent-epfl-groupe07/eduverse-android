@@ -6,6 +6,9 @@ kotlin = "1.9.0"
 gms = "4.4.2"
 ktfmt = "0.17.0"
 sonar = "5.1.0.4882"
+hilt = "2.48"
+hiltExt = "1.1.0"
+
 
 # UI Compose
 mockitoAndroid = "5.13.0"
@@ -68,6 +71,11 @@ coreTesting = "2.1.0"
 junitKtx = "1.2.1"
 
 [libraries]
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
+hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltExt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltExt" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -128,3 +136,5 @@ jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "k
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 gms = { id = "com.google.gms.google-services", version.ref = "gms" }
 sonar = { id = "org.sonarqube", version.ref = "sonar" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+

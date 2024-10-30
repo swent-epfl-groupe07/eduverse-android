@@ -11,7 +11,10 @@ plugins {
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.gms)
     alias(libs.plugins.sonar)
-}
+    kotlin("kapt")
+    alias(libs.plugins.hilt)}
+
+val hiltVersion = "2.48"
 
 android {
     namespace = "com.github.se.eduverse"
@@ -42,6 +45,8 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
+
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -55,11 +60,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -81,6 +86,8 @@ android {
         }
     }
 
+
+
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
@@ -99,7 +106,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 
     sourceSets.getByName("testDebug") {
@@ -115,6 +122,16 @@ android {
         res.setSrcDirs(emptyList<File>())
         resources.setSrcDirs(emptyList<File>())
     }
+
+    kapt {
+        correctErrorTypes = true
+        // Add this line to support Hilt
+        arguments {
+            arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
+        }
+    }
+
+
 }
 
 sonar {
@@ -126,6 +143,8 @@ sonar {
         property("sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
     }
 }
+
+
 
 dependencies {
     //implementation("io.coil-kt:coil-compose:2.1.0")
@@ -143,7 +162,13 @@ dependencies {
     implementation("com.arthenica:ffmpeg-kit-full:4.5.LTS")
 
 
-
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.hilt.navigation.compose)
+    androidTestImplementation(libs.hilt.android.testing)
+    kaptAndroidTest(libs.hilt.android.compiler)
+    testImplementation(libs.hilt.android.testing)
+    kaptTest(libs.hilt.android.compiler)
 
     // Core
     implementation(libs.core.ktx)
