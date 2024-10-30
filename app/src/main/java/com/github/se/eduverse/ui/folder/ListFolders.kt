@@ -31,6 +31,7 @@ import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
@@ -71,7 +72,9 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
         BottomNavigationMenu(
             { navigationActions.navigateTo(it) },
             LIST_TOP_LEVEL_DESTINATION,
-            "") // No item is selected, as it is not one of the screens on the bottom bar
+            Route
+                .LIST_FOLDERS) // No item is selected, as it is not one of the screens on the bottom
+                               // bar
       },
       floatingActionButton = {
         FloatingActionButton(
