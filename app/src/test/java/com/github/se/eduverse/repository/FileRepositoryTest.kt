@@ -67,7 +67,7 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun saveFileTest() {
+  fun savePdfFileTest() {
     var test1 = false
     var test2 = false
     `when`(mockStorageReference.putFile(any())).thenReturn(mockUploadTask)
@@ -80,7 +80,7 @@ class FileRepositoryTest {
       null
     }
 
-    fileRepository.saveFile(Uri.EMPTY, "", {}, {})
+    fileRepository.savePdfFile(Uri.EMPTY, "", {}, {})
 
     assert(test1)
     assert(test2)
@@ -155,7 +155,7 @@ class FileRepositoryTest {
 
     `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
 
-    fileRepository.accessFile("", {}, {})
+    fileRepository.accessFile("", { _, _ -> }, {})
 
     verify(timeout(100)) { (documentSnapshot).getString("url") }
   }
@@ -167,7 +167,7 @@ class FileRepositoryTest {
 
     fileRepository.accessFile(
         "",
-        {},
+        { _, _ -> },
         {
           test = true
           assert(it.message == "message")
@@ -182,7 +182,7 @@ class FileRepositoryTest {
   fun savePDFUrlToFirestoreTest() {
     `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
 
-    fileRepository.savePDFUrlToFirestore("", "", {})
+    fileRepository.saveUrlToFirestore("", ".pdf", "") {}
 
     shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 
