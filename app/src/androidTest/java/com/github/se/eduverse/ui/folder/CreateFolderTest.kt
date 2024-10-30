@@ -1,8 +1,11 @@
 package com.github.se.eduverse.ui.folder
 
+import android.net.Uri
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -41,6 +44,13 @@ class CreateFolderTest {
     navigationActions = mock(NavigationActions::class.java)
 
     `when`(folderRepository.getNewUid()).thenReturn("")
+    `when`(fileRepository.getNewUid()).thenReturn("")
+    `when`(fileRepository.saveFile(any(), any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(2)
+      callback()
+    }
+
+    fileViewModel.createFile(Uri.EMPTY)
 
     val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)
@@ -61,10 +71,11 @@ class CreateFolderTest {
     composeTestRule.onNodeWithTag("courseNameTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("courseNameField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("file").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("file").assertCountEquals(1)
     composeTestRule.onNodeWithTag("addFile").assertIsDisplayed()
     composeTestRule.onNodeWithTag("folderSave").assertIsDisplayed()
     composeTestRule.onNodeWithTag("folderCancel").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
   }
 
   @Test
@@ -149,5 +160,38 @@ class CreateFolderTest {
     assert(test_nav)
     assert(test_del)
     assertEquals(folderViewModel.folders.value.size, 0)
+  }
+
+  @Test
+  fun deleteFileWorkLikeExpected() {
+    `when`(fileRepository.deleteFile(any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(1)
+      callback()
+    }
+
+    composeTestRule.onAllNodesWithTag("file").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("delete_icon").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("delete_icon").performClick()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("no").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("no").performClick()
+
+    composeTestRule.onAllNodesWithTag("file").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("delete_icon").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("delete_icon").performClick()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("no").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("yes").performClick()
+
+    composeTestRule.onAllNodesWithTag("file").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("delete_icon").assertCountEquals(0)
   }
 }

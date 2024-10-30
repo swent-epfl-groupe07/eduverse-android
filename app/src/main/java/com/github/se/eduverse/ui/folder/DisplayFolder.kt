@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.folder
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +11,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,14 +40,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.PopupProperties
 import com.github.se.eduverse.model.FilterTypes
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -63,6 +70,8 @@ fun FolderScreen(
   val context = LocalContext.current
   val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
+  var dialogOpen by remember { mutableStateOf(false) }
+  var suppressFile by remember { mutableStateOf<MyFile?>(null) }
   val validNewFile by fileViewModel.validNewFile.collectAsState()
 
   if (validNewFile) activeFolder!!.files.add(fileViewModel.getNewFile()!!)
@@ -103,6 +112,49 @@ fun FolderScreen(
               Icon(Icons.Default.Add, contentDescription = "Create File")
             }
       }) { padding ->
+        if (dialogOpen) {
+          Dialog(
+              onDismissRequest = {
+                suppressFile = null
+                dialogOpen = false
+              }) {
+                Column(
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFE0F7FA))
+                            .padding(16.dp)
+                            .testTag("confirm")) {
+                      Text("Are you sure you want to delete this file ?")
+                      Row(
+                          horizontalArrangement = Arrangement.SpaceBetween,
+                          modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = {
+                                  fileViewModel.deleteFile(suppressFile!!.fileId) {
+                                    folderViewModel.updateFolder(
+                                        activeFolder!!.apply { files.remove(suppressFile!!) })
+                                    suppressFile = null
+                                  }
+                                  dialogOpen = false
+                                },
+                                modifier = Modifier.testTag("yes"),
+                                colors =
+                                    ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                                  Text("Yes")
+                                }
+                            Button(
+                                onClick = {
+                                  suppressFile = null
+                                  dialogOpen = false
+                                },
+                                modifier = Modifier.testTag("no"),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                                  Text("No")
+                                }
+                          }
+                    }
+              }
+        }
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).testTag("column"),
         ) {
@@ -190,8 +242,26 @@ fun FolderScreen(
           activeFolder!!.files.forEach {
             Button(
                 onClick = { fileViewModel.openFile(it.fileId, context) },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag(it.name)) {
-                  Text(it.name, modifier = Modifier.fillMaxWidth())
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .align(Alignment.Start)
+                        .testTag(it.name)) {
+                  Box(
+                      modifier = Modifier.fillMaxWidth(),
+                      contentAlignment = Alignment.CenterStart) {
+                        Text(it.name)
+                        IconButton(
+                            onClick = {
+                              suppressFile = it
+                              dialogOpen = true
+                            },
+                            modifier =
+                                Modifier.align(Alignment.TopEnd)
+                                    .testTag("delete_icon_${it.name}")) {
+                              Icon(Icons.Default.Close, contentDescription = "Delete File")
+                            }
+                      }
                 }
           }
         }
