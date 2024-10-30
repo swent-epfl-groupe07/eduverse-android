@@ -6,7 +6,6 @@ import androidx.navigation.NavOptionsBuilder
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.navigation.TopLevelDestination
 import com.github.se.eduverse.ui.navigation.TopLevelDestinations
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
