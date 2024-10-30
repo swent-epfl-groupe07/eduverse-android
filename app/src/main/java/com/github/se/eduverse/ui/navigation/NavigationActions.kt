@@ -58,7 +58,7 @@ object TopLevelDestinations {
   val PROFILE =
       TopLevelDestination(
           route = Route.PROFILE, icon = Icons.Outlined.AccountCircle, textId = "Profile")
-  val FOLDER =
+  val FOLDERS =
       TopLevelDestination(
           route = Route.LIST_FOLDERS, icon = Icons.Outlined.Folder, textId = "Folders")
 }
@@ -66,7 +66,7 @@ object TopLevelDestinations {
 val LIST_TOP_LEVEL_DESTINATION =
     listOf(
         TopLevelDestinations.DASHBOARD,
-        TopLevelDestinations.FOLDER,
+        TopLevelDestinations.FOLDERS,
         TopLevelDestinations.CAMERA,
         TopLevelDestinations.VIDEOS,
         TopLevelDestinations.PROFILE)
