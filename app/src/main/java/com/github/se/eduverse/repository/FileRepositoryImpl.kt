@@ -39,7 +39,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
 
     pdfRef
         .putFile(file)
-        .addOnSuccessListener { saveUrlToFirestore(path, ".pdf", fileId, onSuccess) }
+        .addOnSuccessListener { savePathToFirestore(path, ".pdf", fileId, onSuccess) }
         .addOnFailureListener(onFailure)
   }
 
@@ -113,7 +113,12 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    * @param fileId the id of the document in which the path should be stored
    * @param onSuccess to execute in case of success
    */
-  fun saveUrlToFirestore(path: String, suffix: String, fileId: String, onSuccess: () -> Unit) {
+  override fun savePathToFirestore(
+      path: String,
+      suffix: String,
+      fileId: String,
+      onSuccess: () -> Unit
+  ) {
     val pdfData = hashMapOf("url" to path, "suffix" to suffix)
     db.collection(collectionPath)
         .document(fileId)

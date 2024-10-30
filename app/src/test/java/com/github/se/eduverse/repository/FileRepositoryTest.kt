@@ -182,7 +182,7 @@ class FileRepositoryTest {
   fun savePDFUrlToFirestoreTest() {
     `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
 
-    fileRepository.saveUrlToFirestore("", ".pdf", "") {}
+    fileRepository.savePathToFirestore("", ".pdf", "") {}
 
     shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 

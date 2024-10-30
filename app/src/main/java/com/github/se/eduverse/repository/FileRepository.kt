@@ -17,4 +17,6 @@ interface FileRepository {
       onSuccess: (StorageReference, String) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun savePathToFirestore(path: String, suffix: String, fileId: String, onSuccess: () -> Unit)
 }
