@@ -247,18 +247,21 @@ fun FolderScreen(
                         .padding(horizontal = 20.dp)
                         .align(Alignment.Start)
                         .testTag(it.name)) {
-                  Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(it.name)
-                    IconButton(
-                        onClick = {
-                          suppressFile = it
-                          dialogOpen = true
-                        },
-                        modifier =
-                            Modifier.align(Alignment.TopEnd).testTag("delete_icon_${it.name}")) {
-                          Icon(Icons.Default.Close, contentDescription = "Delete File")
-                        }
-                  }
+                  Box(
+                      modifier = Modifier.fillMaxWidth(),
+                      contentAlignment = Alignment.CenterStart) {
+                        Text(it.name)
+                        IconButton(
+                            onClick = {
+                              suppressFile = it
+                              dialogOpen = true
+                            },
+                            modifier =
+                                Modifier.align(Alignment.TopEnd)
+                                    .testTag("delete_icon_${it.name}")) {
+                              Icon(Icons.Default.Close, contentDescription = "Delete File")
+                            }
+                      }
                 }
           }
         }

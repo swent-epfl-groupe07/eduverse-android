@@ -175,17 +175,19 @@ fun CreateFolderScreen(
               Button(
                   onClick = { fileViewModel.openFile(it.fileId, context) },
                   modifier = Modifier.fillMaxWidth().testTag("file")) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                      Text(it.name, modifier = Modifier.fillMaxWidth())
-                      IconButton(
-                          onClick = {
-                            suppressFile = it
-                            dialogOpen = true
-                          },
-                          modifier = Modifier.align(Alignment.TopEnd).testTag("delete_icon")) {
-                            Icon(Icons.Default.Close, contentDescription = "Delete File")
-                          }
-                    }
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterStart) {
+                          Text(it.name, modifier = Modifier.fillMaxWidth())
+                          IconButton(
+                              onClick = {
+                                suppressFile = it
+                                dialogOpen = true
+                              },
+                              modifier = Modifier.align(Alignment.TopEnd).testTag("delete_icon")) {
+                                Icon(Icons.Default.Close, contentDescription = "Delete File")
+                              }
+                        }
                   }
             }
           }
