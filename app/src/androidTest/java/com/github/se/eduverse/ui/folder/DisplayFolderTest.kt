@@ -96,6 +96,7 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag(file1.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file2.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file3.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
   }
 
   @Test
@@ -244,5 +245,40 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("name 1").performClick()
 
     assert(test)
+  }
+
+  @Test
+  fun deleteFileWorkLikeExpected() {
+    `when`(fileRepository.deleteFile(any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(1)
+      callback()
+    }
+
+    composeTestRule.onNodeWithTag("name 1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("delete_icon_name 1").performClick()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("no").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("yes").performClick()
+
+    composeTestRule.onNodeWithTag("name 1").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsNotDisplayed()
+
+    composeTestRule.onNodeWithTag("delete_icon_name 2").performClick()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("no").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("no").performClick()
+
+    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
   }
 }

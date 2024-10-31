@@ -3,8 +3,6 @@ package com.github.se.eduverse.repository
 import android.net.Uri
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
-import com.github.se.eduverse.model.Folder
-import com.github.se.eduverse.model.MyFile
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
@@ -14,13 +12,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
-import java.lang.Exception
-import java.util.Calendar
+import kotlin.Exception
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
@@ -38,12 +34,10 @@ class FileRepositoryTest {
   @Mock private lateinit var mockCollectionReference: CollectionReference
   @Mock private lateinit var mockStorageReference: StorageReference
   @Mock private lateinit var mockUploadTask: UploadTask
+  @Mock private lateinit var documentSnapshot: DocumentSnapshot
+  @Mock private lateinit var void: Void
 
   private lateinit var fileRepository: FileRepositoryImpl
-
-  private val file = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
-
-  private val folder = Folder("uid", MutableList(1) { file }, "folder", "1")
 
   @Before
   fun setUp() {
@@ -59,6 +53,10 @@ class FileRepositoryTest {
     `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
+    `when`(documentSnapshot.getString("url")).thenReturn("url/to/file")
+
+    `when`(mockStorage.reference).thenReturn(mockStorageReference)
+    `when`(mockStorageReference.child(any())).thenReturn(mockStorageReference)
   }
 
   @Test
@@ -72,8 +70,6 @@ class FileRepositoryTest {
   fun saveFileTest() {
     var test1 = false
     var test2 = false
-    `when`(mockStorage.reference).thenReturn(mockStorageReference)
-    `when`(mockStorageReference.child(any())).thenReturn(mockStorageReference)
     `when`(mockStorageReference.putFile(any())).thenReturn(mockUploadTask)
     `when`(mockUploadTask.addOnSuccessListener(any())).then {
       test1 = true
@@ -102,19 +98,60 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun deleteFileTest() {
+  fun deleteFileTest_success() {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    `when`(mockStorageReference.delete()).thenReturn(Tasks.forResult(void))
+    `when`(mockDocumentReference.delete()).thenReturn(Tasks.forResult(void))
+
     var test = false
-    try {
-      fileRepository.deleteFile(Uri.EMPTY, "", {}, {})
-    } catch (e: NotImplementedError) {
-      test = true
-    }
+
+    fileRepository.deleteFile("fileId", { test = true }, { assert(false) })
+
+    shadowOf(Looper.getMainLooper()).idle()
+    assert(test)
+  }
+
+  @Test
+  fun deleteFileTest_failureGet() {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forException(Exception("")))
+
+    var test = false
+
+    fileRepository.deleteFile("fileId", { assert(false) }, { test = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+    assert(test)
+  }
+
+  @Test
+  fun deleteFileTest_failureDeleteStorage() {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    `when`(mockStorageReference.delete()).thenReturn(Tasks.forException(Exception("")))
+
+    var test = false
+
+    fileRepository.deleteFile("fileId", { assert(false) }, { test = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+    assert(test)
+  }
+
+  @Test
+  fun deleteFileTest_failureDeleteFirestore() {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    `when`(mockStorageReference.delete()).thenReturn(Tasks.forResult(void))
+    `when`(mockDocumentReference.delete()).thenReturn(Tasks.forException(Exception("")))
+
+    var test = false
+
+    fileRepository.deleteFile("fileId", { assert(false) }, { test = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
     assert(test)
   }
 
   @Test
   fun accessFileTest_onSuccess() {
-    val documentSnapshot = mock(DocumentSnapshot::class.java)
 
     `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
 
