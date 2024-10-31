@@ -119,7 +119,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
-  val profileRepo = ProfileRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val profileRepo =
+      ProfileRepositoryImpl(
+          firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
@@ -185,7 +187,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
 
-      composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
+      composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""

@@ -50,7 +50,9 @@ class CreateFolderTest {
       callback()
     }
 
-    fileViewModel.createFile(Uri.EMPTY)
+    val uri = mock(Uri::class.java)
+    `when`(uri.lastPathSegment).thenReturn("testFile.pdf")
+    fileViewModel.createFile(uri)
 
     val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)
