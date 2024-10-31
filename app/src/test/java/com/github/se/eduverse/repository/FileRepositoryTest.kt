@@ -20,7 +20,6 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -152,12 +151,18 @@ class FileRepositoryTest {
 
   @Test
   fun accessFileTest_onSuccess() {
+    var test = false
 
     `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    `when`(documentSnapshot.getString("url")).then {
+      test = true
+      "url"
+    }
 
     fileRepository.accessFile("", { _, _ -> }, {})
 
-    verify(timeout(100)) { (documentSnapshot).getString("url") }
+    shadowOf(Looper.getMainLooper()).idle()
+    assert(test)
   }
 
   @Test
