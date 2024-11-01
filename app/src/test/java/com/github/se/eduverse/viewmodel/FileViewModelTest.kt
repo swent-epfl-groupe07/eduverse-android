@@ -32,8 +32,8 @@ class FileViewModelTest {
   @Test
   fun testCreateFile() {
 
-    // When saveFile is called, capture the success callback
-    `when`(fileRepository.saveFile(any(), any(), any(), any())).then {
+    // When savePdfFile is called, capture the success callback
+    `when`(fileRepository.savePdfFile(any(), any(), any(), any())).then {
       val callback = it.getArgument<() -> Unit>(2)
       callback()
     }
@@ -71,8 +71,8 @@ class FileViewModelTest {
     var test = false
 
     `when`(fileRepository.accessFile(any(), any(), any())).then {
-      val callback = it.getArgument<(StorageReference) -> Unit>(1)
-      callback(storageReference)
+      val callback = it.getArgument<(StorageReference, String) -> Unit>(1)
+      callback(storageReference, ".pdf")
     }
     `when`(storageReference.getFile(any<File>())).thenReturn(task)
     `when`(task.addOnSuccessListener(any())).thenReturn(task)
@@ -89,7 +89,7 @@ class FileViewModelTest {
   }
 
   @Test
-  fun openPdfTest() {
+  fun displayFileTest() {
     val context = mock(Context::class.java)
     val file = File.createTempFile("test", ".pdf")
     val intent = mock(Intent::class.java)
@@ -107,7 +107,7 @@ class FileViewModelTest {
       null
     }
 
-    fileViewModel.openPDF(file, context, intent, uri)
+    fileViewModel.displayFile(file, context, intent, uri)
     assert(test)
   }
 
