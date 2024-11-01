@@ -11,6 +11,7 @@ import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
+import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -168,5 +169,25 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
     if (_activeFolder.value == null) return
     _activeFolder.value!!.files.remove(file)
     updateFolder(_activeFolder.value!!)
+  }
+
+  /**
+   * Create a new file in a folder.
+   *
+   * @param fileId the id of the file to add
+   * @param name the name of the file to add
+   * @param folder the folder in which to add
+   */
+  fun createFileInFolder(fileId: String, name: String, folder: Folder) {
+    val newFile =
+        MyFile(
+            id = "",
+            fileId = fileId,
+            name = name,
+            creationTime = Calendar.getInstance(),
+            lastAccess = Calendar.getInstance(),
+            numberAccess = 0)
+    folder.files.add(newFile)
+    updateFolder(folder)
   }
 }

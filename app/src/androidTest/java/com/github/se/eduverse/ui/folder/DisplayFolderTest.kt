@@ -227,8 +227,8 @@ class DisplayFolderTest {
     var test = false
 
     `when`(fileRepository.accessFile(any(), any(), any())).then {
-      val callback = it.getArgument<(StorageReference) -> Unit>(1)
-      callback(ref)
+      val callback = it.getArgument<(StorageReference, String) -> Unit>(1)
+      callback(ref, ".pdf")
     }
     `when`(ref.getFile(any<File>())).thenReturn(task)
     `when`(task.addOnSuccessListener(any())).thenReturn(task)
