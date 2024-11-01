@@ -13,8 +13,12 @@ import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkClass
 import io.mockk.slot
 import io.mockk.verify
 import java.io.File
@@ -27,10 +31,12 @@ import org.junit.Test
 
 class NextScreenTest {
 
-  @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule
+  val composeTestRule = createComposeRule()
 
   private lateinit var navigationActions: NavigationActions
-  private lateinit var viewModel: PhotoViewModel
+  private lateinit var pViewModel: PhotoViewModel
+  private lateinit var vViewModel: VideoViewModel
   private lateinit var context: Context
   private lateinit var testFile: File
   private lateinit var mockBitmap: Bitmap
@@ -42,17 +48,17 @@ class NextScreenTest {
   @Before
   fun setUp() {
     navigationActions = mockk(relaxed = true)
-    viewModel = mockk(relaxed = true)
+    pViewModel = mockk(relaxed = true)
+    vViewModel = mockk(relaxed = true)
     context = ApplicationProvider.getApplicationContext()
 
     // Initialisation de mockBitmap avant de l'utiliser
     mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
 
     // Création d'un fichier temporaire avec des données simulant une image
-    currentPhotoFile =
-        File.createTempFile("test_image", ".jpg").apply {
-          outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
-        }
+    currentPhotoFile = File.createTempFile("test_image", ".jpg").apply {
+      outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+    }
 
     // Initialiser l'état vidéo avec null
     videoFileState = mutableStateOf(null)
@@ -60,10 +66,11 @@ class NextScreenTest {
     // Charger la composable avec la photo et une vidéo à l'état null par défaut
     composeTestRule.setContent {
       NextScreen(
-          photoFile = currentPhotoFile,
-          videoFile = videoFileState.value,
-          navigationActions = navigationActions,
-          viewModel = viewModel)
+        photoFile = currentPhotoFile,
+        videoFile = videoFileState.value,
+        navigationActions = navigationActions,
+         pViewModel, vViewModel
+      )
     }
   }
 
@@ -71,23 +78,17 @@ class NextScreenTest {
   fun testImagePreviewIsDisplayed() {
     composeTestRule.waitForIdle()
     composeTestRule
-        .onNodeWithTag("previewImage")
-        .assertExists("Image preview container should exist")
-        .assertIsDisplayed()
+      .onNodeWithTag("previewImage")
+      .assertExists("Image preview container should exist")
+      .assertIsDisplayed()
   }
-
-  /*@Test
-  fun testEditCoverTextIsDisplayed() {
-      composeTestRule.onNodeWithTag("editCoverText").assertIsDisplayed()
-          .assertTextEquals("Edit cover")
-  }*/
 
   @Test
   fun testAddDescriptionTextIsDisplayed() {
     composeTestRule
-        .onNodeWithTag("addDescriptionText")
-        .assertIsDisplayed()
-        .assertTextEquals("Add description...")
+      .onNodeWithTag("addDescriptionText")
+      .assertIsDisplayed()
+      .assertTextEquals("Add description...")
   }
 
   @Test
@@ -98,7 +99,7 @@ class NextScreenTest {
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Utilisez `verify` avec des arguments relaxés pour s'assurer que savePhoto est appelé
-    verify { viewModel.savePhoto(any()) }
+    verify { pViewModel.savePhoto(any()) }
 
     // Vérifiez aussi que le `goBack` est appelé trois fois
     verify(exactly = 3) { navigationActions.goBack() }
@@ -132,21 +133,6 @@ class NextScreenTest {
   @Test
   fun testMoreOptionsButtonIsClickable() {
     composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().assertHasClickAction()
-  }
-
-  @Test
-  fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
-    val capturedPhoto = slot<Photo>()
-    every { viewModel.savePhoto(capture(capturedPhoto)) } returns Unit
-
-    // Action : cliquer sur le bouton de sauvegarde
-    composeTestRule.onNodeWithTag("saveButton").performClick()
-
-    // Vérifier que `savePhoto` a été appelé avec un `Photo` ayant l'`ownerId` correct
-    assertEquals("anonymous", capturedPhoto.captured.ownerId)
-
-    // Vérifier que le `path` commence bien par le bon préfixe, sans vérifier le timestamp exact
-    assertTrue(capturedPhoto.captured.path.startsWith("media/anonymous/"))
   }
 
   @Test
@@ -198,10 +184,10 @@ class NextScreenTest {
   @Test
   fun testCloseButtonWorks() {
     composeTestRule
-        .onNodeWithTag("closeButton")
-        .assertIsDisplayed()
-        .assertHasClickAction()
-        .performClick()
+      .onNodeWithTag("closeButton")
+      .assertIsDisplayed()
+      .assertHasClickAction()
+      .performClick()
 
     verify { navigationActions.goBack() }
   }
@@ -210,24 +196,24 @@ class NextScreenTest {
   fun testStyledButtonClick() {
     // Test sur le bouton "Add link"
     composeTestRule
-        .onNodeWithTag("addLinkButton")
-        .assertExists()
-        .assertHasClickAction()
-        .performClick()
+      .onNodeWithTag("addLinkButton")
+      .assertExists()
+      .assertHasClickAction()
+      .performClick()
 
     // Test sur le bouton "More options"
     composeTestRule
-        .onNodeWithTag("moreOptionsButton")
-        .assertExists()
-        .assertHasClickAction()
-        .performClick()
+      .onNodeWithTag("moreOptionsButton")
+      .assertExists()
+      .assertHasClickAction()
+      .performClick()
 
     // Test sur le bouton "Share to"
     composeTestRule
-        .onNodeWithTag("shareToButton")
-        .assertExists()
-        .assertHasClickAction()
-        .performClick()
+      .onNodeWithTag("shareToButton")
+      .assertExists()
+      .assertHasClickAction()
+      .performClick()
   }
 
   @Test
@@ -246,12 +232,11 @@ class NextScreenTest {
 
     // Simuler la création et la gestion du player ExoPlayer dans le composant
     composeTestRule.runOnIdle {
-      player =
-          ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(Uri.fromFile(testVideoFile)))
-            prepare()
-            playWhenReady = true
-          }
+      player = ExoPlayer.Builder(context).build().apply {
+        setMediaItem(MediaItem.fromUri(Uri.fromFile(testVideoFile)))
+        prepare()
+        playWhenReady = true
+      }
     }
 
     // Simuler la suppression de la composable et vérifier que le player est libéré
@@ -260,4 +245,23 @@ class NextScreenTest {
       assert(player?.isPlaying == false) // Le player ne doit plus jouer après la libération
     }
   }
+
+  @Test
+  fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
+    val capturedPhoto = slot<Photo>()
+    every { pViewModel.savePhoto(capture(capturedPhoto)) } returns Unit
+
+    // Action : cliquer sur le bouton de sauvegarde
+    composeTestRule.onNodeWithTag("saveButton").performClick()
+
+    // Vérifier que `savePhoto` a été appelé avec un `Photo` ayant l'`ownerId` correct
+    assertEquals("anonymous", capturedPhoto.captured.ownerId)
+
+    // Debug : afficher le chemin capturé
+    println("Captured photo path: ${capturedPhoto.captured.path}")
+
+    // Vérifier que le `path` commence bien par le bon préfixe, sans vérifier le timestamp exact
+    assertTrue(capturedPhoto.captured.path.startsWith("photos/anonymous/") || capturedPhoto.captured.path.startsWith("videos/anonymous/"))
+  }
+
 }

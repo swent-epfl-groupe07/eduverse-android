@@ -128,6 +128,7 @@ sonar {
 }
 
 dependencies {
+    implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
     //implementation("io.coil-kt:coil-compose:2.1.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.androidx.junit.ktx)
