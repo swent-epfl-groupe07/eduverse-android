@@ -6,7 +6,7 @@ import com.google.firebase.storage.StorageReference
 interface FileRepository {
   fun getNewUid(): String
 
-  fun saveFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun savePdfFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun modifiyFile(file: Uri, fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
@@ -14,7 +14,9 @@ interface FileRepository {
 
   fun accessFile(
       fileId: String,
-      onSuccess: (StorageReference) -> Unit,
+      onSuccess: (StorageReference, String) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun savePathToFirestore(path: String, suffix: String, fileId: String, onSuccess: () -> Unit)
 }

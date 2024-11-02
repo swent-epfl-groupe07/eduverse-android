@@ -20,7 +20,6 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -67,7 +66,7 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun saveFileTest() {
+  fun savePdfFileTest() {
     var test1 = false
     var test2 = false
     `when`(mockStorageReference.putFile(any())).thenReturn(mockUploadTask)
@@ -80,7 +79,7 @@ class FileRepositoryTest {
       null
     }
 
-    fileRepository.saveFile(Uri.EMPTY, "", {}, {})
+    fileRepository.savePdfFile(Uri.EMPTY, "", {}, {})
 
     assert(test1)
     assert(test2)
@@ -152,12 +151,18 @@ class FileRepositoryTest {
 
   @Test
   fun accessFileTest_onSuccess() {
+    var test = false
 
     `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    `when`(documentSnapshot.getString("url")).then {
+      test = true
+      "url"
+    }
 
-    fileRepository.accessFile("", {}, {})
+    fileRepository.accessFile("", { _, _ -> }, {})
 
-    verify(timeout(100)) { (documentSnapshot).getString("url") }
+    shadowOf(Looper.getMainLooper()).idle()
+    assert(test)
   }
 
   @Test
@@ -167,7 +172,7 @@ class FileRepositoryTest {
 
     fileRepository.accessFile(
         "",
-        {},
+        { _, _ -> },
         {
           test = true
           assert(it.message == "message")
@@ -182,7 +187,7 @@ class FileRepositoryTest {
   fun savePDFUrlToFirestoreTest() {
     `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
 
-    fileRepository.savePDFUrlToFirestore("", "", {})
+    fileRepository.savePathToFirestore("", ".pdf", "") {}
 
     shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 

@@ -33,7 +33,7 @@ class CreateFileTest {
     fileViewModel = FileViewModel(fileRepository)
 
     `when`(fileRepository.getNewUid()).thenReturn("uid")
-    `when`(fileRepository.saveFile(any(), any(), any(), any())).then {
+    `when`(fileRepository.savePdfFile(any(), any(), any(), any())).then {
       val callback = it.getArgument<() -> Unit>(2)
       callback()
     }
