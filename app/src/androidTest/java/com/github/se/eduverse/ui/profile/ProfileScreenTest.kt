@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.others.profile
+package com.github.se.eduverse.ui.profile
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*

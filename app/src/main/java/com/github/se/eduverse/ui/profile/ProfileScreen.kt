@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.others.profile
+package com.github.se.eduverse.ui.profile
 
 import android.annotation.SuppressLint
 import android.net.Uri
