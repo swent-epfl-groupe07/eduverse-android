@@ -46,10 +46,9 @@ import com.github.se.eduverse.ui.folder.ListFoldersScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.others.OthersScreen
-import com.github.se.eduverse.ui.others.profile.ProfileScreen
-import com.github.se.eduverse.ui.others.setting.SettingsScreen
+import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.screens.GalleryScreen
+import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -183,7 +182,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         startDestination = Screen.PROFILE,
         route = Route.PROFILE,
     ) {
-      composable(Screen.PROFILE) { OthersScreen(navigationActions) }
+      composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
 
