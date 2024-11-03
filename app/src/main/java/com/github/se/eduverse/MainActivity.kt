@@ -75,12 +75,6 @@ class MainActivity : ComponentActivity() {
 
     super.onCreate(savedInstanceState)
 
-    // Initialiser Firebase Auth
-    auth = FirebaseAuth.getInstance()
-    if (auth.currentUser != null) {
-      auth.signOut()
-    }
-
     // Instanciez le repository et le ViewModel
     val photoRepository =
         PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
