@@ -6,7 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.others.setting.SettingsScreen
+import com.github.se.eduverse.ui.setting.SettingsScreen
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith

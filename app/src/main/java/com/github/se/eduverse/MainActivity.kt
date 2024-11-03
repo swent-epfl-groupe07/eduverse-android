@@ -46,10 +46,9 @@ import com.github.se.eduverse.ui.folder.ListFoldersScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.others.OthersScreen
-import com.github.se.eduverse.ui.others.profile.ProfileScreen
-import com.github.se.eduverse.ui.others.setting.SettingsScreen
+import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.screens.GalleryScreen
+import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -149,6 +148,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 
     navigation(
@@ -179,18 +179,12 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
     }
 
     navigation(
-        startDestination = Screen.OTHERS,
-        route = Route.OTHERS,
+        startDestination = Screen.PROFILE,
+        route = Route.PROFILE,
     ) {
-      composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
-      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FOLDER) {
-        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
-      }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
@@ -199,7 +193,15 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+    }
+
+    navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) {
+        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+      }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
 
     // Écran pour afficher la photo prise
