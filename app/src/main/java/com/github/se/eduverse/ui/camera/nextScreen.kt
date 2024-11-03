@@ -65,269 +65,275 @@ fun NextScreen(
     photoViewModel: PhotoViewModel,
     videoViewModel: VideoViewModel // Ajout du VideoViewModel
 ) {
-    val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
-    val ownerId = auth.currentUser?.uid ?: "anonymous"
+  val context = LocalContext.current
+  val auth = FirebaseAuth.getInstance()
+  val ownerId = auth.currentUser?.uid ?: "anonymous"
 
-    // Chemin pour sauvegarder l'image ou la vidéo
-    val mediaType = if (photoFile != null) "photos" else "videos"
-    val path = "$mediaType/$ownerId/${System.currentTimeMillis()}.${if (photoFile != null) "jpg" else "mp4"}"
+  // Chemin pour sauvegarder l'image ou la vidéo
+  val mediaType = if (photoFile != null) "photos" else "videos"
+  val path =
+      "$mediaType/$ownerId/${System.currentTimeMillis()}.${if (photoFile != null) "jpg" else "mp4"}"
 
-    val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
+  val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEBF1F4)).padding(16.dp)) {
-        if (bitmap != null) {
-            // Affichage de l'image
-            Image(
-                bitmap = adjustImageRotation(bitmap.asAndroidBitmap()).asImageBitmap(),
-                contentDescription = "Preview Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = 56.dp, start = 16.dp)
-                    .width(133.dp)
-                    .height(164.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(color = Color(0xFFD9D9D9))
-                    .testTag("previewImage")
-            )
-        } else if (videoFile != null) {
-            // Affichage de la vidéo
-            val videoUri = Uri.fromFile(videoFile)
-            val player = remember {
-                ExoPlayer.Builder(context).build().apply {
-                    setMediaItem(MediaItem.fromUri(videoUri))
-                    repeatMode = ExoPlayer.REPEAT_MODE_ONE
-                    prepare()
-                    playWhenReady = true
-                }
-            }
-
-            DisposableEffect(Unit) {
-                player.playWhenReady = true
-                player.prepare()
-
-                onDispose { player.release() }
-            }
-
-            AndroidView(
-                factory = {
-                    PlayerView(context).apply {
-                        this.player = player
-                        useController = false // Cacher les contrôles vidéo
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = 56.dp, start = 16.dp)
-                    .width(133.dp)
-                    .height(164.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(color = Color(0xFFD9D9D9))
-                    .testTag("previewVideo")
-            )
+  Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEBF1F4)).padding(16.dp)) {
+    if (bitmap != null) {
+      // Affichage de l'image
+      Image(
+          bitmap = adjustImageRotation(bitmap.asAndroidBitmap()).asImageBitmap(),
+          contentDescription = "Preview Image",
+          contentScale = ContentScale.Crop,
+          modifier =
+              Modifier.align(Alignment.TopStart)
+                  .padding(top = 56.dp, start = 16.dp)
+                  .width(133.dp)
+                  .height(164.dp)
+                  .clip(RoundedCornerShape(15.dp))
+                  .background(color = Color(0xFFD9D9D9))
+                  .testTag("previewImage"))
+    } else if (videoFile != null) {
+      // Affichage de la vidéo
+      val videoUri = Uri.fromFile(videoFile)
+      val player = remember {
+        ExoPlayer.Builder(context).build().apply {
+          setMediaItem(MediaItem.fromUri(videoUri))
+          repeatMode = ExoPlayer.REPEAT_MODE_ONE
+          prepare()
+          playWhenReady = true
         }
+      }
 
-        // Autres composants inchangés
-        Text(
-            text = "Add description...",
-            color = Color.Gray,
-            fontSize = 24.sp,
-            modifier = Modifier
-                .align(Alignment.TopStart)
+      DisposableEffect(Unit) {
+        player.playWhenReady = true
+        player.prepare()
+
+        onDispose { player.release() }
+      }
+
+      AndroidView(
+          factory = {
+            PlayerView(context).apply {
+              this.player = player
+              useController = false // Cacher les contrôles vidéo
+              layoutParams =
+                  ViewGroup.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+              resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            }
+          },
+          modifier =
+              Modifier.align(Alignment.TopStart)
+                  .padding(top = 56.dp, start = 16.dp)
+                  .width(133.dp)
+                  .height(164.dp)
+                  .clip(RoundedCornerShape(15.dp))
+                  .background(color = Color(0xFFD9D9D9))
+                  .testTag("previewVideo"))
+    }
+
+    // Autres composants inchangés
+    Text(
+        text = "Add description...",
+        color = Color.Gray,
+        fontSize = 24.sp,
+        modifier =
+            Modifier.align(Alignment.TopStart)
                 .padding(start = 16.dp, top = 240.dp)
                 .testTag("addDescriptionText"),
-            style = TextStyle(
+        style =
+            TextStyle(
                 fontSize = 24.sp,
                 lineHeight = 20.sp,
                 fontWeight = FontWeight.Normal,
                 color = Color(0x424A4459),
                 letterSpacing = 0.24.sp,
-            )
-        )
+            ))
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp, top = 320.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            StyledButton(
-                text = " Add link",
-                iconRes = R.drawable.add,
-                bitmap = bitmap,
-                context = context,
-                videoFile = videoFile,
-                testTag = "addLinkButton"
-            )
-            StyledButton(
-                text = " More options",
-                iconRes = R.drawable.more_horiz,
-                bitmap = bitmap,
-                context = context,
-                videoFile = videoFile,
-                testTag = "moreOptionsButton"
-            )
-            StyledButton(
-                text = " Share to",
-                iconRes = R.drawable.share,
-                bitmap = bitmap,
-                context = context,
-                videoFile = videoFile,
-                testTag = "shareToButton"
-            )
+    Column(
+        modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 320.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)) {
+          StyledButton(
+              text = " Add link",
+              iconRes = R.drawable.add,
+              bitmap = bitmap,
+              context = context,
+              videoFile = videoFile,
+              testTag = "addLinkButton")
+          StyledButton(
+              text = " More options",
+              iconRes = R.drawable.more_horiz,
+              bitmap = bitmap,
+              context = context,
+              videoFile = videoFile,
+              testTag = "moreOptionsButton")
+          StyledButton(
+              text = " Share to",
+              iconRes = R.drawable.share,
+              bitmap = bitmap,
+              context = context,
+              videoFile = videoFile,
+              testTag = "shareToButton")
         }
 
-        // Ajout de la fonctionnalité Save pour photo et vidéo
-        Row(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Button(
-                onClick = {
-                    bitmap?.let { bmp ->
-                        val byteArray = imageBitmapToByteArray(bmp)
-                        val photo = Photo(ownerId, byteArray, path)
-                        photoViewModel.savePhoto(photo)
-                        navigationActions.goBack()
-                        navigationActions.goBack()
-                        navigationActions.goBack()
-                    }
+    // Ajout de la fonctionnalité Save pour photo et vidéo
+    Row(
+        modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+          Button(
+              onClick = {
+                bitmap?.let { bmp ->
+                  val byteArray = imageBitmapToByteArray(bmp)
+                  val photo = Photo(ownerId, byteArray, path)
+                  photoViewModel.savePhoto(photo)
+                  navigationActions.goBack()
+                  navigationActions.goBack()
+                  navigationActions.goBack()
+                }
 
-                    videoFile?.let { file ->
-                        val videoByteArray = file.readBytes()
-                        val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                        videoViewModel.saveVideo(video)
-                        navigationActions.goBack()
-                        navigationActions.goBack()
-                        navigationActions.goBack()
-                    }
-                },
-                modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC6D3E1)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+                videoFile?.let { file ->
+                  val videoByteArray = file.readBytes()
+                  val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
+                  videoViewModel.saveVideo(video)
+                  navigationActions.goBack()
+                  navigationActions.goBack()
+                  navigationActions.goBack()
+                }
+              },
+              modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC6D3E1)),
+              shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Save",
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight(500),
-                        color = Color(0xFF4A4459),
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-            }
+                    style =
+                        TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight(500),
+                            color = Color(0xFF4A4459),
+                            textAlign = TextAlign.Center),
+                    modifier = Modifier.padding(horizontal = 8.dp))
+              }
 
-            Button(
-                onClick = {
-                    val title = "My Publication" // Tu peux récupérer ce titre d'un champ d'entrée utilisateur si nécessaire
+          Button(
+              onClick = {
+                val title =
+                    "My Publication" // Tu peux récupérer ce titre d'un champ d'entrée utilisateur
+                // si nécessaire
 
-                    // Cas de la photo
-                    bitmap?.let { bmp ->
-                        val byteArray = imageBitmapToByteArray(bmp)
-                        val storageRef = FirebaseStorage.getInstance().reference.child("public/media/${System.currentTimeMillis()}.jpg")
+                // Cas de la photo
+                bitmap?.let { bmp ->
+                  val byteArray = imageBitmapToByteArray(bmp)
+                  val storageRef =
+                      FirebaseStorage.getInstance()
+                          .reference
+                          .child("public/media/${System.currentTimeMillis()}.jpg")
 
-                        storageRef.putBytes(byteArray)
-                            .addOnSuccessListener {
-                                storageRef.downloadUrl.addOnSuccessListener { uri ->
-                                    val publication = Publication(
-                                        userId = ownerId,
-                                        title = title,
-                                        thumbnailUrl = uri.toString(), // L'URL de l'image en tant que vignette
-                                        mediaUrl = uri.toString(),
-                                        mediaType = MediaType.PHOTO
-                                    )
-                                    FirebaseFirestore.getInstance().collection("publications")
-                                        .add(publication)
-                                        .addOnSuccessListener {
-                                            Toast.makeText(context, "Photo publiée avec succès", Toast.LENGTH_SHORT).show()
-                                            navigationActions.goBack()
-                                            navigationActions.goBack()
-                                        }
-                                }
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(context, "Échec de l'upload de la photo", Toast.LENGTH_SHORT).show()
-                            }
-                    }
+                  storageRef
+                      .putBytes(byteArray)
+                      .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { uri ->
+                          val publication =
+                              Publication(
+                                  userId = ownerId,
+                                  title = title,
+                                  thumbnailUrl =
+                                      uri.toString(), // L'URL de l'image en tant que vignette
+                                  mediaUrl = uri.toString(),
+                                  mediaType = MediaType.PHOTO)
+                          FirebaseFirestore.getInstance()
+                              .collection("publications")
+                              .add(publication)
+                              .addOnSuccessListener {
+                                Toast.makeText(
+                                        context, "Photo publiée avec succès", Toast.LENGTH_SHORT)
+                                    .show()
+                                navigationActions.goBack()
+                                navigationActions.goBack()
+                              }
+                        }
+                      }
+                      .addOnFailureListener {
+                        Toast.makeText(context, "Échec de l'upload de la photo", Toast.LENGTH_SHORT)
+                            .show()
+                      }
+                }
 
-                    // Cas de la vidéo
-                    videoFile?.let { file ->
-                        val storageRef = FirebaseStorage.getInstance().reference.child("public/media/${System.currentTimeMillis()}.mp4")
+                // Cas de la vidéo
+                videoFile?.let { file ->
+                  val storageRef =
+                      FirebaseStorage.getInstance()
+                          .reference
+                          .child("public/media/${System.currentTimeMillis()}.mp4")
 
-                        storageRef.putFile(Uri.fromFile(file))
-                            .addOnSuccessListener {
-                                storageRef.downloadUrl.addOnSuccessListener { uri ->
-                                    val publication = Publication(
-                                        userId = ownerId,
-                                        title = title,
-                                        thumbnailUrl = generateThumbnail(uri.toString()), // Fonction pour générer une vignette si nécessaire
-                                        mediaUrl = uri.toString(),
-                                        mediaType = MediaType.VIDEO
-                                    )
-                                    FirebaseFirestore.getInstance().collection("publications")
-                                        .add(publication)
-                                        .addOnSuccessListener {
-                                            Toast.makeText(context, "Vidéo publiée avec succès", Toast.LENGTH_SHORT).show()
-                                            navigationActions.goBack()
-                                            navigationActions.goBack()
-                                        }
-                                }
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(context, "Échec de l'upload de la vidéo", Toast.LENGTH_SHORT).show()
-                            }
-                    }
-                },
-                modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+                  storageRef
+                      .putFile(Uri.fromFile(file))
+                      .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { uri ->
+                          val publication =
+                              Publication(
+                                  userId = ownerId,
+                                  title = title,
+                                  thumbnailUrl =
+                                      generateThumbnail(
+                                          uri.toString()), // Fonction pour générer une vignette si
+                                  // nécessaire
+                                  mediaUrl = uri.toString(),
+                                  mediaType = MediaType.VIDEO)
+                          FirebaseFirestore.getInstance()
+                              .collection("publications")
+                              .add(publication)
+                              .addOnSuccessListener {
+                                Toast.makeText(
+                                        context, "Vidéo publiée avec succès", Toast.LENGTH_SHORT)
+                                    .show()
+                                navigationActions.goBack()
+                                navigationActions.goBack()
+                              }
+                        }
+                      }
+                      .addOnFailureListener {
+                        Toast.makeText(context, "Échec de l'upload de la vidéo", Toast.LENGTH_SHORT)
+                            .show()
+                      }
+                }
+              },
+              modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
+              shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Post",
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight(500),
-                        textAlign = TextAlign.Center,
-                        color = Color(0xFF4A4459),
-                    ),
-                    modifier = Modifier.width(50.dp).height(24.dp)
-                )
-            }
+                    style =
+                        TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight(500),
+                            textAlign = TextAlign.Center,
+                            color = Color(0xFF4A4459),
+                        ),
+                    modifier = Modifier.width(50.dp).height(24.dp))
+              }
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
+    Box(
+        modifier =
+            Modifier.align(Alignment.TopStart)
                 .size(40.dp)
                 .clickable { navigationActions.goBack() }
                 .padding(4.dp)
-                .testTag("closeButton")
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.close),
-                contentDescription = "Close button",
-                modifier = Modifier.fillMaxSize().padding(4.dp),
-                contentScale = ContentScale.Fit
-            )
+                .testTag("closeButton")) {
+          Image(
+              painter = painterResource(id = R.drawable.close),
+              contentDescription = "Close button",
+              modifier = Modifier.fillMaxSize().padding(4.dp),
+              contentScale = ContentScale.Fit)
         }
-    }
+  }
 }
 
 fun generateThumbnail(videoUrl: String): String {
-    // Logique pour générer une vignette (si Firebase Storage permet d'accéder aux frames vidéo)
-    // Cette partie dépend des bibliothèques que tu utilises pour le traitement vidéo
-    // Si ce n'est pas faisable ici, tu peux générer les vignettes côté serveur ou lors de l'upload.
-    return videoUrl // Pour simplifier, on utilise la même URL si aucune vignette spécifique
+  // Logique pour générer une vignette (si Firebase Storage permet d'accéder aux frames vidéo)
+  // Cette partie dépend des bibliothèques que tu utilises pour le traitement vidéo
+  // Si ce n'est pas faisable ici, tu peux générer les vignettes côté serveur ou lors de l'upload.
+  return videoUrl // Pour simplifier, on utilise la même URL si aucune vignette spécifique
 }
-
-
 
 @Composable
 fun StyledButton(

@@ -1,175 +1,144 @@
+package com.github.se.eduverse.ui
+
 // Android Imports
+// Accompanist Pager Imports
+// ExoPlayer Imports
+// Coil Image Loading
+// Project-Specific Imports
 import android.content.Context
-import android.net.Uri
 import android.view.ViewGroup
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.viewinterop.AndroidView
-// Accompanist Pager Imports
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.rememberPagerState
-
-// ExoPlayer Imports
 import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
-
-// Coil Image Loading
-import coil.compose.rememberImagePainter
-
-// Coroutines
-import kotlinx.coroutines.launch
-
-// Your Project-Specific Imports (adjust as needed based on your package structure)
-import com.github.se.eduverse.model.Publication
-import com.github.se.eduverse.model.MediaType
-
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.rememberCoroutineScope
-import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
-import com.github.se.eduverse.ui.navigation.TopLevelDestination
-
-
-import androidx.compose.material3.Scaffold
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
+import coil.compose.SubcomposeAsyncImage
+import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.google.firebase.firestore.FirebaseFirestore
+import com.github.se.eduverse.viewmodel.PublicationViewModel
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun VideoScreen(
     navigationActions: NavigationActions,
+    viewModel: PublicationViewModel,
 ) {
-    val context = LocalContext.current
-    val db = FirebaseFirestore.getInstance()
-    var publications by remember { mutableStateOf(listOf<Publication>()) }
-    val pagerState = rememberPagerState()
+  val publications by viewModel.publications.collectAsState()
+  val error by viewModel.error.collectAsState() // Récupération de l'état d'erreur
+  val pagerState = rememberPagerState()
+  val coroutineScope = rememberCoroutineScope()
 
-    // Charger les publications initiales aléatoirement
-    LaunchedEffect(Unit) {
-        loadRandomPublications(db) { newPublications ->
-            publications = newPublications
-        }
-    }
-
-    // Charger plus de publications quand on atteint la dernière page visible
-    LaunchedEffect(pagerState.currentPage) {
-        if (pagerState.currentPage == publications.size - 1) {
-            loadRandomPublications(db) { newPublications ->
-                publications = publications + newPublications
-            }
-        }
-    }
-
-    Scaffold(
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = navigationActions.currentRoute()
-            )
-        }
-    ) { paddingValues ->
-        if (publications.isNotEmpty()) {
+  Scaffold(
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute())
+      },
+      modifier = Modifier.testTag("VideoScreen")) { paddingValues ->
+        when {
+          error != null -> { // En cas d'erreur, affiche un message
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .background(Color.Red.copy(alpha = 0.2f))
+                        .testTag("ErrorIndicator")) {
+                  Text(
+                      text = error ?: "Une erreur est survenue",
+                      color = Color.Red,
+                      modifier = Modifier.align(Alignment.Center))
+                }
+          }
+          publications.isNotEmpty() -> { // Si les publications sont chargées, les afficher
             VerticalPager(
                 count = publications.size,
                 state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) { page ->
-                val publication = publications[page]
-                if (publication.mediaType == MediaType.VIDEO) {
-                    VideoItem(context = context, mediaUrl = publication.mediaUrl)
-                } else {
+                modifier =
+                    Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")) { page
+                  ->
+                  val publication = publications[page]
+                  if (publication.mediaType == MediaType.VIDEO) {
+                    VideoItem(context = LocalContext.current, mediaUrl = publication.mediaUrl)
+                  } else {
                     PhotoItem(thumbnailUrl = publication.thumbnailUrl)
+                  }
                 }
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxSize()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-        }
-    }
-}
 
+            // Charger plus de publications lorsque l’utilisateur atteint la dernière page visible
+            LaunchedEffect(pagerState.currentPage) {
+              if (pagerState.currentPage == publications.size - 1) {
+                viewModel.loadMorePublications()
+              }
+            }
+          }
+          else -> { // Affiche un indicateur de chargement
+            Box(modifier = Modifier.fillMaxSize().testTag("LoadingIndicator")) {
+              CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+          }
+        }
+      }
+}
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
-fun VideoItem(context: Context, mediaUrl: String) {
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(mediaUrl))
-            prepare()
-            playWhenReady = true
-            repeatMode = ExoPlayer.REPEAT_MODE_ONE // Répéter la vidéo en boucle
+fun VideoItem(
+    context: Context,
+    mediaUrl: String,
+    exoPlayerProvider: () -> ExoPlayer = {
+      ExoPlayer.Builder(context).build().apply {
+        setMediaItem(MediaItem.fromUri(mediaUrl))
+        prepare()
+        playWhenReady = true
+        repeatMode = ExoPlayer.REPEAT_MODE_ONE
+      }
+    }
+) {
+  val exoPlayer = remember { exoPlayerProvider() }
+
+  DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
+
+  AndroidView(
+      factory = {
+        PlayerView(context).apply {
+          player = exoPlayer
+          useController = false
+          layoutParams =
+              ViewGroup.LayoutParams(
+                  ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+          resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose { exoPlayer.release() }
-    }
-
-    AndroidView(
-        factory = { PlayerView(context).apply {
-            player = exoPlayer
-            useController = false // Cache les contrôles du lecteur
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-        }},
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    )
+      },
+      modifier = Modifier.fillMaxSize().background(Color.Black).testTag("VideoItem"))
 }
-
 
 @Composable
 fun PhotoItem(thumbnailUrl: String) {
-    Image(
-        painter = rememberImagePainter(data = thumbnailUrl),
-        contentDescription = "Photo",
+  Box(modifier = Modifier.fillMaxSize().background(Color.Black).testTag("PhotoItem")) {
+    SubcomposeAsyncImage(
+        model = thumbnailUrl,
+        contentDescription = "Photo de la publication",
         contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    )
-}
-
-// Fonction pour charger des publications aléatoires
-fun loadRandomPublications(
-    db: FirebaseFirestore,
-    onLoaded: (List<Publication>) -> Unit
-) {
-    db.collection("publications")
-        .orderBy("timestamp") // Trie par timestamp pour un chargement cohérent
-        .limit(100) // Récupère un grand nombre de publications pour mélanger localement
-        .get()
-        .addOnSuccessListener { result ->
-            val publications = result.documents.mapNotNull { it.toObject(Publication::class.java) }
-            onLoaded(publications.shuffled()) // Mélange les publications pour un effet aléatoire
-        }
-        .addOnFailureListener {
-            // Gérer les erreurs de récupération ici si nécessaire
-        }
+        modifier = Modifier.fillMaxSize())
+  }
 }

@@ -9,4 +9,3 @@ data class Profile(
     val favoritePublications: List<Publication> = emptyList(),
     val profileImageUrl: String = ""
 )
-

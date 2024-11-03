@@ -128,7 +128,11 @@ sonar {
 }
 
 dependencies {
+
+
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
+
+
     //implementation("io.coil-kt:coil-compose:2.1.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.androidx.junit.ktx)
@@ -188,7 +192,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
-    implementation("com.google.firebase:firebase-storage-ktx:20.2.0")
+    //implementation("com.google.firebase:firebase-storage-ktx:20.2.0")
 
     // Networking with OkHttp
     implementation(libs.okhttp)
@@ -204,6 +208,11 @@ dependencies {
     androidTestImplementation ("androidx.test.espresso:espresso-contrib:3.5.1")
     androidTestImplementation("io.mockk:mockk-android:1.12.0")
     androidTestImplementation("org.hamcrest:hamcrest-all:1.3")
+    testImplementation("io.mockk:mockk:1.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+
+
+
 
 
 
