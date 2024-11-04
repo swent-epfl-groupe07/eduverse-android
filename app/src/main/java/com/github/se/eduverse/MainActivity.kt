@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -43,11 +42,11 @@ import com.github.se.eduverse.ui.folder.CreateFileScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
 import com.github.se.eduverse.ui.folder.FolderScreen
 import com.github.se.eduverse.ui.folder.ListFoldersScreen
+import com.github.se.eduverse.ui.gallery.GalleryScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
-import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.videos.VideosScreen
@@ -55,7 +54,6 @@ import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
-import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -69,7 +67,6 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
-  private lateinit var photoViewModel: PhotoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -80,12 +77,6 @@ class MainActivity : ComponentActivity() {
     if (auth.currentUser != null) {
       auth.signOut()
     }
-
-    // Instanciez le repository et le ViewModel
-    val photoRepository =
-        PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val photoViewModelFactory = PhotoViewModelFactory(photoRepository)
-    photoViewModel = ViewModelProvider(this, photoViewModelFactory)[PhotoViewModel::class.java]
 
     // Gestion des permissions de la caméra
     val requestPermissionLauncher =
@@ -102,9 +93,7 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          EduverseApp(cameraPermissionGranted, photoViewModel)
-        }
+        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
       }
     }
   }
@@ -112,7 +101,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel) {
+fun EduverseApp(cameraPermissionGranted: Boolean) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -127,6 +116,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
+  val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -190,7 +181,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
+        GalleryScreen(
+            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }
@@ -261,7 +253,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
               photoFile = photoFile,
               videoFile = videoFile,
               navigationActions = navigationActions,
-              photoViewModel)
+              photoViewModel,
+              folderViewModel)
         }
   }
 }

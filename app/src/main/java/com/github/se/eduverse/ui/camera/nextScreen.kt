@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -36,15 +38,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import java.io.File
 import java.io.FileOutputStream
@@ -55,12 +64,14 @@ fun NextScreen(
     photoFile: File?,
     videoFile: File?,
     navigationActions: NavigationActions,
-    viewModel: PhotoViewModel
+    photoViewModel: PhotoViewModel,
+    folderViewModel: FolderViewModel
 ) {
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
   val path = "media/$ownerId/${System.currentTimeMillis()}.jpg"
+  var folder: Folder? = null
 
   val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
 
@@ -141,12 +152,14 @@ fun NextScreen(
         modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 320.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
-              text = " Add link",
+              text = " Add to folder",
               iconRes = R.drawable.add,
               bitmap = bitmap,
               context = context,
               videoFile = videoFile, // Ajout du fichier vidéo
-              testTag = "addLinkButton")
+              testTag = "addLinkButton") {
+                showBottomMenu(context, folderViewModel) { folder = it }
+              }
           StyledButton(
               text = " More options",
               iconRes = R.drawable.more_horiz,
@@ -171,7 +184,9 @@ fun NextScreen(
                 bitmap?.let { bmp ->
                   val byteArray = imageBitmapToByteArray(bmp)
                   val photo = Photo(ownerId, byteArray, path)
-                  viewModel.savePhoto(photo)
+                  photoViewModel.savePhoto(photo, folder) { id, name, folder ->
+                    folderViewModel.createFileInFolder(id, name, folder)
+                  }
                   navigationActions.goBack()
                   navigationActions.goBack()
                   navigationActions.goBack()
@@ -232,7 +247,8 @@ fun StyledButton(
     bitmap: ImageBitmap?,
     context: Context,
     videoFile: File?, // Ajout du fichier vidéo en paramètre
-    testTag: String
+    testTag: String,
+    selectFolder: () -> Unit = {}
 ) {
   Row(
       modifier =
@@ -278,6 +294,8 @@ fun StyledButton(
 
                     context.startActivity(Intent.createChooser(shareIntent, "Share video via"))
                   }
+                } else if (text == " Add to folder") {
+                  selectFolder()
                 }
               }
               .padding(horizontal = 16.dp)
@@ -297,4 +315,64 @@ fun StyledButton(
             textAlign = TextAlign.Start,
         )
       }
+}
+
+fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (Folder) -> Unit) {
+  // Create the BottomSheetDialog
+  val bottomSheetDialog = BottomSheetDialog(context)
+
+  // Define a list of Folder objects
+  folderViewModel.getUserFolders()
+  val folders = folderViewModel.folders.value
+
+  // Set the inflated view as the content of the BottomSheetDialog
+  bottomSheetDialog.setContentView(
+      ComposeView(context).apply {
+        setContent {
+          Column(modifier = Modifier.padding(16.dp).fillMaxWidth().testTag("button_container")) {
+            folders.forEach { folder ->
+              Card(
+                  modifier =
+                      Modifier.padding(8.dp)
+                          .fillMaxWidth()
+                          .clickable {
+                            select(folder)
+                            bottomSheetDialog.dismiss()
+                          }
+                          .testTag("folder_button${folder.id}"),
+                  elevation = 4.dp) {
+                    Text(
+                        text = folder.name,
+                        modifier = Modifier.padding(16.dp),
+                        style = androidx.compose.material.MaterialTheme.typography.h6)
+                  }
+            }
+          }
+        }
+      })
+
+  // Show the dialog
+  bottomSheetDialog.show()
+
+  // Dismiss the dialog on lifecycle changes
+  if (context is LifecycleOwner) {
+    @Suppress("DEPRECATION")
+    val lifecycleObserver =
+        object : LifecycleObserver {
+          @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+          fun onStop() {
+            if (bottomSheetDialog.isShowing) {
+              bottomSheetDialog.dismiss()
+            }
+          }
+
+          @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+          fun onDestroy() {
+            // Remove observer to prevent memory leaks
+            (context as LifecycleOwner).lifecycle.removeObserver(this)
+          }
+        }
+
+    (context as LifecycleOwner).lifecycle.addObserver(lifecycleObserver)
+  }
 }

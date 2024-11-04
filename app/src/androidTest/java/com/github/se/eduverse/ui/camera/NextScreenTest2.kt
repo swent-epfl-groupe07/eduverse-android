@@ -9,6 +9,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import io.mockk.mockk
 import java.io.File
@@ -21,7 +22,8 @@ class NextScreenTest2 {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var navigationActions: NavigationActions
-  private lateinit var viewModel: PhotoViewModel
+  private lateinit var photoViewModel: PhotoViewModel
+  private lateinit var folderViewModel: FolderViewModel
   private lateinit var context: Context
   private var currentPhotoFile: File? = null
   private var currentVideoFile: File? = null
@@ -29,7 +31,8 @@ class NextScreenTest2 {
   @Before
   fun setUp() {
     navigationActions = mockk(relaxed = true)
-    viewModel = mockk(relaxed = true)
+    photoViewModel = mockk(relaxed = true)
+    folderViewModel = mockk(relaxed = true)
     context = ApplicationProvider.getApplicationContext()
 
     // Simuler un fichier image temporaire
@@ -50,7 +53,8 @@ class NextScreenTest2 {
           photoFile = currentPhotoFile,
           videoFile = currentVideoFile,
           navigationActions = navigationActions,
-          viewModel = viewModel)
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel)
     }
 
     // Forcer la recomposition
@@ -71,7 +75,8 @@ class NextScreenTest2 {
           photoFile = currentPhotoFile,
           videoFile = testVideoFile,
           navigationActions = navigationActions,
-          viewModel = viewModel)
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel)
     }
 
     // Forcer la recomposition

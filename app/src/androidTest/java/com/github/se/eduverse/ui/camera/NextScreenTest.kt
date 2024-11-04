@@ -10,9 +10,15 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.core.app.ApplicationProvider
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.model.Photo
+import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -24,13 +30,17 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
 
 class NextScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var navigationActions: NavigationActions
-  private lateinit var viewModel: PhotoViewModel
+  private lateinit var photoViewModel: PhotoViewModel
+  private lateinit var folderViewModel: FolderViewModel
   private lateinit var context: Context
   private lateinit var testFile: File
   private lateinit var mockBitmap: Bitmap
@@ -39,10 +49,22 @@ class NextScreenTest {
   private var currentVideoFile: File? = null
   private lateinit var videoFileState: MutableState<File?>
 
+  private lateinit var folderRepository: FolderRepository
+  private lateinit var auth: FirebaseAuth
+
   @Before
   fun setUp() {
     navigationActions = mockk(relaxed = true)
-    viewModel = mockk(relaxed = true)
+    photoViewModel = mockk(relaxed = true)
+    folderRepository = mock(FolderRepository::class.java)
+    auth = mock(FirebaseAuth::class.java)
+
+    val user = mock(FirebaseUser::class.java)
+    `when`(auth.currentUser).thenReturn(user)
+    `when`(user.uid).thenReturn("")
+    `when`(folderRepository.getFolders(any(), any(), any())).then {}
+
+    folderViewModel = FolderViewModel(folderRepository, auth)
     context = ApplicationProvider.getApplicationContext()
 
     // Initialisation de mockBitmap avant de l'utiliser
@@ -63,7 +85,8 @@ class NextScreenTest {
           photoFile = currentPhotoFile,
           videoFile = videoFileState.value,
           navigationActions = navigationActions,
-          viewModel = viewModel)
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel)
     }
   }
 
@@ -98,7 +121,7 @@ class NextScreenTest {
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Utilisez `verify` avec des arguments relaxés pour s'assurer que savePhoto est appelé
-    verify { viewModel.savePhoto(any()) }
+    verify { photoViewModel.savePhoto(any(), any(), any()) }
 
     // Vérifiez aussi que le `goBack` est appelé trois fois
     verify(exactly = 3) { navigationActions.goBack() }
@@ -137,7 +160,7 @@ class NextScreenTest {
   @Test
   fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
     val capturedPhoto = slot<Photo>()
-    every { viewModel.savePhoto(capture(capturedPhoto)) } returns Unit
+    every { photoViewModel.savePhoto(capture(capturedPhoto), null, any()) } returns Unit
 
     // Action : cliquer sur le bouton de sauvegarde
     composeTestRule.onNodeWithTag("saveButton").performClick()
@@ -208,6 +231,7 @@ class NextScreenTest {
 
   @Test
   fun testStyledButtonClick() {
+
     // Test sur le bouton "Add link"
     composeTestRule
         .onNodeWithTag("addLinkButton")
@@ -259,5 +283,41 @@ class NextScreenTest {
       player?.release()
       assert(player?.isPlaying == false) // Le player ne doit plus jouer après la libération
     }
+  }
+
+  @Test
+  fun openBottomMenuWithFolders() {
+    val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1")
+    val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
+
+    `when`(folderRepository.getFolders(any(), any(), any())).then {
+      val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+      callback(listOf(folder1, folder2))
+    }
+
+    composeTestRule.onNodeWithTag("addLinkButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("addLinkButton").performClick()
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("button_container").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("folder_button1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("folder_button2").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("folder_button1").performClick()
+    composeTestRule.onNodeWithTag("button_container").assertIsNotDisplayed()
+
+    var test = false
+    val func = slot<(String, String, Folder) -> Unit>()
+    every { photoViewModel.savePhoto(any(), folder1, capture(func)) } answers
+        {
+          test = true
+          func.captured("id", "name", folder1)
+        }
+    composeTestRule.onNodeWithTag("saveButton").performClick()
+    assert(test)
+    org.mockito.kotlin.verify(folderRepository).updateFolder(any(), any(), any())
+    assertEquals(1, folder1.files.size)
   }
 }
