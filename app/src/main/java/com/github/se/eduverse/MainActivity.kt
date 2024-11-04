@@ -30,7 +30,10 @@ import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
+import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.VideoScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
@@ -50,14 +53,16 @@ import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
-import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -70,6 +75,7 @@ class MainActivity : ComponentActivity() {
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
   private lateinit var photoViewModel: PhotoViewModel
+  private lateinit var videoViewModel: VideoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -81,11 +87,17 @@ class MainActivity : ComponentActivity() {
       auth.signOut()
     }
 
-    // Instanciez le repository et le ViewModel
+    // Instanciez les repositories et les ViewModels
     val photoRepository =
         PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
     val photoViewModelFactory = PhotoViewModelFactory(photoRepository)
     photoViewModel = ViewModelProvider(this, photoViewModelFactory)[PhotoViewModel::class.java]
+
+    // Ajout du VideoRepository et du VideoViewModel
+    val videoRepository =
+        VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+    val videoViewModelFactory = VideoViewModelFactory(videoRepository)
+    videoViewModel = ViewModelProvider(this, videoViewModelFactory)[VideoViewModel::class.java]
 
     // Gestion des permissions de la caméra
     val requestPermissionLauncher =
@@ -103,7 +115,7 @@ class MainActivity : ComponentActivity() {
     setContent {
       EduverseTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-          EduverseApp(cameraPermissionGranted, photoViewModel)
+          EduverseApp(cameraPermissionGranted, photoViewModel, videoViewModel)
         }
       }
     }
@@ -112,7 +124,11 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel) {
+fun EduverseApp(
+    cameraPermissionGranted: Boolean,
+    photoViewModel: PhotoViewModel,
+    videoViewModel: VideoViewModel
+) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -127,6 +143,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
+
+  val PubRepo = PublicationRepository(firestore)
+  val PublicationViewModel = PublicationViewModel(PubRepo)
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -155,7 +174,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideosScreen(navigationActions) }
+      composable(Screen.VIDEOS) { VideoScreen(navigationActions, PublicationViewModel) }
     }
 
     navigation(
@@ -236,7 +255,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
           val videoFile = videoPath?.let { File(it) }
 
           // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
-          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel)
+          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
         }
 
     composable(
@@ -261,7 +280,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
               photoFile = photoFile,
               videoFile = videoFile,
               navigationActions = navigationActions,
-              photoViewModel)
+              photoViewModel,
+              videoViewModel)
         }
   }
 }
