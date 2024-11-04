@@ -1,6 +1,8 @@
 package com.github.se.eduverse.viewmodel
 
-import com.github.se.eduverse.repository.Profile
+import android.net.Uri
+import com.github.se.eduverse.model.Profile
+import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,88 +16,196 @@ import org.mockito.Mockito.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
-
-  // TestCoroutineDispatcher is replaced by StandardTestDispatcher (Kotlin 1.6+)
   private val testDispatcher = StandardTestDispatcher()
-
   private lateinit var profileViewModel: ProfileViewModel
   private val mockRepository: ProfileRepository = mock(ProfileRepository::class.java)
 
   @Before
   fun setup() {
-    Dispatchers.setMain(testDispatcher) // Set test dispatcher for coroutines
+    Dispatchers.setMain(testDispatcher)
     profileViewModel = ProfileViewModel(mockRepository)
   }
 
   @Test
-  fun `loadProfile updates profileState when repository returns a profile`() = runTest {
+  fun `loadProfile success updates state with profile data`() = runTest {
     val testProfile =
         Profile(
-            name = "John Doe",
-            school = "Test School",
-            coursesSelected = "5",
-            videosWatched = "10",
-            quizzesCompleted = "3",
-            studyTime = "20.0",
-            studyGoals = "Graduate")
+            id = "test123",
+            username = "testuser",
+            followers = 10,
+            following = 20,
+            publications = listOf(),
+            favoritePublications = listOf())
 
-    // Mock the repository's getProfile method to return the test profile
-    val userId = "testUser"
-    `when`(mockRepository.getProfile(userId)).thenReturn(testProfile)
+    `when`(mockRepository.getProfile("testUser")).thenReturn(testProfile)
 
-    // Call the loadProfile method
-    profileViewModel.loadProfile(userId)
-
-    // Execute pending coroutine actions
+    profileViewModel.loadProfile("testUser")
     advanceUntilIdle()
 
-    // Verify that the profileState is updated with the test profile
-    val result = profileViewModel.profileState.first()
-    assertEquals(testProfile, result)
+    val state = profileViewModel.profileState.first()
+    assertTrue(state is ProfileUiState.Success)
+    assertEquals(testProfile, (state as ProfileUiState.Success).profile)
   }
 
   @Test
-  fun `saveProfile updates profileState and saves profile to repository`() = runTest {
-    val userId = "testUser"
-    val name = "John Doe"
-    val school = "Test School"
-    val coursesSelected = "5"
-    val videosWatched = "10" // String as per your signature
-    val quizzesCompleted = "3" // String as per your signature
-    val studyTime = "20.0" // Double as per your signature
-    val studyGoals = "Graduate"
+  fun `loadProfile failure updates state with error`() = runTest {
+    `when`(mockRepository.getProfile("testUser")).thenThrow(RuntimeException("Network error"))
 
-    // Call saveProfile method with the input values
-    profileViewModel.saveProfile(
-        userId = userId,
-        name = name,
-        school = school,
-        coursesSelected = coursesSelected,
-        videosWatched = videosWatched,
-        quizzesCompleted = quizzesCompleted,
-        studyTime = studyTime,
-        studyGoals = studyGoals)
-
-    // Execute pending coroutine actions
+    profileViewModel.loadProfile("testUser")
     advanceUntilIdle()
 
-    // Verify that the profileState is updated correctly
-    val updatedProfile = profileViewModel.profileState.first()
+    val state = profileViewModel.profileState.first()
+    assertTrue(state is ProfileUiState.Error)
+    assertEquals("Network error", (state as ProfileUiState.Error).message)
+  }
 
-    assertEquals(name, updatedProfile.name)
-    assertEquals(school, updatedProfile.school)
-    assertEquals(coursesSelected, updatedProfile.coursesSelected)
-    assertEquals(videosWatched, updatedProfile.videosWatched)
-    assertEquals(quizzesCompleted, updatedProfile.quizzesCompleted)
-    assertEquals(studyTime, updatedProfile.studyTime)
-    assertEquals(studyGoals, updatedProfile.studyGoals)
+  @Test
+  fun `updateProfileImage success updates state`() = runTest {
+    val imageUri = mock(Uri::class.java)
+    val imageUrl = "http://example.com/image.jpg"
 
-    // Verify that the repository's saveProfile method was called with the correct data
-    verify(mockRepository).saveProfile(userId, updatedProfile)
+    `when`(mockRepository.uploadProfileImage("testUser", imageUri)).thenReturn(imageUrl)
+
+    profileViewModel.updateProfileImage("testUser", imageUri)
+    advanceUntilIdle()
+
+    val state = profileViewModel.imageUploadState.first()
+    assertTrue(state is ImageUploadState.Success)
+    verify(mockRepository).updateProfileImage("testUser", imageUrl)
+  }
+
+  @Test
+  fun `toggleFavorite adds publication to favorites`() = runTest {
+    profileViewModel.toggleFavorite("testUser", "pub123", false)
+    advanceUntilIdle()
+
+    verify(mockRepository).addToFavorites("testUser", "pub123")
+    verify(mockRepository).getProfile("testUser")
+  }
+
+  @Test
+  fun `toggleFavorite removes publication from favorites`() = runTest {
+    profileViewModel.toggleFavorite("testUser", "pub123", true)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromFavorites("testUser", "pub123")
+    verify(mockRepository).getProfile("testUser")
+  }
+
+  @Test
+  fun `addPublication success updates profile`() = runTest {
+    val userId = "testUser"
+    val publication = Publication(id = "pub1", userId = userId, title = "Test")
+
+    profileViewModel.addPublication(userId, publication)
+    advanceUntilIdle()
+
+    verify(mockRepository).addPublication(userId, publication)
+    verify(mockRepository).getProfile(userId)
+  }
+
+  @Test
+  fun `addPublication failure updates state with error`() = runTest {
+    val userId = "testUser"
+    val publication = Publication(id = "pub1", userId = userId, title = "Test")
+
+    `when`(mockRepository.addPublication(userId, publication))
+        .thenThrow(RuntimeException("Failed to add"))
+
+    profileViewModel.addPublication(userId, publication)
+    advanceUntilIdle()
+
+    val state = profileViewModel.profileState.first()
+    assertTrue(state is ProfileUiState.Error)
+    assertEquals("Failed to add", (state as ProfileUiState.Error).message)
+  }
+
+  @Test
+  fun `toggleFollow follows user when not following`() = runTest {
+    val currentUserId = "user1"
+    val targetUserId = "user2"
+
+    profileViewModel.toggleFollow(currentUserId, targetUserId, false)
+    advanceUntilIdle()
+
+    verify(mockRepository).followUser(currentUserId, targetUserId)
+    verify(mockRepository).getProfile(currentUserId)
+  }
+
+  @Test
+  fun `toggleFollow unfollows user when following`() = runTest {
+    val currentUserId = "user1"
+    val targetUserId = "user2"
+
+    profileViewModel.toggleFollow(currentUserId, targetUserId, true)
+    advanceUntilIdle()
+
+    verify(mockRepository).unfollowUser(currentUserId, targetUserId)
+    verify(mockRepository).getProfile(currentUserId)
+  }
+
+  @Test
+  fun `toggleFollow failure updates state with error`() = runTest {
+    val currentUserId = "user1"
+    val targetUserId = "user2"
+
+    `when`(mockRepository.followUser(currentUserId, targetUserId))
+        .thenThrow(RuntimeException("Failed to follow"))
+
+    profileViewModel.toggleFollow(currentUserId, targetUserId, false)
+    advanceUntilIdle()
+
+    val state = profileViewModel.profileState.first()
+    assertTrue(state is ProfileUiState.Error)
+    assertEquals("Failed to follow", (state as ProfileUiState.Error).message)
+  }
+
+  @Test
+  fun `toggleFavorite failure updates state with error`() = runTest {
+    val userId = "testUser"
+    val pubId = "pub123"
+
+    `when`(mockRepository.addToFavorites(userId, pubId))
+        .thenThrow(RuntimeException("Failed to favorite"))
+
+    profileViewModel.toggleFavorite(userId, pubId, false)
+    advanceUntilIdle()
+
+    val state = profileViewModel.profileState.first()
+    assertTrue(state is ProfileUiState.Error)
+    assertEquals("Failed to favorite", (state as ProfileUiState.Error).message)
+  }
+
+  @Test
+  fun `updateProfileImage failure updates state with error`() = runTest {
+    val userId = "testUser"
+    val imageUri = mock(Uri::class.java)
+
+    `when`(mockRepository.uploadProfileImage(userId, imageUri))
+        .thenThrow(RuntimeException("Upload failed"))
+
+    profileViewModel.updateProfileImage(userId, imageUri)
+    advanceUntilIdle()
+
+    val state = profileViewModel.imageUploadState.first()
+    assertTrue(state is ImageUploadState.Error)
+    assertEquals("Upload failed", (state as ImageUploadState.Error).message)
+  }
+
+  @Test
+  fun `loadProfile returns null profile updates state with error`() = runTest {
+    `when`(mockRepository.getProfile("testUser")).thenReturn(null)
+
+    profileViewModel.loadProfile("testUser")
+    advanceUntilIdle()
+
+    val state = profileViewModel.profileState.first()
+    assertTrue(state is ProfileUiState.Error)
+    assertEquals("Profile not found", (state as ProfileUiState.Error).message)
   }
 
   @After
   fun tearDown() {
-    Dispatchers.resetMain() // Reset the main dispatcher
+    Dispatchers.resetMain()
   }
 }

@@ -15,8 +15,12 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.storage.FileDownloadTask
+import com.google.firebase.storage.StorageReference
+import java.io.File
 import java.util.Calendar
 import org.junit.Before
 import org.junit.Rule
@@ -92,6 +96,7 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag(file1.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file2.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file3.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
   }
 
   @Test
@@ -186,11 +191,94 @@ class DisplayFolderTest {
   }
 
   @Test
-  fun clickOnFileHaveExpectedBehavior() {
-    composeTestRule.onNodeWithTag("name 1").performClick()
-    composeTestRule.onNodeWithTag("name 2").performClick()
-    composeTestRule.onNodeWithTag("name 3").performClick()
+  fun clickOnFileHaveExpectedBehavior_success() {
+    var test = false
 
-    // click do nothing for now
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      test = true
+      null
+    }
+
+    composeTestRule.onNodeWithTag("name 1").performClick()
+
+    assert(test)
+  }
+
+  @Test
+  fun clickOnFileHaveExpectedBehavior_failureAccess() {
+    var test = false
+
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      val callback = it.getArgument<(Exception) -> Unit>(2)
+      callback(Exception("message"))
+      test = true
+      null
+    }
+
+    composeTestRule.onNodeWithTag("name 1").performClick()
+
+    assert(test)
+  }
+
+  @Test
+  fun clickOnFileHaveExpectedBehavior_failureOpen() {
+    val ref = mock(StorageReference::class.java)
+    val task = mock(FileDownloadTask::class.java)
+    var test = false
+
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      val callback = it.getArgument<(StorageReference, String) -> Unit>(1)
+      callback(ref, ".pdf")
+    }
+    `when`(ref.getFile(any<File>())).thenReturn(task)
+    `when`(task.addOnSuccessListener(any())).thenReturn(task)
+    `when`(task.addOnFailureListener(any())).then {
+      val callback = it.getArgument<OnFailureListener>(0)
+      callback.onFailure(Exception("message"))
+      task
+    }
+    `when`(ref.name).then {
+      test = true
+      "name"
+    }
+
+    composeTestRule.onNodeWithTag("name 1").performClick()
+
+    assert(test)
+  }
+
+  @Test
+  fun deleteFileWorkLikeExpected() {
+    `when`(fileRepository.deleteFile(any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(1)
+      callback()
+    }
+
+    composeTestRule.onNodeWithTag("name 1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("delete_icon_name 1").performClick()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("no").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("yes").performClick()
+
+    composeTestRule.onNodeWithTag("name 1").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsNotDisplayed()
+
+    composeTestRule.onNodeWithTag("delete_icon_name 2").performClick()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("no").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("no").performClick()
+
+    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
   }
 }

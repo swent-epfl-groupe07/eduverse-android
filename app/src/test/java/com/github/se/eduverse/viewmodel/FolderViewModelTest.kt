@@ -174,6 +174,15 @@ class FolderViewModelTest {
     folderViewModel.renameFolder("test 2")
     assertEquals(folderViewModel.activeFolder.value!!.name, "test 2")
   }
+
+  @Test
+  fun createFileInFolderTest() {
+    folderViewModel.createFileInFolder("fileId", "name", folder2)
+
+    assertEquals(folder2.files.size, 1)
+    assertEquals(folder2.files[0].fileId, "fileId")
+    assertEquals(folder2.files[0].name, "name")
+  }
 }
 
 class MockFolderRepository(private val folder: Folder) : FolderRepository {

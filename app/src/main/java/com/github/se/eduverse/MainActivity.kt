@@ -49,10 +49,9 @@ import com.github.se.eduverse.ui.folder.ListFoldersScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.others.OthersScreen
-import com.github.se.eduverse.ui.others.profile.ProfileScreen
-import com.github.se.eduverse.ui.others.setting.SettingsScreen
+import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.screens.GalleryScreen
+import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
@@ -67,8 +66,10 @@ import com.github.se.eduverse.viewmodel.VideoViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
@@ -133,7 +134,9 @@ fun EduverseApp(
   val navigationActions = NavigationActions(navController)
   val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
   val dashboardViewModel = DashboardViewModel(dashboardRepo)
-  val profileRepo = ProfileRepositoryImpl(firestore = FirebaseFirestore.getInstance())
+  val profileRepo =
+      ProfileRepositoryImpl(
+          firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
   val folderRepo = FolderRepositoryImpl(db = firestore)
   val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
@@ -164,6 +167,7 @@ fun EduverseApp(
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
     }
 
     navigation(
@@ -194,27 +198,29 @@ fun EduverseApp(
     }
 
     navigation(
-        startDestination = Screen.OTHERS,
-        route = Route.OTHERS,
+        startDestination = Screen.PROFILE,
+        route = Route.PROFILE,
     ) {
-      composable(Screen.OTHERS) { OthersScreen(navigationActions) }
+      composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
-      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FOLDER) {
-        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
-      }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
 
-      composable(Screen.EDIT_PROFILE) { ProfileScreen(profileViewModel, navigationActions) }
+      composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+    }
+
+    navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) {
+        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+      }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
 
     // Écran pour afficher la photo prise

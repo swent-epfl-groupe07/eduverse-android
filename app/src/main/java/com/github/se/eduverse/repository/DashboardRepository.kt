@@ -50,12 +50,16 @@ class DashboardRepositoryImpl(private val firestore: FirebaseFirestore) : Dashbo
   }
 
   override suspend fun updateWidgets(widgets: List<Widget>) {
-    val batch = firestore.batch()
-    widgets.forEachIndexed { index, widget ->
-      val updatedWidget = widget.copy(order = index) // Update the order
-      val docRef = firestore.collection("widgets").document(widget.widgetId)
-      batch.set(docRef, updatedWidget)
+    try {
+      val batch = firestore.batch()
+      widgets.forEach { widget ->
+        val docRef = firestore.collection("widgets").document(widget.widgetId)
+        batch.set(docRef, widget)
+      }
+      batch.commit().await()
+    } catch (e: Exception) {
+      Log.e("DashboardRepository", "Error updating widgets", e)
+      throw e
     }
-    batch.commit().await()
   }
 }

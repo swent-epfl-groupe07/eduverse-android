@@ -36,6 +36,7 @@ import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
+import com.github.se.eduverse.ui.navigation.Route
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -53,7 +54,7 @@ fun VideoScreen(
         BottomNavigationMenu(
             onTabSelect = { route -> navigationActions.navigateTo(route) },
             tabList = LIST_TOP_LEVEL_DESTINATION,
-            selectedItem = navigationActions.currentRoute())
+            selectedItem = Route.VIDEOS)
       },
       modifier = Modifier.testTag("VideoScreen")) { paddingValues ->
         when {

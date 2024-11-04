@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.others.setting
+package com.github.se.eduverse.ui.setting
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
