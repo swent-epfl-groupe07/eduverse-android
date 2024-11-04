@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui
+package com.github.se.eduverse.ui.gallery
 
 import androidx.compose.ui.test.* // Import pour les tests UI
 import androidx.compose.ui.test.junit4.createComposeRule

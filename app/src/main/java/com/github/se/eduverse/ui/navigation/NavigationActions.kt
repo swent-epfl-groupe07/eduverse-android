@@ -3,13 +3,15 @@
 package com.github.se.eduverse.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import com.github.se.eduverse.model.Folder
 
 object Route {
   const val LOADING = "Loading"
@@ -17,9 +19,10 @@ object Route {
   const val DASHBOARD = "Dashboard"
   const val VIDEOS = "Videos"
   const val CAMERA = "Camera"
-  const val OTHERS = "Others"
   const val CALCULATOR = "Calculator"
   const val POMODORO = "Pomodoro"
+  const val PROFILE = "Profile"
+  const val LIST_FOLDERS = "ListFolders"
 }
 
 object Screen {
@@ -30,7 +33,6 @@ object Screen {
   const val DASHBOARD = "Dashboard screen"
   const val VIDEOS = "Videos screen"
   const val CAMERA = "Camera screen"
-  const val OTHERS = "Others screen"
   const val EDIT_PROFILE = "EditProfile screen"
   const val SETTING = "Setting screen"
   const val LIST_FOLDERS = "ListFolders screen"
@@ -41,6 +43,7 @@ object Screen {
   const val CALCULATOR = "Calculator screen"
   const val POMODORO = "Pomodoro screen"
   const val PDF_CONVERTER = "PdfConverter screen"
+  const val PROFILE = "Profile screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -52,16 +55,21 @@ object TopLevelDestinations {
       TopLevelDestination(route = Route.VIDEOS, icon = Icons.Outlined.PlayArrow, textId = "Videos")
   val CAMERA =
       TopLevelDestination(route = Route.CAMERA, icon = Icons.Outlined.CameraAlt, textId = "Camera")
-  val OTHERS =
-      TopLevelDestination(route = Route.OTHERS, icon = Icons.Outlined.Menu, textId = "Others")
+  val PROFILE =
+      TopLevelDestination(
+          route = Route.PROFILE, icon = Icons.Outlined.AccountCircle, textId = "Profile")
+  val FOLDERS =
+      TopLevelDestination(
+          route = Route.LIST_FOLDERS, icon = Icons.Outlined.Folder, textId = "Folders")
 }
 
 val LIST_TOP_LEVEL_DESTINATION =
     listOf(
         TopLevelDestinations.DASHBOARD,
-        TopLevelDestinations.VIDEOS,
+        TopLevelDestinations.FOLDERS,
         TopLevelDestinations.CAMERA,
-        TopLevelDestinations.OTHERS)
+        TopLevelDestinations.VIDEOS,
+        TopLevelDestinations.PROFILE)
 
 open class NavigationActions(
     private val navController: NavHostController,

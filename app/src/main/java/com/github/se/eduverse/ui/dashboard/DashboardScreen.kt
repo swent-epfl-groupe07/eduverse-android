@@ -28,6 +28,7 @@ import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -70,7 +71,7 @@ fun DashboardScreen(
         BottomNavigationMenu(
             onTabSelect = { route -> navigationActions.navigateTo(route) },
             tabList = LIST_TOP_LEVEL_DESTINATION,
-            selectedItem = navigationActions.currentRoute())
+            selectedItem = Route.DASHBOARD)
       }) {
         Box(modifier = Modifier.fillMaxSize()) {
           val sortedWidgets = remember(widgets) { widgets.sortedBy { it.order } }

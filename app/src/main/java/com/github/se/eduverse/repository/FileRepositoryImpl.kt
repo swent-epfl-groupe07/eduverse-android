@@ -27,7 +27,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    * @param onSuccess to execute if the task is done successfully
    * @param onFailure error management method
    */
-  override fun saveFile(
+  override fun savePdfFile(
       file: Uri,
       fileId: String,
       onSuccess: () -> Unit,
@@ -39,7 +39,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
 
     pdfRef
         .putFile(file)
-        .addOnSuccessListener { savePDFUrlToFirestore(path, fileId, onSuccess) }
+        .addOnSuccessListener { savePathToFirestore(path, ".pdf", fileId, onSuccess) }
         .addOnFailureListener(onFailure)
   }
 
@@ -53,14 +53,31 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
     TODO("Not yet implemented")
   }
 
-  /** Does nothing for now */
-  override fun deleteFile(
-      file: Uri,
-      fileId: String,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    TODO("Not yet implemented")
+  /**
+   * Delete a file on firebase, both in storage and in firestore
+   *
+   * @param fileId the id of the file to delete
+   * @param onSuccess the code to execute if the deletion is successful
+   * @param onFailure error management method
+   */
+  override fun deleteFile(fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    db.collection(collectionPath)
+        .document(fileId)
+        .get()
+        .addOnSuccessListener {
+          storage.reference
+              .child(it.getString("url")!!)
+              .delete()
+              .addOnSuccessListener {
+                db.collection(collectionPath)
+                    .document(fileId)
+                    .delete()
+                    .addOnSuccessListener { onSuccess() }
+                    .addOnFailureListener(onFailure)
+              }
+              .addOnFailureListener(onFailure)
+        }
+        .addOnFailureListener(onFailure)
   }
 
   /**
@@ -72,13 +89,18 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    */
   override fun accessFile(
       fileId: String,
-      onSuccess: (StorageReference) -> Unit,
+      onSuccess: (StorageReference, String) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(collectionPath)
         .document(fileId)
         .get()
-        .addOnSuccessListener { onSuccess(storage.reference.child(it.getString("url")!!)) }
+        .addOnSuccessListener {
+          onSuccess(
+              storage.reference.child(it.getString("url")!!),
+              it.getString("suffix") ?: ".pdf" // Default .pdf for backward compatibility
+              )
+        }
         .addOnFailureListener(onFailure)
   }
 
@@ -87,11 +109,17 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    * called.
    *
    * @param path the path to save
+   * @param suffix the suffix of the fyle type, e.g. .pdf, .jpg
    * @param fileId the id of the document in which the path should be stored
    * @param onSuccess to execute in case of success
    */
-  fun savePDFUrlToFirestore(path: String, fileId: String, onSuccess: () -> Unit) {
-    val pdfData = hashMapOf("url" to path)
+  override fun savePathToFirestore(
+      path: String,
+      suffix: String,
+      fileId: String,
+      onSuccess: () -> Unit
+  ) {
+    val pdfData = hashMapOf("url" to path, "suffix" to suffix)
     db.collection(collectionPath)
         .document(fileId)
         .set(pdfData)
