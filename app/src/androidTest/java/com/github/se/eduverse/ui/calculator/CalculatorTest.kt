@@ -90,7 +90,7 @@ class CalculatorScreenTest {
     composeTestRule.onNodeWithTag("button_4").performClick()
     composeTestRule.onNodeWithTag("button_5").performClick()
     composeTestRule.onNodeWithTag("displayText").assertTextContains("45")
-    composeTestRule.onNodeWithTag("backspaceButton").performClick() // Backspace icon button
+    composeTestRule.onNodeWithTag("backspaceButton").performClick()
     composeTestRule.onNodeWithTag("displayText").assertTextEquals("4")
 
     composeTestRule.onNodeWithTag("button_5").performClick()
@@ -108,7 +108,7 @@ class CalculatorScreenTest {
     composeTestRule.onNodeWithTag("button_=").performClick()
     composeTestRule.onNodeWithTag("resultText").assertTextEquals("Undefined")
 
-    composeTestRule.onNodeWithTag("clearButton").performClick() // Clear icon button
+    composeTestRule.onNodeWithTag("clearButton").performClick()
     composeTestRule.onNodeWithTag("displayText").assertTextEquals("")
 
     composeTestRule.onNodeWithTag("button_1").performClick()

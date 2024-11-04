@@ -160,6 +160,7 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.0.0")
 
     implementation("com.arthenica:ffmpeg-kit-full:4.5.LTS")
+    implementation("net.objecthunter:exp4j:0.4.8")
 
 
     implementation(libs.hilt.android)
