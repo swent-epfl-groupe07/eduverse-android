@@ -32,11 +32,11 @@ import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
-import com.github.se.eduverse.ui.navigation.Route
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
