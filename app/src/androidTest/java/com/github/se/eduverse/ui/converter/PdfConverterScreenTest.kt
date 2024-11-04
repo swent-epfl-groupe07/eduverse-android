@@ -72,11 +72,11 @@ class PdfConverterScreenTest {
     composeTestRule
         .onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name)
         .assertTextEquals("Image to PDF")
-    composeTestRule.onNodeWithTag(PdfConverterOption.SCANNER_TOOL.name).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(PdfConverterOption.SCANNER_TOOL.name).assertHasClickAction()
+    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).assertHasClickAction()
     composeTestRule
-        .onNodeWithTag(PdfConverterOption.SCANNER_TOOL.name)
-        .assertTextEquals("Scanner tool")
+        .onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name)
+        .assertTextEquals("Doc to PDF")
     composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).assertHasClickAction()
     composeTestRule
