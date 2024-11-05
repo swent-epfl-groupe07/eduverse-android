@@ -6,7 +6,7 @@ import com.github.se.eduverse.model.TodoStatus
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 
-class TodoRepository(private val db: FirebaseFirestore) {
+open class TodoRepository(private val db: FirebaseFirestore) {
   private val collectionPath = "todos"
 
   /**
@@ -14,7 +14,7 @@ class TodoRepository(private val db: FirebaseFirestore) {
    *
    * @return a unique id in the todo collection of the database
    */
-  fun getNewUid(): String {
+  open fun getNewUid(): String {
     return db.collection(collectionPath).document().id
   }
 
@@ -24,7 +24,7 @@ class TodoRepository(private val db: FirebaseFirestore) {
    * @param onSuccess code executed if the todos are successfully accessed
    * @param onFailure code executed if the todos can't be accessed
    */
-  fun getActualTodos(onSuccess: (List<Todo>) -> Unit, onFailure: (Exception) -> Unit) {
+  open fun getActualTodos(onSuccess: (List<Todo>) -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(collectionPath)
         .whereEqualTo("status", "ACTUAL")
         .get()
@@ -41,7 +41,7 @@ class TodoRepository(private val db: FirebaseFirestore) {
    * @param onSuccess code executed if the todos are successfully accessed
    * @param onFailure code executed if the todos can't be accessed
    */
-  fun getDoneTodos(onSuccess: (List<Todo>) -> Unit, onFailure: (Exception) -> Unit) {
+  open fun getDoneTodos(onSuccess: (List<Todo>) -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(collectionPath)
         .whereEqualTo("status", "DONE")
         .get()
@@ -59,7 +59,7 @@ class TodoRepository(private val db: FirebaseFirestore) {
    * @param onSuccess code executed if the todo is successfully added
    * @param onFailure code executed if the todo can't be added
    */
-  fun addNewTodo(todo: Todo, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+  open fun addNewTodo(todo: Todo, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(collectionPath)
         .document(todo.uid)
         .set(todo)
@@ -74,7 +74,7 @@ class TodoRepository(private val db: FirebaseFirestore) {
    * @param onSuccess code executed if the todo is successfully updated
    * @param onFailure code executed if the todo can't be updated
    */
-  fun updateTodo(todo: Todo, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+  open fun updateTodo(todo: Todo, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(collectionPath)
         .document(todo.uid)
         .set(todo)
@@ -89,7 +89,7 @@ class TodoRepository(private val db: FirebaseFirestore) {
    * @param onSuccess code executed if the todo is successfully deleted
    * @param onFailure code executed if the todo can't be deleted
    */
-  fun deleteTodoById(todoId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+  open fun deleteTodoById(todoId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(collectionPath)
         .document(todoId)
         .delete()
