@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.camera
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,6 +12,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
 import io.mockk.mockk
 import java.io.File
 import org.junit.Before
@@ -24,19 +26,27 @@ class NextScreenTest2 {
   private lateinit var navigationActions: NavigationActions
   private lateinit var photoViewModel: PhotoViewModel
   private lateinit var folderViewModel: FolderViewModel
+  private lateinit var vViewModel: VideoViewModel
   private lateinit var context: Context
   private var currentPhotoFile: File? = null
   private var currentVideoFile: File? = null
+  private lateinit var mockBitmap: Bitmap
+  private lateinit var testFile: File
 
   @Before
   fun setUp() {
     navigationActions = mockk(relaxed = true)
     photoViewModel = mockk(relaxed = true)
     folderViewModel = mockk(relaxed = true)
+    vViewModel = mockk(relaxed = true) // Ensure vViewModel is initialized
     context = ApplicationProvider.getApplicationContext()
 
     // Simuler un fichier image temporaire
-    currentPhotoFile = File.createTempFile("test_image", ".jpg")
+    mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    testFile =
+        File.createTempFile("test_image", ".jpg").apply {
+          outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+        }
   }
 
   @Test
@@ -54,7 +64,8 @@ class NextScreenTest2 {
           videoFile = currentVideoFile,
           navigationActions = navigationActions,
           photoViewModel = photoViewModel,
-          folderViewModel = folderViewModel)
+          folderViewModel = folderViewModel,
+          vViewModel)
     }
 
     // Forcer la recomposition
@@ -76,7 +87,8 @@ class NextScreenTest2 {
           videoFile = testVideoFile,
           navigationActions = navigationActions,
           photoViewModel = photoViewModel,
-          folderViewModel = folderViewModel)
+          folderViewModel = folderViewModel,
+          vViewModel)
     }
 
     // Forcer la recomposition

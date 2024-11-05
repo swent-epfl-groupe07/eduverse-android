@@ -19,6 +19,7 @@ import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.github.se.eduverse.viewmodel.VideoViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -41,6 +42,7 @@ class NextScreenTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var photoViewModel: PhotoViewModel
   private lateinit var folderViewModel: FolderViewModel
+  private lateinit var vViewModel: VideoViewModel
   private lateinit var context: Context
   private lateinit var testFile: File
   private lateinit var mockBitmap: Bitmap
@@ -65,6 +67,8 @@ class NextScreenTest {
     `when`(folderRepository.getFolders(any(), any(), any())).then {}
 
     folderViewModel = FolderViewModel(folderRepository, auth)
+
+    vViewModel = mockk(relaxed = true)
     context = ApplicationProvider.getApplicationContext()
 
     // Initialisation de mockBitmap avant de l'utiliser
@@ -86,7 +90,8 @@ class NextScreenTest {
           videoFile = videoFileState.value,
           navigationActions = navigationActions,
           photoViewModel = photoViewModel,
-          folderViewModel = folderViewModel)
+          folderViewModel = folderViewModel,
+          vViewModel)
     }
   }
 
@@ -98,12 +103,6 @@ class NextScreenTest {
         .assertExists("Image preview container should exist")
         .assertIsDisplayed()
   }
-
-  /*@Test
-  fun testEditCoverTextIsDisplayed() {
-      composeTestRule.onNodeWithTag("editCoverText").assertIsDisplayed()
-          .assertTextEquals("Edit cover")
-  }*/
 
   @Test
   fun testAddDescriptionTextIsDisplayed() {
@@ -319,5 +318,25 @@ class NextScreenTest {
     assert(test)
     org.mockito.kotlin.verify(folderRepository).updateFolder(any(), any(), any())
     assertEquals(1, folder1.files.size)
+  }
+    
+  @Test
+  fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
+    val capturedPhoto = slot<Photo>()
+    every { pViewModel.savePhoto(capture(capturedPhoto)) } returns Unit
+
+    // Action : cliquer sur le bouton de sauvegarde
+    composeTestRule.onNodeWithTag("saveButton").performClick()
+
+    // Vérifier que `savePhoto` a été appelé avec un `Photo` ayant l'`ownerId` correct
+    assertEquals("anonymous", capturedPhoto.captured.ownerId)
+
+    // Debug : afficher le chemin capturé
+    println("Captured photo path: ${capturedPhoto.captured.path}")
+
+    // Vérifier que le `path` commence bien par le bon préfixe, sans vérifier le timestamp exact
+    assertTrue(
+        capturedPhoto.captured.path.startsWith("photos/anonymous/") ||
+            capturedPhoto.captured.path.startsWith("videos/anonymous/"))
   }
 }
