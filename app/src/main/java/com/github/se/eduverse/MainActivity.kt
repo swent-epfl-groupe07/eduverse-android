@@ -53,6 +53,7 @@ import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
@@ -168,6 +169,7 @@ fun EduverseApp(
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions) }
     }
 
     navigation(
