@@ -28,18 +28,18 @@ import com.github.se.eduverse.viewmodel.TodoListViewModel
 @Composable
 fun TodoListScreen(
     navigationActions: NavigationActions,
-    viewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
+    todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
 ) {
-  val actualTodos = viewModel.actualTodos.collectAsState()
-  val doneTodos = viewModel.doneTodos.collectAsState()
+  val actualTodos = todoListViewModel.actualTodos.collectAsState()
+  val doneTodos = todoListViewModel.doneTodos.collectAsState()
   var showCompleted by remember { mutableStateOf(false) }
   Scaffold(
       topBar = { TopNavigationBar("Todo List", navigationActions = navigationActions) },
       content = { pd ->
         Column(modifier = Modifier.fillMaxSize().padding(pd).testTag("todoListScreen")) {
           AddTodoEntry { name ->
-            val newTodo = Todo(viewModel.getNewUid(), name, status = TodoStatus.ACTUAL)
-            viewModel.addNewTodo(newTodo)
+            val newTodo = Todo(todoListViewModel.getNewUid(), name, status = TodoStatus.ACTUAL)
+            todoListViewModel.addNewTodo(newTodo)
           }
           Spacer(modifier = Modifier.height(10.dp))
           Row(
@@ -66,7 +66,10 @@ fun TodoListScreen(
             val todosToShow = if (showCompleted) doneTodos.value else actualTodos.value
             items(todosToShow.size) { i ->
               val todo = todosToShow[i]
-              TodoItem(todo, { viewModel.setTodoActual(it) }, { viewModel.setTodoDone(it) })
+              TodoItem(
+                  todo,
+                  { todoListViewModel.setTodoActual(it) },
+                  { todoListViewModel.setTodoDone(it) })
             }
           }
         }
