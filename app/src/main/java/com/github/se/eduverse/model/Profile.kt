@@ -9,11 +9,3 @@ data class Profile(
     val favoritePublications: List<Publication> = emptyList(),
     val profileImageUrl: String = ""
 )
-
-data class Publication(
-    val id: String = "",
-    val userId: String = "",
-    val title: String = "",
-    val thumbnailUrl: String = "",
-    val timestamp: Long = System.currentTimeMillis()
-)

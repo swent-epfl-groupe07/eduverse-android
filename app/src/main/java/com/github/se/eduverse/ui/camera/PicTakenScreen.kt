@@ -49,8 +49,10 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Photo
+import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -60,12 +62,19 @@ fun PicTakenScreen(
     photoFile: File?, // Fichier photo
     videoFile: File?, // Fichier vidéo
     navigationActions: NavigationActions,
-    viewModel: PhotoViewModel
+    photoViewModel: PhotoViewModel,
+    videoViewModel: VideoViewModel
 ) {
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
-  val path = "media/$ownerId/${System.currentTimeMillis()}.jpg"
+
+  // Utiliser le chemin approprié pour les photos et les vidéos
+  val mediaType = if (photoFile != null) "photos" else "videos"
+  val path =
+      "$mediaType/$ownerId/${System.currentTimeMillis()}.${
+        if (photoFile != null) "jpg" else "mp4"
+    }"
 
   val bitmap =
       photoFile?.let {
@@ -87,10 +96,23 @@ fun PicTakenScreen(
               modifier =
                   Modifier.fillMaxWidth()
                       .fillMaxHeight(0.9f)
-                      .align(Alignment.TopCenter)
-                      .clip(RoundedCornerShape(12.dp)) // Bords arrondis
+                      .clip(RoundedCornerShape(12.dp))
                       .background(Color.LightGray)
                       .testTag("capturedImage"))
+
+          // Icônes de crop et settings
+          Column(
+              modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 16.dp),
+              verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.vector),
+                    contentDescription = "Crop Photo",
+                    modifier = Modifier.size(30.dp).clickable {}.testTag("cropIcon"))
+                Image(
+                    painter = painterResource(id = R.drawable.settings),
+                    contentDescription = "Filters",
+                    modifier = Modifier.size(40.dp).clickable {}.testTag("settingsIcon"))
+              }
         } else if (videoFile != null) {
           // Utiliser ExoPlayer pour afficher la vidéo en boucle avec ContentScale.Crop
           val videoUri = Uri.fromFile(videoFile)
@@ -145,21 +167,7 @@ fun PicTakenScreen(
                       .testTag("googleLogoImage"))
         }
 
-        // Reste du contenu comme les icônes de crop et settings (inchangé)
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              Image(
-                  painter = painterResource(id = R.drawable.vector),
-                  contentDescription = "Crop Photo",
-                  modifier = Modifier.size(30.dp).clickable {}.testTag("cropIcon"))
-              Image(
-                  painter = painterResource(id = R.drawable.settings),
-                  contentDescription = "Filters",
-                  modifier = Modifier.size(40.dp).clickable {}.testTag("settingsIcon"))
-            }
-
-        // Boutons Save et Next (inchangé)
+        // Boutons Save et Next (mise à jour pour gérer les vidéos)
         Row(
             modifier =
                 Modifier.align(Alignment.BottomCenter)
@@ -171,7 +179,16 @@ fun PicTakenScreen(
                     bitmap?.let {
                       val byteArray = imageBitmapToByteArray(it)
                       val photo = Photo(ownerId, byteArray, path)
-                      viewModel.savePhoto(photo)
+                      photoViewModel.savePhoto(photo)
+                      navigationActions.goBack()
+                      navigationActions.goBack()
+                    }
+
+                    videoFile?.let {
+                      val videoByteArray =
+                          it.readBytes() // Convertir le fichier vidéo en byte array
+                      val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
+                      videoViewModel.saveVideo(video)
                       navigationActions.goBack()
                       navigationActions.goBack()
                     }
