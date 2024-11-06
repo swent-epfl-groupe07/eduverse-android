@@ -2,8 +2,6 @@ package com.github.se.eduverse.model
 
 import java.util.Calendar
 
-typealias WeeklyTable = List<List<List<Scheduled>>>
-
 val daysInWeek = 7
 val hoursInDay = 24
 
@@ -20,4 +18,11 @@ data class Scheduled(
 enum class ScheduledType {
     TASK,
     EVENT
+}
+
+
+typealias WeeklyTable = List<List<MutableList<Scheduled>>> // mutable list to have a setter
+
+fun emptyWeeklyTable(): WeeklyTable {
+    return List(daysInWeek) { List(hoursInDay) { emptyList<Scheduled>().toMutableList() } }
 }
