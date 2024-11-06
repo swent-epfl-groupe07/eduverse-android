@@ -308,7 +308,7 @@ class NextScreenTest {
   @Test
   fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
     val capturedPhoto = slot<Photo>()
-    every { photoViewModel.savePhoto(capture(capturedPhoto)) } returns Unit
+    every { photoViewModel.savePhoto(capture(capturedPhoto), any(), any()) } returns Unit
 
     // Action : cliquer sur le bouton de sauvegarde
     composeTestRule.onNodeWithTag("saveButton").performClick()
