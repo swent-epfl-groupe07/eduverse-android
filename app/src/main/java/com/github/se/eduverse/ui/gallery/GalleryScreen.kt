@@ -16,11 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.github.se.eduverse.model.Photo
-import com.github.se.eduverse.ui.camera.showBottomMenu
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.showBottomMenu
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 
@@ -156,4 +157,10 @@ fun downloadImage(imagePath: String) {
   // Cela pourrait impliquer d'utiliser une bibliothèque ou API pour manipuler des fichiers et
   // stocker des images localement
   Log.d("GalleryScreen", "Downloading image from: $imagePath")
+}
+
+@Composable
+@Preview
+fun PreviewDialog() {
+  ImageDialog(Photo("", byteArrayOf(0x01, 0x02)), {}, {}, {})
 }

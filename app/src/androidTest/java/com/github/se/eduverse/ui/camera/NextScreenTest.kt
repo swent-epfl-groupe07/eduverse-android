@@ -17,9 +17,9 @@ import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.github.se.eduverse.viewmodel.VideoViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -147,28 +147,13 @@ class NextScreenTest {
   }
 
   @Test
-  fun testAddLinkButtonIsClickable() {
-    composeTestRule.onNodeWithTag("addLinkButton").assertIsDisplayed().assertHasClickAction()
+  fun testAddToFolderButtonIsClickable() {
+    composeTestRule.onNodeWithTag("addToFolderButton").assertIsDisplayed().assertHasClickAction()
   }
 
   @Test
   fun testMoreOptionsButtonIsClickable() {
     composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().assertHasClickAction()
-  }
-
-  @Test
-  fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
-    val capturedPhoto = slot<Photo>()
-    every { photoViewModel.savePhoto(capture(capturedPhoto), null, any()) } returns Unit
-
-    // Action : cliquer sur le bouton de sauvegarde
-    composeTestRule.onNodeWithTag("saveButton").performClick()
-
-    // Vérifier que `savePhoto` a été appelé avec un `Photo` ayant l'`ownerId` correct
-    assertEquals("anonymous", capturedPhoto.captured.ownerId)
-
-    // Vérifier que le `path` commence bien par le bon préfixe, sans vérifier le timestamp exact
-    assertTrue(capturedPhoto.captured.path.startsWith("media/anonymous/"))
   }
 
   @Test
@@ -189,7 +174,7 @@ class NextScreenTest {
 
   @Test
   fun testAddLinkAndMoreOptionsButtons() {
-    composeTestRule.onNodeWithTag("addLinkButton").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("addToFolderButton").assertIsDisplayed().assertHasClickAction()
     composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().assertHasClickAction()
   }
 
@@ -233,7 +218,7 @@ class NextScreenTest {
 
     // Test sur le bouton "Add link"
     composeTestRule
-        .onNodeWithTag("addLinkButton")
+        .onNodeWithTag("addToFolderButton")
         .assertExists()
         .assertHasClickAction()
         .performClick()
@@ -294,8 +279,8 @@ class NextScreenTest {
       callback(listOf(folder1, folder2))
     }
 
-    composeTestRule.onNodeWithTag("addLinkButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("addLinkButton").performClick()
+    composeTestRule.onNodeWithTag("addToFolderButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("addToFolderButton").performClick()
 
     composeTestRule.waitForIdle()
 
@@ -319,11 +304,11 @@ class NextScreenTest {
     org.mockito.kotlin.verify(folderRepository).updateFolder(any(), any(), any())
     assertEquals(1, folder1.files.size)
   }
-    
+
   @Test
   fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
     val capturedPhoto = slot<Photo>()
-    every { pViewModel.savePhoto(capture(capturedPhoto)) } returns Unit
+    every { photoViewModel.savePhoto(capture(capturedPhoto)) } returns Unit
 
     // Action : cliquer sur le bouton de sauvegarde
     composeTestRule.onNodeWithTag("saveButton").performClick()

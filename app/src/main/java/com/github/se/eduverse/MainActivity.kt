@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -72,7 +73,7 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
-  
+
   private lateinit var videoViewModel: VideoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,10 +117,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(
-    cameraPermissionGranted: Boolean,
-    videoViewModel: VideoViewModel
-) {
+fun EduverseApp(cameraPermissionGranted: Boolean, videoViewModel: VideoViewModel) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -137,8 +135,8 @@ fun EduverseApp(
   val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
 
-  val PubRepo = PublicationRepository(firestore)
-  val PublicationViewModel = PublicationViewModel(PubRepo)
+  val pubRepo = PublicationRepository(firestore)
+  val publicationViewModel = PublicationViewModel(pubRepo)
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -167,7 +165,7 @@ fun EduverseApp(
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideoScreen(navigationActions, PublicationViewModel) }
+      composable(Screen.VIDEOS) { VideoScreen(navigationActions, publicationViewModel) }
     }
 
     navigation(

@@ -13,7 +13,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,7 +26,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -39,10 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -55,9 +49,9 @@ import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.showBottomMenu
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -72,7 +66,7 @@ fun NextScreen(
     videoFile: File?,
     navigationActions: NavigationActions,
     photoViewModel: PhotoViewModel,
-    folderViewModel: FolderViewModel
+    folderViewModel: FolderViewModel,
     videoViewModel: VideoViewModel // Ajout du VideoViewModel
 ) {
   val context = LocalContext.current
@@ -164,28 +158,16 @@ fun NextScreen(
         modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 320.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
-              text = " Add to folder",
-              iconRes = R.drawable.add,
-              bitmap = bitmap,
-              context = context,
-              videoFile = videoFile, // Ajout du fichier vidéo
-              testTag = "addLinkButton") {
+              text = " Add to folder", iconRes = R.drawable.add, testTag = "addToFolderButton") {
                 showBottomMenu(context, folderViewModel) { folder = it }
               }
           StyledButton(
               text = " More options",
               iconRes = R.drawable.more_horiz,
-              bitmap = bitmap,
-              context = context,
-              videoFile = videoFile,
-              testTag = "moreOptionsButton")
-          StyledButton(
-              text = " Share to",
-              iconRes = R.drawable.share,
-              bitmap = bitmap,
-              context = context,
-              videoFile = videoFile,
-              testTag = "shareToButton")
+              testTag = "moreOptionsButton") {}
+          StyledButton(text = " Share to", iconRes = R.drawable.share, testTag = "shareToButton") {
+            handleShare(bitmap, context, videoFile)
+          }
         }
 
     // Ajout de la fonctionnalité Save pour photo et vidéo
@@ -351,63 +333,13 @@ fun generateThumbnail(videoUrl: String): String {
 }
 
 @Composable
-fun StyledButton(
-    text: String,
-    iconRes: Int,
-    bitmap: ImageBitmap?,
-    context: Context,
-    videoFile: File?, // Ajout du fichier vidéo en paramètre
-    testTag: String,
-    selectFolder: () -> Unit = {}
-) {
+fun StyledButton(text: String, iconRes: Int, testTag: String, onClick: () -> Unit) {
   Row(
       modifier =
           Modifier.fillMaxWidth()
               .height(56.dp)
               .background(Color(0xFFEBF1F4))
-              .clickable {
-                if (text == " Share to") {
-                  if (bitmap != null) {
-                    // Partage d'une image
-                    val photoFile = File(context.cacheDir, "shared_image.jpg")
-                    val outputStream = FileOutputStream(photoFile)
-                    bitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                    outputStream.flush()
-                    outputStream.close()
-
-                    val uri =
-                        FileProvider.getUriForFile(
-                            context, "${context.packageName}.fileprovider", photoFile)
-
-                    val shareIntent =
-                        Intent().apply {
-                          action = Intent.ACTION_SEND
-                          putExtra(Intent.EXTRA_STREAM, uri)
-                          type = "image/jpeg"
-                          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-
-                    context.startActivity(Intent.createChooser(shareIntent, "Share image via"))
-                  } else if (videoFile != null) {
-                    // Partage d'une vidéo
-                    val videoUri =
-                        FileProvider.getUriForFile(
-                            context, "${context.packageName}.fileprovider", videoFile)
-
-                    val shareIntent =
-                        Intent().apply {
-                          action = Intent.ACTION_SEND
-                          putExtra(Intent.EXTRA_STREAM, videoUri)
-                          type = "video/mp4"
-                          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-
-                    context.startActivity(Intent.createChooser(shareIntent, "Share video via"))
-                  }
-                } else if (text == " Add to folder") {
-                  selectFolder()
-                }
-              }
+              .clickable { onClick() }
               .padding(horizontal = 16.dp)
               .testTag(testTag),
       verticalAlignment = Alignment.CenterVertically) {
@@ -427,62 +359,43 @@ fun StyledButton(
       }
 }
 
-fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (Folder) -> Unit) {
-  // Create the BottomSheetDialog
-  val bottomSheetDialog = BottomSheetDialog(context)
+fun handleShare(
+    bitmap: ImageBitmap?,
+    context: Context,
+    videoFile: File? // Ajout du fichier vidéo en paramètre
+) {
+  if (bitmap != null) {
+    // Partage d'une image
+    val photoFile = File(context.cacheDir, "shared_image.jpg")
+    val outputStream = FileOutputStream(photoFile)
+    bitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+    outputStream.flush()
+    outputStream.close()
 
-  // Define a list of Folder objects
-  folderViewModel.getUserFolders()
-  val folders = folderViewModel.folders.value
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
 
-  // Set the inflated view as the content of the BottomSheetDialog
-  bottomSheetDialog.setContentView(
-      ComposeView(context).apply {
-        setContent {
-          Column(modifier = Modifier.padding(16.dp).fillMaxWidth().testTag("button_container")) {
-            folders.forEach { folder ->
-              Card(
-                  modifier =
-                      Modifier.padding(8.dp)
-                          .fillMaxWidth()
-                          .clickable {
-                            select(folder)
-                            bottomSheetDialog.dismiss()
-                          }
-                          .testTag("folder_button${folder.id}"),
-                  elevation = 4.dp) {
-                    Text(
-                        text = folder.name,
-                        modifier = Modifier.padding(16.dp),
-                        style = androidx.compose.material.MaterialTheme.typography.h6)
-                  }
-            }
-          }
-        }
-      })
-
-  // Show the dialog
-  bottomSheetDialog.show()
-
-  // Dismiss the dialog on lifecycle changes
-  if (context is LifecycleOwner) {
-    @Suppress("DEPRECATION")
-    val lifecycleObserver =
-        object : LifecycleObserver {
-          @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-          fun onStop() {
-            if (bottomSheetDialog.isShowing) {
-              bottomSheetDialog.dismiss()
-            }
-          }
-
-          @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-          fun onDestroy() {
-            // Remove observer to prevent memory leaks
-            (context as LifecycleOwner).lifecycle.removeObserver(this)
-          }
+    val shareIntent =
+        Intent().apply {
+          action = Intent.ACTION_SEND
+          putExtra(Intent.EXTRA_STREAM, uri)
+          type = "image/jpeg"
+          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-    (context as LifecycleOwner).lifecycle.addObserver(lifecycleObserver)
+    context.startActivity(Intent.createChooser(shareIntent, "Share image via"))
+  } else if (videoFile != null) {
+    // Partage d'une vidéo
+    val videoUri =
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile)
+
+    val shareIntent =
+        Intent().apply {
+          action = Intent.ACTION_SEND
+          putExtra(Intent.EXTRA_STREAM, videoUri)
+          type = "video/mp4"
+          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+    context.startActivity(Intent.createChooser(shareIntent, "Share video via"))
   }
 }
