@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -61,7 +60,6 @@ import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
-import com.github.se.eduverse.viewmodel.VideoViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -74,8 +72,6 @@ class MainActivity : ComponentActivity() {
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
 
-  private lateinit var videoViewModel: VideoViewModel
-
   override fun onCreate(savedInstanceState: Bundle?) {
 
     super.onCreate(savedInstanceState)
@@ -87,10 +83,6 @@ class MainActivity : ComponentActivity() {
     }
 
     // Ajout du VideoRepository et du VideoViewModel
-    val videoRepository =
-        VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val videoViewModelFactory = VideoViewModelFactory(videoRepository)
-    videoViewModel = ViewModelProvider(this, videoViewModelFactory)[VideoViewModel::class.java]
 
     // Gestion des permissions de la caméra
     val requestPermissionLauncher =
@@ -107,9 +99,7 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          EduverseApp(cameraPermissionGranted, videoViewModel)
-        }
+        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
       }
     }
   }
@@ -117,7 +107,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean, videoViewModel: VideoViewModel) {
+fun EduverseApp(cameraPermissionGranted: Boolean) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -134,6 +124,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, videoViewModel: VideoViewModel
   val fileViewModel = FileViewModel(fileRepo)
   val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
+  val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val videoViewModel = VideoViewModel(videoRepo, fileRepo)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)

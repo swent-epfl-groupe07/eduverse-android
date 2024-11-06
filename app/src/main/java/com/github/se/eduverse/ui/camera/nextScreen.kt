@@ -159,7 +159,27 @@ fun NextScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
               text = " Add to folder", iconRes = R.drawable.add, testTag = "addToFolderButton") {
-                showBottomMenu(context, folderViewModel) { folder = it }
+                showBottomMenu(context, folderViewModel) {
+                  bitmap?.let { bmp ->
+                    val byteArray = imageBitmapToByteArray(bmp)
+                    val photo = Photo(ownerId, byteArray, path)
+                    photoViewModel.savePhoto(photo, it) { id, name, folder ->
+                      folderViewModel.createFileInFolder(id, name, folder)
+                    }
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                  }
+
+                  videoFile?.let { file ->
+                    val videoByteArray = file.readBytes()
+                    val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
+                    videoViewModel.saveVideo(video)
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                  }
+                }
               }
           StyledButton(
               text = " More options",
@@ -179,9 +199,7 @@ fun NextScreen(
                 bitmap?.let { bmp ->
                   val byteArray = imageBitmapToByteArray(bmp)
                   val photo = Photo(ownerId, byteArray, path)
-                  photoViewModel.savePhoto(photo, folder) { id, name, folder ->
-                    folderViewModel.createFileInFolder(id, name, folder)
-                  }
+                  photoViewModel.savePhoto(photo)
                   navigationActions.goBack()
                   navigationActions.goBack()
                   navigationActions.goBack()

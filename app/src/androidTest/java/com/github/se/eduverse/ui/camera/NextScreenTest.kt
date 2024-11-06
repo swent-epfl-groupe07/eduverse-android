@@ -289,9 +289,6 @@ class NextScreenTest {
     composeTestRule.onNodeWithTag("folder_button1").assertIsDisplayed()
     composeTestRule.onNodeWithTag("folder_button2").assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag("folder_button1").performClick()
-    composeTestRule.onNodeWithTag("button_container").assertIsNotDisplayed()
-
     var test = false
     val func = slot<(String, String, Folder) -> Unit>()
     every { photoViewModel.savePhoto(any(), folder1, capture(func)) } answers
@@ -299,10 +296,14 @@ class NextScreenTest {
           test = true
           func.captured("id", "name", folder1)
         }
-    composeTestRule.onNodeWithTag("saveButton").performClick()
+    composeTestRule.onNodeWithTag("folder_button1").performClick()
+
+    composeTestRule.onNodeWithTag("button_container").assertIsNotDisplayed()
+
     assert(test)
     org.mockito.kotlin.verify(folderRepository).updateFolder(any(), any(), any())
     assertEquals(1, folder1.files.size)
+    verify(exactly = 3) { navigationActions.goBack() }
   }
 
   @Test
