@@ -4,6 +4,7 @@ import java.util.Calendar
 
 val daysInWeek = 7
 val hoursInDay = 24
+val millisecInDay = 86400000 // The number of milliseconds in a day
 
 data class Scheduled(
     val id: String,
