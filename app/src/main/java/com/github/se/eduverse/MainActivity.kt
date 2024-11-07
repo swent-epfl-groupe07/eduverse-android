@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -46,11 +45,11 @@ import com.github.se.eduverse.ui.folder.CreateFileScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
 import com.github.se.eduverse.ui.folder.FolderScreen
 import com.github.se.eduverse.ui.folder.ListFoldersScreen
+import com.github.se.eduverse.ui.gallery.GalleryScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
-import com.github.se.eduverse.ui.screens.GalleryScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.todo.TodoListScreen
@@ -58,12 +57,10 @@ import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
-import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
-import com.github.se.eduverse.viewmodel.VideoViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -75,8 +72,6 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
-  private lateinit var photoViewModel: PhotoViewModel
-  private lateinit var videoViewModel: VideoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -88,17 +83,7 @@ class MainActivity : ComponentActivity() {
       auth.signOut()
     }
 
-    // Instanciez les repositories et les ViewModels
-    val photoRepository =
-        PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val photoViewModelFactory = PhotoViewModelFactory(photoRepository)
-    photoViewModel = ViewModelProvider(this, photoViewModelFactory)[PhotoViewModel::class.java]
-
     // Ajout du VideoRepository et du VideoViewModel
-    val videoRepository =
-        VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val videoViewModelFactory = VideoViewModelFactory(videoRepository)
-    videoViewModel = ViewModelProvider(this, videoViewModelFactory)[VideoViewModel::class.java]
 
     // Gestion des permissions de la caméra
     val requestPermissionLauncher =
@@ -115,9 +100,7 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          EduverseApp(cameraPermissionGranted, photoViewModel, videoViewModel)
-        }
+        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
       }
     }
   }
@@ -125,11 +108,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(
-    cameraPermissionGranted: Boolean,
-    photoViewModel: PhotoViewModel,
-    videoViewModel: VideoViewModel
-) {
+fun EduverseApp(cameraPermissionGranted: Boolean) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -144,9 +123,13 @@ fun EduverseApp(
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
+  val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
+  val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val videoViewModel = VideoViewModel(videoRepo, fileRepo)
 
-  val PubRepo = PublicationRepository(firestore)
-  val PublicationViewModel = PublicationViewModel(PubRepo)
+  val pubRepo = PublicationRepository(firestore)
+  val publicationViewModel = PublicationViewModel(pubRepo)
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -176,7 +159,7 @@ fun EduverseApp(
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideoScreen(navigationActions, PublicationViewModel) }
+      composable(Screen.VIDEOS) { VideoScreen(navigationActions, publicationViewModel) }
     }
 
     navigation(
@@ -211,7 +194,8 @@ fun EduverseApp(
 
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
+        GalleryScreen(
+            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }
@@ -283,6 +267,7 @@ fun EduverseApp(
               videoFile = videoFile,
               navigationActions = navigationActions,
               photoViewModel,
+              folderViewModel,
               videoViewModel)
         }
   }

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.performClick
 import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import io.mockk.mockk
@@ -17,6 +18,7 @@ import org.mockito.Mockito.*
 class NextScreenTest3 {
 
   private lateinit var pViewModel: PhotoViewModel
+  private lateinit var fViewModel: FolderViewModel
   private lateinit var vViewModel: VideoViewModel
   private lateinit var navigationActions: NavigationActions
   private lateinit var testFile: File
@@ -25,6 +27,7 @@ class NextScreenTest3 {
   @Before
   fun setUp() {
     pViewModel = mockk(relaxed = true)
+    fViewModel = mockk(relaxed = true)
     vViewModel = mockk(relaxed = true)
     navigationActions = mockk(relaxed = true)
 
@@ -49,6 +52,7 @@ class NextScreenTest3 {
           videoFile = testVideoFile, // Fichier vidéo valide
           navigationActions = navigationActions,
           pViewModel,
+          fViewModel,
           vViewModel)
     }
 
