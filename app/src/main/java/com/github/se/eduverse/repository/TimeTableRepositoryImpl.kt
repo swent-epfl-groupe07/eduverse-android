@@ -8,7 +8,7 @@ import java.util.Calendar
 
 open class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableRepository {
     val collectionPath = "scheduled"
-    override fun getNeuUid(): String {
+    override fun getNewUid(): String {
         return db.collection(collectionPath).document().id
     }
 

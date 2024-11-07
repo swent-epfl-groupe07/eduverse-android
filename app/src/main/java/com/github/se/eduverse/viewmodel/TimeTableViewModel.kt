@@ -39,7 +39,7 @@ class TimeTableViewModel(
      * Create a new document in the database and returns its id
      */
     fun getNewUid(): String {
-        return timeTableRepository.getNeuUid()
+        return timeTableRepository.getNewUid()
     }
 
     /**

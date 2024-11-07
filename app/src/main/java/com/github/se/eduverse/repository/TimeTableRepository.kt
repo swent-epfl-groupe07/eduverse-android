@@ -4,7 +4,7 @@ import com.github.se.eduverse.model.Scheduled
 import java.util.Calendar
 
 interface TimeTableRepository {
-    fun getNeuUid(): String
+    fun getNewUid(): String
 
     fun getScheduled(firstDay: Calendar, ownerId: String, onSuccess: (List<Scheduled>) -> Unit, onFailure: (Exception) -> Unit)
 
