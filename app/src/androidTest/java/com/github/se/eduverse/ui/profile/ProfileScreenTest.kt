@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -177,5 +178,19 @@ class ProfileScreenTest {
     }
 
     composeTestRule.onNodeWithTag("profile_username").assertTextContains("TestUser")
+  }
+
+  @Test
+  fun whenSettingsButtonClicked_navigatesToSettings() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("settings_button").assertExists()
+    composeTestRule.onNodeWithTag("settings_button").performClick()
+    assertTrue(fakeNavigationActions.lastNavigatedRoute == Screen.SETTING)
   }
 }
