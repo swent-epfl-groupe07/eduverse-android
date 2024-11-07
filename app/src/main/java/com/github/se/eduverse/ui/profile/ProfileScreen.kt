@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -78,6 +80,13 @@ fun ProfileScreen(
                   onClick = { navigationActions.goBack() },
                   modifier = Modifier.testTag("back_button")) {
                     Icon(Icons.Default.ArrowBack, "Back")
+                  }
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.SETTING) },
+                  modifier = Modifier.testTag("settings_button")) {
+                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
                   }
             })
       },
