@@ -142,13 +142,22 @@ class TimeTableViewModel(
         )
     }
 
-    fun getDateAtDay(day: Int): String {
+    /**
+     * Get a meaningful string representing a date
+     *
+     * @param day the day of the week, starting at the current one (0 = today, 1 = tomorrow, ...)
+     * @param calendar the time of the beginning of the week. Is there to make the tests
+     * time-consistent, do not use
+     * @return a 2-lines string with the day (Mon., Tue., ...) on the first one and the date
+     * (17, 18, ...) on the second
+     */
+    fun getDateAtDay(day: Int, calendar: Calendar = currentWeek): String {
         val week = Calendar.getInstance().apply {
-            timeInMillis = currentWeek.timeInMillis
+            timeInMillis = calendar.timeInMillis
             add(Calendar.DAY_OF_MONTH, day)
         }
         val dayLetter = SimpleDateFormat("E", Locale.getDefault()).format(week.time)
-        return "$dayLetter.\n${week.get(Calendar.DAY_OF_MONTH)}"
+        return "$dayLetter\n${week.get(Calendar.DAY_OF_MONTH)}"
     }
 
 
@@ -175,7 +184,7 @@ class TimeTableViewModel(
         val ret = MutableList(daysInWeek) { emptyList<Scheduled>() }
 
         val map = list.filter { isValidTime(it.start, it.length) }.groupBy {
-            (it.start.get(Calendar.DAY_OF_WEEK) - currentWeek.get(Calendar.DAY_OF_WEEK)) % daysInWeek
+            (it.start.get(Calendar.DAY_OF_WEEK) - currentWeek.get(Calendar.DAY_OF_WEEK) + daysInWeek) % daysInWeek
         }
 
         for ((key, value) in map) {

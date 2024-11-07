@@ -13,7 +13,7 @@ data class Scheduled(
     val length: Long,
     val taskOrEventId: String,
     val ownerId: String,
-    val name: String
+    var name: String
 )
 
 
