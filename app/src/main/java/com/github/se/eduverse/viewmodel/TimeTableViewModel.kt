@@ -6,21 +6,24 @@ import com.github.se.eduverse.model.WeeklyTable
 import com.github.se.eduverse.model.daysInWeek
 import com.github.se.eduverse.model.emptyWeeklyTable
 import com.github.se.eduverse.model.millisecInDay
-import com.github.se.eduverse.repository.EventRepository
 import com.github.se.eduverse.repository.TimeTableRepository
-import com.github.se.eduverse.repository.TodoRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class TimeTableViewModel(
     val timeTableRepository: TimeTableRepository,
-    val todoRepository: TodoRepository,
-    val eventRepository: EventRepository,
     val auth: FirebaseAuth
 ) {
-    private val currentWeek = Calendar.getInstance()
+    private val currentWeek = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
 
     // A 3-dimensional table with dimension corresponding to day, hour and events
     private val _table: MutableStateFlow<WeeklyTable> =
@@ -28,8 +31,19 @@ class TimeTableViewModel(
     val table: StateFlow<WeeklyTable> = _table
 
 
+    init {
+        getWeek()
+    }
+
     /**
-     * Access all scheduled events and tasks in the current week for rhe active user
+     * Create a new document in the database and returns its id
+     */
+    fun getNewUid(): String {
+        return timeTableRepository.getNeuUid()
+    }
+
+    /**
+     * Access all scheduled events and tasks in the current week for the active user
      */
     fun getWeek() {
         timeTableRepository.getScheduled(
@@ -75,7 +89,11 @@ class TimeTableViewModel(
                     val addedTime = scheduled.start.timeInMillis
                     for (i in 0..<daysInWeek) {
                         if (currentTime <= addedTime && addedTime < currentTime + millisecInDay) {
-                            _table.value[i][scheduled.start.get(Calendar.HOUR_OF_DAY)].add(scheduled)
+                            _table.value = _table.value.mapIndexed { index, innerList ->
+                                if (index == i) {
+                                    (innerList + scheduled).sortedBy { it.start.timeInMillis }
+                                } else innerList
+                            }
                         }
                         currentTime += millisecInDay
                     }
@@ -95,12 +113,10 @@ class TimeTableViewModel(
         timeTableRepository.updateScheduled(
             scheduled,
             {
-                for (day in _table.value) {
-                    for (hour in day) {
-                        hour.map {
-                            return@map if (it.id == scheduled.id) scheduled else it
-                        }
-                    }
+                _table.value = _table.value.map { innerList ->
+                    innerList.map {
+                        if (it.id == scheduled.id) scheduled else it
+                    }.sortedBy { it.start.timeInMillis }
                 }
             },
             { Log.e("TimeTableViewModel",
@@ -117,15 +133,22 @@ class TimeTableViewModel(
         timeTableRepository.deleteScheduled(
             scheduled,
             {
-                for (day in _table.value) {
-                    for (hour in day) {
-                        hour.removeIf { it.id == scheduled.id }
-                    }
+                _table.value = _table.value.map { innerList ->
+                    innerList - scheduled
                 }
             },
             { Log.e("TimeTableViewModel",
                 "Exception $it while trying to delete a scheduled event") }
         )
+    }
+
+    fun getDateAtDay(day: Int): String {
+        val week = Calendar.getInstance().apply {
+            timeInMillis = currentWeek.timeInMillis
+            add(Calendar.DAY_OF_MONTH, day)
+        }
+        val dayLetter = SimpleDateFormat("E", Locale.getDefault()).format(week.time)
+        return "$dayLetter.\n${week.get(Calendar.DAY_OF_MONTH)}"
     }
 
 
@@ -136,8 +159,10 @@ class TimeTableViewModel(
      * @param length the length of the event (in millisecond)
      */
     private fun isValidTime(time: Calendar, length: Long): Boolean {
+        val comp = Calendar.getInstance()
         return length <= millisecInDay &&
-        time.get(Calendar.DAY_OF_YEAR) == time.apply { timeInMillis += length }.get(Calendar.DAY_OF_YEAR)
+        time.get(Calendar.DAY_OF_YEAR) == comp.apply {
+            timeInMillis = time.timeInMillis + length }.get(Calendar.DAY_OF_YEAR)
     }
 
     /**
@@ -147,15 +172,16 @@ class TimeTableViewModel(
      * @return a WeeklyTable containing required elements
      */
     private fun buildWeekTable(list: List<Scheduled>): WeeklyTable {
-        val ret = emptyWeeklyTable()
+        val ret = MutableList(daysInWeek) { emptyList<Scheduled>() }
 
-        list.forEach {
-            if (isValidTime(it.start, it.length)) {
-                val day = (it.start.get(Calendar.DAY_OF_WEEK) - currentWeek.get(Calendar.DAY_OF_WEEK)) % daysInWeek
-                val hour = it.start.get(Calendar.HOUR_OF_DAY)
-                ret[day][hour].add(it)
-            } else Log.d("TimeTableViewModel", "A scheduled event occurring on more than one day was ignored")
+        val map = list.filter { isValidTime(it.start, it.length) }.groupBy {
+            (it.start.get(Calendar.DAY_OF_WEEK) - currentWeek.get(Calendar.DAY_OF_WEEK)) % daysInWeek
         }
+
+        for ((key, value) in map) {
+            ret[key] = value.sortedBy { it.start.timeInMillis }
+        }
+
         return ret
     }
 

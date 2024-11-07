@@ -3,8 +3,8 @@ package com.github.se.eduverse.model
 import java.util.Calendar
 
 val daysInWeek = 7
-val hoursInDay = 24
 val millisecInDay = 86400000 // The number of milliseconds in a day
+val millisecInHour = 3600000
 
 data class Scheduled(
     val id: String,
@@ -12,7 +12,8 @@ data class Scheduled(
     val start: Calendar,
     val length: Long,
     val taskOrEventId: String,
-    val ownerId: String
+    val ownerId: String,
+    val name: String
 )
 
 
@@ -22,8 +23,8 @@ enum class ScheduledType {
 }
 
 
-typealias WeeklyTable = List<List<MutableList<Scheduled>>> // mutable list to have a setter
+typealias WeeklyTable = List<List<Scheduled>>
 
 fun emptyWeeklyTable(): WeeklyTable {
-    return List(daysInWeek) { List(hoursInDay) { emptyList<Scheduled>().toMutableList() } }
+    return List(daysInWeek) { emptyList<Scheduled>().toMutableList() }
 }

@@ -6,8 +6,11 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
 
-class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableRepository {
+open class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableRepository {
     val collectionPath = "scheduled"
+    override fun getNeuUid(): String {
+        return db.collection(collectionPath).document().id
+    }
 
     override fun getScheduled(
         firstDay: Calendar,
@@ -41,7 +44,8 @@ class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableRepository {
                 "startTime" to scheduled.start.timeInMillis,
                 "endTime" to scheduled.start.timeInMillis + scheduled.length,
                 "taskOrEventId" to scheduled.taskOrEventId,
-                "ownerId" to scheduled.ownerId
+                "ownerId" to scheduled.ownerId,
+                "name" to scheduled.name
             )
 
         db.collection(collectionPath)
@@ -62,7 +66,8 @@ class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableRepository {
                 "startTime" to scheduled.start.timeInMillis,
                 "endTime" to scheduled.start.timeInMillis + scheduled.length,
                 "taskOrEventId" to scheduled.taskOrEventId,
-                "ownerId" to scheduled.ownerId
+                "ownerId" to scheduled.ownerId,
+                "name" to scheduled.name
             )
 
         db.collection(collectionPath)
@@ -92,7 +97,8 @@ class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableRepository {
             start = Calendar.getInstance().apply { timeInMillis = document.getLong("startTime")!! },
             length = document.getLong("endTime")!! - document.getLong("startTime")!!,
             taskOrEventId = document.getString("taskOrEventId")!!,
-            ownerId = document.getString("ownerId")!!
+            ownerId = document.getString("ownerId")!!,
+            name = document.getString("name")!!
         )
     }
 }
