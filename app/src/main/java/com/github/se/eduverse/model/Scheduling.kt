@@ -16,15 +16,13 @@ data class Scheduled(
     var name: String
 )
 
-
 enum class ScheduledType {
-    TASK,
-    EVENT
+  TASK,
+  EVENT
 }
-
 
 typealias WeeklyTable = List<List<Scheduled>>
 
 fun emptyWeeklyTable(): WeeklyTable {
-    return List(daysInWeek) { emptyList<Scheduled>().toMutableList() }
+  return List(daysInWeek) { emptyList<Scheduled>().toMutableList() }
 }
