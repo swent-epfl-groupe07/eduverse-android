@@ -28,7 +28,7 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore): TimeTableReposito
             .whereLessThan("endTime", lastDay.timeInMillis)
             .get()
             .addOnSuccessListener {
-                onSuccess(it.map { document -> convertScheduled(document) })
+                onSuccess(it.documents.map { document -> convertScheduled(document) })
             }
             .addOnFailureListener(onFailure)
     }
