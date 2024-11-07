@@ -45,6 +45,7 @@ object Screen {
   const val PDF_CONVERTER = "PdfConverter screen"
   const val PROFILE = "Profile screen"
   const val TODO_LIST = "TodoList screen"
+  const val TIME_TABLE = "TimeTable screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)

@@ -58,7 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.Todo
@@ -71,7 +70,6 @@ import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import kotlin.math.min
 
 private val blue = ButtonColors(Color(0xFF00A5FF), Color.Black, Color.LightGray, Color.Black)
 private val orange = ButtonColors(Color(0xFFFFA500), Color.Black, Color.LightGray, Color.Black)
@@ -81,11 +79,8 @@ private val orange = ButtonColors(Color(0xFFFFA500), Color.Black, Color.LightGra
 fun TimeTableScreen(
     timeTableViewModel: TimeTableViewModel,
     todoViewModel: TodoListViewModel,
-    // navigationActions: NavigationActions
+    navigationActions: NavigationActions
 ) {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-
   val context = LocalContext.current
 
   val weeklyTable by timeTableViewModel.table.collectAsState()
@@ -457,78 +452,3 @@ fun hourToString(hour: Int, minute: Int): String {
   val lM = if (minute < 10) "0$minute" else "$minute"
   return "${hour}h" + lM
 }
-
-/*
-class MyActivity : ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val repo = MyRepo()
-        val timeTableViewModel = TimeTableViewModel(repo)
-
-        val todoRepository = MyTodoRepo()
-        val todoViewModel = TodoListViewModel(todoRepository)
-
-        setContent {
-            TimeTableScreen(timeTableViewModel, todoViewModel)
-        }
-    }
-}
-
-
-class MyRepo(): TimeTableRepositoryImpl(FirebaseFirestore.getInstance()) {
-    override fun getNewUid(): String {
-        return "uid"
-    }
-
-    override fun getScheduled(
-        firstDay: Calendar,
-        ownerId: String,
-        onSuccess: (List<Scheduled>) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        onSuccess(listOf(
-            sched(
-                Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, -5) },
-                (3*millisecInHour).toLong()
-            ),
-            sched(
-                Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, -3) },
-                (2*millisecInHour).toLong(),
-                ScheduledType.TASK
-            ),
-            sched(
-                Calendar.getInstance(),//.apply { add(Calendar.HOUR_OF_DAY, -2) },
-                millisecInHour.toLong()
-            )
-        ))
-    }
-
-    override fun addScheduled(
-        scheduled: Scheduled,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        onSuccess()
-    }
-}
-
-fun sched(start: Calendar, length: Long, type: ScheduledType = ScheduledType.EVENT): Scheduled {
-    return Scheduled("id", type, start, length, "eid", "oid", "content")
-}
-
-
-class MyTodoRepo: TodoRepository(FirebaseFirestore.getInstance()) {
-    override fun getActualTodos(onSuccess: (List<Todo>) -> Unit, onFailure: (Exception) -> Unit) {
-        onSuccess(listOf(
-            task("todo #1"),
-            task("todo #2"),
-            task("todo #3")
-        ))
-    }
-}
-
-fun task(name: String): Todo {
-    return Todo("uid", name, 0, TodoStatus.ACTUAL)
-}*/
