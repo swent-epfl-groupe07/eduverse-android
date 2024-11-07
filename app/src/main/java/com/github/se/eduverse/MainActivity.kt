@@ -62,6 +62,7 @@ import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -144,6 +145,7 @@ fun EduverseApp(
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
+  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
 
   val PubRepo = PublicationRepository(firestore)
   val PublicationViewModel = PublicationViewModel(PubRepo)
@@ -169,7 +171,7 @@ fun EduverseApp(
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
-      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions) }
+      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
     }
 
     navigation(
