@@ -106,7 +106,10 @@ fun TodoItem(todo: Todo, onUndo: (Todo) -> Unit, onDone: (Todo) -> Unit) {
               }
           Text(
               todo.name,
-              modifier = Modifier.weight(1f).padding(start = 8.dp, end = 8.dp),
+              modifier =
+                  Modifier.weight(1f)
+                      .padding(start = 8.dp, end = 8.dp)
+                      .testTag("todoName_${todo.uid}"),
               textDecoration = if (completed) TextDecoration.LineThrough else TextDecoration.None,
               color = if (completed) Color.Gray else Color.Unspecified)
           IconButton(
