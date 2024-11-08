@@ -374,7 +374,7 @@ fun NextScreen(
   }
 }
 
-private fun generateVideoThumbnail(context: Context, videoFile: File): ByteArray? {
+fun generateVideoThumbnail(context: Context, videoFile: File): ByteArray? {
   return try {
     val retriever = MediaMetadataRetriever()
     retriever.setDataSource(context, Uri.fromFile(videoFile))
