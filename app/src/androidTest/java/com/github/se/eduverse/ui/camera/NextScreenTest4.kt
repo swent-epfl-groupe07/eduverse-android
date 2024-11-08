@@ -9,6 +9,7 @@ import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import io.mockk.mockk
 import java.io.File
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +35,12 @@ class NextScreenPostTests {
     // Create simple test files
     testPhotoFile = File.createTempFile("test_photo", ".jpg")
     testVideoFile = File.createTempFile("test_video", ".mp4")
+  }
+
+  @After
+  fun tearDown() {
+    testPhotoFile.delete()
+    testVideoFile.delete()
   }
 
   @Test
