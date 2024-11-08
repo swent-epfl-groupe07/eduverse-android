@@ -270,71 +270,94 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                             CalculatorButton(
                                 label = label,
                                 onClick = {
-                                  if (result == "Undefined") {
-                                    when (label) {
-                                      "=" -> {}
-                                      else -> {
-                                        display = label
-                                        result = ""
-                                      }
-                                    }
-                                  } else {
-                                    when (label) {
-                                      "=" -> {
-                                        result =
-                                            try {
-                                              evaluateExpression(display)
-                                            } catch (e: Exception) {
-                                              "Undefined"
-                                            }
-                                      }
-                                      "+",
-                                      "-",
-                                      "*",
-                                      "/",
-                                      "×",
-                                      "^" -> {
-                                        if (result.isNotEmpty()) {
-                                          display = result + label
+                                  if (!expressionContainsVariable(display)) {
+                                    if (result == "Undefined") {
+                                      when (label) {
+                                        "=" -> {}
+                                        else -> {
+                                          display = label
                                           result = ""
-                                        } else {
+                                        }
+                                      }
+                                    } else {
+                                      when (label) {
+                                        "=" -> {
+                                          result =
+                                              try {
+                                                evaluateExpression(display)
+                                              } catch (e: Exception) {
+                                                "Undefined"
+                                              }
+                                        }
+                                        "+",
+                                        "-",
+                                        "*",
+                                        "/",
+                                        "×",
+                                        "^" -> {
+                                          if (result.isNotEmpty()) {
+                                            display = result + label
+                                            result = ""
+                                          } else {
+                                            display += label
+                                          }
+                                        }
+                                        "√",
+                                        "exp",
+                                        "sin",
+                                        "cos",
+                                        "tan",
+                                        "cot",
+                                        "ln",
+                                        "arcsin",
+                                        "arccos",
+                                        "arctan",
+                                        "arccot",
+                                        "log",
+                                        "sinh",
+                                        "cosh",
+                                        "tanh",
+                                        "coth",
+                                        "rad",
+                                        "arsinh",
+                                        "arcosh",
+                                        "artanh",
+                                        "arcoth" -> {
+                                          if (result.isNotEmpty()) {
+                                            display = "$label($result)"
+                                            result = ""
+                                          } else {
+                                            display += "$label("
+                                          }
+                                        }
+                                        else -> {
+                                          if (result.isNotEmpty()) {
+                                            display = ""
+                                            result = ""
+                                          }
                                           display += label
                                         }
                                       }
-                                      "√",
-                                      "exp",
-                                      "sin",
-                                      "cos",
-                                      "tan",
-                                      "cot",
-                                      "ln",
-                                      "arcsin",
-                                      "arccos",
-                                      "arctan",
-                                      "arccot",
-                                      "log",
-                                      "sinh",
-                                      "cosh",
-                                      "tanh",
-                                      "coth",
-                                      "rad",
-                                      "arsinh",
-                                      "arcosh",
-                                      "artanh",
-                                      "arcoth" -> {
-                                        if (result.isNotEmpty()) {
-                                          display = "$label($result)"
-                                          result = ""
-                                        } else {
-                                          display += "$label("
-                                        }
+                                    }
+                                  } else {
+                                    if (expressionContainsEqual(display)) {
+
+                                      display += label
+                                      try {
+                                        result = evaluateEquation(display)
+                                      } catch (e: Exception) {
+                                        "Undefined"
                                       }
-                                      else -> {
-                                        if (result.isNotEmpty()) {
-                                          display = ""
-                                          result = ""
-                                        }
+                                    } else {
+                                      result = ""
+                                      try {
                                         display += label
+                                        /**
+                                         * Implemente moi ici une colonne rectanglaire clickable a
+                                         * droite de la bande rouge ou verte qui mene au graph
+                                         */
+                                      } catch (e: Exception) {
+                                        "Undefined"
                                       }
                                     }
                                   }
@@ -397,4 +420,17 @@ fun CalculatorButton(label: String, onClick: () -> Unit, testTag: String, select
 fun evaluateExpression(expression: String): String {
   val evaluator = Evaluator()
   return evaluator.evaluate(expression)
+}
+
+fun evaluateEquation(expression: String): String {
+  val equation = Equation()
+  return equation.solveEquation(expression)
+}
+
+fun expressionContainsVariable(expression: String): Boolean {
+  return expression.any { it.isLetter() }
+}
+
+fun expressionContainsEqual(expression: String): Boolean {
+  return expression.contains("=")
 }
