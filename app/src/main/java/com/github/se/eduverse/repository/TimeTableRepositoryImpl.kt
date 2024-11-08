@@ -92,7 +92,8 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
   private fun convertScheduled(document: DocumentSnapshot): Scheduled {
     return Scheduled(
         id = document.id,
-        type = if (document.get("type")!! == "TASK") ScheduledType.TASK else ScheduledType.EVENT,
+        type =
+            if (document.getString("type")!! == "TASK") ScheduledType.TASK else ScheduledType.EVENT,
         start = Calendar.getInstance().apply { timeInMillis = document.getLong("startTime")!! },
         length = document.getLong("endTime")!! - document.getLong("startTime")!!,
         taskOrEventId = document.getString("taskOrEventId")!!,

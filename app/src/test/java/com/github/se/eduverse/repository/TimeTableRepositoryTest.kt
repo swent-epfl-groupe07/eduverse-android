@@ -62,7 +62,7 @@ class TimeTableRepositoryTest {
         .thenReturn(mockCollectionReference)
 
     `when`(documentSnapshot.id).thenReturn("id")
-    `when`(documentSnapshot.get(eq("type"))).thenReturn(ScheduledType.TASK)
+    `when`(documentSnapshot.getString(eq("type"))).thenReturn("TASK")
     `when`(documentSnapshot.getLong(eq("startTime"))).thenReturn(12)
     `when`(documentSnapshot.getLong(eq("endTime"))).thenReturn(19)
     `when`(documentSnapshot.getString(eq("taskOrEventId"))).thenReturn("taskId")
