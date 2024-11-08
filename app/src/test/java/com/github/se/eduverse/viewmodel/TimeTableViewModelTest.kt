@@ -69,6 +69,7 @@ class TimeTableViewModelTest {
     }
 
     timeTableViewModel = TimeTableViewModel(timeTableRepository, firebaseAuth)
+    timeTableViewModel.getWeek()
 
     // 3 because scheduled1 and scheduled2 are tuesday, represented by 3
     weekWithScheduled[
@@ -128,6 +129,8 @@ class TimeTableViewModelTest {
       callback()
     }
 
+    timeTableViewModel.getWeek()
+    scheduled2.start.apply { timeInMillis = Calendar.getInstance().timeInMillis }
     timeTableViewModel.addScheduled(scheduled2)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
   }
@@ -139,7 +142,7 @@ class TimeTableViewModelTest {
       callback()
     }
 
-    timeTableViewModel.addScheduled(scheduled2.apply { name = "newName" })
+    timeTableViewModel.updateScheduled(scheduled2.apply { name = "newName" })
     assertEquals("newName", scheduled2.name)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
   }

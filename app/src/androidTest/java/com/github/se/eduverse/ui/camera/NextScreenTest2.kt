@@ -10,6 +10,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import io.mockk.mockk
@@ -23,7 +24,8 @@ class NextScreenTest2 {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var navigationActions: NavigationActions
-  private lateinit var pViewModel: PhotoViewModel
+  private lateinit var photoViewModel: PhotoViewModel
+  private lateinit var folderViewModel: FolderViewModel
   private lateinit var vViewModel: VideoViewModel
   private lateinit var context: Context
   private var currentPhotoFile: File? = null
@@ -34,7 +36,8 @@ class NextScreenTest2 {
   @Before
   fun setUp() {
     navigationActions = mockk(relaxed = true)
-    pViewModel = mockk(relaxed = true)
+    photoViewModel = mockk(relaxed = true)
+    folderViewModel = mockk(relaxed = true)
     vViewModel = mockk(relaxed = true) // Ensure vViewModel is initialized
     context = ApplicationProvider.getApplicationContext()
 
@@ -60,7 +63,8 @@ class NextScreenTest2 {
           photoFile = currentPhotoFile,
           videoFile = currentVideoFile,
           navigationActions = navigationActions,
-          pViewModel,
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel,
           vViewModel)
     }
 
@@ -82,7 +86,8 @@ class NextScreenTest2 {
           photoFile = currentPhotoFile,
           videoFile = testVideoFile,
           navigationActions = navigationActions,
-          pViewModel,
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel,
           vViewModel)
     }
 
