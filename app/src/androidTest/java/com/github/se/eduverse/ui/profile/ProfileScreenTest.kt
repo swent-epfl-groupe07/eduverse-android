@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -192,5 +193,188 @@ class ProfileScreenTest {
     composeTestRule.onNodeWithTag("settings_button").assertExists()
     composeTestRule.onNodeWithTag("settings_button").performClick()
     assertTrue(fakeNavigationActions.lastNavigatedRoute == Screen.SETTING)
+  }
+
+  @Test
+  fun whenVideoPublication_showsPlayIcon() {
+    val videoPublication = Publication(
+      id = "video1",
+      title = "Test Video",
+      mediaType = MediaType.VIDEO,
+      thumbnailUrl = "https://example.com/thumb.jpg",
+      mediaUrl = "https://example.com/video.mp4"
+    )
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(videoPublication)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("video_play_icon_video1", useUnmergedTree = true).assertExists()
+  }
+
+  @Test
+  fun whenPhotoPublication_doesNotShowPlayIcon() {
+    val photoPublication = Publication(
+      id = "photo1",
+      title = "Test Photo",
+      mediaType = MediaType.PHOTO,
+      thumbnailUrl = "https://example.com/thumb.jpg",
+      mediaUrl = "https://example.com/photo.jpg"
+    )
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(photoPublication)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("publication_item_photo1")
+      .assertExists()
+      .onChildren()
+      .filterToOne(hasContentDescription("Video"))
+      .assertDoesNotExist()
+  }
+
+  @Test
+  fun whenPublicationClicked_showsDetailDialog() {
+    val publication = Publication(
+      id = "pub1",
+      title = "Test Publication",
+      mediaType = MediaType.PHOTO,
+      thumbnailUrl = "https://example.com/thumb.jpg",
+      mediaUrl = "https://example.com/photo.jpg"
+    )
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(publication)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("publication_item_pub1").performClick()
+    composeTestRule.onNodeWithText("Test Publication").assertExists()
+  }
+
+  @Test
+  fun whenDetailDialogDisplayed_hasCloseButton() {
+    val publication = Publication(
+      id = "pub1",
+      title = "Test Publication",
+      mediaType = MediaType.PHOTO
+    )
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(publication)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("publication_item_pub1").performClick()
+    composeTestRule.onNodeWithContentDescription("Close").assertExists()
+  }
+
+  @Test
+  fun whenPublicationHasNoThumbnail_showsFallback() {
+    val publication = Publication(
+      id = "pub1",
+      title = "Test Publication",
+      mediaType = MediaType.PHOTO,
+      thumbnailUrl = ""
+    )
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(publication)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("publication_thumbnail_pub1", useUnmergedTree = true).assertExists()
+  }
+
+  @Test
+  fun whenSwitchingTabs_maintainsCorrectPublications() {
+    val publication = Publication(id = "pub1", title = "Regular Publication")
+    val favorite = Publication(id = "fav1", title = "Favorite Publication")
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(publication),
+      favoritePublications = listOf(favorite)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    // Check regular publications
+    composeTestRule.onNodeWithTag("publication_item_pub1").assertExists()
+    composeTestRule.onNodeWithTag("publication_item_fav1").assertDoesNotExist()
+
+    // Switch to favorites
+    composeTestRule.onNodeWithTag("favorites_tab").performClick()
+    composeTestRule.onNodeWithTag("publication_item_pub1").assertDoesNotExist()
+    composeTestRule.onNodeWithTag("publication_item_fav1").assertExists()
+  }
+
+  @Test
+  fun whenDetailDialogDisplayed_showsCorrectMediaType() {
+    val videoPublication = Publication(
+      id = "video1",
+      title = "Test Video",
+      mediaType = MediaType.VIDEO,
+      mediaUrl = "https://example.com/video.mp4"
+    )
+    val photoPublication = Publication(
+      id = "photo1",
+      title = "Test Photo",
+      mediaType = MediaType.PHOTO,
+      mediaUrl = "https://example.com/photo.jpg"
+    )
+    val testProfile = Profile(
+      id = "test",
+      username = "TestUser",
+      publications = listOf(videoPublication, photoPublication)
+    )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    // Test video publication
+    composeTestRule.onNodeWithTag("publication_item_video1").performClick()
+    // Should find ExoPlayer for video
+    composeTestRule.onAllNodesWithTag("exo_player_view").assertCountEquals(1)
+
+    // Dismiss dialog
+    composeTestRule.onNodeWithContentDescription("Close").performClick()
+
+    // Test photo publication
+    composeTestRule.onNodeWithTag("publication_item_photo1").performClick()
+    // Should find AsyncImage for photo
+    composeTestRule.onAllNodesWithTag("detail_photo_view").assertCountEquals(1)
   }
 }
