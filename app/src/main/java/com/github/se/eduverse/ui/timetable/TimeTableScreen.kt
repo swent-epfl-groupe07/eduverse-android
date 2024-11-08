@@ -87,6 +87,7 @@ fun TimeTableScreen(
   val context = LocalContext.current
 
   val weeklyTable by timeTableViewModel.table.collectAsState()
+  val currentWeek by timeTableViewModel.currentWeek.collectAsState()
   var showDialog by remember { mutableStateOf(false) }
   var newElementType by remember { mutableStateOf(ScheduledType.EVENT) }
 
@@ -167,9 +168,9 @@ fun TimeTableScreen(
             items(1) {
               Row(modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp).testTag("days")) {
                 Spacer(modifier = Modifier.fillMaxWidth(0.12f).padding(top = 25.dp))
-                for (c in 0..6) {
+                for (c in weeklyTable.indices) {
                   Text(
-                      text = timeTableViewModel.getDateAtDay(c),
+                      text = timeTableViewModel.getDateAtDay(c, currentWeek),
                       modifier = Modifier.fillMaxWidth((1.0 / (7 - c)).toFloat()),
                       textAlign = TextAlign.Center)
                 }
