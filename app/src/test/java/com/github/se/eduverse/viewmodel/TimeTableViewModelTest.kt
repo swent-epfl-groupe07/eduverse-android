@@ -26,7 +26,9 @@ class TimeTableViewModelTest {
       Scheduled(
           "id1",
           ScheduledType.TASK,
-          Calendar.getInstance().apply { timeInMillis = 12 },
+          Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_WEEK, (Calendar.THURSDAY - get(Calendar.DAY_OF_WEEK) + 7) % 7)
+          },
           7,
           "taskId",
           "ownerId",
@@ -35,7 +37,9 @@ class TimeTableViewModelTest {
       Scheduled(
           "id2",
           ScheduledType.EVENT,
-          Calendar.getInstance().apply { timeInMillis = 12 },
+          Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_WEEK, (Calendar.THURSDAY - get(Calendar.DAY_OF_WEEK) + 7) % 7)
+          },
           11,
           "eventId",
           "ownerId",
@@ -44,7 +48,9 @@ class TimeTableViewModelTest {
       Scheduled(
           "id3",
           ScheduledType.EVENT,
-          Calendar.getInstance().apply { timeInMillis = 12 },
+          Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_WEEK, (Calendar.THURSDAY - get(Calendar.DAY_OF_WEEK) + 7) % 7)
+          },
           9,
           "eventId",
           "ownerId",
@@ -130,8 +136,8 @@ class TimeTableViewModelTest {
     }
 
     timeTableViewModel.getWeek()
-    scheduled2.start.apply { timeInMillis = Calendar.getInstance().timeInMillis }
     timeTableViewModel.addScheduled(scheduled2)
+    val t = timeTableViewModel.table.value
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
   }
 

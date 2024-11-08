@@ -15,13 +15,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth: FirebaseAuth) {
-  private val currentWeek =
-      Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-      }
+  private val _currentWeek =
+      MutableStateFlow(
+          Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+          })
+  val currentWeek: StateFlow<Calendar> = _currentWeek
 
   // A 3-dimensional table with dimension corresponding to day, hour and events
   private val _table: MutableStateFlow<WeeklyTable> = MutableStateFlow(emptyWeeklyTable())
@@ -35,7 +37,7 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
   /** Access all scheduled events and tasks in the current week for the active user */
   fun getWeek() {
     timeTableRepository.getScheduled(
-        currentWeek,
+        _currentWeek.value,
         auth.currentUser!!.uid,
         { _table.value = buildWeekTable(it) },
         { Log.e("TimeTableViewModel", "Exception $it while trying to load data for the week") })
@@ -45,7 +47,11 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
    * Change the active week to the next one, and access the scheduled events and tasks in that week
    */
   fun getNextWeek() {
-    currentWeek.add(Calendar.WEEK_OF_YEAR, 1)
+    _currentWeek.value =
+        Calendar.getInstance().apply {
+          timeInMillis = _currentWeek.value.timeInMillis
+          add(Calendar.WEEK_OF_YEAR, 1)
+        }
     getWeek()
   }
 
@@ -54,7 +60,11 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
    * week
    */
   fun getPreviousWeek() {
-    currentWeek.add(Calendar.WEEK_OF_YEAR, -1)
+    _currentWeek.value =
+        Calendar.getInstance().apply {
+          timeInMillis = _currentWeek.value.timeInMillis
+          add(Calendar.WEEK_OF_YEAR, -1)
+        }
     getWeek()
   }
 
@@ -68,7 +78,7 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
         scheduled,
         {
           if (isValidTime(scheduled.start, scheduled.length)) {
-            var currentTime = currentWeek.timeInMillis
+            var currentTime = _currentWeek.value.timeInMillis
             val addedTime = scheduled.start.timeInMillis
             for (i in 0 ..< daysInWeek) {
               if (currentTime <= addedTime && addedTime < currentTime + millisecInDay) {
@@ -121,12 +131,11 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
    * Get a meaningful string representing a date
    *
    * @param day the day of the week, starting at the current one (0 = today, 1 = tomorrow, ...)
-   * @param calendar the time of the beginning of the week. Is there to make the tests
-   *   time-consistent, do not use
+   * @param calendar the time of the beginning of the week
    * @return a 2-lines string with the day (Mon., Tue., ...) on the first one and the date (17, 18,
    *   ...) on the second
    */
-  fun getDateAtDay(day: Int, calendar: Calendar = currentWeek): String {
+  fun getDateAtDay(day: Int, calendar: Calendar): String {
     val week =
         Calendar.getInstance().apply {
           timeInMillis = calendar.timeInMillis
@@ -162,7 +171,7 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
         list
             .filter { isValidTime(it.start, it.length) }
             .groupBy {
-              (it.start.get(Calendar.DAY_OF_WEEK) - currentWeek.get(Calendar.DAY_OF_WEEK) +
+              (it.start.get(Calendar.DAY_OF_WEEK) - _currentWeek.value.get(Calendar.DAY_OF_WEEK) +
                   daysInWeek) % daysInWeek
             }
 
