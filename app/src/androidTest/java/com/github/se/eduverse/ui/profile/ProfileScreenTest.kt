@@ -197,18 +197,15 @@ class ProfileScreenTest {
 
   @Test
   fun whenVideoPublication_showsPlayIcon() {
-    val videoPublication = Publication(
-      id = "video1",
-      title = "Test Video",
-      mediaType = MediaType.VIDEO,
-      thumbnailUrl = "https://example.com/thumb.jpg",
-      mediaUrl = "https://example.com/video.mp4"
-    )
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(videoPublication)
-    )
+    val videoPublication =
+        Publication(
+            id = "video1",
+            title = "Test Video",
+            mediaType = MediaType.VIDEO,
+            thumbnailUrl = "https://example.com/thumb.jpg",
+            mediaUrl = "https://example.com/video.mp4")
+    val testProfile =
+        Profile(id = "test", username = "TestUser", publications = listOf(videoPublication))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {
@@ -220,45 +217,40 @@ class ProfileScreenTest {
 
   @Test
   fun whenPhotoPublication_doesNotShowPlayIcon() {
-    val photoPublication = Publication(
-      id = "photo1",
-      title = "Test Photo",
-      mediaType = MediaType.PHOTO,
-      thumbnailUrl = "https://example.com/thumb.jpg",
-      mediaUrl = "https://example.com/photo.jpg"
-    )
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(photoPublication)
-    )
+    val photoPublication =
+        Publication(
+            id = "photo1",
+            title = "Test Photo",
+            mediaType = MediaType.PHOTO,
+            thumbnailUrl = "https://example.com/thumb.jpg",
+            mediaUrl = "https://example.com/photo.jpg")
+    val testProfile =
+        Profile(id = "test", username = "TestUser", publications = listOf(photoPublication))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {
       ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    composeTestRule.onNodeWithTag("publication_item_photo1")
-      .assertExists()
-      .onChildren()
-      .filterToOne(hasContentDescription("Video"))
-      .assertDoesNotExist()
+    composeTestRule
+        .onNodeWithTag("publication_item_photo1")
+        .assertExists()
+        .onChildren()
+        .filterToOne(hasContentDescription("Video"))
+        .assertDoesNotExist()
   }
 
   @Test
   fun whenPublicationClicked_showsDetailDialog() {
-    val publication = Publication(
-      id = "pub1",
-      title = "Test Publication",
-      mediaType = MediaType.PHOTO,
-      thumbnailUrl = "https://example.com/thumb.jpg",
-      mediaUrl = "https://example.com/photo.jpg"
-    )
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(publication)
-    )
+    val publication =
+        Publication(
+            id = "pub1",
+            title = "Test Publication",
+            mediaType = MediaType.PHOTO,
+            thumbnailUrl = "https://example.com/thumb.jpg",
+            mediaUrl = "https://example.com/photo.jpg")
+    val testProfile =
+        Profile(id = "test", username = "TestUser", publications = listOf(publication))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {
@@ -271,16 +263,10 @@ class ProfileScreenTest {
 
   @Test
   fun whenDetailDialogDisplayed_hasCloseButton() {
-    val publication = Publication(
-      id = "pub1",
-      title = "Test Publication",
-      mediaType = MediaType.PHOTO
-    )
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(publication)
-    )
+    val publication =
+        Publication(id = "pub1", title = "Test Publication", mediaType = MediaType.PHOTO)
+    val testProfile =
+        Profile(id = "test", username = "TestUser", publications = listOf(publication))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {
@@ -293,36 +279,32 @@ class ProfileScreenTest {
 
   @Test
   fun whenPublicationHasNoThumbnail_showsFallback() {
-    val publication = Publication(
-      id = "pub1",
-      title = "Test Publication",
-      mediaType = MediaType.PHOTO,
-      thumbnailUrl = ""
-    )
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(publication)
-    )
+    val publication =
+        Publication(
+            id = "pub1", title = "Test Publication", mediaType = MediaType.PHOTO, thumbnailUrl = "")
+    val testProfile =
+        Profile(id = "test", username = "TestUser", publications = listOf(publication))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {
       ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    composeTestRule.onNodeWithTag("publication_thumbnail_pub1", useUnmergedTree = true).assertExists()
+    composeTestRule
+        .onNodeWithTag("publication_thumbnail_pub1", useUnmergedTree = true)
+        .assertExists()
   }
 
   @Test
   fun whenSwitchingTabs_maintainsCorrectPublications() {
     val publication = Publication(id = "pub1", title = "Regular Publication")
     val favorite = Publication(id = "fav1", title = "Favorite Publication")
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(publication),
-      favoritePublications = listOf(favorite)
-    )
+    val testProfile =
+        Profile(
+            id = "test",
+            username = "TestUser",
+            publications = listOf(publication),
+            favoritePublications = listOf(favorite))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {
@@ -341,23 +323,23 @@ class ProfileScreenTest {
 
   @Test
   fun whenDetailDialogDisplayed_showsCorrectMediaType() {
-    val videoPublication = Publication(
-      id = "video1",
-      title = "Test Video",
-      mediaType = MediaType.VIDEO,
-      mediaUrl = "https://example.com/video.mp4"
-    )
-    val photoPublication = Publication(
-      id = "photo1",
-      title = "Test Photo",
-      mediaType = MediaType.PHOTO,
-      mediaUrl = "https://example.com/photo.jpg"
-    )
-    val testProfile = Profile(
-      id = "test",
-      username = "TestUser",
-      publications = listOf(videoPublication, photoPublication)
-    )
+    val videoPublication =
+        Publication(
+            id = "video1",
+            title = "Test Video",
+            mediaType = MediaType.VIDEO,
+            mediaUrl = "https://example.com/video.mp4")
+    val photoPublication =
+        Publication(
+            id = "photo1",
+            title = "Test Photo",
+            mediaType = MediaType.PHOTO,
+            mediaUrl = "https://example.com/photo.jpg")
+    val testProfile =
+        Profile(
+            id = "test",
+            username = "TestUser",
+            publications = listOf(videoPublication, photoPublication))
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {

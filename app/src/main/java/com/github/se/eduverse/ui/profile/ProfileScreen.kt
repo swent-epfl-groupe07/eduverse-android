@@ -30,7 +30,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -202,131 +201,94 @@ private fun PublicationItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .testTag("publication_content_${publication.id}")
-                .fillMaxSize()
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(publication.thumbnailUrl)
-                    .crossfade(true)
-                    .listener(
-                        onError = { _, _ ->
+  Card(
+      modifier = modifier.aspectRatio(1f).clickable(onClick = onClick),
+      shape = RoundedCornerShape(8.dp)) {
+        Box(modifier = Modifier.testTag("publication_content_${publication.id}").fillMaxSize()) {
+          AsyncImage(
+              model =
+                  ImageRequest.Builder(LocalContext.current)
+                      .data(publication.thumbnailUrl)
+                      .crossfade(true)
+                      .listener(
+                          onError = { _, _ ->
                             println("Failed to load thumbnail for ${publication.id}")
-                        },
-                        onSuccess = { _, _ ->
+                          },
+                          onSuccess = { _, _ ->
                             println("Successfully loaded thumbnail for ${publication.id}")
-                        }
-                    )
-                    .build(),
-                contentDescription = "Publication thumbnail",
-                modifier = Modifier
-                    .testTag("publication_thumbnail_${publication.id}")
-                    .fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                error = painterResource(R.drawable.eduverse_logo_alone),
-                fallback = painterResource(R.drawable.eduverse_logo_alone),
-            )
+                          })
+                      .build(),
+              contentDescription = "Publication thumbnail",
+              modifier = Modifier.testTag("publication_thumbnail_${publication.id}").fillMaxSize(),
+              contentScale = ContentScale.Crop,
+              error = painterResource(R.drawable.eduverse_logo_alone),
+              fallback = painterResource(R.drawable.eduverse_logo_alone),
+          )
 
-            // Video indicator overlay
-            if (publication.mediaType == MediaType.VIDEO) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
-                )
+          // Video indicator overlay
+          if (publication.mediaType == MediaType.VIDEO) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
 
-                Icon(
-                    imageVector = Icons.Default.PlayCircle,
-                    contentDescription = "Video",
-                    modifier = Modifier
-                        .size(48.dp)
+            Icon(
+                imageVector = Icons.Default.PlayCircle,
+                contentDescription = "Video",
+                modifier =
+                    Modifier.size(48.dp)
                         .align(Alignment.Center)
                         .testTag("video_play_icon_${publication.id}"), // Add this testTag
-                    tint = Color.White
-                )
-            }
+                tint = Color.White)
+          }
         }
-    }
+      }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PublicationDetailDialog(
-    publication: Publication,
-    onDismiss: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Black
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Top
-            ) {
-                SmallTopAppBar(
-                    title = { Text(publication.title, color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = onDismiss) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Black,
-                        titleContentColor = Color.White
-                    )
-                )
+private fun PublicationDetailDialog(publication: Publication, onDismiss: () -> Unit) {
+  Dialog(
+      onDismissRequest = onDismiss,
+      properties =
+          DialogProperties(
+              usePlatformDefaultWidth = false,
+              dismissOnBackPress = true,
+              dismissOnClickOutside = false)) {
+        Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+          Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+            SmallTopAppBar(
+                title = { Text(publication.title, color = Color.White) },
+                navigationIcon = {
+                  IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                  }
+                },
+                colors =
+                    TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = Color.Black, titleContentColor = Color.White))
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when (publication.mediaType) {
-                        MediaType.VIDEO -> {
-                            ExoVideoPlayer(
-                                videoUrl = publication.mediaUrl,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        MediaType.PHOTO -> {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(publication.mediaUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = "Publication media",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .testTag("detail_photo_view"),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center) {
+                  when (publication.mediaType) {
+                    MediaType.VIDEO -> {
+                      ExoVideoPlayer(
+                          videoUrl = publication.mediaUrl, modifier = Modifier.fillMaxWidth())
                     }
+                    MediaType.PHOTO -> {
+                      AsyncImage(
+                          model =
+                              ImageRequest.Builder(LocalContext.current)
+                                  .data(publication.mediaUrl)
+                                  .crossfade(true)
+                                  .build(),
+                          contentDescription = "Publication media",
+                          modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                          contentScale = ContentScale.Fit)
+                    }
+                  }
                 }
-            }
+          }
         }
-    }
+      }
 }
 
 @Composable
@@ -335,58 +297,43 @@ private fun PublicationsGrid(
     onPublicationClick: (Publication) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedPublication by remember { mutableStateOf<Publication?>(null) }
+  var selectedPublication by remember { mutableStateOf<Publication?>(null) }
 
-    if (publications.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .testTag("empty_publications_container")
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No publications yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("empty_publications_text")
-            )
+  if (publications.isEmpty()) {
+    Box(
+        modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
+        contentAlignment = Alignment.Center) {
+          Text(
+              text = "No publications yet",
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              modifier = Modifier.testTag("empty_publications_text"))
         }
-    } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(1.dp),
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-            items(publications) { publication ->
-                PublicationItem(
-                    publication = publication,
-                    onClick = { selectedPublication = publication },
-                    modifier = Modifier.testTag("publication_item_${publication.id}")
-                )
-            }
-        }
-
-        // Show detail dialog when a publication is selected
-        selectedPublication?.let { publication ->
-            PublicationDetailDialog(
+  } else {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(1.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)) {
+          items(publications) { publication ->
+            PublicationItem(
                 publication = publication,
-                onDismiss = { selectedPublication = null }
-            )
+                onClick = { selectedPublication = publication },
+                modifier = Modifier.testTag("publication_item_${publication.id}"))
+          }
         }
+
+    // Show detail dialog when a publication is selected
+    selectedPublication?.let { publication ->
+      PublicationDetailDialog(publication = publication, onDismiss = { selectedPublication = null })
     }
+  }
 }
 
 @Composable
-private fun VideoPlayer(
-    videoUrl: String,
-    modifier: Modifier = Modifier
-) {
-    ExoVideoPlayer(
-        videoUrl = videoUrl,
-        modifier = modifier
-    )
+private fun VideoPlayer(videoUrl: String, modifier: Modifier = Modifier) {
+  ExoVideoPlayer(videoUrl = videoUrl, modifier = modifier)
 }
 
 @Composable

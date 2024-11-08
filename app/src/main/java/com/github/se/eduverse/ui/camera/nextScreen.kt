@@ -275,70 +275,73 @@ fun NextScreen(
                 }
 
                 // Cas de la vidéo
-                  videoFile?.let { file ->
-                      val timestamp = System.currentTimeMillis()
+                videoFile?.let { file ->
+                  val timestamp = System.currentTimeMillis()
 
-                      // First generate the thumbnail
-                      generateVideoThumbnail(context, file)?.let { thumbnailBytes ->
-                          // References for both files
-                          val thumbnailRef = FirebaseStorage.getInstance()
-                              .reference
-                              .child("public/thumbnails/thumb_$timestamp.jpg")
+                  // First generate the thumbnail
+                  generateVideoThumbnail(context, file)?.let { thumbnailBytes ->
+                    // References for both files
+                    val thumbnailRef =
+                        FirebaseStorage.getInstance()
+                            .reference
+                            .child("public/thumbnails/thumb_$timestamp.jpg")
 
-                          val videoRef = FirebaseStorage.getInstance()
-                              .reference
-                              .child("public/media/video_$timestamp.mp4")
+                    val videoRef =
+                        FirebaseStorage.getInstance()
+                            .reference
+                            .child("public/media/video_$timestamp.mp4")
 
-                          // Upload thumbnail first
-                          thumbnailRef.putBytes(thumbnailBytes)
-                              .addOnSuccessListener {
-                                  thumbnailRef.downloadUrl.addOnSuccessListener { thumbnailUri ->
-                                      // Then upload video
-                                      videoRef.putFile(Uri.fromFile(file))
-                                          .addOnSuccessListener {
-                                              videoRef.downloadUrl.addOnSuccessListener { videoUri ->
-                                                  // Create publication with correct URLs
-                                                  val publication = Publication(
-                                                      userId = ownerId,
-                                                      title = title,
-                                                      thumbnailUrl = thumbnailUri.toString(), // Thumbnail image URL
-                                                      mediaUrl = videoUri.toString(), // Video URL
-                                                      mediaType = MediaType.VIDEO
-                                                  )
+                    // Upload thumbnail first
+                    thumbnailRef
+                        .putBytes(thumbnailBytes)
+                        .addOnSuccessListener {
+                          thumbnailRef.downloadUrl.addOnSuccessListener { thumbnailUri ->
+                            // Then upload video
+                            videoRef
+                                .putFile(Uri.fromFile(file))
+                                .addOnSuccessListener {
+                                  videoRef.downloadUrl.addOnSuccessListener { videoUri ->
+                                    // Create publication with correct URLs
+                                    val publication =
+                                        Publication(
+                                            userId = ownerId,
+                                            title = title,
+                                            thumbnailUrl =
+                                                thumbnailUri.toString(), // Thumbnail image URL
+                                            mediaUrl = videoUri.toString(), // Video URL
+                                            mediaType = MediaType.VIDEO)
 
-                                                  FirebaseFirestore.getInstance()
-                                                      .collection("publications")
-                                                      .add(publication)
-                                                      .addOnSuccessListener {
-                                                          Toast.makeText(
-                                                              context,
-                                                              "Vidéo publiée avec succès",
-                                                              Toast.LENGTH_SHORT
-                                                          ).show()
-                                                          navigationActions.goBack()
-                                                          navigationActions.goBack()
-                                                      }
-                                              }
-                                          }
-                                          .addOnFailureListener {
-                                              Toast.makeText(
+                                    FirebaseFirestore.getInstance()
+                                        .collection("publications")
+                                        .add(publication)
+                                        .addOnSuccessListener {
+                                          Toast.makeText(
                                                   context,
-                                                  "Échec de l'upload de la vidéo",
-                                                  Toast.LENGTH_SHORT
-                                              ).show()
-                                          }
+                                                  "Vidéo publiée avec succès",
+                                                  Toast.LENGTH_SHORT)
+                                              .show()
+                                          navigationActions.goBack()
+                                          navigationActions.goBack()
+                                        }
                                   }
-                              }
-                              .addOnFailureListener {
+                                }
+                                .addOnFailureListener {
                                   Toast.makeText(
-                                      context,
-                                      "Échec de l'upload de la vignette",
-                                      Toast.LENGTH_SHORT
-                                  ).show()
-                              }
-                      }
+                                          context,
+                                          "Échec de l'upload de la vidéo",
+                                          Toast.LENGTH_SHORT)
+                                      .show()
+                                }
+                          }
+                        }
+                        .addOnFailureListener {
+                          Toast.makeText(
+                                  context, "Échec de l'upload de la vignette", Toast.LENGTH_SHORT)
+                              .show()
+                        }
                   }
-                        },
+                }
+              },
               modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
               colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
               shape = RoundedCornerShape(8.dp)) {
@@ -372,29 +375,29 @@ fun NextScreen(
 }
 
 private fun generateVideoThumbnail(context: Context, videoFile: File): ByteArray? {
-    return try {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, Uri.fromFile(videoFile))
+  return try {
+    val retriever = MediaMetadataRetriever()
+    retriever.setDataSource(context, Uri.fromFile(videoFile))
 
-        // Extract a frame from 1 second into the video
-        val bitmap = retriever.getFrameAtTime(
+    // Extract a frame from 1 second into the video
+    val bitmap =
+        retriever.getFrameAtTime(
             1000000, // 1 second in microseconds
-            MediaMetadataRetriever.OPTION_CLOSEST_SYNC
-        )
+            MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
 
-        retriever.release()
+    retriever.release()
 
-        // Convert bitmap to byte array
-        bitmap?.let { bmp ->
-            ByteArrayOutputStream().use { stream ->
-                bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-                stream.toByteArray()
-            }
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
+    // Convert bitmap to byte array
+    bitmap?.let { bmp ->
+      ByteArrayOutputStream().use { stream ->
+        bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        stream.toByteArray()
+      }
     }
+  } catch (e: Exception) {
+    e.printStackTrace()
+    null
+  }
 }
 
 @Composable
