@@ -84,118 +84,11 @@ fun TimeTableScreen(
   val context = LocalContext.current
 
   val weeklyTable by timeTableViewModel.table.collectAsState()
-  val actualTodos by todoViewModel.actualTodos.collectAsState()
   var showDialog by remember { mutableStateOf(false) }
-
-  var idTaskOrEvent = ""
   var newElementType by remember { mutableStateOf(ScheduledType.EVENT) }
-  var name by remember { mutableStateOf("") }
-  var selectedDate by remember { mutableStateOf<Calendar>(Calendar.getInstance()) }
-  var lengthHour by remember { mutableIntStateOf(1) }
-  var lengthMin by remember { mutableIntStateOf(0) }
-  var addedTodo by remember { mutableStateOf<Todo?>(null) }
 
   if (showDialog) {
-    AlertDialog(
-        modifier = Modifier.fillMaxWidth(),
-        onDismissRequest = { showDialog = false },
-        title = {
-          if (newElementType == ScheduledType.TASK) {
-            Text("Plan to do a task")
-          } else {
-            Text("Schedule an event")
-          }
-        },
-        text = {
-          if (newElementType == ScheduledType.TASK) {
-            todoViewModel.getActualTodos()
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                  Text("Todo", fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                  LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.25f)) {
-                    items(actualTodos.size) { index ->
-                      Card(
-                          modifier =
-                              Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
-                                addedTodo = actualTodos[index]
-                                name = actualTodos[index].name
-                                idTaskOrEvent = actualTodos[index].uid
-                              },
-                          shape = RoundedCornerShape(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                verticalAlignment = Alignment.CenterVertically) {
-                                  if (addedTodo == actualTodos[index]) {
-                                    Icon(Icons.Rounded.CheckCircle, "Checked")
-                                  } else {
-                                    Icon(Icons.Rounded.RadioButtonUnchecked, "Unchecked")
-                                  }
-                                  Text(actualTodos[index].name)
-                                }
-                          }
-                    }
-                  }
-                  DateAndTimePickers(
-                      context,
-                      selectedDate,
-                      lengthHour,
-                      lengthMin,
-                      selectDate = { selectedDate = it },
-                      selectTime = { hour, min ->
-                        lengthHour = hour
-                        lengthMin = min
-                      })
-                }
-          } else {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                  Text("Name", fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                  OutlinedTextField(
-                      value = name,
-                      modifier = Modifier.fillMaxWidth(0.9f),
-                      onValueChange = { name = it },
-                      placeholder = { Text("Name the task") })
-                  DateAndTimePickers(
-                      context,
-                      selectedDate,
-                      lengthHour,
-                      lengthMin,
-                      selectDate = { selectedDate = it },
-                      selectTime = { hour, min ->
-                        lengthHour = hour
-                        lengthMin = min
-                      })
-                }
-          }
-        },
-        confirmButton = {
-          TextButton(
-              onClick = {
-                showDialog = false
-                timeTableViewModel.addScheduled(
-                    Scheduled(
-                        timeTableViewModel.getNewUid(),
-                        newElementType,
-                        selectedDate,
-                        ((lengthHour + lengthMin.toDouble() / 60) * millisecInHour).toLong(),
-                        idTaskOrEvent,
-                        timeTableViewModel.auth.currentUser!!.uid,
-                        name))
-                idTaskOrEvent = ""
-                name = ""
-                selectedDate = Calendar.getInstance()
-                lengthHour = 1
-                lengthMin = 0
-                addedTodo = null
-              },
-              enabled = newElementType == ScheduledType.EVENT || addedTodo != null) {
-                Text("Confirm")
-              }
-        },
-        dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } })
+    DialogCreate(context, timeTableViewModel, todoViewModel, newElementType) { showDialog = false }
   }
 
   Scaffold(
@@ -207,6 +100,7 @@ fun TimeTableScreen(
                   fontWeight = FontWeight.Bold,
                   modifier = Modifier.testTag("topBarTitle"))
             },
+            modifier = Modifier.testTag("topBar"),
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() },
@@ -231,7 +125,7 @@ fun TimeTableScreen(
                       newElementType = ScheduledType.TASK
                       showDialog = true
                     },
-                    modifier = Modifier.fillMaxWidth(0.45f),
+                    modifier = Modifier.fillMaxWidth(0.45f).testTag("addTaskButton"),
                     colors = orange) {
                       Text("Add task")
                     }
@@ -240,7 +134,7 @@ fun TimeTableScreen(
                       newElementType = ScheduledType.EVENT
                       showDialog = true
                     },
-                    modifier = Modifier.fillMaxWidth(0.82f),
+                    modifier = Modifier.fillMaxWidth(0.82f).testTag("addEventButton"),
                     colors = blue) {
                       Text("Add event")
                     }
@@ -250,21 +144,25 @@ fun TimeTableScreen(
           Row(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { timeTableViewModel.getPreviousWeek() }) {
-                  Icon(Icons.Default.KeyboardDoubleArrowLeft, "left arrow")
-                  Text("last week")
-                }
+                TextButton(
+                    onClick = { timeTableViewModel.getPreviousWeek() },
+                    modifier = Modifier.testTag("lastWeekButton")) {
+                      Icon(Icons.Default.KeyboardDoubleArrowLeft, "left arrow")
+                      Text("last week")
+                    }
 
-                TextButton(onClick = { timeTableViewModel.getNextWeek() }) {
-                  Text("next week")
-                  Icon(Icons.Default.KeyboardDoubleArrowRight, "right arrow")
-                }
+                TextButton(
+                    onClick = { timeTableViewModel.getNextWeek() },
+                    modifier = Modifier.testTag("nextWeekButton")) {
+                      Text("next week")
+                      Icon(Icons.Default.KeyboardDoubleArrowRight, "right arrow")
+                    }
               }
 
           // Table
           LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(1) {
-              Row(modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp)) {
+              Row(modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp).testTag("days")) {
                 Spacer(modifier = Modifier.fillMaxWidth(0.12f).padding(top = 25.dp))
                 for (c in 0..6) {
                   Text(
@@ -275,7 +173,7 @@ fun TimeTableScreen(
               }
               Row(modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(0.12f).padding(top = 25.dp),
+                    modifier = Modifier.fillMaxWidth(0.12f).padding(top = 25.dp).testTag("hours"),
                     horizontalAlignment = Alignment.End) {
                       for (i in 1..23) {
                         Text(
@@ -300,15 +198,17 @@ fun TableColumn(width: Float, content: List<Scheduled>) {
   BoxWithConstraints(modifier = Modifier.fillMaxWidth(width).fillMaxHeight()) {
     val boxWidth = maxWidth
 
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.End) {
-      for (i in 0..23) {
-        Row(
-            modifier =
-                Modifier.border(width = 0.5.dp, color = Color.LightGray)
-                    .height(50.dp)
-                    .fillMaxWidth()) {}
-      }
-    }
+    Column(
+        modifier = Modifier.fillMaxSize().testTag("tableColumn"),
+        horizontalAlignment = Alignment.End) {
+          for (i in 0..23) {
+            Row(
+                modifier =
+                    Modifier.border(width = 0.5.dp, color = Color.LightGray)
+                        .height(50.dp)
+                        .fillMaxWidth()) {}
+          }
+        }
     val openedButton = emptyList<Scheduled>().toMutableList()
     val unseenButtons = content.toMutableList() // copy
     var lastButtonEnd = 0f
@@ -338,7 +238,8 @@ fun TableColumn(width: Float, content: List<Scheduled>) {
                       y =
                           (new.start.get(Calendar.HOUR_OF_DAY) * 50).dp +
                               (new.start.get(Calendar.MINUTE).toDouble() / 60 * 50).dp)
-                  .padding(1.dp),
+                  .padding(1.dp)
+                  .testTag("buttonOf${new.name}"),
           shape = RoundedCornerShape(5.dp),
           colors = if (new.type == ScheduledType.TASK) orange else blue,
           contentPadding = PaddingValues(1.dp)) {
@@ -350,6 +251,133 @@ fun TableColumn(width: Float, content: List<Scheduled>) {
       unseenButtons.remove(new)
     }
   }
+}
+
+@Composable
+fun DialogCreate(
+    context: Context,
+    timeTableViewModel: TimeTableViewModel,
+    todoViewModel: TodoListViewModel,
+    newElementType: ScheduledType,
+    onDismiss: () -> Unit
+) {
+  var idTaskOrEvent = ""
+  var name by remember { mutableStateOf("") }
+  var selectedDate by remember { mutableStateOf<Calendar>(Calendar.getInstance()) }
+  var lengthHour by remember { mutableIntStateOf(1) }
+  var lengthMin by remember { mutableIntStateOf(0) }
+  var addedTodo by remember { mutableStateOf<Todo?>(null) }
+
+  val actualTodos by todoViewModel.actualTodos.collectAsState()
+
+  AlertDialog(
+      modifier = Modifier.fillMaxWidth().testTag("dialog"),
+      onDismissRequest = { onDismiss() },
+      title = {
+        if (newElementType == ScheduledType.TASK) {
+          Text("Plan to do a task")
+        } else {
+          Text("Schedule an event")
+        }
+      },
+      text = {
+        if (newElementType == ScheduledType.TASK) {
+          todoViewModel.getActualTodos()
+          Column(
+              modifier = Modifier.fillMaxWidth().testTag("addTaskDialog"),
+              verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Todo", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.25f)) {
+                  items(actualTodos.size) { index ->
+                    Card(
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                  addedTodo = actualTodos[index]
+                                  name = actualTodos[index].name
+                                  idTaskOrEvent = actualTodos[index].uid
+                                }
+                                .testTag(actualTodos[index].name),
+                        shape = RoundedCornerShape(16.dp)) {
+                          Row(
+                              modifier = Modifier.fillMaxWidth().padding(4.dp),
+                              horizontalArrangement = Arrangement.spacedBy(5.dp),
+                              verticalAlignment = Alignment.CenterVertically) {
+                                if (addedTodo == actualTodos[index]) {
+                                  Icon(Icons.Rounded.CheckCircle, "Checked")
+                                } else {
+                                  Icon(Icons.Rounded.RadioButtonUnchecked, "Unchecked")
+                                }
+                                Text(actualTodos[index].name)
+                              }
+                        }
+                  }
+                }
+                DateAndTimePickers(
+                    context,
+                    selectedDate,
+                    lengthHour,
+                    lengthMin,
+                    selectDate = { selectedDate = it },
+                    selectTime = { hour, min ->
+                      lengthHour = hour
+                      lengthMin = min
+                    })
+              }
+        } else {
+          Column(
+              modifier = Modifier.fillMaxWidth().testTag("addEventDialog"),
+              verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Name", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                OutlinedTextField(
+                    value = name,
+                    modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
+                    onValueChange = { name = it },
+                    placeholder = { Text("Name the task") })
+                DateAndTimePickers(
+                    context,
+                    selectedDate,
+                    lengthHour,
+                    lengthMin,
+                    selectDate = { selectedDate = it },
+                    selectTime = { hour, min ->
+                      lengthHour = hour
+                      lengthMin = min
+                    })
+              }
+        }
+      },
+      confirmButton = {
+        TextButton(
+            onClick = {
+              onDismiss()
+              timeTableViewModel.addScheduled(
+                  Scheduled(
+                      timeTableViewModel.getNewUid(),
+                      newElementType,
+                      selectedDate,
+                      ((lengthHour + lengthMin.toDouble() / 60) * millisecInHour).toLong(),
+                      idTaskOrEvent,
+                      timeTableViewModel.auth.currentUser!!.uid,
+                      name))
+              idTaskOrEvent = ""
+              name = ""
+              selectedDate = Calendar.getInstance()
+              lengthHour = 1
+              lengthMin = 0
+              addedTodo = null
+            },
+            modifier = Modifier.testTag("confirm"),
+            enabled = newElementType == ScheduledType.EVENT || addedTodo != null) {
+              Text("Confirm")
+            }
+      },
+      dismissButton = {
+        TextButton(onClick = { onDismiss() }, modifier = Modifier.testTag("cancel")) {
+          Text("Cancel")
+        }
+      })
 }
 
 @Composable
@@ -383,7 +411,7 @@ fun DateAndTimePickers(
                 day)
             .show()
       },
-      modifier = Modifier.fillMaxWidth(0.9f),
+      modifier = Modifier.fillMaxWidth(0.9f).testTag("datePicker"),
       shape = OutlinedTextFieldDefaults.shape) {
         Text(
             text = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(selectedDate.time),
@@ -417,7 +445,7 @@ fun DateAndTimePickers(
                 )
             .show()
       },
-      modifier = Modifier.fillMaxWidth(0.9f),
+      modifier = Modifier.fillMaxWidth(0.9f).testTag("timePicker"),
       shape = OutlinedTextFieldDefaults.shape) {
         Text(
             text =
@@ -439,7 +467,7 @@ fun DateAndTimePickers(
                 true)
             .show()
       },
-      modifier = Modifier.fillMaxWidth(0.9f),
+      modifier = Modifier.fillMaxWidth(0.9f).testTag("lengthPicker"),
       shape = OutlinedTextFieldDefaults.shape) {
         Text(
             text = hourToString(lengthHour, lengthMin),
