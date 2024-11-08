@@ -27,10 +27,6 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
   private val _table: MutableStateFlow<WeeklyTable> = MutableStateFlow(emptyWeeklyTable())
   val table: StateFlow<WeeklyTable> = _table
 
-  init {
-    getWeek()
-  }
-
   /** Create a new document in the database and returns its id */
   fun getNewUid(): String {
     return timeTableRepository.getNewUid()

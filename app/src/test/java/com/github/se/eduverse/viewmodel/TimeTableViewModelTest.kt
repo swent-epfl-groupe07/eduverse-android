@@ -69,6 +69,7 @@ class TimeTableViewModelTest {
     }
 
     timeTableViewModel = TimeTableViewModel(timeTableRepository, firebaseAuth)
+    timeTableViewModel.getWeek()
 
     // 3 because scheduled1 and scheduled2 are tuesday, represented by 3
     weekWithScheduled[
