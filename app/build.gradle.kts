@@ -74,6 +74,8 @@ android {
     }
     packaging {
         resources {
+            excludes += "mockito-extensions/org.mockito.plugins.MockMaker"
+            excludes += "META-INF/DEPENDENCIES"
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             merges += "META-INF/LICENSE.md"
             merges += "META-INF/LICENSE-notice.md"
@@ -155,6 +157,7 @@ dependencies {
     //implementation("io.coil-kt:coil-compose:2.1.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.androidx.junit.ktx)
+    implementation(libs.core)
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.test:runner:1.5.2")
@@ -262,6 +265,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
 
+
+
     // CameraX
     implementation("androidx.camera:camera-core:1.1.0")
     implementation("androidx.camera:camera-camera2:1.1.0")
@@ -301,6 +306,9 @@ tasks.withType<Test> {
         isIncludeNoLocationClasses = true
         excludes = listOf("jdk.internal.*")
     }
+    useJUnit()
+    // Configure maxParallelForks for Robolectric tests
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
 }
 
 tasks.register("jacocoTestReport", JacocoReport::class) {
