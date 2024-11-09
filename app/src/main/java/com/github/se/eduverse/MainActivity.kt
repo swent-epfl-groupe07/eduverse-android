@@ -75,12 +75,12 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
 
     super.onCreate(savedInstanceState)
-
+    /*
     // Initialiser Firebase Auth
     auth = FirebaseAuth.getInstance()
     if (auth.currentUser != null) {
       auth.signOut()
-    }
+    } */
 
     // Ajout du VideoRepository et du VideoViewModel
 
