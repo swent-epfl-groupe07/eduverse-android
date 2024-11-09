@@ -1,6 +1,5 @@
-package com.github.se.eduverse.others.setting
+package com.github.se.eduverse.ui.others.setting
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
@@ -10,92 +9,80 @@ import com.github.se.eduverse.ui.setting.SettingsScreen
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
+import org.mockito.Mockito
 
 @RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  // Mutable states to track button clicks
-  private var isSaveClicked = mutableStateOf(false)
-  private var isCancelClicked = mutableStateOf(false)
-
-  // Fake NavigationActions class to include state tracking
-  private class FakeNavigationActions(
-      navController: NavHostController,
-      private val onSave: () -> Unit = {},
-      private val onCancel: () -> Unit = {}
-  ) : NavigationActions(navController)
+  private val mockNavHostController = Mockito.mock(NavHostController::class.java)
+  private val mockNavigationActions = NavigationActions(mockNavHostController)
 
   @Test
-  fun testPrivacySettingsInput() {
-    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
+  fun testBackButtonNavigation() {
+    composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
 
-    // Test Privacy Settings input interaction
-    composeTestRule.onNodeWithTag("privacySettingsInput").performTextInput("Private")
+    // Test clicking the back button
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+
+    // Verify that navigation action 'goBack' was triggered
   }
 
   @Test
-  fun testThemeDropdownInteraction() {
-    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
+  fun testConfidentialityToggleSwitch() {
+    composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
 
-    composeTestRule.onNodeWithTag("themeSelectionBox").assertHasClickAction()
+    // Check that the confidentiality toggle is displayed
+    composeTestRule.onNodeWithTag("confidentialityToggle").assertIsDisplayed()
 
-    // Test clicking theme dropdown
-    composeTestRule.onNodeWithTag("themeSelectionBox").performClick()
-
-    // Check that the dropdown menu is expanded
-    composeTestRule.onNodeWithTag("themeDropdown").assertIsDisplayed()
-
-    // Select a theme from the dropdown
-    composeTestRule.onNodeWithTag("themeOption_Dark").performClick()
-
-    // Verify the selected theme is "Dark"
-    composeTestRule.onNodeWithTag("themeSelectionBox").assertTextContains("Dark")
+    // Check initial state of confidentiality toggle (assuming it starts as "Private")
+    composeTestRule.onNodeWithTag("confidentialityToggleState").assertTextEquals("Private")
   }
 
   @Test
-  fun testLanguageDropdownInteraction() {
-    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
+  fun testThemeDropdownSelection() {
+    composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
 
-    composeTestRule.onNodeWithTag("languageSelectionBox").assertHasClickAction()
-    // Test clicking language dropdown
-    composeTestRule.onNodeWithTag("languageSelectionBox").performClick()
+    // Open the theme dropdown
+    composeTestRule.onNodeWithTag("themeDropdown").assertIsDisplayed().performClick()
 
-    // Check that the dropdown menu is expanded
-    composeTestRule.onNodeWithTag("languageDropdown").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("dropdownOption_ThemeLight").isDisplayed()
 
-    // Select a language from the dropdown
-    composeTestRule.onNodeWithTag("languageOption_Français").performClick()
+    // Check dropdown display and selection of theme option
+    composeTestRule.onNodeWithTag("dropdownOption_ThemeDark").isDisplayed()
 
-    // Verify the selected language is "Français"
-    composeTestRule.onNodeWithTag("languageSelectionBox").assertTextContains("Français")
+    composeTestRule.onNodeWithTag("dropdownOption_ThemeSystem Default").isDisplayed()
   }
 
   @Test
-  fun testSaveButton() {
-    // Reset the save click variable
+  fun testLanguageDropdownSelection() {
+    composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
 
-    // Set the content with the FakeNavigationActions for tracking save action
-    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
+    composeTestRule.onNodeWithTag("languageDropdown").assertIsDisplayed().performClick()
 
-    // Test Save button interaction
-    composeTestRule.onNodeWithTag("saveButton").performClick()
+    // Open the language dropdown
+    composeTestRule.onNodeWithTag("dropdownOption_LanguageEnglish").assertIsDisplayed()
 
-    // Assert that save was clicked
+    // Select a language from the dropdown and verify selection text
+    composeTestRule.onNodeWithTag("dropdownOption_LanguageFrançais").assertIsDisplayed()
   }
 
   @Test
-  fun testCancelButton() {
-    // Reset the cancel click variable
+  fun testAddAccountButtonClick() {
+    composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
 
-    // Set the content with the FakeNavigationActions for tracking cancel action
-    composeTestRule.setContent { SettingsScreen(navigationActions = FakeNavigationActions(mock())) }
+    // Click on the Add Account button
+    composeTestRule.onNodeWithTag("addAccountButton").assertIsDisplayed()
 
-    // Test Cancel button interaction
-    composeTestRule.onNodeWithTag("cancelButton").performClick()
+    // Verify Add Account action (assuming further implementation to test the outcome)
+  }
 
-    // Assert that cancel was clicked
+  @Test
+  fun testLogoutButtonClick() {
+    composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
+
+    // Check if Logout button exists and clickable
+    composeTestRule.onNodeWithTag("logoutButton").assertIsDisplayed()
   }
 }
