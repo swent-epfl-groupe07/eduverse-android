@@ -15,23 +15,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -191,11 +196,109 @@ private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun PublicationItem(
+    publication: Publication,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Card(
+      modifier = modifier.aspectRatio(1f).clickable(onClick = onClick),
+      shape = RoundedCornerShape(8.dp)) {
+        Box(modifier = Modifier.testTag("publication_content_${publication.id}").fillMaxSize()) {
+          AsyncImage(
+              model =
+                  ImageRequest.Builder(LocalContext.current)
+                      .data(publication.thumbnailUrl)
+                      .crossfade(true)
+                      .listener(
+                          onError = { _, _ ->
+                            println("Failed to load thumbnail for ${publication.id}")
+                          },
+                          onSuccess = { _, _ ->
+                            println("Successfully loaded thumbnail for ${publication.id}")
+                          })
+                      .build(),
+              contentDescription = "Publication thumbnail",
+              modifier = Modifier.testTag("publication_thumbnail_${publication.id}").fillMaxSize(),
+              contentScale = ContentScale.Crop,
+              error = painterResource(R.drawable.eduverse_logo_alone),
+              fallback = painterResource(R.drawable.eduverse_logo_alone),
+          )
+
+          // Video indicator overlay
+          if (publication.mediaType == MediaType.VIDEO) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
+
+            Icon(
+                imageVector = Icons.Default.PlayCircle,
+                contentDescription = "Video",
+                modifier =
+                    Modifier.size(48.dp)
+                        .align(Alignment.Center)
+                        .testTag("video_play_icon_${publication.id}"), // Add this testTag
+                tint = Color.White)
+          }
+        }
+      }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PublicationDetailDialog(publication: Publication, onDismiss: () -> Unit) {
+  Dialog(
+      onDismissRequest = onDismiss,
+      properties =
+          DialogProperties(
+              usePlatformDefaultWidth = false,
+              dismissOnBackPress = true,
+              dismissOnClickOutside = false)) {
+        Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+          Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+            SmallTopAppBar(
+                title = { Text(publication.title, color = Color.White) },
+                navigationIcon = {
+                  IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                  }
+                },
+                colors =
+                    TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = Color.Black, titleContentColor = Color.White))
+
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center) {
+                  when (publication.mediaType) {
+                    MediaType.VIDEO -> {
+                      ExoVideoPlayer(
+                          videoUrl = publication.mediaUrl, modifier = Modifier.fillMaxWidth())
+                    }
+                    MediaType.PHOTO -> {
+                      AsyncImage(
+                          model =
+                              ImageRequest.Builder(LocalContext.current)
+                                  .data(publication.mediaUrl)
+                                  .crossfade(true)
+                                  .build(),
+                          contentDescription = "Publication media",
+                          modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                          contentScale = ContentScale.Fit)
+                    }
+                  }
+                }
+          }
+        }
+      }
+}
+
+@Composable
 private fun PublicationsGrid(
     publications: List<Publication>,
     onPublicationClick: (Publication) -> Unit,
     modifier: Modifier = Modifier
 ) {
+  var selectedPublication by remember { mutableStateOf<Publication?>(null) }
+
   if (publications.isEmpty()) {
     Box(
         modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
@@ -208,53 +311,29 @@ private fun PublicationsGrid(
         }
   } else {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(3),
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        contentPadding = PaddingValues(1.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)) {
           items(publications) { publication ->
             PublicationItem(
                 publication = publication,
-                onClick = { onPublicationClick(publication) },
+                onClick = { selectedPublication = publication },
                 modifier = Modifier.testTag("publication_item_${publication.id}"))
           }
         }
+
+    // Show detail dialog when a publication is selected
+    selectedPublication?.let { publication ->
+      PublicationDetailDialog(publication = publication, onDismiss = { selectedPublication = null })
+    }
   }
 }
 
 @Composable
-private fun PublicationItem(
-    publication: Publication,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-  Card(
-      modifier = modifier.aspectRatio(1f).clickable(onClick = onClick),
-      shape = RoundedCornerShape(8.dp)) {
-        Box(modifier = Modifier.testTag("publication_content_${publication.id}").fillMaxSize()) {
-          Box(
-              modifier =
-                  Modifier.testTag("publication_thumbnail_${publication.id}")
-                      .fillMaxSize()
-                      .background(MaterialTheme.colorScheme.surfaceVariant))
-
-          Box(
-              modifier =
-                  Modifier.testTag("publication_title_container_${publication.id}")
-                      .fillMaxWidth()
-                      .align(Alignment.BottomCenter)
-                      .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
-                      .padding(8.dp)) {
-                Text(
-                    text = publication.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("publication_title_${publication.id}"))
-              }
-        }
-      }
+private fun VideoPlayer(videoUrl: String, modifier: Modifier = Modifier) {
+  ExoVideoPlayer(videoUrl = videoUrl, modifier = modifier)
 }
 
 @Composable
