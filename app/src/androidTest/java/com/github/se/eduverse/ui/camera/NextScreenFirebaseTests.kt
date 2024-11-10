@@ -23,8 +23,8 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import io.mockk.*
-import org.junit.After
 import java.io.File
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -193,10 +193,9 @@ class NextScreenFirebaseTests {
     composeTestRule.onNodeWithTag("postButton").performClick()
   }
 
-    @After
-    fun tearDown() {
-        // Clear static mocks to avoid interference with other tests
-        unmockkAll()
-    }
-
+  @After
+  fun tearDown() {
+    // Clear static mocks to avoid interference with other tests
+    unmockkAll()
+  }
 }
