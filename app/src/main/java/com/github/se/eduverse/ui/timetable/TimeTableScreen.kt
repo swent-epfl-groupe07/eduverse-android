@@ -290,7 +290,7 @@ fun DialogCreate(
           Column(
               modifier = Modifier.fillMaxWidth().testTag("addTaskDialog"),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Todo", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                Title("Todo")
                 LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.25f)) {
                   items(actualTodos.size) { index ->
                     Card(
@@ -333,7 +333,7 @@ fun DialogCreate(
           Column(
               modifier = Modifier.fillMaxWidth().testTag("addEventDialog"),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Name", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                Title("Name")
                 OutlinedTextField(
                     value = name,
                     modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
@@ -394,7 +394,7 @@ fun DateAndTimePickers(
     selectTime: (Int, Int) -> Unit
 ) {
   // Pick the date
-  Text("Date", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+  Title("Date")
   OutlinedButton(
       onClick = {
         val calendar = Calendar.getInstance()
@@ -424,7 +424,7 @@ fun DateAndTimePickers(
       }
 
   // Pick the time
-  Text("Time", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+  Title("Time")
   OutlinedButton(
       onClick = {
         val calendar = Calendar.getInstance()
@@ -460,7 +460,7 @@ fun DateAndTimePickers(
       }
 
   // Pick the length
-  Text("Length", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+  Title("Length")
   OutlinedButton(
       onClick = {
         TimePickerDialog(
@@ -478,6 +478,11 @@ fun DateAndTimePickers(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start)
       }
+}
+
+@Composable
+fun Title(text: String) {
+  Text(text, fontWeight = FontWeight.Bold, fontSize = 24.sp)
 }
 
 fun hourToString(hour: Int, minute: Int): String {
