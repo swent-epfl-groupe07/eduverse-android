@@ -23,172 +23,172 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import io.mockk.*
+import java.io.File
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 import org.mockito.Mockito.*
 
 class NextScreenFirebaseTests {
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    private lateinit var context: Context
-    private lateinit var navigationActions: NavigationActions
-    private lateinit var photoViewModel: PhotoViewModel
-    private lateinit var folderViewModel: FolderViewModel
-    private lateinit var videoViewModel: VideoViewModel
-    private lateinit var testPhotoFile: File
-    private lateinit var testVideoFile: File
-    private lateinit var mockBitmap: Bitmap
-    private lateinit var mockStorage: FirebaseStorage
-    private lateinit var mockStorageRef: StorageReference
-    private lateinit var mockUploadTask: UploadTask
-    private lateinit var mockDownloadUrlTask: Task<Uri>
-    private lateinit var mockUri: Uri
+  private lateinit var context: Context
+  private lateinit var navigationActions: NavigationActions
+  private lateinit var photoViewModel: PhotoViewModel
+  private lateinit var folderViewModel: FolderViewModel
+  private lateinit var videoViewModel: VideoViewModel
+  private lateinit var testPhotoFile: File
+  private lateinit var testVideoFile: File
+  private lateinit var mockBitmap: Bitmap
+  private lateinit var mockStorage: FirebaseStorage
+  private lateinit var mockStorageRef: StorageReference
+  private lateinit var mockUploadTask: UploadTask
+  private lateinit var mockDownloadUrlTask: Task<Uri>
+  private lateinit var mockUri: Uri
 
-    @Before
-    fun setUp() {
-        context = ApplicationProvider.getApplicationContext()
+  @Before
+  fun setUp() {
+    context = ApplicationProvider.getApplicationContext()
 
-        // Initialize test files
-        mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-        testPhotoFile = File.createTempFile("test_photo", ".jpg").apply {
-            outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+    // Initialize test files
+    mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    testPhotoFile =
+        File.createTempFile("test_photo", ".jpg").apply {
+          outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
         }
-        testVideoFile = File.createTempFile("test_video", ".mp4")
+    testVideoFile = File.createTempFile("test_video", ".mp4")
 
-        // Mock Firebase Auth
-        val mockAuth = mock(FirebaseAuth::class.java)
-        val mockUser = mock(FirebaseUser::class.java)
-        `when`(mockUser.uid).thenReturn("test-user-id")
-        `when`(mockAuth.currentUser).thenReturn(mockUser)
+    // Mock Firebase Auth
+    val mockAuth = mock(FirebaseAuth::class.java)
+    val mockUser = mock(FirebaseUser::class.java)
+    `when`(mockUser.uid).thenReturn("test-user-id")
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
 
-        // Mock Firebase Storage components
-        mockStorage = mock(FirebaseStorage::class.java)
-        mockStorageRef = mock(StorageReference::class.java)
-        mockUploadTask = mock(UploadTask::class.java)
-        mockDownloadUrlTask = mock(Task::class.java) as Task<Uri>
-        mockUri = mock(Uri::class.java)
+    // Mock Firebase Storage components
+    mockStorage = mock(FirebaseStorage::class.java)
+    mockStorageRef = mock(StorageReference::class.java)
+    mockUploadTask = mock(UploadTask::class.java)
+    mockDownloadUrlTask = mock(Task::class.java) as Task<Uri>
+    mockUri = mock(Uri::class.java)
 
-        // Set up basic storage chain
-        `when`(mockStorage.reference).thenReturn(mockStorageRef)
-        `when`(mockStorageRef.child(anyString())).thenReturn(mockStorageRef)
-        `when`(mockStorageRef.putBytes(any())).thenReturn(mockUploadTask)
-        `when`(mockStorageRef.putFile(any())).thenReturn(mockUploadTask)
-        `when`(mockStorageRef.downloadUrl).thenReturn(mockDownloadUrlTask)
-        `when`(mockUri.toString()).thenReturn("https://test-url.com/test.jpg")
+    // Set up basic storage chain
+    `when`(mockStorage.reference).thenReturn(mockStorageRef)
+    `when`(mockStorageRef.child(anyString())).thenReturn(mockStorageRef)
+    `when`(mockStorageRef.putBytes(any())).thenReturn(mockUploadTask)
+    `when`(mockStorageRef.putFile(any())).thenReturn(mockUploadTask)
+    `when`(mockStorageRef.downloadUrl).thenReturn(mockDownloadUrlTask)
+    `when`(mockUri.toString()).thenReturn("https://test-url.com/test.jpg")
 
-        // Mock success callbacks
-        doAnswer { invocation ->
-            val listener = invocation.arguments[0] as OnSuccessListener<UploadTask.TaskSnapshot>
-            listener.onSuccess(mock(UploadTask.TaskSnapshot::class.java))
-            mockUploadTask
-        }.`when`(mockUploadTask).addOnSuccessListener(any<OnSuccessListener<UploadTask.TaskSnapshot>>())
+    // Mock success callbacks
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<UploadTask.TaskSnapshot>
+          listener.onSuccess(mock(UploadTask.TaskSnapshot::class.java))
+          mockUploadTask
+        }
+        .`when`(mockUploadTask)
+        .addOnSuccessListener(any<OnSuccessListener<UploadTask.TaskSnapshot>>())
 
-        doAnswer { invocation ->
-            val listener = invocation.arguments[0] as OnSuccessListener<Uri>
-            listener.onSuccess(mockUri)
-            mockDownloadUrlTask
-        }.`when`(mockDownloadUrlTask).addOnSuccessListener(any<OnSuccessListener<Uri>>())
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<Uri>
+          listener.onSuccess(mockUri)
+          mockDownloadUrlTask
+        }
+        .`when`(mockDownloadUrlTask)
+        .addOnSuccessListener(any<OnSuccessListener<Uri>>())
 
-        // Mock Firestore
-        val mockFirestore = mock(FirebaseFirestore::class.java)
-        val mockCollectionRef = mock(CollectionReference::class.java)
-        val mockDocumentRef = mock(DocumentReference::class.java)
-        val mockFirestoreTask = mock(Task::class.java) as Task<DocumentReference>
+    // Mock Firestore
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    val mockCollectionRef = mock(CollectionReference::class.java)
+    val mockDocumentRef = mock(DocumentReference::class.java)
+    val mockFirestoreTask = mock(Task::class.java) as Task<DocumentReference>
 
-        `when`(mockFirestore.collection(anyString())).thenReturn(mockCollectionRef)
-        `when`(mockCollectionRef.add(any())).thenReturn(mockFirestoreTask)
+    `when`(mockFirestore.collection(anyString())).thenReturn(mockCollectionRef)
+    `when`(mockCollectionRef.add(any())).thenReturn(mockFirestoreTask)
 
-        doAnswer { invocation ->
-            val listener = invocation.arguments[0] as OnSuccessListener<DocumentReference>
-            listener.onSuccess(mockDocumentRef)
-            mockFirestoreTask
-        }.`when`(mockFirestoreTask).addOnSuccessListener(any<OnSuccessListener<DocumentReference>>())
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<DocumentReference>
+          listener.onSuccess(mockDocumentRef)
+          mockFirestoreTask
+        }
+        .`when`(mockFirestoreTask)
+        .addOnSuccessListener(any<OnSuccessListener<DocumentReference>>())
 
-        // Mock static methods
-        mockkStatic(FirebaseAuth::class)
-        every { FirebaseAuth.getInstance() } returns mockAuth
+    // Mock static methods
+    mockkStatic(FirebaseAuth::class)
+    every { FirebaseAuth.getInstance() } returns mockAuth
 
-        mockkStatic(FirebaseStorage::class)
-        every { FirebaseStorage.getInstance() } returns mockStorage
+    mockkStatic(FirebaseStorage::class)
+    every { FirebaseStorage.getInstance() } returns mockStorage
 
-        mockkStatic(FirebaseFirestore::class)
-        every { FirebaseFirestore.getInstance() } returns mockFirestore
+    mockkStatic(FirebaseFirestore::class)
+    every { FirebaseFirestore.getInstance() } returns mockFirestore
 
-        // Initialize view models and navigation
-        navigationActions = mockk(relaxed = true)
-        photoViewModel = mockk(relaxed = true)
-        folderViewModel = mockk(relaxed = true)
-        videoViewModel = mockk(relaxed = true)
+    // Initialize view models and navigation
+    navigationActions = mockk(relaxed = true)
+    photoViewModel = mockk(relaxed = true)
+    folderViewModel = mockk(relaxed = true)
+    videoViewModel = mockk(relaxed = true)
+  }
+
+  @Test
+  fun testPhotoPostButtonClick() {
+    composeTestRule.setContent {
+      NextScreen(
+          photoFile = testPhotoFile,
+          videoFile = null,
+          navigationActions = navigationActions,
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel,
+          videoViewModel = videoViewModel)
     }
 
-    @Test
-    fun testPhotoPostButtonClick() {
-        composeTestRule.setContent {
-            NextScreen(
-                photoFile = testPhotoFile,
-                videoFile = null,
-                navigationActions = navigationActions,
-                photoViewModel = photoViewModel,
-                folderViewModel = folderViewModel,
-                videoViewModel = videoViewModel
-            )
-        }
+    composeTestRule.onNodeWithTag("postButton").performClick()
+  }
 
-        composeTestRule.onNodeWithTag("postButton").performClick()
-
-
+  @Test
+  fun testVideoPostButtonClick() {
+    composeTestRule.setContent {
+      NextScreen(
+          photoFile = null,
+          videoFile = testVideoFile,
+          navigationActions = navigationActions,
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel,
+          videoViewModel = videoViewModel)
     }
 
-    @Test
-    fun testVideoPostButtonClick() {
-        composeTestRule.setContent {
-            NextScreen(
-                photoFile = null,
-                videoFile = testVideoFile,
-                navigationActions = navigationActions,
-                photoViewModel = photoViewModel,
-                folderViewModel = folderViewModel,
-                videoViewModel = videoViewModel
-            )
+    composeTestRule.onNodeWithTag("postButton").performClick()
+  }
+
+  @Test
+  fun testUploadFailure() {
+    // Create new mocks for failure scenario
+    val mockFailureUploadTask = mock(UploadTask::class.java)
+    `when`(mockStorageRef.putBytes(any())).thenReturn(mockFailureUploadTask)
+
+    // Setup failure callback
+    doAnswer { invocation -> mockFailureUploadTask }
+        .`when`(mockFailureUploadTask)
+        .addOnSuccessListener(any<OnSuccessListener<UploadTask.TaskSnapshot>>())
+
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnFailureListener
+          listener.onFailure(Exception("Upload failed"))
+          mockFailureUploadTask
         }
+        .`when`(mockFailureUploadTask)
+        .addOnFailureListener(any<OnFailureListener>())
 
-        composeTestRule.onNodeWithTag("postButton").performClick()
-
-
+    composeTestRule.setContent {
+      NextScreen(
+          photoFile = testPhotoFile,
+          videoFile = null,
+          navigationActions = navigationActions,
+          photoViewModel = photoViewModel,
+          folderViewModel = folderViewModel,
+          videoViewModel = videoViewModel)
     }
 
-    @Test
-    fun testUploadFailure() {
-        // Create new mocks for failure scenario
-        val mockFailureUploadTask = mock(UploadTask::class.java)
-        `when`(mockStorageRef.putBytes(any())).thenReturn(mockFailureUploadTask)
-
-        // Setup failure callback
-        doAnswer { invocation ->
-            mockFailureUploadTask
-        }.`when`(mockFailureUploadTask).addOnSuccessListener(any<OnSuccessListener<UploadTask.TaskSnapshot>>())
-
-        doAnswer { invocation ->
-            val listener = invocation.arguments[0] as OnFailureListener
-            listener.onFailure(Exception("Upload failed"))
-            mockFailureUploadTask
-        }.`when`(mockFailureUploadTask).addOnFailureListener(any<OnFailureListener>())
-
-        composeTestRule.setContent {
-            NextScreen(
-                photoFile = testPhotoFile,
-                videoFile = null,
-                navigationActions = navigationActions,
-                photoViewModel = photoViewModel,
-                folderViewModel = folderViewModel,
-                videoViewModel = videoViewModel
-            )
-        }
-
-        composeTestRule.onNodeWithTag("postButton").performClick()
-
-    }
+    composeTestRule.onNodeWithTag("postButton").performClick()
+  }
 }
