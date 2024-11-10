@@ -123,19 +123,6 @@ class FileRepositoryTest {
   }
 
   @Test
-  fun deleteFileTest_failureDeleteStorage() {
-    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
-    `when`(mockStorageReference.delete()).thenReturn(Tasks.forException(Exception("")))
-
-    var test = false
-
-    fileRepository.deleteFile("fileId", { assert(false) }, { test = true })
-
-    shadowOf(Looper.getMainLooper()).idle()
-    assert(test)
-  }
-
-  @Test
   fun deleteFileTest_failureDeleteFirestore() {
     `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
     `when`(mockStorageReference.delete()).thenReturn(Tasks.forResult(void))

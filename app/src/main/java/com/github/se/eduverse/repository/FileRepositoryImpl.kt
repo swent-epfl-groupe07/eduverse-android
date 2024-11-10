@@ -54,7 +54,8 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
   }
 
   /**
-   * Delete a file on firebase, both in storage and in firestore
+   * Delete a file on firebase, only in firestore as there may be many occurrences of the storage
+   * instance
    *
    * @param fileId the id of the file to delete
    * @param onSuccess the code to execute if the deletion is successful
@@ -65,16 +66,10 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
         .document(fileId)
         .get()
         .addOnSuccessListener {
-          storage.reference
-              .child(it.getString("url")!!)
+          db.collection(collectionPath)
+              .document(fileId)
               .delete()
-              .addOnSuccessListener {
-                db.collection(collectionPath)
-                    .document(fileId)
-                    .delete()
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener(onFailure)
-              }
+              .addOnSuccessListener { onSuccess() }
               .addOnFailureListener(onFailure)
         }
         .addOnFailureListener(onFailure)
