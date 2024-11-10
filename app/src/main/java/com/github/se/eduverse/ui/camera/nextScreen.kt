@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.view.ViewGroup
 import android.widget.Toast
@@ -56,6 +57,7 @@ import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -274,41 +276,70 @@ fun NextScreen(
 
                 // Cas de la vidéo
                 videoFile?.let { file ->
-                  val storageRef =
-                      FirebaseStorage.getInstance()
-                          .reference
-                          .child("public/media/${System.currentTimeMillis()}.mp4")
+                  val timestamp = System.currentTimeMillis()
 
-                  storageRef
-                      .putFile(Uri.fromFile(file))
-                      .addOnSuccessListener {
-                        storageRef.downloadUrl.addOnSuccessListener { uri ->
-                          val publication =
-                              Publication(
-                                  userId = ownerId,
-                                  title = title,
-                                  thumbnailUrl =
-                                      generateThumbnail(
-                                          uri.toString()), // Fonction pour générer une vignette si
-                                  // nécessaire
-                                  mediaUrl = uri.toString(),
-                                  mediaType = MediaType.VIDEO)
-                          FirebaseFirestore.getInstance()
-                              .collection("publications")
-                              .add(publication)
-                              .addOnSuccessListener {
-                                Toast.makeText(
-                                        context, "Vidéo publiée avec succès", Toast.LENGTH_SHORT)
-                                    .show()
-                                navigationActions.goBack()
-                                navigationActions.goBack()
-                              }
+                  // First generate the thumbnail
+                  generateVideoThumbnail(context, file)?.let { thumbnailBytes ->
+                    // References for both files
+                    val thumbnailRef =
+                        FirebaseStorage.getInstance()
+                            .reference
+                            .child("public/thumbnails/thumb_$timestamp.jpg")
+
+                    val videoRef =
+                        FirebaseStorage.getInstance()
+                            .reference
+                            .child("public/media/video_$timestamp.mp4")
+
+                    // Upload thumbnail first
+                    thumbnailRef
+                        .putBytes(thumbnailBytes)
+                        .addOnSuccessListener {
+                          thumbnailRef.downloadUrl.addOnSuccessListener { thumbnailUri ->
+                            // Then upload video
+                            videoRef
+                                .putFile(Uri.fromFile(file))
+                                .addOnSuccessListener {
+                                  videoRef.downloadUrl.addOnSuccessListener { videoUri ->
+                                    // Create publication with correct URLs
+                                    val publication =
+                                        Publication(
+                                            userId = ownerId,
+                                            title = title,
+                                            thumbnailUrl =
+                                                thumbnailUri.toString(), // Thumbnail image URL
+                                            mediaUrl = videoUri.toString(), // Video URL
+                                            mediaType = MediaType.VIDEO)
+
+                                    FirebaseFirestore.getInstance()
+                                        .collection("publications")
+                                        .add(publication)
+                                        .addOnSuccessListener {
+                                          Toast.makeText(
+                                                  context,
+                                                  "Vidéo publiée avec succès",
+                                                  Toast.LENGTH_SHORT)
+                                              .show()
+                                          navigationActions.goBack()
+                                          navigationActions.goBack()
+                                        }
+                                  }
+                                }
+                                .addOnFailureListener {
+                                  Toast.makeText(
+                                          context,
+                                          "Échec de l'upload de la vidéo",
+                                          Toast.LENGTH_SHORT)
+                                      .show()
+                                }
+                          }
                         }
-                      }
-                      .addOnFailureListener {
-                        Toast.makeText(context, "Échec de l'upload de la vidéo", Toast.LENGTH_SHORT)
-                            .show()
-                      }
+                        .addOnFailureListener {
+                          Toast.makeText(
+                                  context, "Échec de l'upload de la vignette", Toast.LENGTH_SHORT)
+                              .show()
+                        }
+                  }
                 }
               },
               modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
@@ -343,11 +374,30 @@ fun NextScreen(
   }
 }
 
-fun generateThumbnail(videoUrl: String): String {
-  // Logique pour générer une vignette (si Firebase Storage permet d'accéder aux frames vidéo)
-  // Cette partie dépend des bibliothèques que tu utilises pour le traitement vidéo
-  // Si ce n'est pas faisable ici, tu peux générer les vignettes côté serveur ou lors de l'upload.
-  return videoUrl // Pour simplifier, on utilise la même URL si aucune vignette spécifique
+fun generateVideoThumbnail(context: Context, videoFile: File): ByteArray? {
+  return try {
+    val retriever = MediaMetadataRetriever()
+    retriever.setDataSource(context, Uri.fromFile(videoFile))
+
+    // Extract a frame from 1 second into the video
+    val bitmap =
+        retriever.getFrameAtTime(
+            1000000, // 1 second in microseconds
+            MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+
+    retriever.release()
+
+    // Convert bitmap to byte array
+    bitmap?.let { bmp ->
+      ByteArrayOutputStream().use { stream ->
+        bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        stream.toByteArray()
+      }
+    }
+  } catch (e: Exception) {
+    e.printStackTrace()
+    null
+  }
 }
 
 @Composable

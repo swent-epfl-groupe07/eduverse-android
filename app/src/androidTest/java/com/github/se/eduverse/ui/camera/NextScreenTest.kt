@@ -48,7 +48,6 @@ class NextScreenTest {
   private lateinit var mockBitmap: Bitmap
 
   private var currentPhotoFile: File? = null
-  private var currentVideoFile: File? = null
   private lateinit var videoFileState: MutableState<File?>
 
   private lateinit var folderRepository: FolderRepository
