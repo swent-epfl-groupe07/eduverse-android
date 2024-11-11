@@ -1,6 +1,7 @@
 package com.github.se.eduverse.repository
 
 import android.net.Uri
+import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.google.firebase.firestore.FirebaseFirestore
@@ -27,9 +28,14 @@ interface ProfileRepository {
   suspend fun uploadProfileImage(userId: String, imageUri: Uri): String
 
   suspend fun updateProfileImage(userId: String, imageUrl: String)
+
+    suspend fun addToUserCollection(userId: String, collectionName: String, publicationId: String)
+
+    suspend fun incrementLikes(publicationId: String)
 }
 
 class ProfileRepositoryImpl(
+    private val db: FirebaseFirestore,
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) : ProfileRepository {
@@ -82,15 +88,17 @@ class ProfileRepositoryImpl(
     publicationsCollection.document(publicationId).delete().await()
   }
 
-  override suspend fun addToFavorites(userId: String, publicationId: String) {
-    favoritesCollection
-        .add(
-            hashMapOf(
-                "userId" to userId,
-                "publicationId" to publicationId,
-                "timestamp" to System.currentTimeMillis()))
-        .await()
-  }
+    override suspend fun addToFavorites(userId: String, publicationId: String) {
+        favoritesCollection
+            .document("$userId-$publicationId")
+            .set(
+                hashMapOf(
+                    "userId" to userId,
+                    "publicationId" to publicationId,
+                    "timestamp" to System.currentTimeMillis()
+                )
+            ).await()
+    }
 
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
     favoritesCollection
@@ -131,4 +139,49 @@ class ProfileRepositoryImpl(
   override suspend fun updateProfileImage(userId: String, imageUrl: String) {
     profilesCollection.document(userId).update("profileImageUrl", imageUrl).await()
   }
+
+    override suspend fun addToUserCollection(
+        userId: String,
+        collectionName: String,
+        publicationId: String
+    ) {
+        firestore.collection("users")
+            .document(userId)
+            .collection(collectionName)
+            .document(publicationId)
+            .set(
+                hashMapOf(
+                    "publicationId" to publicationId,
+                    "timestamp" to System.currentTimeMillis()
+                )
+            ).await()
+    }
+
+    override suspend fun incrementLikes(publicationId: String) {
+        try {
+            // Requête pour trouver le document correspondant
+            val querySnapshot = db.collection("publications")
+                .whereEqualTo("id", publicationId)
+                .get()
+                .await()
+
+            if (!querySnapshot.isEmpty) {
+                // On prend le premier document trouvé
+                val documentSnapshot = querySnapshot.documents[0]
+                val publicationRef = documentSnapshot.reference
+
+                // On effectue la transaction pour mettre à jour le nombre de likes
+                db.runTransaction { transaction ->
+                    val snapshot = transaction.get(publicationRef)
+                    val currentLikes = snapshot.getLong("likes") ?: 0
+                    transaction.update(publicationRef, "likes", currentLikes + 1)
+                }.await()
+            } else {
+                throw Exception("Publication not found with ID: $publicationId")
+            }
+        } catch (e: Exception) {
+            Log.d("INCREMENTFAIIIL", "FAIIIL: ${e.message}")
+        }
+    }
+
 }
