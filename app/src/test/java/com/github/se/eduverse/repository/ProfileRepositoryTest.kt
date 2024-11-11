@@ -12,6 +12,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -87,6 +88,26 @@ class ProfileRepositoryImplTest {
           override suspend fun uploadProfileImage(userId: String, imageUri: Uri): String = ""
 
           override suspend fun updateProfileImage(userId: String, imageUrl: String) {}
+
+          override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
+            return emptyList()
+          }
+
+          override suspend fun createProfile(
+              userId: String,
+              defaultUsername: String,
+              photoUrl: String
+          ): Profile {
+            return Profile(id = userId, username = defaultUsername, profileImageUrl = photoUrl)
+          }
+
+          override suspend fun updateUsername(userId: String, newUsername: String) {
+            TODO()
+          }
+
+          override suspend fun doesUsernameExist(username: String): Boolean {
+            return false
+          }
 
           override suspend fun addToUserCollection(
               userId: String,
@@ -259,6 +280,77 @@ class ProfileRepositoryImplTest {
     repository.updateProfileImage(userId, imageUrl)
 
     verify(mockDocumentRef).update("profileImageUrl", imageUrl)
+  }
+
+  @Test
+  fun `createProfile creates new profile with correct data`() = runTest {
+    val userId = "testUser"
+    val username = "testUsername"
+    val photoUrl = "http://example.com/photo.jpg"
+
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.set(any())).thenReturn(Tasks.forResult(null))
+
+    val result = repository.createProfile(userId, username, photoUrl)
+
+    verify(mockDocumentRef)
+        .set(
+            argThat { profile: Profile ->
+              profile.id == userId &&
+                  profile.username == username &&
+                  profile.profileImageUrl == photoUrl &&
+                  profile.followers == 0 &&
+                  profile.following == 0 &&
+                  profile.publications.isEmpty() &&
+                  profile.favoritePublications.isEmpty()
+            })
+
+    assertEquals(userId, result.id)
+    assertEquals(username, result.username)
+    assertEquals(photoUrl, result.profileImageUrl)
+  }
+
+  @Test
+  fun `updateUsername updates only username field`() = runTest {
+    val userId = "testUser"
+    val newUsername = "newUsername"
+
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.update("username", newUsername)).thenReturn(Tasks.forResult(null))
+
+    repository.updateUsername(userId, newUsername)
+
+    verify(mockDocumentRef).update("username", newUsername)
+  }
+
+  @Test
+  fun `doesUsernameExist returns true for existing username`() = runTest {
+    val username = "existingUsername"
+    val mockQuery = mock(Query::class.java)
+
+    whenever(mockCollectionRef.whereEqualTo("username", username)).thenReturn(mockQuery)
+    whenever(mockQuery.limit(1)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(false)
+
+    val result = repository.doesUsernameExist(username)
+
+    assertTrue(result)
+  }
+
+  @Test
+  fun `doesUsernameExist returns false for non-existing username`() = runTest {
+    val username = "newUsername"
+    val mockQuery = mock(Query::class.java)
+
+    whenever(mockCollectionRef.whereEqualTo("username", username)).thenReturn(mockQuery)
+    whenever(mockQuery.limit(1)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(true)
+
+    val result = repository.doesUsernameExist(username)
+
+    assertFalse(result)
   }
 
   @Test

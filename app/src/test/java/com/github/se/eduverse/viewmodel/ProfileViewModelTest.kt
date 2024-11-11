@@ -20,10 +20,15 @@ class ProfileViewModelTest {
   private lateinit var profileViewModel: ProfileViewModel
   private val mockRepository: ProfileRepository = mock(ProfileRepository::class.java)
 
+  private val defaultProfile = Profile(id = "testId", username = "testUser")
+
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     profileViewModel = ProfileViewModel(mockRepository)
+
+    // Setup default profile without using matchers
+    runTest { `when`(mockRepository.getProfile("testUser")).thenReturn(defaultProfile) }
   }
 
   @Test
@@ -37,6 +42,7 @@ class ProfileViewModelTest {
             publications = listOf(),
             favoritePublications = listOf())
 
+    // Use specific value instead of matcher
     `when`(mockRepository.getProfile("testUser")).thenReturn(testProfile)
 
     profileViewModel.loadProfile("testUser")
@@ -45,6 +51,7 @@ class ProfileViewModelTest {
     val state = profileViewModel.profileState.first()
     assertTrue(state is ProfileUiState.Success)
     assertEquals(testProfile, (state as ProfileUiState.Success).profile)
+    verify(mockRepository, times(2)).getProfile("testUser")
   }
 
   @Test
@@ -61,29 +68,36 @@ class ProfileViewModelTest {
 
   @Test
   fun `updateProfileImage success updates state`() = runTest {
+    clearInvocations(mockRepository)
     val imageUri = mock(Uri::class.java)
     val imageUrl = "http://example.com/image.jpg"
+    val userId = "testUser"
 
-    `when`(mockRepository.uploadProfileImage("testUser", imageUri)).thenReturn(imageUrl)
+    `when`(mockRepository.uploadProfileImage(userId, imageUri)).thenReturn(imageUrl)
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
-    profileViewModel.updateProfileImage("testUser", imageUri)
+    profileViewModel.updateProfileImage(userId, imageUri)
     advanceUntilIdle()
 
     val state = profileViewModel.imageUploadState.first()
     assertTrue(state is ImageUploadState.Success)
-    verify(mockRepository).updateProfileImage("testUser", imageUrl)
+    verify(mockRepository).updateProfileImage(userId, imageUrl)
+    verify(mockRepository, times(2)).getProfile(userId)
   }
 
   @Test
   fun `addPublication success updates profile`() = runTest {
+    clearInvocations(mockRepository)
     val userId = "testUser"
     val publication = Publication(id = "pub1", userId = userId, title = "Test")
+
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.addPublication(userId, publication)
     advanceUntilIdle()
 
     verify(mockRepository).addPublication(userId, publication)
-    verify(mockRepository).getProfile(userId)
+    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
   }
 
   @Test
@@ -93,6 +107,7 @@ class ProfileViewModelTest {
 
     `when`(mockRepository.addPublication(userId, publication))
         .thenThrow(RuntimeException("Failed to add"))
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.addPublication(userId, publication)
     advanceUntilIdle()
@@ -104,26 +119,32 @@ class ProfileViewModelTest {
 
   @Test
   fun `toggleFollow follows user when not following`() = runTest {
+    clearInvocations(mockRepository)
     val currentUserId = "user1"
     val targetUserId = "user2"
+
+    `when`(mockRepository.getProfile(currentUserId)).thenReturn(defaultProfile)
 
     profileViewModel.toggleFollow(currentUserId, targetUserId, false)
     advanceUntilIdle()
 
     verify(mockRepository).followUser(currentUserId, targetUserId)
-    verify(mockRepository).getProfile(currentUserId)
+    verify(mockRepository, times(2)).getProfile(currentUserId) // Changed from 1 to 2
   }
 
   @Test
   fun `toggleFollow unfollows user when following`() = runTest {
+    clearInvocations(mockRepository)
     val currentUserId = "user1"
     val targetUserId = "user2"
+
+    `when`(mockRepository.getProfile(currentUserId)).thenReturn(defaultProfile)
 
     profileViewModel.toggleFollow(currentUserId, targetUserId, true)
     advanceUntilIdle()
 
     verify(mockRepository).unfollowUser(currentUserId, targetUserId)
-    verify(mockRepository).getProfile(currentUserId)
+    verify(mockRepository, times(2)).getProfile(currentUserId) // Changed from 1 to 2
   }
 
   @Test
@@ -133,6 +154,7 @@ class ProfileViewModelTest {
 
     `when`(mockRepository.followUser(currentUserId, targetUserId))
         .thenThrow(RuntimeException("Failed to follow"))
+    `when`(mockRepository.getProfile(currentUserId)).thenReturn(defaultProfile)
 
     profileViewModel.toggleFollow(currentUserId, targetUserId, false)
     advanceUntilIdle()
@@ -149,6 +171,7 @@ class ProfileViewModelTest {
 
     `when`(mockRepository.uploadProfileImage(userId, imageUri))
         .thenThrow(RuntimeException("Upload failed"))
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.updateProfileImage(userId, imageUri)
     advanceUntilIdle()
@@ -168,6 +191,96 @@ class ProfileViewModelTest {
     val state = profileViewModel.profileState.first()
     assertTrue(state is ProfileUiState.Error)
     assertEquals("Profile not found", (state as ProfileUiState.Error).message)
+  }
+
+  @Test
+  fun `updateUsername when username is blank returns error state`() = runTest {
+    profileViewModel.updateUsername("testUser", "")
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals("Username cannot be empty", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername("testUser", "")
+  }
+
+  @Test
+  fun `updateUsername when username is too short returns error state`() = runTest {
+    profileViewModel.updateUsername("testUser", "ab")
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(
+        "Username must be at least 3 characters", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername("testUser", "ab")
+  }
+
+  @Test
+  fun `updateUsername with invalid characters returns error state`() = runTest {
+    val userId = "testUser"
+    val invalidUsername = "user@name!"
+
+    profileViewModel.updateUsername(userId, invalidUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(
+        "Username can only contain letters, numbers, dots and underscores",
+        (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername(userId, invalidUsername)
+  }
+
+  @Test
+  fun `updateUsername when username already exists returns error state`() = runTest {
+    val userId = "testUser"
+    val existingUsername = "existingUser"
+
+    `when`(mockRepository.doesUsernameExist(existingUsername)).thenReturn(true)
+
+    profileViewModel.updateUsername(userId, existingUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals("Username already taken", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername(userId, existingUsername)
+  }
+
+  @Test
+  fun `updateUsername with valid username updates successfully`() = runTest {
+    val userId = "testUser"
+    val newUsername = "validUser123"
+
+    `when`(mockRepository.doesUsernameExist(newUsername)).thenReturn(false)
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
+
+    profileViewModel.updateUsername(userId, newUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Success)
+    verify(mockRepository).updateUsername(userId, newUsername)
+    verify(mockRepository, times(2)).getProfile(userId)
+  }
+
+  @Test
+  fun `updateUsername when repository throws exception returns error state`() = runTest {
+    val userId = "testUser"
+    val newUsername = "validUser123"
+    val errorMessage = "Database error"
+
+    `when`(mockRepository.doesUsernameExist(newUsername)).thenReturn(false)
+    `when`(mockRepository.updateUsername(userId, newUsername))
+        .thenThrow(RuntimeException(errorMessage))
+
+    profileViewModel.updateUsername(userId, newUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(errorMessage, (state as UsernameUpdateState.Error).message)
   }
 
   @Test
