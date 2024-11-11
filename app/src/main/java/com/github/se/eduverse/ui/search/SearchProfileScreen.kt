@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,17 @@ import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
+
+const val TAG_SEARCH_FIELD = "search_field"
+const val TAG_LOADING_INDICATOR = "loading_indicator"
+const val TAG_NO_RESULTS = "no_results"
+const val TAG_IDLE_MESSAGE = "idle_message"
+const val TAG_ERROR_MESSAGE = "error_message"
+const val TAG_PROFILE_LIST = "profile_list"
+const val TAG_PROFILE_ITEM = "profile_item"
+const val TAG_PROFILE_IMAGE = "profile_image"
+const val TAG_PROFILE_USERNAME = "profile_username"
+const val TAG_PROFILE_STATS = "profile_stats"
 
 @Composable
 fun SearchProfileScreen(
@@ -42,7 +54,8 @@ fun SearchProfileScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 16.dp)
+                .testTag(TAG_SEARCH_FIELD),
             placeholder = { Text("Search profiles...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true
@@ -51,7 +64,9 @@ fun SearchProfileScreen(
         when (val state = searchState) {
             is SearchProfileState.Loading -> {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag(TAG_LOADING_INDICATOR),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -60,7 +75,9 @@ fun SearchProfileScreen(
             is SearchProfileState.Success -> {
                 if (state.profiles.isEmpty() && searchQuery.isNotEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag(TAG_NO_RESULTS),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -71,6 +88,7 @@ fun SearchProfileScreen(
                     }
                 } else {
                     LazyColumn(
+                        modifier = Modifier.testTag(TAG_PROFILE_LIST),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(
@@ -87,7 +105,9 @@ fun SearchProfileScreen(
             }
             is SearchProfileState.Error -> {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag(TAG_ERROR_MESSAGE),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -100,7 +120,9 @@ fun SearchProfileScreen(
             SearchProfileState.Idle -> {
                 if (searchQuery.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag(TAG_IDLE_MESSAGE),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -116,24 +138,27 @@ fun SearchProfileScreen(
 }
 
 @Composable
-private fun ProfileSearchItem(
+fun ProfileSearchItem(
     profile: Profile,
     onClick: () -> Unit
 ) {
     ListItem(
         modifier = Modifier
             .clickable(onClick = onClick)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .testTag("${TAG_PROFILE_ITEM}_${profile.id}"),
         headlineContent = {
             Text(
                 text = profile.username,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("${TAG_PROFILE_USERNAME}_${profile.id}")
             )
         },
         supportingContent = {
             Row(
+                modifier = Modifier.testTag("${TAG_PROFILE_STATS}_${profile.id}"),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
@@ -154,7 +179,8 @@ private fun ProfileSearchItem(
                 contentDescription = "Profile picture of ${profile.username}",
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .testTag("${TAG_PROFILE_IMAGE}_${profile.id}"),
                 fallback = painterResource(R.drawable.eduverse_logo_alone)
             )
         }

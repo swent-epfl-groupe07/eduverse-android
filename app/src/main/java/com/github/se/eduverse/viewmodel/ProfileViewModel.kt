@@ -20,7 +20,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
   val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
   private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
-  val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
+  open val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
   private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
   val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
 
@@ -99,7 +99,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun searchProfiles(query: String) {
+  open fun searchProfiles(query: String) {
     // Cancel previous search if any
     searchJob?.cancel()
 
