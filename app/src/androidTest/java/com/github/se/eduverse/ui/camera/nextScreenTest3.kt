@@ -31,7 +31,6 @@ class NextScreenTest3 {
     vViewModel = mockk(relaxed = true)
     navigationActions = mockk(relaxed = true)
 
-    // Création d'une image bitmap et d'un fichier temporaire simulant une photo capturée
     mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
     testFile =
         File.createTempFile("test_image", ".jpg").apply {
@@ -43,12 +42,11 @@ class NextScreenTest3 {
 
   @Test
   fun testSaveButtonSavesVideoWhenVideoFileIsPresent() {
-    // Crée un fichier vidéo temporaire pour simuler une vidéo capturée
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
     composeTestRule.setContent {
       NextScreen(
-          photoFile = null, // Pas de fichier photo
+          photoFile = null,
           videoFile = testVideoFile, // Fichier vidéo valide
           navigationActions = navigationActions,
           pViewModel,
@@ -56,13 +54,10 @@ class NextScreenTest3 {
           vViewModel)
     }
 
-    // Effectuer un clic sur le bouton "Save"
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Vérifier que `videoViewModel.saveVideo` est appelé avec un objet `Video`
     io.mockk.verify { vViewModel.saveVideo(any<Video>()) }
 
-    // Vérifier que `navigationActions.goBack()` est appelé deux fois après la sauvegarde
     io.mockk.verify(exactly = 3) { navigationActions.goBack() }
   }
 }
