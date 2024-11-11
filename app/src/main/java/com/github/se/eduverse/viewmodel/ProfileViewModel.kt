@@ -99,7 +99,7 @@ open class ProfileViewModel(
   fun likeAndAddToFavorites(userId: String, publicationId: String) {
     viewModelScope.launch {
       try {
-        profileRepository.incrementLikes(publicationId)
+        profileRepository.incrementLikes(publicationId, userId)
         addPublicationToUserCollection(userId, publicationId)
         Log.d("REUSSIII", "POST LIKEEE")
       } catch (e: Exception) {

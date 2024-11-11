@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -31,7 +32,7 @@ interface ProfileRepository {
 
     suspend fun addToUserCollection(userId: String, collectionName: String, publicationId: String)
 
-    suspend fun incrementLikes(publicationId: String)
+    suspend fun incrementLikes(publicationId: String, userId: String)
 }
 
 class ProfileRepositoryImpl(
@@ -157,24 +158,36 @@ class ProfileRepositoryImpl(
             ).await()
     }
 
-    override suspend fun incrementLikes(publicationId: String) {
+    override suspend fun incrementLikes(publicationId: String, userId: String) {
         try {
-            // Requête pour trouver le document correspondant
-            val querySnapshot = db.collection("publications")
-                .whereEqualTo("id", publicationId)
-                .get()
-                .await()
+            // Récupérer tous les documents de la collection `publications`
+            val querySnapshot = db.collection("publications").get().await()
 
-            if (!querySnapshot.isEmpty) {
-                // On prend le premier document trouvé
-                val documentSnapshot = querySnapshot.documents[0]
-                val publicationRef = documentSnapshot.reference
+            var documentRefToUpdate: DocumentReference? = null
 
-                // On effectue la transaction pour mettre à jour le nombre de likes
+            // Parcourir les documents pour trouver celui avec l'attribut `id` correspondant
+            for (document in querySnapshot.documents) {
+                val docId = document.getString("id")
+                if (docId == publicationId) {
+                    documentRefToUpdate = document.reference
+                    break
+                }
+            }
+
+            // Si le document correspondant est trouvé, procéder à la mise à jour
+            if (documentRefToUpdate != null) {
                 db.runTransaction { transaction ->
-                    val snapshot = transaction.get(publicationRef)
-                    val currentLikes = snapshot.getLong("likes") ?: 0
-                    transaction.update(publicationRef, "likes", currentLikes + 1)
+                    val snapshot = transaction.get(documentRefToUpdate)
+                    val likedBy = snapshot.get("likedBy") as? List<String> ?: emptyList()
+
+                    // Vérifier si l'utilisateur a déjà liké
+                    if (!likedBy.contains(userId)) {
+                        val currentLikes = snapshot.getLong("likes") ?: 0
+                        transaction.update(documentRefToUpdate, "likes", currentLikes + 1)
+                        transaction.update(documentRefToUpdate, "likedBy", likedBy + userId)
+                    } else {
+                        Log.d("INCREMENTCHECK", "User $userId has already liked this publication.")
+                    }
                 }.await()
             } else {
                 throw Exception("Publication not found with ID: $publicationId")
@@ -183,5 +196,7 @@ class ProfileRepositoryImpl(
             Log.d("INCREMENTFAIIIL", "FAIIIL: ${e.message}")
         }
     }
+
+
 
 }
