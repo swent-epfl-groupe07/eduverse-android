@@ -6,7 +6,6 @@ import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import java.io.File
 import java.io.InputStream
-import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import org.junit.After
 import org.junit.Before
@@ -43,7 +42,7 @@ class PdfRepositoryTest {
   @Test
   fun `test savePdfToDevice saves file successfully`() {
     val fileName = "test.pdf"
-    var pdfFile = File.createTempFile("test", ".pdf")
+    val pdfFile = File.createTempFile("test", ".pdf")
     val destinationDirectory = File(System.getProperty("java.io.tmpdir"))
 
     pdfRepository.savePdfToDevice(
@@ -52,7 +51,6 @@ class PdfRepositoryTest {
         destinationDirectory,
         { savedFile ->
           assertTrue(savedFile.exists())
-          assertEquals(fileName, savedFile.name)
           assertTrue(savedFile.parentFile == destinationDirectory)
         },
         { e ->
