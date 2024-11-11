@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,8 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
   private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
   val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
+  private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
+  val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
 
   private var searchJob: Job? = null
 
@@ -27,9 +30,14 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     viewModelScope.launch {
       _profileState.value = ProfileUiState.Loading
       try {
+        // Try to create profile if it doesn't exist
+        createProfileIfNotExists(userId)
+
+        // Load the profile (whether it existed or was just created)
         val profile = repository.getProfile(userId)
-        _profileState.value =
-            profile?.let { ProfileUiState.Success(it) } ?: ProfileUiState.Error("Profile not found")
+        _profileState.value = profile?.let {
+          ProfileUiState.Success(it)
+        } ?: ProfileUiState.Error("Profile not found")
       } catch (e: Exception) {
         _profileState.value = ProfileUiState.Error(e.message ?: "Unknown error")
       }
@@ -117,6 +125,59 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     super.onCleared()
     searchJob?.cancel()
   }
+
+  suspend fun createProfileIfNotExists(userId: String) {
+    try {
+      val profile = repository.getProfile(userId)
+      if (profile == null) {
+        // Get Google Auth user info
+        val user = FirebaseAuth.getInstance().currentUser
+        val defaultUsername = user?.displayName ?: "User${userId.take(4)}"
+        val photoUrl = user?.photoUrl?.toString() ?: ""
+
+        repository.createProfile(
+          userId = userId,
+          defaultUsername = defaultUsername,
+          photoUrl = photoUrl
+        )
+      }
+    } catch (e: Exception) {
+      _profileState.value = ProfileUiState.Error(e.message ?: "Failed to create profile")
+    }
+  }
+
+  fun updateUsername(userId: String, newUsername: String) {
+    viewModelScope.launch {
+      _usernameState.value = UsernameUpdateState.Loading
+      try {
+        // Validate username
+        when {
+          newUsername.isBlank() -> {
+            _usernameState.value = UsernameUpdateState.Error("Username cannot be empty")
+            return@launch
+          }
+          newUsername.length < 3 -> {
+            _usernameState.value = UsernameUpdateState.Error("Username must be at least 3 characters")
+            return@launch
+          }
+          !newUsername.matches(Regex("^[a-zA-Z0-9._]+$")) -> {
+            _usernameState.value = UsernameUpdateState.Error("Username can only contain letters, numbers, dots and underscores")
+            return@launch
+          }
+          repository.doesUsernameExist(newUsername) -> {
+            _usernameState.value = UsernameUpdateState.Error("Username already taken")
+            return@launch
+          }
+        }
+
+        repository.updateUsername(userId, newUsername)
+        loadProfile(userId) // Reload profile to reflect changes
+        _usernameState.value = UsernameUpdateState.Success
+      } catch (e: Exception) {
+        _usernameState.value = UsernameUpdateState.Error(e.message ?: "Failed to update username")
+      }
+    }
+  }
 }
 
 sealed class ProfileUiState {
@@ -143,4 +204,11 @@ sealed class SearchProfileState {
   object Loading : SearchProfileState()
   data class Success(val profiles: List<Profile>) : SearchProfileState()
   data class Error(val message: String) : SearchProfileState()
+}
+
+sealed class UsernameUpdateState {
+  object Idle : UsernameUpdateState()
+  object Loading : UsernameUpdateState()
+  object Success : UsernameUpdateState()
+  data class Error(val message: String) : UsernameUpdateState()
 }

@@ -29,6 +29,12 @@ interface ProfileRepository {
   suspend fun updateProfileImage(userId: String, imageUrl: String)
 
   suspend fun searchProfiles(query: String, limit: Int = 20): List<Profile>
+
+  suspend fun createProfile(userId: String, defaultUsername: String, photoUrl: String = ""): Profile
+
+  suspend fun updateUsername(userId: String, newUsername: String)
+
+  suspend fun doesUsernameExist(username: String): Boolean
 }
 
 class ProfileRepositoryImpl(
@@ -144,4 +150,36 @@ class ProfileRepositoryImpl(
           .documents
           .mapNotNull { it.toObject(Profile::class.java) }
   }
+
+  override suspend fun createProfile(
+      userId: String,
+      defaultUsername: String,
+      photoUrl: String
+  ): Profile {
+      val profile = Profile(
+          id = userId,
+          username = defaultUsername,
+          profileImageUrl = photoUrl,
+          followers = 0,
+          following = 0,
+          publications = emptyList(),
+          favoritePublications = emptyList()
+      )
+
+      profilesCollection.document(userId).set(profile).await()
+      return profile
+  }
+
+    override suspend fun updateUsername(userId: String, newUsername: String) {
+        profilesCollection.document(userId).update("username", newUsername).await()
+    }
+
+    override suspend fun doesUsernameExist(username: String): Boolean {
+        val snapshot = profilesCollection
+            .whereEqualTo("username", username)
+            .limit(1)
+            .get()
+            .await()
+        return !snapshot.isEmpty
+    }
 }

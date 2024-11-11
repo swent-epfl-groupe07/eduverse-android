@@ -156,9 +156,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.SEARCH) {
           SearchProfileScreen(
               viewModel = profileViewModel,
-              onProfileClick = { userId ->
-                  navigationActions.navigateTo("${Screen.PROFILE}/$userId")
-              }
+              onProfileClick = {}
           )
       }
     }
