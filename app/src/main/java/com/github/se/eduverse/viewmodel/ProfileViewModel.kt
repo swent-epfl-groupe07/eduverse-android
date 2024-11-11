@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +18,10 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
   private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
   val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
+  private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
+  val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
+
+  private var searchJob: Job? = null
 
   fun loadProfile(userId: String) {
     viewModelScope.launch {
@@ -84,6 +90,33 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       }
     }
   }
+
+  fun searchProfiles(query: String) {
+    // Cancel previous search if any
+    searchJob?.cancel()
+
+    if (query.isBlank()) {
+      _searchState.value = SearchProfileState.Idle
+      return
+    }
+
+    searchJob = viewModelScope.launch {
+      _searchState.value = SearchProfileState.Loading
+      try {
+        // Add delay to avoid too many requests while typing
+        delay(300)
+        val results = repository.searchProfiles(query)
+        _searchState.value = SearchProfileState.Success(results)
+      } catch (e: Exception) {
+        _searchState.value = SearchProfileState.Error(e.message ?: "Search failed")
+      }
+    }
+  }
+
+  override fun onCleared() {
+    super.onCleared()
+    searchJob?.cancel()
+  }
 }
 
 sealed class ProfileUiState {
@@ -102,4 +135,12 @@ sealed class ImageUploadState {
   object Success : ImageUploadState()
 
   data class Error(val message: String) : ImageUploadState()
+}
+
+
+sealed class SearchProfileState {
+  object Idle : SearchProfileState()
+  object Loading : SearchProfileState()
+  data class Success(val profiles: List<Profile>) : SearchProfileState()
+  data class Error(val message: String) : SearchProfileState()
 }
