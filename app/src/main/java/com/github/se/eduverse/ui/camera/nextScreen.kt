@@ -251,7 +251,7 @@ fun NextScreen(
                         storageRef.downloadUrl.addOnSuccessListener { uri ->
                           val publication =
                               Publication(
-                                  id=  UUID.randomUUID().toString(),
+                                  id = UUID.randomUUID().toString(),
                                   userId = ownerId,
                                   title = title,
                                   thumbnailUrl =

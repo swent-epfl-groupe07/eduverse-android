@@ -87,10 +87,11 @@ class ProfileRepositoryImplTest {
           override suspend fun uploadProfileImage(userId: String, imageUri: Uri): String = ""
 
           override suspend fun updateProfileImage(userId: String, imageUrl: String) {}
+
           override suspend fun addToUserCollection(
-            userId: String,
-            collectionName: String,
-            publicationId: String
+              userId: String,
+              collectionName: String,
+              publicationId: String
           ) {
             TODO("Not yet implemented")
           }
@@ -285,11 +286,11 @@ class ProfileRepositoryImplTest {
     verify(mockUsersCollectionRef).document(userId)
     verify(mockUserDocumentRef).collection(collectionName)
     verify(mockCollectionRef).document(publicationId)
-    verify(mockPublicationDocumentRef).set(
-      argThat { map: Map<String, Any> ->
-        map["publicationId"] == publicationId && map.containsKey("timestamp")
-      }
-    )
+    verify(mockPublicationDocumentRef)
+        .set(
+            argThat { map: Map<String, Any> ->
+              map["publicationId"] == publicationId && map.containsKey("timestamp")
+            })
   }
 
   @Test
@@ -339,80 +340,84 @@ class ProfileRepositoryImplTest {
   }
 
   @Test
-  fun `removeFromLikedPublications successfully removes publication from likedPublications`() = runTest {
-    val userId = "testUser"
-    val publicationId = "pub123"
+  fun `removeFromLikedPublications successfully removes publication from likedPublications`() =
+      runTest {
+        val userId = "testUser"
+        val publicationId = "pub123"
 
-    val mockUsersCollectionRef = mock(CollectionReference::class.java)
-    val mockUserDocumentRef = mock(DocumentReference::class.java)
-    val mockLikedPublicationsCollectionRef = mock(CollectionReference::class.java)
-    val mockPublicationDocumentRef = mock(DocumentReference::class.java)
+        val mockUsersCollectionRef = mock(CollectionReference::class.java)
+        val mockUserDocumentRef = mock(DocumentReference::class.java)
+        val mockLikedPublicationsCollectionRef = mock(CollectionReference::class.java)
+        val mockPublicationDocumentRef = mock(DocumentReference::class.java)
 
-    // Mocking the Firestore calls
-    whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollectionRef)
-    whenever(mockUsersCollectionRef.document(userId)).thenReturn(mockUserDocumentRef)
-    whenever(mockUserDocumentRef.collection("likedPublications")).thenReturn(mockLikedPublicationsCollectionRef)
-    whenever(mockLikedPublicationsCollectionRef.document(publicationId)).thenReturn(mockPublicationDocumentRef)
-    whenever(mockPublicationDocumentRef.delete()).thenReturn(Tasks.forResult(null))
+        // Mocking the Firestore calls
+        whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollectionRef)
+        whenever(mockUsersCollectionRef.document(userId)).thenReturn(mockUserDocumentRef)
+        whenever(mockUserDocumentRef.collection("likedPublications"))
+            .thenReturn(mockLikedPublicationsCollectionRef)
+        whenever(mockLikedPublicationsCollectionRef.document(publicationId))
+            .thenReturn(mockPublicationDocumentRef)
+        whenever(mockPublicationDocumentRef.delete()).thenReturn(Tasks.forResult(null))
 
-    // Call the method
-    repository.removeFromLikedPublications(userId, publicationId)
+        // Call the method
+        repository.removeFromLikedPublications(userId, publicationId)
 
-    // Verify that delete was called
-    verify(mockPublicationDocumentRef).delete()
-  }
-
+        // Verify that delete was called
+        verify(mockPublicationDocumentRef).delete()
+      }
 
   @Test
-  fun `decrementLikesAndRemoveUser successfully decrements likes and removes user from likedBy`() = runTest {
-    val publicationId = "pub123"
-    val userId = "user456"
+  fun `decrementLikesAndRemoveUser successfully decrements likes and removes user from likedBy`() =
+      runTest {
+        val publicationId = "pub123"
+        val userId = "user456"
 
-    // Mock Firestore references
-    val mockPublicationsCollection = mock(CollectionReference::class.java)
-    val mockQuery = mock(Query::class.java)
-    val mockQuerySnapshot = mock(QuerySnapshot::class.java)
-    val mockDocumentSnapshot = mock(DocumentSnapshot::class.java)
-    val mockDocumentReference = mock(DocumentReference::class.java)
+        // Mock Firestore references
+        val mockPublicationsCollection = mock(CollectionReference::class.java)
+        val mockQuery = mock(Query::class.java)
+        val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+        val mockDocumentSnapshot = mock(DocumentSnapshot::class.java)
+        val mockDocumentReference = mock(DocumentReference::class.java)
 
-    // Mock Transaction
-    val mockTransaction = mock(Transaction::class.java)
+        // Mock Transaction
+        val mockTransaction = mock(Transaction::class.java)
 
-    // Mock Firestore collection and query behavior
-    whenever(mockFirestore.collection("publications")).thenReturn(mockPublicationsCollection)
-    whenever(mockPublicationsCollection.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
-    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
-    whenever(mockQuerySnapshot.isEmpty).thenReturn(false)
-    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockDocumentSnapshot))
-    whenever(mockDocumentSnapshot.reference).thenReturn(mockDocumentReference)
+        // Mock Firestore collection and query behavior
+        whenever(mockFirestore.collection("publications")).thenReturn(mockPublicationsCollection)
+        whenever(mockPublicationsCollection.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+        whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+        whenever(mockQuerySnapshot.isEmpty).thenReturn(false)
+        whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockDocumentSnapshot))
+        whenever(mockDocumentSnapshot.reference).thenReturn(mockDocumentReference)
 
-    // Mock transaction behavior
-    whenever(mockFirestore.runTransaction<Void>(any())).thenAnswer { invocation ->
-      val transactionFunction = invocation.arguments[0] as Transaction.Function<Void>
-      transactionFunction.apply(mockTransaction)
-      Tasks.forResult(null)
-    }
+        // Mock transaction behavior
+        whenever(mockFirestore.runTransaction<Void>(any())).thenAnswer { invocation ->
+          val transactionFunction = invocation.arguments[0] as Transaction.Function<Void>
+          transactionFunction.apply(mockTransaction)
+          Tasks.forResult(null)
+        }
 
-    // Mock transaction.get() to return our mockDocumentSnapshot
-    whenever(mockTransaction.get(mockDocumentReference)).thenReturn(mockDocumentSnapshot)
+        // Mock transaction.get() to return our mockDocumentSnapshot
+        whenever(mockTransaction.get(mockDocumentReference)).thenReturn(mockDocumentSnapshot)
 
-    // Simulate that the user has liked the publication
-    val likedBy = mutableListOf(userId)
-    whenever(mockDocumentSnapshot.get("likedBy")).thenReturn(likedBy)
-    whenever(mockDocumentSnapshot.getLong("likes")).thenReturn(1L)
+        // Simulate that the user has liked the publication
+        val likedBy = mutableListOf(userId)
+        whenever(mockDocumentSnapshot.get("likedBy")).thenReturn(likedBy)
+        whenever(mockDocumentSnapshot.getLong("likes")).thenReturn(1L)
 
-    // Call the method under test
-    repository.decrementLikesAndRemoveUser(publicationId, userId)
+        // Call the method under test
+        repository.decrementLikesAndRemoveUser(publicationId, userId)
 
-    // Verify that likedBy list no longer contains the user
-    verify(mockTransaction).update(eq(mockDocumentReference), argThat { map ->
-      val updatedLikedBy = map["likedBy"] as? List<*>
-      val updatedLikes = map["likes"] as? Long
-      updatedLikedBy != null && !updatedLikedBy.contains(userId) && updatedLikes == 0L
-    })
-  }
-
-
+        // Verify that likedBy list no longer contains the user
+        verify(mockTransaction)
+            .update(
+                eq(mockDocumentReference),
+                argThat { map ->
+                  val updatedLikedBy = map["likedBy"] as? List<*>
+                  val updatedLikes = map["likes"] as? Long
+                  updatedLikedBy != null && !updatedLikedBy.contains(userId) && updatedLikes == 0L
+                })
+      }
 
   @After
   fun tearDown() {

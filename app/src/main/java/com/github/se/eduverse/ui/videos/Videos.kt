@@ -9,7 +9,6 @@ import android.content.Context
 import android.util.Log
 import android.view.ViewGroup
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -54,113 +53,117 @@ fun VideoScreen(
     publicationViewModel: PublicationViewModel,
     profileViewModel: ProfileViewModel,
 ) {
-    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    val publications by publicationViewModel.publications.collectAsState()
-    val error by publicationViewModel.error.collectAsState()
-    val pagerState = rememberPagerState()
+  val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+  val publications by publicationViewModel.publications.collectAsState()
+  val error by publicationViewModel.error.collectAsState()
+  val pagerState = rememberPagerState()
 
-    Scaffold(
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = Route.VIDEOS
-            )
-        },
-        modifier = Modifier.testTag("VideoScreen")
-    ) { paddingValues ->
+  Scaffold(
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = Route.VIDEOS)
+      },
+      modifier = Modifier.testTag("VideoScreen")) { paddingValues ->
         when {
-            error != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
+          error != null -> {
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
                         .background(Color.Red.copy(alpha = 0.2f))
-                        .testTag("ErrorIndicator")
-                ) {
-                    Text(
-                        text = error ?: "Une erreur est survenue",
-                        color = Color.Red,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                        .testTag("ErrorIndicator")) {
+                  Text(
+                      text = error ?: "Une erreur est survenue",
+                      color = Color.Red,
+                      modifier = Modifier.align(Alignment.Center))
                 }
-            }
-            publications.isNotEmpty() -> {
-                VerticalPager(
-                    count = publications.size,
-                    state = pagerState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .testTag("VerticalPager")
-                ) { page ->
-                    val publication = publications[page]
-                    // Initialisation du state isLiked
-                    val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
+          }
+          publications.isNotEmpty() -> {
+            VerticalPager(
+                count = publications.size,
+                state = pagerState,
+                modifier =
+                    Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")) { page
+                  ->
+                  val publication = publications[page]
+                  // Initialisation du state isLiked
+                  val isLiked = remember {
+                    mutableStateOf(publication.likedBy.contains(currentUserId))
+                  }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(Unit) {
+                  Box(
+                      modifier =
+                          Modifier.fillMaxSize()
+                              .pointerInput(Unit) {
                                 detectTapGestures(
                                     onDoubleTap = {
-                                        profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
-                                        isLiked.value = true // Mettre à jour l'état local
-                                    }
-                                )
-                            }
-                            .testTag("PublicationItem_$page") // Ajout d'un testTag unique pour chaque publication
-                    ) {
+                                      profileViewModel.likeAndAddToFavorites(
+                                          currentUserId, publication.id)
+                                      isLiked.value = true // Mettre à jour l'état local
+                                    })
+                              }
+                              .testTag(
+                                  "PublicationItem_$page") // Ajout d'un testTag unique pour chaque
+                      // publication
+                      ) {
                         if (publication.mediaType == MediaType.VIDEO) {
-                            VideoItem(context = LocalContext.current, mediaUrl = publication.mediaUrl)
+                          VideoItem(context = LocalContext.current, mediaUrl = publication.mediaUrl)
                         } else {
-                            PhotoItem(thumbnailUrl = publication.thumbnailUrl)
+                          PhotoItem(thumbnailUrl = publication.thumbnailUrl)
                         }
 
                         // Icône de cœur pour aimer
                         IconButton(
                             onClick = {
-                                if (isLiked.value) {
-                                    // Logique pour retirer le like (à implémenter dans le ViewModel)
-                                    profileViewModel.removeLike(currentUserId, publication.id)
-                                    isLiked.value = false
-                                } else {
-                                    profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
-                                    isLiked.value = true
-                                }
-                                Log.d("AUTHHHHHHH", currentUserId)
+                              if (isLiked.value) {
+                                // Logique pour retirer le like (à implémenter dans le ViewModel)
+                                profileViewModel.removeLike(currentUserId, publication.id)
+                                isLiked.value = false
+                              } else {
+                                profileViewModel.likeAndAddToFavorites(
+                                    currentUserId, publication.id)
+                                isLiked.value = true
+                              }
+                              Log.d("AUTHHHHHHH", currentUserId)
                             },
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .offset(y = 64.dp)
-                                .padding(12.dp)
-                                .testTag("LikeButton_$page") // Ajout d'un testTag unique pour le bouton like
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = "Like",
-                                tint = if (isLiked.value) Color.Red else Color.White,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .testTag(if (isLiked.value) "LikedIcon_$page" else "UnlikedIcon_$page") // Ajout d'un testTag conditionnel pour l'icône
-                            )
-                        }
-                    }
+                            modifier =
+                                Modifier.align(Alignment.CenterEnd)
+                                    .offset(y = 64.dp)
+                                    .padding(12.dp)
+                                    .testTag(
+                                        "LikeButton_$page") // Ajout d'un testTag unique pour le
+                            // bouton like
+                            ) {
+                              Icon(
+                                  imageVector = Icons.Default.Favorite,
+                                  contentDescription = "Like",
+                                  tint = if (isLiked.value) Color.Red else Color.White,
+                                  modifier =
+                                      Modifier.size(48.dp)
+                                          .testTag(
+                                              if (isLiked.value) "LikedIcon_$page"
+                                              else "UnlikedIcon_$page") // Ajout d'un testTag
+                                  // conditionnel pour l'icône
+                                  )
+                            }
+                      }
                 }
 
-                // Charger plus de publications lorsque l’utilisateur atteint la dernière page visible
-                LaunchedEffect(pagerState.currentPage) {
-                    if (pagerState.currentPage == publications.size - 1) {
-                        publicationViewModel.loadMorePublications()
-                    }
-                }
+            // Charger plus de publications lorsque l’utilisateur atteint la dernière page visible
+            LaunchedEffect(pagerState.currentPage) {
+              if (pagerState.currentPage == publications.size - 1) {
+                publicationViewModel.loadMorePublications()
+              }
             }
-            else -> {
-                Box(modifier = Modifier.fillMaxSize().testTag("LoadingIndicator")) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+          }
+          else -> {
+            Box(modifier = Modifier.fillMaxSize().testTag("LoadingIndicator")) {
+              CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
+          }
         }
-    }
+      }
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -169,49 +172,39 @@ fun VideoItem(
     context: Context,
     mediaUrl: String,
     exoPlayerProvider: () -> ExoPlayer = {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(mediaUrl))
-            prepare()
-            playWhenReady = true
-            repeatMode = ExoPlayer.REPEAT_MODE_ONE
-        }
+      ExoPlayer.Builder(context).build().apply {
+        setMediaItem(MediaItem.fromUri(mediaUrl))
+        prepare()
+        playWhenReady = true
+        repeatMode = ExoPlayer.REPEAT_MODE_ONE
+      }
     }
 ) {
-    val exoPlayer = remember { exoPlayerProvider() }
+  val exoPlayer = remember { exoPlayerProvider() }
 
-    DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
+  DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
 
-    AndroidView(
-        factory = {
-            PlayerView(context).apply {
-                player = exoPlayer
-                useController = false
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            }
-        },
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .testTag("VideoItem")
-    )
+  AndroidView(
+      factory = {
+        PlayerView(context).apply {
+          player = exoPlayer
+          useController = false
+          layoutParams =
+              ViewGroup.LayoutParams(
+                  ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+          resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+        }
+      },
+      modifier = Modifier.fillMaxSize().background(Color.Black).testTag("VideoItem"))
 }
 
 @Composable
 fun PhotoItem(thumbnailUrl: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .testTag("PhotoItem")
-    ) {
-        SubcomposeAsyncImage(
-            model = thumbnailUrl,
-            contentDescription = "Photo de la publication",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+  Box(modifier = Modifier.fillMaxSize().background(Color.Black).testTag("PhotoItem")) {
+    SubcomposeAsyncImage(
+        model = thumbnailUrl,
+        contentDescription = "Photo de la publication",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize())
+  }
 }

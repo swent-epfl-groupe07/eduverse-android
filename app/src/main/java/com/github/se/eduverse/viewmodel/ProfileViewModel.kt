@@ -7,16 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
-import com.github.se.eduverse.repository.PublicationRepository
-import com.google.android.play.core.assetpacks.db
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 open class ProfileViewModel(
-  private val profileRepository: ProfileRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
   open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
@@ -33,13 +30,12 @@ open class ProfileViewModel(
       try {
         val profile = profileRepository.getProfile(userId)
         _profileState.value =
-          profile?.let { ProfileUiState.Success(it) } ?: ProfileUiState.Error("Profile not found")
+            profile?.let { ProfileUiState.Success(it) } ?: ProfileUiState.Error("Profile not found")
       } catch (e: Exception) {
         _profileState.value = ProfileUiState.Error(e.message ?: "Unknown error")
       }
     }
   }
-
 
   fun addPublication(userId: String, publication: Publication) {
     viewModelScope.launch {
@@ -95,8 +91,6 @@ open class ProfileViewModel(
     }
   }
 
-
-
   private suspend fun addPublicationToUserCollection(userId: String, publicationId: String) {
     profileRepository.addToUserCollection(userId, "likedPublications", publicationId)
   }
@@ -111,19 +105,22 @@ open class ProfileViewModel(
       }
     }
   }
-
 }
-
 
 sealed class ProfileUiState {
   object Loading : ProfileUiState()
+
   data class Success(val profile: Profile) : ProfileUiState()
+
   data class Error(val message: String) : ProfileUiState()
 }
 
 sealed class ImageUploadState {
   object Idle : ImageUploadState()
+
   object Loading : ImageUploadState()
+
   object Success : ImageUploadState()
+
   data class Error(val message: String) : ImageUploadState()
 }

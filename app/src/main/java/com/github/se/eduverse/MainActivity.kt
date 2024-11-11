@@ -69,209 +69,211 @@ import java.io.File
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private var cameraPermissionGranted by mutableStateOf(false)
+  private lateinit var auth: FirebaseAuth
+  private var cameraPermissionGranted by mutableStateOf(false)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+  override fun onCreate(savedInstanceState: Bundle?) {
 
-        super.onCreate(savedInstanceState)
-        /*
-        // Initialiser Firebase Auth
-        auth = FirebaseAuth.getInstance()
-        if (auth.currentUser != null) {
-          auth.signOut()
-        } */
+    super.onCreate(savedInstanceState)
+    /*
+    // Initialiser Firebase Auth
+    auth = FirebaseAuth.getInstance()
+    if (auth.currentUser != null) {
+      auth.signOut()
+    } */
 
-        // Ajout du VideoRepository et du VideoViewModel
+    // Ajout du VideoRepository et du VideoViewModel
 
-        // Gestion des permissions de la caméra
-        val requestPermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                cameraPermissionGranted = isGranted
-            }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-            PackageManager.PERMISSION_GRANTED) {
-            cameraPermissionGranted = true
-        } else {
-            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+    // Gestion des permissions de la caméra
+    val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+          cameraPermissionGranted = isGranted
         }
 
-        setContent {
-            EduverseTheme {
-                Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
-            }
-        }
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+        PackageManager.PERMISSION_GRANTED) {
+      cameraPermissionGranted = true
+    } else {
+      requestPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
+
+    setContent {
+      EduverseTheme {
+        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
+      }
+    }
+  }
 }
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
 fun EduverseApp(cameraPermissionGranted: Boolean) {
-    val firestore = FirebaseFirestore.getInstance()
-    val navController = rememberNavController()
-    val navigationActions = NavigationActions(navController)
-    val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
-    val dashboardViewModel = DashboardViewModel(dashboardRepo)
-    val profileRepo =
-        ProfileRepositoryImpl(
-            firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
-    val profileViewModel = ProfileViewModel(profileRepo)
-    val folderRepo = FolderRepositoryImpl(db = firestore)
-    val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
-    val pomodoroViewModel: TimerViewModel = viewModel()
-    val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
-    val fileViewModel = FileViewModel(fileRepo)
-    val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
-    val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+  val firestore = FirebaseFirestore.getInstance()
+  val navController = rememberNavController()
+  val navigationActions = NavigationActions(navController)
+  val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
+  val dashboardViewModel = DashboardViewModel(dashboardRepo)
+  val profileRepo =
+      ProfileRepositoryImpl(
+          firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
+  val profileViewModel = ProfileViewModel(profileRepo)
+  val folderRepo = FolderRepositoryImpl(db = firestore)
+  val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val pomodoroViewModel: TimerViewModel = viewModel()
+  val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
+  val fileViewModel = FileViewModel(fileRepo)
+  val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
+  val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val videoViewModel = VideoViewModel(videoRepo, fileRepo)
 
-    val pubRepo = PublicationRepository(firestore)
-    val publicationViewModel = PublicationViewModel(pubRepo)
+  val pubRepo = PublicationRepository(firestore)
+  val publicationViewModel = PublicationViewModel(pubRepo)
 
-    NavHost(navController = navController, startDestination = Route.LOADING) {
-        navigation(
-            startDestination = Screen.LOADING,
-            route = Route.LOADING,
-        ) {
-            composable(Screen.LOADING) { LoadingScreen(navigationActions) }
-        }
-
-        navigation(
-            startDestination = Screen.AUTH,
-            route = Route.AUTH,
-        ) {
-            composable(Screen.AUTH) { SignInScreen(navigationActions) }
-        }
-
-        navigation(
-            startDestination = Screen.DASHBOARD,
-            route = Route.DASHBOARD,
-        ) {
-            composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-            composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
-        }
-
-        navigation(
-            startDestination = Screen.VIDEOS,
-            route = Route.VIDEOS,
-        ) {
-            composable(Screen.VIDEOS) { VideoScreen(navigationActions, publicationViewModel, profileViewModel) }
-        }
-
-        navigation(
-            startDestination = Screen.CALCULATOR,
-            route = Route.CALCULATOR,
-        ) {
-            composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
-        }
-
-        navigation(
-            startDestination = Screen.CAMERA,
-            route = Route.CAMERA,
-        ) {
-            composable(Screen.CAMERA) {
-                if (cameraPermissionGranted) {
-                    CameraScreen(navigationActions)
-                } else {
-                    PermissionDeniedScreen()
-                }
-            }
-        }
-
-        navigation(
-            startDestination = Screen.PROFILE,
-            route = Route.PROFILE,
-        ) {
-            composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
-
-            composable(Screen.SETTING) { SettingsScreen(navigationActions) }
-
-            composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
-
-            composable(Screen.GALLERY) {
-                val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                GalleryScreen(
-                    ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
-                Log.d("GalleryScreen", "Current Owner ID: $ownerId")
-            }
-        }
-
-        navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
-            composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-            composable(Screen.CREATE_FOLDER) {
-                CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
-            }
-            composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
-            composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
-        }
-
-        // Écran pour afficher la photo prise
-        navigation(
-            startDestination = Screen.POMODORO,
-            route = Route.POMODORO,
-        ) {
-            composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
-            composable(Screen.SETTING) { SettingsScreen(navigationActions) }
-        }
-
-        // Ajoute une route dynamique pour PicTakenScreen avec des arguments optionnels pour photo et
-        // vidéo
-        composable(
-            "picTaken/{photoPath}?videoPath={videoPath}",
-            arguments =
-            listOf(
-                navArgument("photoPath") {
-                    type = NavType.StringType
-                    nullable = true
-                },
-                navArgument("videoPath") {
-                    type = NavType.StringType
-                    nullable = true
-                })) { backStackEntry ->
-            // Récupère les chemins de photo et de vidéo depuis les arguments
-            val photoPath = backStackEntry.arguments?.getString("photoPath")
-            val videoPath = backStackEntry.arguments?.getString("videoPath")
-
-            // Crée les fichiers correspondants si les chemins existent
-            val photoFile = photoPath?.let { File(it) }
-            val videoFile = videoPath?.let { File(it) }
-
-            // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
-            PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
-        }
-
-        composable(
-            "nextScreen/{photoPath}/{videoPath}",
-            arguments =
-            listOf(
-                navArgument("photoPath") {
-                    nullable = true
-                    type = NavType.StringType
-                },
-                navArgument("videoPath") {
-                    nullable = true
-                    type = NavType.StringType
-                })) { backStackEntry ->
-            val photoPath = backStackEntry.arguments?.getString("photoPath")
-            val videoPath = backStackEntry.arguments?.getString("videoPath")
-
-            val photoFile = if (photoPath != null) File(photoPath) else null
-            val videoFile = if (videoPath != null) File(videoPath) else null
-
-            NextScreen(
-                photoFile = photoFile,
-                videoFile = videoFile,
-                navigationActions = navigationActions,
-                photoViewModel,
-                folderViewModel,
-                videoViewModel)
-        }
+  NavHost(navController = navController, startDestination = Route.LOADING) {
+    navigation(
+        startDestination = Screen.LOADING,
+        route = Route.LOADING,
+    ) {
+      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
     }
+
+    navigation(
+        startDestination = Screen.AUTH,
+        route = Route.AUTH,
+    ) {
+      composable(Screen.AUTH) { SignInScreen(navigationActions) }
+    }
+
+    navigation(
+        startDestination = Screen.DASHBOARD,
+        route = Route.DASHBOARD,
+    ) {
+      composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+    }
+
+    navigation(
+        startDestination = Screen.VIDEOS,
+        route = Route.VIDEOS,
+    ) {
+      composable(Screen.VIDEOS) {
+        VideoScreen(navigationActions, publicationViewModel, profileViewModel)
+      }
+    }
+
+    navigation(
+        startDestination = Screen.CALCULATOR,
+        route = Route.CALCULATOR,
+    ) {
+      composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
+    }
+
+    navigation(
+        startDestination = Screen.CAMERA,
+        route = Route.CAMERA,
+    ) {
+      composable(Screen.CAMERA) {
+        if (cameraPermissionGranted) {
+          CameraScreen(navigationActions)
+        } else {
+          PermissionDeniedScreen()
+        }
+      }
+    }
+
+    navigation(
+        startDestination = Screen.PROFILE,
+        route = Route.PROFILE,
+    ) {
+      composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
+
+      composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+
+      composable(Screen.GALLERY) {
+        val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        GalleryScreen(
+            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
+        Log.d("GalleryScreen", "Current Owner ID: $ownerId")
+      }
+    }
+
+    navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
+      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
+      composable(Screen.CREATE_FOLDER) {
+        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+      }
+      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
+      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
+    }
+
+    // Écran pour afficher la photo prise
+    navigation(
+        startDestination = Screen.POMODORO,
+        route = Route.POMODORO,
+    ) {
+      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
+    }
+
+    // Ajoute une route dynamique pour PicTakenScreen avec des arguments optionnels pour photo et
+    // vidéo
+    composable(
+        "picTaken/{photoPath}?videoPath={videoPath}",
+        arguments =
+            listOf(
+                navArgument("photoPath") {
+                  type = NavType.StringType
+                  nullable = true
+                },
+                navArgument("videoPath") {
+                  type = NavType.StringType
+                  nullable = true
+                })) { backStackEntry ->
+          // Récupère les chemins de photo et de vidéo depuis les arguments
+          val photoPath = backStackEntry.arguments?.getString("photoPath")
+          val videoPath = backStackEntry.arguments?.getString("videoPath")
+
+          // Crée les fichiers correspondants si les chemins existent
+          val photoFile = photoPath?.let { File(it) }
+          val videoFile = videoPath?.let { File(it) }
+
+          // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
+          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
+        }
+
+    composable(
+        "nextScreen/{photoPath}/{videoPath}",
+        arguments =
+            listOf(
+                navArgument("photoPath") {
+                  nullable = true
+                  type = NavType.StringType
+                },
+                navArgument("videoPath") {
+                  nullable = true
+                  type = NavType.StringType
+                })) { backStackEntry ->
+          val photoPath = backStackEntry.arguments?.getString("photoPath")
+          val videoPath = backStackEntry.arguments?.getString("videoPath")
+
+          val photoFile = if (photoPath != null) File(photoPath) else null
+          val videoFile = if (videoPath != null) File(videoPath) else null
+
+          NextScreen(
+              photoFile = photoFile,
+              videoFile = videoFile,
+              navigationActions = navigationActions,
+              photoViewModel,
+              folderViewModel,
+              videoViewModel)
+        }
+  }
 }
 
 @Composable
 fun PermissionDeniedScreen() {
-    Text("Permission Denied")
+  Text("Permission Denied")
 }

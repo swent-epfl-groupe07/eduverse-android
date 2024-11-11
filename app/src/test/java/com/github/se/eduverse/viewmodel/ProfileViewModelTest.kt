@@ -188,7 +188,8 @@ class ProfileViewModelTest {
     val userId = "testUser"
     val publicationId = "pub1"
 
-    `when`(mockRepository.incrementLikes(publicationId, userId)).thenThrow(RuntimeException("Failed to like"))
+    `when`(mockRepository.incrementLikes(publicationId, userId))
+        .thenThrow(RuntimeException("Failed to like"))
 
     profileViewModel.likeAndAddToFavorites(userId, publicationId)
     advanceUntilIdle()
@@ -219,7 +220,7 @@ class ProfileViewModelTest {
 
     // Simulate an exception when removing the like
     `when`(mockRepository.removeFromLikedPublications(userId, publicationId))
-      .thenThrow(RuntimeException("Failed to remove like"))
+        .thenThrow(RuntimeException("Failed to remove like"))
 
     profileViewModel.removeLike(userId, publicationId)
     advanceUntilIdle()
