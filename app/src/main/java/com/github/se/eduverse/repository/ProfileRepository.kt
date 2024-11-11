@@ -27,6 +27,8 @@ interface ProfileRepository {
   suspend fun uploadProfileImage(userId: String, imageUri: Uri): String
 
   suspend fun updateProfileImage(userId: String, imageUrl: String)
+
+  suspend fun searchProfiles(query: String, limit: Int = 20): List<Profile>
 }
 
 class ProfileRepositoryImpl(
@@ -130,5 +132,16 @@ class ProfileRepositoryImpl(
 
   override suspend fun updateProfileImage(userId: String, imageUrl: String) {
     profilesCollection.document(userId).update("profileImageUrl", imageUrl).await()
+  }
+
+  override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
+      return profilesCollection
+          .whereGreaterThanOrEqualTo("username", query)
+          .whereLessThanOrEqualTo("username", query + '\uf8ff')
+          .limit(limit.toLong())
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.toObject(Profile::class.java) }
   }
 }
