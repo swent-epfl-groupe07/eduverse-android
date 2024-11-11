@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.screens
+package com.github.se.eduverse.ui.gallery
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -13,26 +13,32 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.* // Material 3 API
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.showBottomMenu
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
     ownerId: String,
-    viewModel: PhotoViewModel,
+    photoViewModel: PhotoViewModel,
+    folderViewModel: FolderViewModel,
     navigationActions: NavigationActions // Paramètre pour les actions de navigation
 ) {
-  val photos by viewModel.photos.collectAsState()
+  val context = LocalContext.current
+  val photos by photoViewModel.photos.collectAsState()
   var selectedPhoto by remember { mutableStateOf<Photo?>(null) } // État pour l'image sélectionnée
 
   LaunchedEffect(ownerId) {
-    viewModel.getPhotosByOwner(ownerId) // Récupère les photos pour cet utilisateur
+    photoViewModel.getPhotosByOwner(ownerId) // Récupère les photos pour cet utilisateur
   }
 
   Scaffold(
@@ -82,6 +88,13 @@ fun GalleryScreen(
         onDownload = {
           // Appelle la fonction pour télécharger l'image
           downloadImage(photo.path ?: "unknown")
+        },
+        onAdd = {
+          showBottomMenu(context, folderViewModel) { folder ->
+            photoViewModel.makeFileFromPhoto(photo) {
+              folderViewModel.createFileInFolder(it, it, folder)
+            }
+          }
         })
   }
 }
@@ -97,7 +110,7 @@ fun PhotoItem(photo: Photo, modifier: Modifier = Modifier, onClick: () -> Unit) 
 }
 
 @Composable
-fun ImageDialog(photo: Photo, onDismiss: () -> Unit, onDownload: () -> Unit) {
+fun ImageDialog(photo: Photo, onDismiss: () -> Unit, onDownload: () -> Unit, onAdd: () -> Unit) {
   AlertDialog(
       onDismissRequest = { onDismiss() },
       text = {
@@ -123,13 +136,18 @@ fun ImageDialog(photo: Photo, onDismiss: () -> Unit, onDownload: () -> Unit) {
             }
       },
       dismissButton = {
-        IconButton(
-            onClick = { onDownload() },
-            modifier =
-                Modifier.testTag("DownloadButton") // Ajout du testTag pour le bouton Download
-            ) {
-              Icon(imageVector = Icons.Default.Download, contentDescription = "Download Image")
-            }
+        Row {
+          IconButton(
+              onClick = { onDownload() },
+              modifier =
+                  Modifier.testTag("DownloadButton") // Ajout du testTag pour le bouton Download
+              ) {
+                Icon(imageVector = Icons.Default.Download, contentDescription = "Download Image")
+              }
+          TextButton(onClick = { onAdd() }, modifier = Modifier.testTag("addToFolder")) {
+            Text("Add to folder")
+          }
+        }
       })
 }
 
@@ -139,4 +157,10 @@ fun downloadImage(imagePath: String) {
   // Cela pourrait impliquer d'utiliser une bibliothèque ou API pour manipuler des fichiers et
   // stocker des images localement
   Log.d("GalleryScreen", "Downloading image from: $imagePath")
+}
+
+@Composable
+@Preview
+fun PreviewDialog() {
+  ImageDialog(Photo("", byteArrayOf(0x01, 0x02)), {}, {}, {})
 }

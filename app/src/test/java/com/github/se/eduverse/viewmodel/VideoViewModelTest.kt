@@ -1,7 +1,10 @@
 package com.github.se.eduverse.viewmodel
 
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.model.repository.IVideoRepository
+import com.github.se.eduverse.repository.FileRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -16,6 +19,7 @@ import org.mockito.kotlin.*
 class VideoViewModelTest {
 
   @get:Rule private lateinit var videoRepositoryMock: IVideoRepository
+  @get:Rule private lateinit var fileRepositoryMock: FileRepository
   private lateinit var videoViewModel: VideoViewModel
 
   private val testDispatcher = StandardTestDispatcher()
@@ -23,7 +27,8 @@ class VideoViewModelTest {
   @Before
   fun setUp() {
     videoRepositoryMock = mock()
-    videoViewModel = VideoViewModel(videoRepositoryMock)
+    fileRepositoryMock = mock()
+    videoViewModel = VideoViewModel(videoRepositoryMock, fileRepositoryMock)
     Dispatchers.setMain(testDispatcher)
   }
 
@@ -56,6 +61,31 @@ class VideoViewModelTest {
   }
 
   @Test
+  fun `saveVideo create if folder not null`() = runTest {
+    // Arrange
+    val video = Video("ownerId", byteArrayOf(0x01, 0x02), "videos/path.mp4")
+    whenever(videoRepositoryMock.saveVideo(video)).thenReturn(true)
+
+    val folder = Folder("uid", emptyList<MyFile>().toMutableList(), "name", "id")
+    whenever(fileRepositoryMock.getNewUid()).thenReturn("fileUid")
+    whenever(
+            fileRepositoryMock.savePathToFirestore(
+                eq("videos/path.mp4"), eq(".mp4"), eq("fileUid"), any()))
+        .then {
+          val callback = it.getArgument<() -> Unit>(3)
+          callback()
+        }
+
+    // Act
+    var test = false
+    videoViewModel.saveVideo(video, folder) { _, _, _ -> test = true }
+    advanceUntilIdle()
+
+    // Assert
+    assert(test)
+  }
+
+  @Test
   fun `getVideosByOwner updates videos list on success`() = runTest {
     // Arrange
     val ownerId = "ownerId"
@@ -76,7 +106,7 @@ class VideoViewModelTest {
   @Test
   fun `VideoViewModelFactory creates VideoViewModel with correct repository`() {
     // Arrange
-    val factory = VideoViewModelFactory(videoRepositoryMock)
+    val factory = VideoViewModelFactory(videoRepositoryMock, fileRepositoryMock)
 
     // Act
     val viewModel = factory.create(VideoViewModel::class.java)

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.view.ViewGroup
 import android.widget.Toast
@@ -43,16 +44,20 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.showBottomMenu
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -63,11 +68,13 @@ fun NextScreen(
     videoFile: File?,
     navigationActions: NavigationActions,
     photoViewModel: PhotoViewModel,
+    folderViewModel: FolderViewModel,
     videoViewModel: VideoViewModel // Ajout du VideoViewModel
 ) {
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
+  var folder: Folder? = null
 
   // Chemin pour sauvegarder l'image ou la vidéo
   val mediaType = if (photoFile != null) "photos" else "videos"
@@ -153,26 +160,36 @@ fun NextScreen(
         modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 320.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
-              text = " Add link",
-              iconRes = R.drawable.add,
-              bitmap = bitmap,
-              context = context,
-              videoFile = videoFile,
-              testTag = "addLinkButton")
+              text = " Add to folder", iconRes = R.drawable.add, testTag = "addToFolderButton") {
+                showBottomMenu(context, folderViewModel) {
+                  bitmap?.let { bmp ->
+                    val byteArray = imageBitmapToByteArray(bmp)
+                    val photo = Photo(ownerId, byteArray, path)
+                    photoViewModel.savePhoto(photo, it) { id, name, folder ->
+                      folderViewModel.createFileInFolder(id, name, folder)
+                    }
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                  }
+
+                  videoFile?.let { file ->
+                    val videoByteArray = file.readBytes()
+                    val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
+                    videoViewModel.saveVideo(video)
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                    navigationActions.goBack()
+                  }
+                }
+              }
           StyledButton(
               text = " More options",
               iconRes = R.drawable.more_horiz,
-              bitmap = bitmap,
-              context = context,
-              videoFile = videoFile,
-              testTag = "moreOptionsButton")
-          StyledButton(
-              text = " Share to",
-              iconRes = R.drawable.share,
-              bitmap = bitmap,
-              context = context,
-              videoFile = videoFile,
-              testTag = "shareToButton")
+              testTag = "moreOptionsButton") {}
+          StyledButton(text = " Share to", iconRes = R.drawable.share, testTag = "shareToButton") {
+            handleShare(bitmap, context, videoFile)
+          }
         }
 
     // Ajout de la fonctionnalité Save pour photo et vidéo
@@ -259,41 +276,70 @@ fun NextScreen(
 
                 // Cas de la vidéo
                 videoFile?.let { file ->
-                  val storageRef =
-                      FirebaseStorage.getInstance()
-                          .reference
-                          .child("public/media/${System.currentTimeMillis()}.mp4")
+                  val timestamp = System.currentTimeMillis()
 
-                  storageRef
-                      .putFile(Uri.fromFile(file))
-                      .addOnSuccessListener {
-                        storageRef.downloadUrl.addOnSuccessListener { uri ->
-                          val publication =
-                              Publication(
-                                  userId = ownerId,
-                                  title = title,
-                                  thumbnailUrl =
-                                      generateThumbnail(
-                                          uri.toString()), // Fonction pour générer une vignette si
-                                  // nécessaire
-                                  mediaUrl = uri.toString(),
-                                  mediaType = MediaType.VIDEO)
-                          FirebaseFirestore.getInstance()
-                              .collection("publications")
-                              .add(publication)
-                              .addOnSuccessListener {
-                                Toast.makeText(
-                                        context, "Vidéo publiée avec succès", Toast.LENGTH_SHORT)
-                                    .show()
-                                navigationActions.goBack()
-                                navigationActions.goBack()
-                              }
+                  // First generate the thumbnail
+                  generateVideoThumbnail(context, file)?.let { thumbnailBytes ->
+                    // References for both files
+                    val thumbnailRef =
+                        FirebaseStorage.getInstance()
+                            .reference
+                            .child("public/thumbnails/thumb_$timestamp.jpg")
+
+                    val videoRef =
+                        FirebaseStorage.getInstance()
+                            .reference
+                            .child("public/media/video_$timestamp.mp4")
+
+                    // Upload thumbnail first
+                    thumbnailRef
+                        .putBytes(thumbnailBytes)
+                        .addOnSuccessListener {
+                          thumbnailRef.downloadUrl.addOnSuccessListener { thumbnailUri ->
+                            // Then upload video
+                            videoRef
+                                .putFile(Uri.fromFile(file))
+                                .addOnSuccessListener {
+                                  videoRef.downloadUrl.addOnSuccessListener { videoUri ->
+                                    // Create publication with correct URLs
+                                    val publication =
+                                        Publication(
+                                            userId = ownerId,
+                                            title = title,
+                                            thumbnailUrl =
+                                                thumbnailUri.toString(), // Thumbnail image URL
+                                            mediaUrl = videoUri.toString(), // Video URL
+                                            mediaType = MediaType.VIDEO)
+
+                                    FirebaseFirestore.getInstance()
+                                        .collection("publications")
+                                        .add(publication)
+                                        .addOnSuccessListener {
+                                          Toast.makeText(
+                                                  context,
+                                                  "Vidéo publiée avec succès",
+                                                  Toast.LENGTH_SHORT)
+                                              .show()
+                                          navigationActions.goBack()
+                                          navigationActions.goBack()
+                                        }
+                                  }
+                                }
+                                .addOnFailureListener {
+                                  Toast.makeText(
+                                          context,
+                                          "Échec de l'upload de la vidéo",
+                                          Toast.LENGTH_SHORT)
+                                      .show()
+                                }
+                          }
                         }
-                      }
-                      .addOnFailureListener {
-                        Toast.makeText(context, "Échec de l'upload de la vidéo", Toast.LENGTH_SHORT)
-                            .show()
-                      }
+                        .addOnFailureListener {
+                          Toast.makeText(
+                                  context, "Échec de l'upload de la vignette", Toast.LENGTH_SHORT)
+                              .show()
+                        }
+                  }
                 }
               },
               modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
@@ -328,68 +374,40 @@ fun NextScreen(
   }
 }
 
-fun generateThumbnail(videoUrl: String): String {
-  // Logique pour générer une vignette (si Firebase Storage permet d'accéder aux frames vidéo)
-  // Cette partie dépend des bibliothèques que tu utilises pour le traitement vidéo
-  // Si ce n'est pas faisable ici, tu peux générer les vignettes côté serveur ou lors de l'upload.
-  return videoUrl // Pour simplifier, on utilise la même URL si aucune vignette spécifique
+fun generateVideoThumbnail(context: Context, videoFile: File): ByteArray? {
+  return try {
+    val retriever = MediaMetadataRetriever()
+    retriever.setDataSource(context, Uri.fromFile(videoFile))
+
+    // Extract a frame from 1 second into the video
+    val bitmap =
+        retriever.getFrameAtTime(
+            1000000, // 1 second in microseconds
+            MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+
+    retriever.release()
+
+    // Convert bitmap to byte array
+    bitmap?.let { bmp ->
+      ByteArrayOutputStream().use { stream ->
+        bmp.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+        stream.toByteArray()
+      }
+    }
+  } catch (e: Exception) {
+    e.printStackTrace()
+    null
+  }
 }
 
 @Composable
-fun StyledButton(
-    text: String,
-    iconRes: Int,
-    bitmap: ImageBitmap?,
-    context: Context,
-    videoFile: File?, // Ajout du fichier vidéo en paramètre
-    testTag: String
-) {
+fun StyledButton(text: String, iconRes: Int, testTag: String, onClick: () -> Unit) {
   Row(
       modifier =
           Modifier.fillMaxWidth()
               .height(56.dp)
               .background(Color(0xFFEBF1F4))
-              .clickable {
-                if (text == " Share to") {
-                  if (bitmap != null) {
-                    // Partage d'une image
-                    val photoFile = File(context.cacheDir, "shared_image.jpg")
-                    val outputStream = FileOutputStream(photoFile)
-                    bitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                    outputStream.flush()
-                    outputStream.close()
-
-                    val uri =
-                        FileProvider.getUriForFile(
-                            context, "${context.packageName}.fileprovider", photoFile)
-
-                    val shareIntent =
-                        Intent().apply {
-                          action = Intent.ACTION_SEND
-                          putExtra(Intent.EXTRA_STREAM, uri)
-                          type = "image/jpeg"
-                          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-
-                    context.startActivity(Intent.createChooser(shareIntent, "Share image via"))
-                  } else if (videoFile != null) {
-                    // Partage d'une vidéo
-                    val videoUri =
-                        FileProvider.getUriForFile(
-                            context, "${context.packageName}.fileprovider", videoFile)
-
-                    val shareIntent =
-                        Intent().apply {
-                          action = Intent.ACTION_SEND
-                          putExtra(Intent.EXTRA_STREAM, videoUri)
-                          type = "video/mp4"
-                          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-
-                    context.startActivity(Intent.createChooser(shareIntent, "Share video via"))
-                  }
-                }
-              }
+              .clickable { onClick() }
               .padding(horizontal = 16.dp)
               .testTag(testTag),
       verticalAlignment = Alignment.CenterVertically) {
@@ -407,4 +425,45 @@ fun StyledButton(
             textAlign = TextAlign.Start,
         )
       }
+}
+
+fun handleShare(
+    bitmap: ImageBitmap?,
+    context: Context,
+    videoFile: File? // Ajout du fichier vidéo en paramètre
+) {
+  if (bitmap != null) {
+    // Partage d'une image
+    val photoFile = File(context.cacheDir, "shared_image.jpg")
+    val outputStream = FileOutputStream(photoFile)
+    bitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+    outputStream.flush()
+    outputStream.close()
+
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+
+    val shareIntent =
+        Intent().apply {
+          action = Intent.ACTION_SEND
+          putExtra(Intent.EXTRA_STREAM, uri)
+          type = "image/jpeg"
+          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+    context.startActivity(Intent.createChooser(shareIntent, "Share image via"))
+  } else if (videoFile != null) {
+    // Partage d'une vidéo
+    val videoUri =
+        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile)
+
+    val shareIntent =
+        Intent().apply {
+          action = Intent.ACTION_SEND
+          putExtra(Intent.EXTRA_STREAM, videoUri)
+          type = "video/mp4"
+          addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+    context.startActivity(Intent.createChooser(shareIntent, "Share video via"))
+  }
 }

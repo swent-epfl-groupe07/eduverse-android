@@ -4,18 +4,29 @@ import androidx.compose.ui.test.* // Import pour les tests UI
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.model.Photo
+import com.github.se.eduverse.repository.FileRepository
+import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.screens.GalleryScreen
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.any
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
 class GalleryScreenUiTest {
@@ -23,17 +34,38 @@ class GalleryScreenUiTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   private val mockNavigationActions = aliBouiri(navController = mock())
-  private lateinit var fakeViewModel: FakePhotoViewModel
+  private lateinit var fakePhotoViewModel: FakePhotoViewModel
+  private lateinit var folderViewModel: FolderViewModel
+  private lateinit var folderRepository: FolderRepository
+  private lateinit var auth: FirebaseAuth
+
+  val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1")
+  val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
 
   @Before
   fun setUp() {
-    fakeViewModel =
+    fakePhotoViewModel =
         FakePhotoViewModel().apply {
           setPhotos(
               listOf(
                   Photo("testOwnerId", ByteArray(0), "path1"),
                   Photo("testOwnerId", ByteArray(0), "path2")))
         }
+
+    folderRepository = mock(FolderRepository::class.java)
+    auth = mock(FirebaseAuth::class.java)
+    val user = mock(FirebaseUser::class.java)
+    `when`(auth.currentUser).thenReturn(user)
+    `when`(user.uid).thenReturn("uid")
+
+    `when`(
+            folderRepository.getFolders(
+                org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+        .then {
+          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          callback(listOf(folder1, folder2))
+        }
+    folderViewModel = FolderViewModel(folderRepository, auth)
   }
 
   @Test
@@ -51,7 +83,7 @@ class GalleryScreenUiTest {
 
   @Test
   fun testGalleryScreenDisplaysNoPhotosMessage() {
-    fakeViewModel.setPhotos(emptyList()) // Simuler l'absence de photos
+    fakePhotoViewModel.setPhotos(emptyList()) // Simuler l'absence de photos
     setupGalleryScreen()
 
     composeTestRule.onNodeWithTag("NoPhotosText").assertExists()
@@ -114,11 +146,35 @@ class GalleryScreenUiTest {
     assert(mockNavigationActions.backCalled)
   }
 
+  @Test
+  fun testAddToFolder() {
+    setupGalleryScreen()
+
+    composeTestRule.onNodeWithTag("PhotoItem_path1").performClick()
+    composeTestRule.onNodeWithTag("ImageDialogBox").assertExists()
+    composeTestRule.onNodeWithTag("addToFolder").performClick()
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("button_container").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("folder_button1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("folder_button2").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("folder_button1").performClick()
+    composeTestRule.onNodeWithTag("button_container").assertIsNotDisplayed()
+
+    verify(folderRepository)
+        .updateFolder(org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any())
+    assertEquals(1, folder1.files.size)
+  }
+
   private fun setupGalleryScreen() {
     composeTestRule.setContent {
       GalleryScreen(
           ownerId = "testOwnerId",
-          viewModel = fakeViewModel,
+          photoViewModel = fakePhotoViewModel,
+          folderViewModel = folderViewModel,
           navigationActions = mockNavigationActions)
     }
   }
@@ -126,7 +182,7 @@ class GalleryScreenUiTest {
 
 // Classe factice qui simule le comportement de PhotoViewModel
 // Classe factice qui simule le comportement de PhotoViewModel sans l'hériter
-class FakePhotoViewModel : PhotoViewModel(mockRepository()) {
+class FakePhotoViewModel : PhotoViewModel(mockRepository(), mock(FileRepository::class.java)) {
 
   // Simule une liste de photos
   override val _photos =
@@ -141,6 +197,10 @@ class FakePhotoViewModel : PhotoViewModel(mockRepository()) {
 
   override fun getPhotosByOwner(ownerId: String) {
     // No-op pour les tests
+  }
+
+  override fun makeFileFromPhoto(photo: Photo, onSuccess: (String) -> Unit) {
+    onSuccess("success")
   }
 
   fun setPhotos(newPhotos: List<Photo>) {
