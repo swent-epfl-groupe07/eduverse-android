@@ -19,7 +19,7 @@ open class ProfileViewModel(
   private val profileRepository: ProfileRepository,
 ) : ViewModel() {
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-  val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
+  open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
   private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
   val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()

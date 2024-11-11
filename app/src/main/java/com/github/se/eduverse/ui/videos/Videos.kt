@@ -108,6 +108,7 @@ fun VideoScreen(
                                     }
                                 )
                             }
+                            .testTag("PublicationItem_$page") // Ajout d'un testTag unique pour chaque publication
                     ) {
                         if (publication.mediaType == MediaType.VIDEO) {
                             VideoItem(context = LocalContext.current, mediaUrl = publication.mediaUrl)
@@ -132,12 +133,15 @@ fun VideoScreen(
                                 .align(Alignment.CenterEnd)
                                 .offset(y = 64.dp)
                                 .padding(12.dp)
+                                .testTag("LikeButton_$page") // Ajout d'un testTag unique pour le bouton like
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = "Like",
                                 tint = if (isLiked.value) Color.Red else Color.White,
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .testTag(if (isLiked.value) "LikedIcon_$page" else "UnlikedIcon_$page") // Ajout d'un testTag conditionnel pour l'icône
                             )
                         }
                     }
@@ -158,7 +162,6 @@ fun VideoScreen(
         }
     }
 }
-
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -189,13 +192,21 @@ fun VideoItem(
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
             }
         },
-        modifier = Modifier.fillMaxSize().background(Color.Black).testTag("VideoItem")
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .testTag("VideoItem")
     )
 }
 
 @Composable
 fun PhotoItem(thumbnailUrl: String) {
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black).testTag("PhotoItem")) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .testTag("PhotoItem")
+    ) {
         SubcomposeAsyncImage(
             model = thumbnailUrl,
             contentDescription = "Photo de la publication",
