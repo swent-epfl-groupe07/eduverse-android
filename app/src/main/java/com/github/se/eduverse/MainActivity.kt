@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -50,6 +51,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
+import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -151,6 +153,14 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.SEARCH) {
+          SearchProfileScreen(
+              viewModel = profileViewModel,
+              onProfileClick = { userId ->
+                  navigationActions.navigateTo("${Screen.PROFILE}/$userId")
+              }
+          )
+      }
     }
 
     navigation(
