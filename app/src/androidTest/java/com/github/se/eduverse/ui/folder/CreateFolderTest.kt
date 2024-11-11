@@ -6,9 +6,11 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.repository.FileRepository
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -172,9 +174,12 @@ class CreateFolderTest {
     }
 
     composeTestRule.onAllNodesWithTag("file").assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("delete_icon").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(1)
 
-    composeTestRule.onNodeWithTag("delete_icon").performClick()
+    composeTestRule.onNodeWithTag("editButton").performClick()
+
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete").performClick()
 
     composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
     composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
@@ -183,9 +188,10 @@ class CreateFolderTest {
     composeTestRule.onNodeWithTag("no").performClick()
 
     composeTestRule.onAllNodesWithTag("file").assertCountEquals(1)
-    composeTestRule.onAllNodesWithTag("delete_icon").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(1)
 
-    composeTestRule.onNodeWithTag("delete_icon").performClick()
+    composeTestRule.onNodeWithTag("editButton").performClick()
+    composeTestRule.onNodeWithTag("delete").performClick()
 
     composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
     composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
@@ -194,6 +200,34 @@ class CreateFolderTest {
     composeTestRule.onNodeWithTag("yes").performClick()
 
     composeTestRule.onAllNodesWithTag("file").assertCountEquals(0)
-    composeTestRule.onAllNodesWithTag("delete_icon").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(0)
+  }
+
+  @Test
+  fun renameFileWorkLikeExpected() {
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("editButton").performClick()
+
+    composeTestRule.onNodeWithTag("rename").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("rename").performClick()
+
+    composeTestRule.onNodeWithTag("renameDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("textField").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("textField").performTextInput("test_input")
+
+    composeTestRule.onNodeWithTag("cancel").performClick()
+    composeTestRule.onAllNodesWithText("test_input").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("editButton").performClick()
+    composeTestRule.onNodeWithTag("rename").performClick()
+
+    composeTestRule.onNodeWithTag("textField").performTextInput("test_input")
+
+    composeTestRule.onNodeWithTag("confirm").performClick()
+    composeTestRule.onAllNodesWithText("test_input").assertCountEquals(1)
   }
 }
