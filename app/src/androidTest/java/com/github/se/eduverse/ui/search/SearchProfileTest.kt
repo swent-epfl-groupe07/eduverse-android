@@ -201,18 +201,27 @@ class ProfileSearchItemTest {
   fun allProfileElements_areDisplayed() {
     composeTestRule.setContent { ProfileSearchItem(profile = testProfile, onClick = {}) }
 
+    // Check main container
     composeTestRule.onNodeWithTag("${TAG_PROFILE_ITEM}_1").assertExists().assertIsDisplayed()
 
-    // Use onChildren() to access text within semantic nodes
+    // Check username with unmerged tree
     composeTestRule
-        .onNodeWithTag("${TAG_PROFILE_ITEM}_1")
-        .onChildren()
-        .filterToOne(hasText(testProfile.username))
+        .onNodeWithTag("${TAG_PROFILE_USERNAME}_1", useUnmergedTree = true)
         .assertExists()
+        .assertIsDisplayed()
+        .assertTextContains(testProfile.username)
 
-    composeTestRule.onNodeWithTag("${TAG_PROFILE_STATS}_1").assertExists().assertIsDisplayed()
+    // Check stats with unmerged tree
+    composeTestRule
+        .onNodeWithTag("${TAG_PROFILE_STATS}_1", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag("${TAG_PROFILE_IMAGE}_1").assertExists().assertIsDisplayed()
+    // Check profile image
+    composeTestRule
+        .onNodeWithTag("${TAG_PROFILE_IMAGE}_1", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
   }
 
   @Test
@@ -235,10 +244,11 @@ class ProfileSearchItemTest {
 
     composeTestRule.setContent { ProfileSearchItem(profile = longNameProfile, onClick = {}) }
 
+    // Check username with unmerged tree
     composeTestRule
-        .onNodeWithTag("${TAG_PROFILE_ITEM}_1")
-        .onChildren()
-        .filterToOne(hasText(longNameProfile.username))
+        .onNodeWithTag("${TAG_PROFILE_USERNAME}_1", useUnmergedTree = true)
         .assertExists()
+        .assertIsDisplayed()
+        .assertTextContains(longNameProfile.username)
   }
 }
