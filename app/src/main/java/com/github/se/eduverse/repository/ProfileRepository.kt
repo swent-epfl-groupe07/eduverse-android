@@ -4,7 +4,6 @@ import android.net.Uri
 import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -18,9 +17,7 @@ interface ProfileRepository {
 
   suspend fun removePublication(publicationId: String)
 
-  suspend fun addToFavorites(userId: String, publicationId: String)
-
-  suspend fun removeFromFavorites(userId: String, publicationId: String)
+    suspend fun removeFromFavorites(userId: String, publicationId: String)
 
   suspend fun followUser(followerId: String, followedId: String)
 
@@ -40,7 +37,6 @@ interface ProfileRepository {
 }
 
 class ProfileRepositoryImpl(
-    private val db: FirebaseFirestore,
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) : ProfileRepository {
@@ -92,18 +88,6 @@ class ProfileRepositoryImpl(
   override suspend fun removePublication(publicationId: String) {
     publicationsCollection.document(publicationId).delete().await()
   }
-
-    override suspend fun addToFavorites(userId: String, publicationId: String) {
-        favoritesCollection
-            .document("$userId-$publicationId")
-            .set(
-                hashMapOf(
-                    "userId" to userId,
-                    "publicationId" to publicationId,
-                    "timestamp" to System.currentTimeMillis()
-                )
-            ).await()
-    }
 
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
     favoritesCollection
@@ -165,7 +149,7 @@ class ProfileRepositoryImpl(
     override suspend fun incrementLikes(publicationId: String, userId: String) {
         try {
             // Requête ciblée pour récupérer le document avec un champ `id` correspondant
-            val querySnapshot = db.collection("publications")
+            val querySnapshot = firestore.collection("publications")
                 .whereEqualTo("id", publicationId)
                 .get()
                 .await()
@@ -173,7 +157,7 @@ class ProfileRepositoryImpl(
             if (!querySnapshot.isEmpty) {
                 val documentRef = querySnapshot.documents[0].reference
 
-                db.runTransaction { transaction ->
+                firestore.runTransaction { transaction ->
                     val snapshot = transaction.get(documentRef)
                     val likedBy = snapshot.get("likedBy") as? List<String> ?: emptyList()
 
@@ -196,7 +180,7 @@ class ProfileRepositoryImpl(
 
     override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {
         try {
-            val documentRef = db.collection("users")
+            val documentRef = firestore.collection("users")
                 .document(userId)
                 .collection("likedPublications")
                 .document(publicationId)
@@ -215,7 +199,7 @@ class ProfileRepositoryImpl(
     override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
         try {
             // Requête pour trouver le document avec un champ `id` correspondant
-            val querySnapshot = db.collection("publications")
+            val querySnapshot = firestore.collection("publications")
                 .whereEqualTo("id", publicationId)
                 .get()
                 .await()
@@ -223,7 +207,7 @@ class ProfileRepositoryImpl(
             if (!querySnapshot.isEmpty) {
                 val documentRef = querySnapshot.documents[0].reference
 
-                db.runTransaction { transaction ->
+                firestore.runTransaction { transaction ->
                     val snapshot = transaction.get(documentRef)
                     val likedBy = snapshot.get("likedBy") as? MutableList<String> ?: mutableListOf()
 
@@ -247,6 +231,8 @@ class ProfileRepositoryImpl(
             throw e
         }
     }
+    // IDK IF THIS FUNCTION SHOULD BE IN PROFILE REPO OR PUBLI REPO. logically it should be in publication repo
+    // but idk if it s ok that profil VM calls a function that is in publication repo.
 
 
 

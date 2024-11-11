@@ -52,21 +52,6 @@ open class ProfileViewModel(
     }
   }
 
-  fun toggleFavorite(userId: String, publicationId: String, isFavorite: Boolean) {
-    viewModelScope.launch {
-      try {
-        if (isFavorite) {
-          profileRepository.removeFromFavorites(userId, publicationId)
-        } else {
-          profileRepository.addToFavorites(userId, publicationId)
-        }
-        loadProfile(userId)
-      } catch (e: Exception) {
-        _profileState.value = ProfileUiState.Error(e.message ?: "Failed to update favorites")
-      }
-    }
-  }
-
   fun toggleFollow(currentUserId: String, targetUserId: String, isFollowing: Boolean) {
     viewModelScope.launch {
       try {

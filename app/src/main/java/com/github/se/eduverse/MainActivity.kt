@@ -115,7 +115,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     val dashboardViewModel = DashboardViewModel(dashboardRepo)
     val profileRepo =
         ProfileRepositoryImpl(
-            firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance(), db = FirebaseFirestore.getInstance())
+            firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
     val profileViewModel = ProfileViewModel(profileRepo)
     val folderRepo = FolderRepositoryImpl(db = firestore)
     val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())

@@ -75,24 +75,6 @@ class ProfileViewModelTest {
   }
 
   @Test
-  fun `toggleFavorite adds publication to favorites`() = runTest {
-    profileViewModel.toggleFavorite("testUser", "pub123", false)
-    advanceUntilIdle()
-
-    verify(mockRepository).addToFavorites("testUser", "pub123")
-    verify(mockRepository).getProfile("testUser")
-  }
-
-  @Test
-  fun `toggleFavorite removes publication from favorites`() = runTest {
-    profileViewModel.toggleFavorite("testUser", "pub123", true)
-    advanceUntilIdle()
-
-    verify(mockRepository).removeFromFavorites("testUser", "pub123")
-    verify(mockRepository).getProfile("testUser")
-  }
-
-  @Test
   fun `addPublication success updates profile`() = runTest {
     val userId = "testUser"
     val publication = Publication(id = "pub1", userId = userId, title = "Test")
@@ -161,22 +143,6 @@ class ProfileViewModelTest {
   }
 
   @Test
-  fun `toggleFavorite failure updates state with error`() = runTest {
-    val userId = "testUser"
-    val pubId = "pub123"
-
-    `when`(mockRepository.addToFavorites(userId, pubId))
-        .thenThrow(RuntimeException("Failed to favorite"))
-
-    profileViewModel.toggleFavorite(userId, pubId, false)
-    advanceUntilIdle()
-
-    val state = profileViewModel.profileState.first()
-    assertTrue(state is ProfileUiState.Error)
-    assertEquals("Failed to favorite", (state as ProfileUiState.Error).message)
-  }
-
-  @Test
   fun `updateProfileImage failure updates state with error`() = runTest {
     val userId = "testUser"
     val imageUri = mock(Uri::class.java)
@@ -202,6 +168,65 @@ class ProfileViewModelTest {
     val state = profileViewModel.profileState.first()
     assertTrue(state is ProfileUiState.Error)
     assertEquals("Profile not found", (state as ProfileUiState.Error).message)
+  }
+
+  @Test
+  fun likeAndAddToFavorites_success() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    profileViewModel.likeAndAddToFavorites(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).incrementLikes(publicationId, userId)
+    verify(mockRepository).addToUserCollection(userId, "likedPublications", publicationId)
+    assertNull(profileViewModel.error.value)
+  }
+
+  @Test
+  fun likeAndAddToFavorites_failure() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    `when`(mockRepository.incrementLikes(publicationId, userId)).thenThrow(RuntimeException("Failed to like"))
+
+    profileViewModel.likeAndAddToFavorites(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).incrementLikes(publicationId, userId)
+    verify(mockRepository, never()).addToUserCollection(userId, "likedPublications", publicationId)
+    assertNotNull(profileViewModel.error.value)
+    assertEquals("Failed to like and save publication", profileViewModel.error.value)
+  }
+
+  @Test
+  fun removeLike_success() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    profileViewModel.removeLike(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromLikedPublications(userId, publicationId)
+    verify(mockRepository).decrementLikesAndRemoveUser(publicationId, userId)
+    assertNull(profileViewModel.error.value)
+  }
+
+  @Test
+  fun removeLike_failure() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    // Simulate an exception when removing the like
+    `when`(mockRepository.removeFromLikedPublications(userId, publicationId))
+      .thenThrow(RuntimeException("Failed to remove like"))
+
+    profileViewModel.removeLike(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromLikedPublications(userId, publicationId)
+    assertNotNull(profileViewModel.error.value)
+    assertEquals("Failed to remove like: Failed to remove like", profileViewModel.error.value)
   }
 
   @After
