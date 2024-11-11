@@ -1,11 +1,16 @@
 package com.github.se.eduverse.ui.folder
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
@@ -254,12 +259,12 @@ class DisplayFolderTest {
       callback()
     }
 
-    composeTestRule.onNodeWithTag("name 1").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(3)
 
-    composeTestRule.onNodeWithTag("delete_icon_name 1").performClick()
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete").performClick()
 
     composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
     composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
@@ -267,10 +272,10 @@ class DisplayFolderTest {
 
     composeTestRule.onNodeWithTag("yes").performClick()
 
-    composeTestRule.onNodeWithTag("name 1").assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(2)
 
-    composeTestRule.onNodeWithTag("delete_icon_name 2").performClick()
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+    composeTestRule.onNodeWithTag("delete").performClick()
 
     composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
     composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
@@ -278,7 +283,35 @@ class DisplayFolderTest {
 
     composeTestRule.onNodeWithTag("no").performClick()
 
-    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(2)
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+  }
+
+  @Test
+  fun renameFileWorkLikeExpected() {
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(3)
+
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+
+    composeTestRule.onNodeWithTag("rename").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("rename").performClick()
+
+    composeTestRule.onNodeWithTag("renameDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("textField").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("textField").performTextInput("test_input")
+
+    composeTestRule.onNodeWithTag("cancel").performClick()
+    composeTestRule.onAllNodesWithText("test_input").assertCountEquals(0)
+
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+    composeTestRule.onNodeWithTag("rename").performClick()
+
+    composeTestRule.onNodeWithTag("textField").performTextInput("test_input")
+
+    composeTestRule.onNodeWithTag("confirm").performClick()
+    composeTestRule.onAllNodesWithText("test_input").assertCountEquals(1)
   }
 }
