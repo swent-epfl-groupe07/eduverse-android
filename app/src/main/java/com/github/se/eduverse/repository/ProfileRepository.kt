@@ -97,7 +97,6 @@ class ProfileRepositoryImpl(
     publicationsCollection.document(publicationId).delete().await()
   }
 
-
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
     favoritesCollection
         .whereEqualTo("userId", userId)

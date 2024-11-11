@@ -58,7 +58,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-
   fun toggleFollow(currentUserId: String, targetUserId: String, isFollowing: Boolean) {
     viewModelScope.launch {
       try {
