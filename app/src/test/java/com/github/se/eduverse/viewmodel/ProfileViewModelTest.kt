@@ -221,6 +221,96 @@ class ProfileViewModelTest {
     assertEquals("Profile not found", (state as ProfileUiState.Error).message)
   }
 
+  @Test
+  fun `updateUsername when username is blank returns error state`() = runTest {
+    profileViewModel.updateUsername("testUser", "")
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals("Username cannot be empty", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername("testUser", "")
+  }
+
+  @Test
+  fun `updateUsername when username is too short returns error state`() = runTest {
+    profileViewModel.updateUsername("testUser", "ab")
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(
+        "Username must be at least 3 characters", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername("testUser", "ab")
+  }
+
+  @Test
+  fun `updateUsername with invalid characters returns error state`() = runTest {
+    val userId = "testUser"
+    val invalidUsername = "user@name!"
+
+    profileViewModel.updateUsername(userId, invalidUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(
+        "Username can only contain letters, numbers, dots and underscores",
+        (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername(userId, invalidUsername)
+  }
+
+  @Test
+  fun `updateUsername when username already exists returns error state`() = runTest {
+    val userId = "testUser"
+    val existingUsername = "existingUser"
+
+    `when`(mockRepository.doesUsernameExist(existingUsername)).thenReturn(true)
+
+    profileViewModel.updateUsername(userId, existingUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals("Username already taken", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername(userId, existingUsername)
+  }
+
+  @Test
+  fun `updateUsername with valid username updates successfully`() = runTest {
+    val userId = "testUser"
+    val newUsername = "validUser123"
+
+    `when`(mockRepository.doesUsernameExist(newUsername)).thenReturn(false)
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
+
+    profileViewModel.updateUsername(userId, newUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Success)
+    verify(mockRepository).updateUsername(userId, newUsername)
+    verify(mockRepository, times(2)).getProfile(userId)
+  }
+
+  @Test
+  fun `updateUsername when repository throws exception returns error state`() = runTest {
+    val userId = "testUser"
+    val newUsername = "validUser123"
+    val errorMessage = "Database error"
+
+    `when`(mockRepository.doesUsernameExist(newUsername)).thenReturn(false)
+    `when`(mockRepository.updateUsername(userId, newUsername))
+        .thenThrow(RuntimeException(errorMessage))
+
+    profileViewModel.updateUsername(userId, newUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(errorMessage, (state as UsernameUpdateState.Error).message)
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain()
