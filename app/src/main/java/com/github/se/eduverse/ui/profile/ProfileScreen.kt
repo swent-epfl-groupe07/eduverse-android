@@ -64,7 +64,14 @@ fun ProfileScreen(
         uri?.let { viewModel.updateProfileImage(userId, it) }
       }
 
-  LaunchedEffect(userId) { viewModel.loadProfile(userId) }
+  LaunchedEffect(userId) {
+    if (auth.currentUser == null) {
+      navigationActions.navigateTo(Screen.AUTH)
+      return@LaunchedEffect
+    }
+
+    viewModel.loadProfile(userId)
+  }
 
   Scaffold(
       modifier = Modifier.testTag("profile_screen_container"),
