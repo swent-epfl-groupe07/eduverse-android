@@ -58,15 +58,15 @@ class NextScreenTest {
     navigationActions = mockk(relaxed = true)
     photoViewModel = mockk(relaxed = true)
     folderRepository = mock(FolderRepository::class.java)
-    auth = mock(FirebaseAuth::class.java)
 
-    val user = mock(FirebaseUser::class.java)
-    `when`(auth.currentUser).thenReturn(user)
-    `when`(user.uid).thenReturn("")
-    `when`(folderRepository.getFolders(any(), any(), any())).then {}
+
+    // Properly mock Firebase Auth
+    auth = mock(FirebaseAuth::class.java)
+    val mockUser = mock(FirebaseUser::class.java)
+    `when`(auth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn("test_user_id")  // Use a consistent test ID
 
     folderViewModel = FolderViewModel(folderRepository, auth)
-
     vViewModel = mockk(relaxed = true)
     context = ApplicationProvider.getApplicationContext()
 
@@ -310,18 +310,12 @@ class NextScreenTest {
     val capturedPhoto = slot<Photo>()
     every { photoViewModel.savePhoto(capture(capturedPhoto), any(), any()) } returns Unit
 
-    // Action : cliquer sur le bouton de sauvegarde
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Vérifier que `savePhoto` a été appelé avec un `Photo` ayant l'`ownerId` correct
     assertEquals("anonymous", capturedPhoto.captured.ownerId)
-
-    // Debug : afficher le chemin capturé
-    println("Captured photo path: ${capturedPhoto.captured.path}")
-
-    // Vérifier que le `path` commence bien par le bon préfixe, sans vérifier le timestamp exact
     assertTrue(
-        capturedPhoto.captured.path.startsWith("photos/anonymous/") ||
-            capturedPhoto.captured.path.startsWith("videos/anonymous/"))
+      capturedPhoto.captured.path.startsWith("photos/anonymous/") ||
+              capturedPhoto.captured.path.startsWith("videos/anonymous/")
+    )
   }
 }
