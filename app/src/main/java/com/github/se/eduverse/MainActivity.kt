@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -154,10 +153,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
       composable(Screen.SEARCH) {
-          SearchProfileScreen(
-              viewModel = profileViewModel,
-              onProfileClick = {}
-          )
+        SearchProfileScreen(viewModel = profileViewModel, onProfileClick = {})
       }
     }
 

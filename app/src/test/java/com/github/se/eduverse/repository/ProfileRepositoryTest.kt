@@ -90,14 +90,15 @@ class ProfileRepositoryImplTest {
           override suspend fun uploadProfileImage(userId: String, imageUri: Uri): String = ""
 
           override suspend fun updateProfileImage(userId: String, imageUrl: String) {}
+
           override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
             return emptyList()
           }
 
           override suspend fun createProfile(
-            userId: String,
-            defaultUsername: String,
-            photoUrl: String
+              userId: String,
+              defaultUsername: String,
+              photoUrl: String
           ): Profile {
             return Profile(id = userId, username = defaultUsername, profileImageUrl = photoUrl)
           }
@@ -292,17 +293,17 @@ class ProfileRepositoryImplTest {
 
     val result = repository.createProfile(userId, username, photoUrl)
 
-    verify(mockDocumentRef).set(
-      argThat { profile: Profile ->
-        profile.id == userId &&
-                profile.username == username &&
-                profile.profileImageUrl == photoUrl &&
-                profile.followers == 0 &&
-                profile.following == 0 &&
-                profile.publications.isEmpty() &&
-                profile.favoritePublications.isEmpty()
-      }
-    )
+    verify(mockDocumentRef)
+        .set(
+            argThat { profile: Profile ->
+              profile.id == userId &&
+                  profile.username == username &&
+                  profile.profileImageUrl == photoUrl &&
+                  profile.followers == 0 &&
+                  profile.following == 0 &&
+                  profile.publications.isEmpty() &&
+                  profile.favoritePublications.isEmpty()
+            })
 
     assertEquals(userId, result.id)
     assertEquals(username, result.username)

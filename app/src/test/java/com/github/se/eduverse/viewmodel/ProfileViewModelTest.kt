@@ -20,10 +20,7 @@ class ProfileViewModelTest {
   private lateinit var profileViewModel: ProfileViewModel
   private val mockRepository: ProfileRepository = mock(ProfileRepository::class.java)
 
-  private val defaultProfile = Profile(
-    id = "testId",
-    username = "testUser"
-  )
+  private val defaultProfile = Profile(id = "testId", username = "testUser")
 
   @Before
   fun setup() {
@@ -31,21 +28,19 @@ class ProfileViewModelTest {
     profileViewModel = ProfileViewModel(mockRepository)
 
     // Setup default profile without using matchers
-    runTest {
-      `when`(mockRepository.getProfile("testUser")).thenReturn(defaultProfile)
-    }
+    runTest { `when`(mockRepository.getProfile("testUser")).thenReturn(defaultProfile) }
   }
 
   @Test
   fun `loadProfile success updates state with profile data`() = runTest {
-    val testProfile = Profile(
-      id = "test123",
-      username = "testuser",
-      followers = 10,
-      following = 20,
-      publications = listOf(),
-      favoritePublications = listOf()
-    )
+    val testProfile =
+        Profile(
+            id = "test123",
+            username = "testuser",
+            followers = 10,
+            following = 20,
+            publications = listOf(),
+            favoritePublications = listOf())
 
     // Use specific value instead of matcher
     `when`(mockRepository.getProfile("testUser")).thenReturn(testProfile)
@@ -101,7 +96,7 @@ class ProfileViewModelTest {
     advanceUntilIdle()
 
     verify(mockRepository).addToFavorites(userId, "pub123")
-    verify(mockRepository, times(2)).getProfile(userId)  // Changed from 1 to 2
+    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
   }
 
   @Test
@@ -115,7 +110,7 @@ class ProfileViewModelTest {
     advanceUntilIdle()
 
     verify(mockRepository).removeFromFavorites(userId, "pub123")
-    verify(mockRepository, times(2)).getProfile(userId)  // Changed from 1 to 2
+    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
   }
 
   @Test
@@ -130,7 +125,7 @@ class ProfileViewModelTest {
     advanceUntilIdle()
 
     verify(mockRepository).addPublication(userId, publication)
-    verify(mockRepository, times(2)).getProfile(userId)  // Changed from 1 to 2
+    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
   }
 
   @Test
@@ -139,7 +134,7 @@ class ProfileViewModelTest {
     val publication = Publication(id = "pub1", userId = userId, title = "Test")
 
     `when`(mockRepository.addPublication(userId, publication))
-      .thenThrow(RuntimeException("Failed to add"))
+        .thenThrow(RuntimeException("Failed to add"))
     `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.addPublication(userId, publication)
@@ -162,7 +157,7 @@ class ProfileViewModelTest {
     advanceUntilIdle()
 
     verify(mockRepository).followUser(currentUserId, targetUserId)
-    verify(mockRepository, times(2)).getProfile(currentUserId)  // Changed from 1 to 2
+    verify(mockRepository, times(2)).getProfile(currentUserId) // Changed from 1 to 2
   }
 
   @Test
@@ -177,7 +172,7 @@ class ProfileViewModelTest {
     advanceUntilIdle()
 
     verify(mockRepository).unfollowUser(currentUserId, targetUserId)
-    verify(mockRepository, times(2)).getProfile(currentUserId)  // Changed from 1 to 2
+    verify(mockRepository, times(2)).getProfile(currentUserId) // Changed from 1 to 2
   }
 
   @Test
@@ -186,7 +181,7 @@ class ProfileViewModelTest {
     val targetUserId = "user2"
 
     `when`(mockRepository.followUser(currentUserId, targetUserId))
-      .thenThrow(RuntimeException("Failed to follow"))
+        .thenThrow(RuntimeException("Failed to follow"))
     `when`(mockRepository.getProfile(currentUserId)).thenReturn(defaultProfile)
 
     profileViewModel.toggleFollow(currentUserId, targetUserId, false)
@@ -203,7 +198,7 @@ class ProfileViewModelTest {
     val imageUri = mock(Uri::class.java)
 
     `when`(mockRepository.uploadProfileImage(userId, imageUri))
-      .thenThrow(RuntimeException("Upload failed"))
+        .thenThrow(RuntimeException("Upload failed"))
     `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.updateProfileImage(userId, imageUri)

@@ -34,155 +34,113 @@ const val TAG_PROFILE_USERNAME = "profile_username"
 const val TAG_PROFILE_STATS = "profile_stats"
 
 @Composable
-fun SearchProfileScreen(
-    viewModel: ProfileViewModel,
-    onProfileClick: (String) -> Unit
-) {
-    var searchQuery by remember { mutableStateOf("") }
-    val searchState by viewModel.searchState.collectAsState()
+fun SearchProfileScreen(viewModel: ProfileViewModel, onProfileClick: (String) -> Unit) {
+  var searchQuery by remember { mutableStateOf("") }
+  val searchState by viewModel.searchState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        TextField(
-            value = searchQuery,
-            onValueChange = {
-                searchQuery = it
-                viewModel.searchProfiles(it)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .testTag(TAG_SEARCH_FIELD),
-            placeholder = { Text("Search profiles...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            singleLine = true
-        )
+  Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    TextField(
+        value = searchQuery,
+        onValueChange = {
+          searchQuery = it
+          viewModel.searchProfiles(it)
+        },
+        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).testTag(TAG_SEARCH_FIELD),
+        placeholder = { Text("Search profiles...") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        singleLine = true)
 
-        when (val state = searchState) {
-            is SearchProfileState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag(TAG_LOADING_INDICATOR),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+    when (val state = searchState) {
+      is SearchProfileState.Loading -> {
+        Box(
+            modifier = Modifier.fillMaxSize().testTag(TAG_LOADING_INDICATOR),
+            contentAlignment = Alignment.Center) {
+              CircularProgressIndicator()
             }
-            is SearchProfileState.Success -> {
-                if (state.profiles.isEmpty() && searchQuery.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag(TAG_NO_RESULTS),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No profiles found",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.testTag(TAG_PROFILE_LIST),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(
-                            items = state.profiles,
-                            key = { it.id }
-                        ) { profile ->
-                            ProfileSearchItem(
-                                profile = profile,
-                                onClick = { onProfileClick(profile.id) }
-                            )
-                        }
-                    }
+      }
+      is SearchProfileState.Success -> {
+        if (state.profiles.isEmpty() && searchQuery.isNotEmpty()) {
+          Box(
+              modifier = Modifier.fillMaxSize().testTag(TAG_NO_RESULTS),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = "No profiles found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+        } else {
+          LazyColumn(
+              modifier = Modifier.testTag(TAG_PROFILE_LIST),
+              verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(items = state.profiles, key = { it.id }) { profile ->
+                  ProfileSearchItem(profile = profile, onClick = { onProfileClick(profile.id) })
                 }
-            }
-            is SearchProfileState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag(TAG_ERROR_MESSAGE),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = state.message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-            SearchProfileState.Idle -> {
-                if (searchQuery.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag(TAG_IDLE_MESSAGE),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Search for other users",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+              }
         }
+      }
+      is SearchProfileState.Error -> {
+        Box(
+            modifier = Modifier.fillMaxSize().testTag(TAG_ERROR_MESSAGE),
+            contentAlignment = Alignment.Center) {
+              Text(
+                  text = state.message,
+                  color = MaterialTheme.colorScheme.error,
+                  style = MaterialTheme.typography.bodyLarge)
+            }
+      }
+      SearchProfileState.Idle -> {
+        if (searchQuery.isEmpty()) {
+          Box(
+              modifier = Modifier.fillMaxSize().testTag(TAG_IDLE_MESSAGE),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = "Search for other users",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+        }
+      }
     }
+  }
 }
 
 @Composable
-fun ProfileSearchItem(
-    profile: Profile,
-    onClick: () -> Unit
-) {
-    ListItem(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .fillMaxWidth()
-            .testTag("${TAG_PROFILE_ITEM}_${profile.id}"),
-        headlineContent = {
-            Text(
-                text = profile.username,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.testTag("${TAG_PROFILE_USERNAME}_${profile.id}")
-            )
-        },
-        supportingContent = {
-            Row(
-                modifier = Modifier.testTag("${TAG_PROFILE_STATS}_${profile.id}"),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "${profile.followers} followers",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "${profile.following} following",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+fun ProfileSearchItem(profile: Profile, onClick: () -> Unit) {
+  ListItem(
+      modifier =
+          Modifier.clickable(onClick = onClick)
+              .fillMaxWidth()
+              .testTag("${TAG_PROFILE_ITEM}_${profile.id}"),
+      headlineContent = {
+        Text(
+            text = profile.username,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag("${TAG_PROFILE_USERNAME}_${profile.id}"))
+      },
+      supportingContent = {
+        Row(
+            modifier = Modifier.testTag("${TAG_PROFILE_STATS}_${profile.id}"),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+              Text(
+                  text = "${profile.followers} followers",
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = MaterialTheme.colorScheme.onSurfaceVariant)
+              Text(
+                  text = "${profile.following} following",
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        },
-        leadingContent = {
-            AsyncImage(
-                model = profile.profileImageUrl,
-                contentDescription = "Profile picture of ${profile.username}",
-                modifier = Modifier
-                    .size(48.dp)
+      },
+      leadingContent = {
+        AsyncImage(
+            model = profile.profileImageUrl,
+            contentDescription = "Profile picture of ${profile.username}",
+            modifier =
+                Modifier.size(48.dp)
                     .clip(CircleShape)
                     .testTag("${TAG_PROFILE_IMAGE}_${profile.id}"),
-                fallback = painterResource(R.drawable.eduverse_logo_alone)
-            )
-        }
-    )
+            fallback = painterResource(R.drawable.eduverse_logo_alone))
+      })
 }

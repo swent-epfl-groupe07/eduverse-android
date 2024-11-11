@@ -60,30 +60,26 @@ fun DashboardScreen(
 
   Scaffold(
       topBar = {
-          TopAppBar(
-              title = {
-                  Text(
-                      "Eduverse",
-                      style = MaterialTheme.typography.h6,
-                      modifier = Modifier.testTag("app_title")
-                  )
-              },
-              actions = {
-                  IconButton(
-                      onClick = { navigationActions.navigateTo(Screen.SEARCH) },
-                      modifier = Modifier.testTag("search_button")
-                  ) {
-                      Icon(
-                          Icons.Default.Search,
-                          contentDescription = "Search profiles",
-                          tint = MaterialTheme.colors.onPrimary
-                      )
+        TopAppBar(
+            title = {
+              Text(
+                  "Eduverse",
+                  style = MaterialTheme.typography.h6,
+                  modifier = Modifier.testTag("app_title"))
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.SEARCH) },
+                  modifier = Modifier.testTag("search_button")) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Search profiles",
+                        tint = MaterialTheme.colors.onPrimary)
                   }
-              },
-              backgroundColor = MaterialTheme.colors.primary,
-              contentColor = MaterialTheme.colors.onPrimary,
-              elevation = 4.dp
-          )
+            },
+            backgroundColor = MaterialTheme.colors.primary,
+            contentColor = MaterialTheme.colors.onPrimary,
+            elevation = 4.dp)
       },
       floatingActionButton = {
         FloatingActionButton(

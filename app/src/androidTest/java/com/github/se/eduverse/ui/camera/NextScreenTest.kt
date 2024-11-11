@@ -59,12 +59,11 @@ class NextScreenTest {
     photoViewModel = mockk(relaxed = true)
     folderRepository = mock(FolderRepository::class.java)
 
-
     // Properly mock Firebase Auth
     auth = mock(FirebaseAuth::class.java)
     val mockUser = mock(FirebaseUser::class.java)
     `when`(auth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn("test_user_id")  // Use a consistent test ID
+    `when`(mockUser.uid).thenReturn("test_user_id") // Use a consistent test ID
 
     folderViewModel = FolderViewModel(folderRepository, auth)
     vViewModel = mockk(relaxed = true)
@@ -314,8 +313,7 @@ class NextScreenTest {
 
     assertEquals("anonymous", capturedPhoto.captured.ownerId)
     assertTrue(
-      capturedPhoto.captured.path.startsWith("photos/anonymous/") ||
-              capturedPhoto.captured.path.startsWith("videos/anonymous/")
-    )
+        capturedPhoto.captured.path.startsWith("photos/anonymous/") ||
+            capturedPhoto.captured.path.startsWith("videos/anonymous/"))
   }
 }
