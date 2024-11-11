@@ -33,6 +33,10 @@ interface ProfileRepository {
     suspend fun addToUserCollection(userId: String, collectionName: String, publicationId: String)
 
     suspend fun incrementLikes(publicationId: String, userId: String)
+
+    suspend fun removeFromLikedPublications(userId: String, publicationId: String)
+
+    suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String)
 }
 
 class ProfileRepositoryImpl(
@@ -189,4 +193,64 @@ class ProfileRepositoryImpl(
             Log.d("INCREMENTFAIIIL", "FAIIIL: ${e.message}")
         }
     }
+
+    override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {
+        try {
+            val documentRef = db.collection("users")
+                .document(userId)
+                .collection("likedPublications")
+                .document(publicationId)
+
+            documentRef.delete().await()
+            Log.d("REMOVE_LIKE", "Publication $publicationId removed from likedPublications for user $userId.")
+        } catch (e: Exception) {
+            Log.d("REMOVE_LIKE", "Failed to remove publication from likedPublications: ${e.message}")
+            throw e
+        }
+    }
+
+
+
+
+    override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
+        try {
+            // Requête pour trouver le document avec un champ `id` correspondant
+            val querySnapshot = db.collection("publications")
+                .whereEqualTo("id", publicationId)
+                .get()
+                .await()
+
+            if (!querySnapshot.isEmpty) {
+                val documentRef = querySnapshot.documents[0].reference
+
+                db.runTransaction { transaction ->
+                    val snapshot = transaction.get(documentRef)
+                    val likedBy = snapshot.get("likedBy") as? MutableList<String> ?: mutableListOf()
+
+                    if (likedBy.contains(userId)) {
+                        likedBy.remove(userId)
+                        val currentLikes = snapshot.getLong("likes") ?: 0
+                        val newLikes = if (currentLikes > 0) currentLikes - 1 else 0
+
+                        // Mettre à jour le nombre de likes et la liste `likedBy`
+                        transaction.update(documentRef, mapOf(
+                            "likedBy" to likedBy,
+                            "likes" to newLikes
+                        ))
+                    }
+                }.await()
+            } else {
+                throw Exception("Publication not found with ID: $publicationId")
+            }
+        } catch (e: Exception) {
+            Log.d("REMOVE_LIKE", "Failed to decrement likes and remove user from likedBy: ${e.message}")
+            throw e
+        }
+    }
+
+
+
+
+
+
 }

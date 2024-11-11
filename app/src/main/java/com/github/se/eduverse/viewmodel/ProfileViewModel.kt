@@ -101,7 +101,7 @@ open class ProfileViewModel(
       try {
         profileRepository.incrementLikes(publicationId, userId)
         addPublicationToUserCollection(userId, publicationId)
-        Log.d("REUSSIII", "POST LIKEEE")
+        Log.d("REUSSIII", "POST LIKEEE $publicationId ")
       } catch (e: Exception) {
         _error.value = "Failed to like and save publication"
         Log.d("DEBUG", "UserId: $userId, PublicationId: $publicationId")
@@ -115,6 +115,18 @@ open class ProfileViewModel(
   private suspend fun addPublicationToUserCollection(userId: String, publicationId: String) {
     profileRepository.addToUserCollection(userId, "likedPublications", publicationId)
   }
+
+  fun removeLike(userId: String, publicationId: String) {
+    viewModelScope.launch {
+      try {
+        profileRepository.removeFromLikedPublications(userId, publicationId)
+        profileRepository.decrementLikesAndRemoveUser(publicationId, userId)
+      } catch (e: Exception) {
+        _error.value = "Failed to remove like: ${e.message}"
+      }
+    }
+  }
+
 }
 
 

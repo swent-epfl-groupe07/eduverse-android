@@ -72,7 +72,8 @@ fun VideoScreen(
         when {
             error != null -> {
                 Box(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .background(Color.Red.copy(alpha = 0.2f))
                         .testTag("ErrorIndicator")
                 ) {
@@ -87,9 +88,14 @@ fun VideoScreen(
                 VerticalPager(
                     count = publications.size,
                     state = pagerState,
-                    modifier = Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .testTag("VerticalPager")
                 ) { page ->
                     val publication = publications[page]
+                    // Initialisation du state isLiked
+                    val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
 
                     Box(
                         modifier = Modifier
@@ -98,6 +104,7 @@ fun VideoScreen(
                                 detectTapGestures(
                                     onDoubleTap = {
                                         profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
+                                        isLiked.value = true // Mettre à jour l'état local
                                     }
                                 )
                             }
@@ -111,15 +118,26 @@ fun VideoScreen(
                         // Icône de cœur pour aimer
                         IconButton(
                             onClick = {
-                                profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
-                                Log.d("AUTHHHHHHH",currentUserId)
+                                if (isLiked.value) {
+                                    // Logique pour retirer le like (à implémenter dans le ViewModel)
+                                    profileViewModel.removeLike(currentUserId, publication.id)
+                                    isLiked.value = false
+                                } else {
+                                    profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
+                                    isLiked.value = true
+                                }
+                                Log.d("AUTHHHHHHH", currentUserId)
                             },
-                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .offset(y = 64.dp)
+                                .padding(12.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = "Like",
-                                tint = Color.Red
+                                tint = if (isLiked.value) Color.Red else Color.White,
+                                modifier = Modifier.size(48.dp)
                             )
                         }
                     }
@@ -140,6 +158,7 @@ fun VideoScreen(
         }
     }
 }
+
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
