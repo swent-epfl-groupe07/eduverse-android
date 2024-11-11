@@ -177,7 +177,9 @@ fun NextScreen(
                   videoFile?.let { file ->
                     val videoByteArray = file.readBytes()
                     val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                    videoViewModel.saveVideo(video)
+                    videoViewModel.saveVideo(video, it) { id, name, folder ->
+                      folderViewModel.createFileInFolder(id, name, folder)
+                    }
                     navigationActions.goBack()
                     navigationActions.goBack()
                     navigationActions.goBack()
