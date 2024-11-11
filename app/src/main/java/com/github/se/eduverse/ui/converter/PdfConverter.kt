@@ -49,7 +49,7 @@ enum class PdfConverterOption {
 @Composable
 fun PdfConverterScreen(
     navigationActions: NavigationActions,
-    converterViewModel: PdfConverterViewModel = viewModel()
+    converterViewModel: PdfConverterViewModel = viewModel(factory = PdfConverterViewModel.Factory)
 ) {
   val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
@@ -177,8 +177,8 @@ fun PdfConverterScreen(
     }
     is PdfConverterViewModel.PdfGenerationState.Ready -> {}
     is PdfConverterViewModel.PdfGenerationState.Success -> {
-      context.showToast(
-          "${conversionState.pdfFile.name} created successfully and saved in ${conversionState.pdfFile.parent}")
+      context.showToast("Pdf created successfully")
+      converterViewModel.savePdfToDevice(conversionState.pdfFile, context)
       converterViewModel.setPdfGenerationStateToReady()
     }
   }
