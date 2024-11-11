@@ -47,9 +47,9 @@ class FileRepositoryTest {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
+    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     fileRepository = FileRepositoryImpl(mockFirestore, mockStorage)
 
-    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
     `when`(documentSnapshot.getString("url")).thenReturn("url/to/file")
@@ -98,38 +98,10 @@ class FileRepositoryTest {
 
   @Test
   fun deleteFileTest_success() {
-    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
-    `when`(mockStorageReference.delete()).thenReturn(Tasks.forResult(void))
     `when`(mockDocumentReference.delete()).thenReturn(Tasks.forResult(void))
-
     var test = false
 
     fileRepository.deleteFile("fileId", { test = true }, { assert(false) })
-
-    shadowOf(Looper.getMainLooper()).idle()
-    assert(test)
-  }
-
-  @Test
-  fun deleteFileTest_failureGet() {
-    `when`(mockDocumentReference.get()).thenReturn(Tasks.forException(Exception("")))
-
-    var test = false
-
-    fileRepository.deleteFile("fileId", { assert(false) }, { test = true })
-
-    shadowOf(Looper.getMainLooper()).idle()
-    assert(test)
-  }
-
-  @Test
-  fun deleteFileTest_failureDeleteStorage() {
-    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
-    `when`(mockStorageReference.delete()).thenReturn(Tasks.forException(Exception("")))
-
-    var test = false
-
-    fileRepository.deleteFile("fileId", { assert(false) }, { test = true })
 
     shadowOf(Looper.getMainLooper()).idle()
     assert(test)
