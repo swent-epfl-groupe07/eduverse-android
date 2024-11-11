@@ -160,31 +160,24 @@ class ProfileRepositoryImpl(
 
     override suspend fun incrementLikes(publicationId: String, userId: String) {
         try {
-            // Récupérer tous les documents de la collection `publications`
-            val querySnapshot = db.collection("publications").get().await()
+            // Requête ciblée pour récupérer le document avec un champ `id` correspondant
+            val querySnapshot = db.collection("publications")
+                .whereEqualTo("id", publicationId)
+                .get()
+                .await()
 
-            var documentRefToUpdate: DocumentReference? = null
+            if (!querySnapshot.isEmpty) {
+                val documentRef = querySnapshot.documents[0].reference
 
-            // Parcourir les documents pour trouver celui avec l'attribut `id` correspondant
-            for (document in querySnapshot.documents) {
-                val docId = document.getString("id")
-                if (docId == publicationId) {
-                    documentRefToUpdate = document.reference
-                    break
-                }
-            }
-
-            // Si le document correspondant est trouvé, procéder à la mise à jour
-            if (documentRefToUpdate != null) {
                 db.runTransaction { transaction ->
-                    val snapshot = transaction.get(documentRefToUpdate)
+                    val snapshot = transaction.get(documentRef)
                     val likedBy = snapshot.get("likedBy") as? List<String> ?: emptyList()
 
                     // Vérifier si l'utilisateur a déjà liké
                     if (!likedBy.contains(userId)) {
                         val currentLikes = snapshot.getLong("likes") ?: 0
-                        transaction.update(documentRefToUpdate, "likes", currentLikes + 1)
-                        transaction.update(documentRefToUpdate, "likedBy", likedBy + userId)
+                        transaction.update(documentRef, "likes", currentLikes + 1)
+                        transaction.update(documentRef, "likedBy", likedBy + userId)
                     } else {
                         Log.d("INCREMENTCHECK", "User $userId has already liked this publication.")
                     }
@@ -196,7 +189,4 @@ class ProfileRepositoryImpl(
             Log.d("INCREMENTFAIIIL", "FAIIIL: ${e.message}")
         }
     }
-
-
-
 }
