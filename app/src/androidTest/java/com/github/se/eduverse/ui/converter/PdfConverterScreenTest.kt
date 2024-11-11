@@ -131,6 +131,12 @@ class PdfConverterScreenTest {
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
     composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("abortButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("abortButton").performClick()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Aborted,
+        pdfConverterViewModel.pdfGenerationState.value)
     assertEquals("test.pdf", pdfConverterViewModel.newFileName.value)
   }
 
