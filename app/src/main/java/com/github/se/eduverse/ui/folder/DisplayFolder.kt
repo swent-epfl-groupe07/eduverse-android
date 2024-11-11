@@ -15,7 +15,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,6 +52,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.theme.blackTransparentButton
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
@@ -165,12 +165,7 @@ fun FolderScreen(
                     Button(
                         onClick = { sorting = true },
                         modifier = Modifier.testTag("sortingButton"),
-                        colors =
-                            ButtonColors(
-                                Color.Transparent,
-                                Color.Black,
-                                Color.Transparent,
-                                Color.Transparent),
+                        colors = blackTransparentButton,
                         border = BorderStroke(1.dp, Color.Black)) {
                           Icon(Icons.AutoMirrored.Filled.List, "Sort files")
                         }
@@ -235,7 +230,7 @@ fun FolderScreen(
                 }
 
             // The files
-            activeFolder!!.files.forEach {
+            activeFolder?.files?.forEach {
               @Suppress("UNUSED_EXPRESSION")
               trigger // Force recomposition by adding dependency on a state flow
 

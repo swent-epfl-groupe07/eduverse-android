@@ -8,7 +8,7 @@ import com.google.firebase.storage.StorageReference
 
 class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage: FirebaseStorage) :
     FileRepository {
-  private val collectionPath = "files"
+  private val collection = db.collection("files")
 
   /**
    * Create a new file document in the firebase firestore
@@ -16,7 +16,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    * @return the id of the document
    */
   override fun getNewUid(): String {
-    return db.collection(collectionPath).document().id
+    return collection.document().id
   }
 
   /**
@@ -62,16 +62,10 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
    * @param onFailure error management method
    */
   override fun deleteFile(fileId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-    db.collection(collectionPath)
+    collection
         .document(fileId)
-        .get()
-        .addOnSuccessListener {
-          db.collection(collectionPath)
-              .document(fileId)
-              .delete()
-              .addOnSuccessListener { onSuccess() }
-              .addOnFailureListener(onFailure)
-        }
+        .delete()
+        .addOnSuccessListener { onSuccess() }
         .addOnFailureListener(onFailure)
   }
 
@@ -87,7 +81,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
       onSuccess: (StorageReference, String) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    db.collection(collectionPath)
+    collection
         .document(fileId)
         .get()
         .addOnSuccessListener {
@@ -115,7 +109,7 @@ class FileRepositoryImpl(private val db: FirebaseFirestore, private val storage:
       onSuccess: () -> Unit
   ) {
     val pdfData = hashMapOf("url" to path, "suffix" to suffix)
-    db.collection(collectionPath)
+    collection
         .document(fileId)
         .set(pdfData)
         .addOnSuccessListener { onSuccess() }
