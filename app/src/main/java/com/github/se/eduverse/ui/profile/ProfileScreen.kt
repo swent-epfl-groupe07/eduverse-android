@@ -71,7 +71,7 @@ fun ProfileScreen(
         }
 
         viewModel.loadProfile(userId)
-        viewModel.loadLikedPublications(userId) // Charger les publications likées
+        viewModel.loadLikedPublications(userId)
     }
 
     Scaffold(
@@ -175,13 +175,13 @@ fun ProfileScreen(
                         if (selectedTab == 0) {
                             profile.publications
                         } else {
-                            likedPublications // Affichage des publications likées
+                            likedPublications // Display of liked publications
                         }
 
                     PublicationsGrid(
                         publications = publications,
-                        currentUserId = userId, // Passe l'ID de l'utilisateur actuel
-                        profileViewModel = viewModel, // Passe le ViewModel pour gérer les interactions
+                        currentUserId = userId,
+                        profileViewModel = viewModel,
                         onPublicationClick = { /* Handle publication click */ },
                         modifier = Modifier.testTag("publications_grid")
                     )
@@ -257,7 +257,7 @@ private fun PublicationItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PublicationDetailDialog(
+fun PublicationDetailDialog(
     publication: Publication,
     profileViewModel: ProfileViewModel,
     currentUserId: String,
@@ -274,28 +274,46 @@ private fun PublicationDetailDialog(
             dismissOnClickOutside = false
         )
     ) {
-        Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+        Surface(
+            modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog"),
+            color = Color.Black
+        ) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
                 SmallTopAppBar(
-                    title = { Text(publication.title, color = Color.White) },
+                    title = {
+                        Text(
+                            publication.title,
+                            color = Color.White,
+                            modifier = Modifier.testTag("publication_title")
+                        )
+                    },
                     navigationIcon = {
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.testTag("close_button")
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = Color.White
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Black, titleContentColor = Color.White
+                        containerColor = Color.Black,
+                        titleContentColor = Color.White
                     )
                 )
 
                 Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    modifier = Modifier.weight(1f).fillMaxWidth().testTag("media_container"),
                     contentAlignment = Alignment.Center
                 ) {
                     when (publication.mediaType) {
                         MediaType.VIDEO -> {
                             ExoVideoPlayer(
-                                videoUrl = publication.mediaUrl, modifier = Modifier.fillMaxWidth()
+                                videoUrl = publication.mediaUrl,
+                                modifier = Modifier.fillMaxWidth().testTag("video_player")
                             )
                         }
                         MediaType.PHOTO -> {
@@ -305,15 +323,20 @@ private fun PublicationDetailDialog(
                                     .crossfade(true)
                                     .build(),
                                 contentDescription = "Publication media",
-                                modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .testTag("detail_photo_view"),
                                 contentScale = ContentScale.Fit
                             )
                         }
                     }
 
-                    // Icône du cœur et compteur de likes
+                    // Icon and Counter
                     Column(
-                        modifier = Modifier.align(Alignment.CenterEnd).padding(16.dp),
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(16.dp)
+                            .testTag("like_section"),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         IconButton(
@@ -327,13 +350,16 @@ private fun PublicationDetailDialog(
                                     isLiked.value = true
                                     likeCount.value += 1
                                 }
-                            }
+                            },
+                            modifier = Modifier.testTag("like_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = "Like",
                                 tint = if (isLiked.value) Color.Red else Color.White,
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(48.dp).testTag(
+                                    if (isLiked.value) "liked_icon" else "unliked_icon"
+                                )
                             )
                         }
                         Text(

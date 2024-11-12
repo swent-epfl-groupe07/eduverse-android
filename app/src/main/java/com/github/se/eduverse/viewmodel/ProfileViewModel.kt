@@ -19,18 +19,18 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
   open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
   private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
-  val likedPublications: StateFlow<List<Publication>> = _likedPublications.asStateFlow()
+  open val likedPublications: StateFlow<List<Publication>> = _likedPublications.asStateFlow()
   private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
-  val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
+  open val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
   private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
   open val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
   private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
-  val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
+  open val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
 
   private var searchJob: Job? = null
 
   private val _error = MutableStateFlow<String?>(null)
-  val error: StateFlow<String?> = _error.asStateFlow()
+  open val error: StateFlow<String?> = _error.asStateFlow()
 
   fun loadProfile(userId: String) {
     viewModelScope.launch {

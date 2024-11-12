@@ -343,6 +343,54 @@ class ProfileViewModelTest {
     assertEquals("Failed to remove like: Failed to remove like", profileViewModel.error.value)
   }
 
+  @Test
+  fun `loadLikedPublications success updates state with liked publications`() = runTest {
+    val userId = "testUser"
+    val likedPublicationIds = listOf("pub1", "pub2")
+    val allPublications =
+        listOf(
+            Publication(id = "pub1", userId = userId, title = "Publication 1"),
+            Publication(id = "pub2", userId = userId, title = "Publication 2"),
+            Publication(id = "pub3", userId = "otherUser", title = "Publication 3"))
+    val expectedLikedPublications = allPublications.filter { it.id in likedPublicationIds }
+
+    // Mock repository responses
+    `when`(mockRepository.getUserLikedPublicationsIds(userId)).thenReturn(likedPublicationIds)
+    `when`(mockRepository.getAllPublications()).thenReturn(allPublications)
+
+    // Call the method under test
+    profileViewModel.loadLikedPublications(userId)
+    advanceUntilIdle()
+
+    // Verify the state is updated correctly
+    val likedPublications = profileViewModel.likedPublications.first()
+    assertEquals(expectedLikedPublications, likedPublications)
+    assertNull(profileViewModel.error.value)
+
+    verify(mockRepository).getUserLikedPublicationsIds(userId)
+    verify(mockRepository).getAllPublications()
+  }
+
+  @Test
+  fun `loadLikedPublications failure updates state with error`() = runTest {
+    val userId = "testUser"
+
+    // Simulate an exception when fetching liked publication IDs
+    `when`(mockRepository.getUserLikedPublicationsIds(userId))
+        .thenThrow(RuntimeException("Failed to fetch liked publications"))
+
+    // Call the method under test
+    profileViewModel.loadLikedPublications(userId)
+    advanceUntilIdle()
+
+    // Verify that an error message is set
+    val error = profileViewModel.error.first()
+    assertEquals("Failed to load liked publications: Failed to fetch liked publications", error)
+
+    verify(mockRepository).getUserLikedPublicationsIds(userId)
+    verify(mockRepository, never()).getAllPublications()
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain()
