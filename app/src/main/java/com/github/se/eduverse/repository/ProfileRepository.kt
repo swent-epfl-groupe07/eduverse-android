@@ -1,6 +1,7 @@
 package com.github.se.eduverse.repository
 
 import android.net.Uri
+import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,8 +17,6 @@ interface ProfileRepository {
 
   suspend fun removePublication(publicationId: String)
 
-  suspend fun addToFavorites(userId: String, publicationId: String)
-
   suspend fun removeFromFavorites(userId: String, publicationId: String)
 
   suspend fun followUser(followerId: String, followedId: String)
@@ -27,6 +26,26 @@ interface ProfileRepository {
   suspend fun uploadProfileImage(userId: String, imageUri: Uri): String
 
   suspend fun updateProfileImage(userId: String, imageUrl: String)
+
+  suspend fun searchProfiles(query: String, limit: Int = 20): List<Profile>
+
+  suspend fun createProfile(userId: String, defaultUsername: String, photoUrl: String = ""): Profile
+
+  suspend fun updateUsername(userId: String, newUsername: String)
+
+  suspend fun doesUsernameExist(username: String): Boolean
+
+  suspend fun addToUserCollection(userId: String, collectionName: String, publicationId: String)
+
+  suspend fun incrementLikes(publicationId: String, userId: String)
+
+  suspend fun removeFromLikedPublications(userId: String, publicationId: String)
+
+  suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String)
+
+  suspend fun getAllPublications(): List<Publication>
+
+  suspend fun getUserLikedPublicationsIds(userId: String): List<String>
 }
 
 class ProfileRepositoryImpl(
@@ -37,6 +56,34 @@ class ProfileRepositoryImpl(
   private val publicationsCollection = firestore.collection("publications")
   private val favoritesCollection = firestore.collection("favorites")
   private val followersCollection = firestore.collection("followers")
+
+  private val usersCollection = firestore.collection("users")
+
+  override suspend fun getAllPublications(): List<Publication> {
+    return try {
+      publicationsCollection.get().await().documents.mapNotNull {
+        it.toObject(Publication::class.java)
+      }
+    } catch (e: Exception) {
+      Log.e("GET_ALL_PUBLICATIONS", "Failed to get all publications: ${e.message}")
+      emptyList()
+    }
+  }
+
+  override suspend fun getUserLikedPublicationsIds(userId: String): List<String> {
+    return try {
+      usersCollection
+          .document(userId)
+          .collection("likedPublications")
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.getString("publicationId") }
+    } catch (e: Exception) {
+      Log.e("GET_LIKED_PUBLICATIONS", "Failed to get liked publications: ${e.message}")
+      emptyList()
+    }
+  }
 
   override suspend fun getProfile(userId: String): Profile? {
     val profileDoc = profilesCollection.document(userId).get().await()
@@ -82,16 +129,6 @@ class ProfileRepositoryImpl(
     publicationsCollection.document(publicationId).delete().await()
   }
 
-  override suspend fun addToFavorites(userId: String, publicationId: String) {
-    favoritesCollection
-        .add(
-            hashMapOf(
-                "userId" to userId,
-                "publicationId" to publicationId,
-                "timestamp" to System.currentTimeMillis()))
-        .await()
-  }
-
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
     favoritesCollection
         .whereEqualTo("userId", userId)
@@ -131,4 +168,149 @@ class ProfileRepositoryImpl(
   override suspend fun updateProfileImage(userId: String, imageUrl: String) {
     profilesCollection.document(userId).update("profileImageUrl", imageUrl).await()
   }
+
+  override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
+    return profilesCollection
+        .whereGreaterThanOrEqualTo("username", query)
+        .whereLessThanOrEqualTo("username", query + '\uf8ff')
+        .limit(limit.toLong())
+        .get()
+        .await()
+        .documents
+        .mapNotNull { it.toObject(Profile::class.java) }
+  }
+
+  override suspend fun createProfile(
+      userId: String,
+      defaultUsername: String,
+      photoUrl: String
+  ): Profile {
+    val profile =
+        Profile(
+            id = userId,
+            username = defaultUsername,
+            profileImageUrl = photoUrl,
+            followers = 0,
+            following = 0,
+            publications = emptyList(),
+            favoritePublications = emptyList())
+
+    profilesCollection.document(userId).set(profile).await()
+    return profile
+  }
+
+  override suspend fun updateUsername(userId: String, newUsername: String) {
+    profilesCollection.document(userId).update("username", newUsername).await()
+  }
+
+  override suspend fun doesUsernameExist(username: String): Boolean {
+    val snapshot = profilesCollection.whereEqualTo("username", username).limit(1).get().await()
+    return !snapshot.isEmpty
+  }
+
+  override suspend fun addToUserCollection(
+      userId: String,
+      collectionName: String,
+      publicationId: String
+  ) {
+    firestore
+        .collection("users")
+        .document(userId)
+        .collection(collectionName)
+        .document(publicationId)
+        .set(hashMapOf("publicationId" to publicationId, "timestamp" to System.currentTimeMillis()))
+        .await()
+  }
+
+  override suspend fun incrementLikes(publicationId: String, userId: String) {
+    try {
+      // Targeted query to retrieve the document with a matching `id` field
+
+      val querySnapshot =
+          firestore.collection("publications").whereEqualTo("id", publicationId).get().await()
+
+      if (!querySnapshot.isEmpty) {
+        val documentRef = querySnapshot.documents[0].reference
+
+        firestore
+            .runTransaction { transaction ->
+              val snapshot = transaction.get(documentRef)
+              val likedBy = snapshot.get("likedBy") as? List<String> ?: emptyList()
+
+              // Check if the user has already liked
+
+              if (!likedBy.contains(userId)) {
+                val currentLikes = snapshot.getLong("likes") ?: 0
+                transaction.update(documentRef, "likes", currentLikes + 1)
+                transaction.update(documentRef, "likedBy", likedBy + userId)
+              } else {
+                Log.d("INCREMENTCHECK", "User $userId has already liked this publication.")
+              }
+            }
+            .await()
+      } else {
+        throw Exception("Publication not found with ID: $publicationId")
+      }
+    } catch (e: Exception) {
+      Log.d("INCREMENTFAIIIL", "FAIIIL: ${e.message}")
+    }
+  }
+
+  override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {
+    try {
+      val documentRef =
+          firestore
+              .collection("users")
+              .document(userId)
+              .collection("likedPublications")
+              .document(publicationId)
+
+      documentRef.delete().await()
+      Log.d(
+          "REMOVE_LIKE",
+          "Publication $publicationId removed from likedPublications for user $userId.")
+    } catch (e: Exception) {
+      Log.d("REMOVE_LIKE", "Failed to remove publication from likedPublications: ${e.message}")
+      throw e
+    }
+  }
+
+  override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
+    try {
+      // Query to find the document with a matching `id` field
+
+      val querySnapshot =
+          firestore.collection("publications").whereEqualTo("id", publicationId).get().await()
+
+      if (!querySnapshot.isEmpty) {
+        val documentRef = querySnapshot.documents[0].reference
+
+        firestore
+            .runTransaction { transaction ->
+              val snapshot = transaction.get(documentRef)
+              val likedBy = snapshot.get("likedBy") as? MutableList<String> ?: mutableListOf()
+
+              if (likedBy.contains(userId)) {
+                likedBy.remove(userId)
+                val currentLikes = snapshot.getLong("likes") ?: 0
+                val newLikes = if (currentLikes > 0) currentLikes - 1 else 0
+
+                // Update the number of likes and the `likedBy` list
+
+                transaction.update(documentRef, mapOf("likedBy" to likedBy, "likes" to newLikes))
+              }
+            }
+            .await()
+      } else {
+        throw Exception("Publication not found with ID: $publicationId")
+      }
+    } catch (e: Exception) {
+      Log.d("REMOVE_LIKE", "Failed to decrement likes and remove user from likedBy: ${e.message}")
+      throw e
+    }
+  }
+  // IDK IF THIS FUNCTION SHOULD BE IN PROFILE REPO OR PUBLI REPO. Logically, it should be in
+  // publication repo
+  // but I'm not sure if it's okay for the profile VM to call a function that is in the publication
+  // repo.
 }

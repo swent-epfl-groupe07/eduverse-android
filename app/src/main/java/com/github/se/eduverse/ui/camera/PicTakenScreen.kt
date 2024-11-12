@@ -49,23 +49,32 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Photo
+import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
 import java.io.File
 
 @Composable
 fun PicTakenScreen(
-    photoFile: File?, // Fichier photo
-    videoFile: File?, // Fichier vidéo
+    photoFile: File?, // Photo file
+    videoFile: File?, // Video file
     navigationActions: NavigationActions,
-    viewModel: PhotoViewModel
+    photoViewModel: PhotoViewModel,
+    videoViewModel: VideoViewModel
 ) {
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
-  val path = "media/$ownerId/${System.currentTimeMillis()}.jpg"
+
+  // Use the appropriate path for photos and videos
+  val mediaType = if (photoFile != null) "photos" else "videos"
+  val path =
+      "$mediaType/$ownerId/${System.currentTimeMillis()}.${
+            if (photoFile != null) "jpg" else "mp4"
+        }"
 
   val bitmap =
       photoFile?.let {
@@ -79,7 +88,7 @@ fun PicTakenScreen(
               .padding(8.dp)
               .testTag("picTakenScreenBox")) {
         if (bitmap != null) {
-          // Afficher la photo avec les bords arrondis
+          // Display the photo with rounded corners
           Image(
               bitmap = bitmap,
               contentDescription = "Captured Photo",
@@ -87,17 +96,30 @@ fun PicTakenScreen(
               modifier =
                   Modifier.fillMaxWidth()
                       .fillMaxHeight(0.9f)
-                      .align(Alignment.TopCenter)
-                      .clip(RoundedCornerShape(12.dp)) // Bords arrondis
+                      .clip(RoundedCornerShape(12.dp))
                       .background(Color.LightGray)
                       .testTag("capturedImage"))
+
+          // Crop and settings icons
+          Column(
+              modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 16.dp),
+              verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Image(
+                    painter = painterResource(id = R.drawable.vector),
+                    contentDescription = "Crop Photo",
+                    modifier = Modifier.size(30.dp).clickable {}.testTag("cropIcon"))
+                Image(
+                    painter = painterResource(id = R.drawable.settings),
+                    contentDescription = "Filters",
+                    modifier = Modifier.size(40.dp).clickable {}.testTag("settingsIcon"))
+              }
         } else if (videoFile != null) {
-          // Utiliser ExoPlayer pour afficher la vidéo en boucle avec ContentScale.Crop
+          // Use ExoPlayer to display the video in loop with ContentScale.Crop
           val videoUri = Uri.fromFile(videoFile)
           val player = remember {
             ExoPlayer.Builder(context).build().apply {
               setMediaItem(MediaItem.fromUri(videoUri))
-              repeatMode = ExoPlayer.REPEAT_MODE_ONE // Répéter la vidéo en boucle
+              repeatMode = ExoPlayer.REPEAT_MODE_ONE // Loop the video
               prepare()
               playWhenReady = true
             }
@@ -110,28 +132,28 @@ fun PicTakenScreen(
             onDispose { player.release() }
           }
 
-          // Ajout du PlayerView avec ContentScale.Crop
+          // Add PlayerView with ContentScale.Crop
           AndroidView(
               factory = {
                 PlayerView(context).apply {
                   this.player = player
-                  useController = false // Masquer les contrôles de lecture
+                  useController = false // Hide playback controls
                   layoutParams =
                       ViewGroup.LayoutParams(
                           ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                  scaleX = 1.2f // Ajustement du scale pour imiter ContentScale.Crop
-                  scaleY = 1.2f // Ajustement du scale pour imiter ContentScale.Crop
+                  scaleX = 1.2f // Adjust scale to mimic ContentScale.Crop
+                  scaleY = 1.2f // Adjust scale to mimic ContentScale.Crop
                 }
               },
               modifier =
                   Modifier.fillMaxWidth()
                       .fillMaxHeight(0.9f)
                       .align(Alignment.TopCenter)
-                      .clip(RoundedCornerShape(12.dp)) // Bords arrondis identiques à la photo
+                      .clip(RoundedCornerShape(12.dp)) // Rounded corners same as photo
                       .background(Color.LightGray)
                       .testTag("videoPlayer"))
         } else {
-          // Cas où ni la photo ni la vidéo n'est fournie
+          // Case when neither photo nor video is provided
           Image(
               painter = painterResource(id = R.drawable.google_logo),
               contentDescription = "Google Logo",
@@ -140,26 +162,12 @@ fun PicTakenScreen(
                   Modifier.fillMaxWidth()
                       .fillMaxHeight(0.8f)
                       .align(Alignment.Center)
-                      .clip(RoundedCornerShape(12.dp)) // Bords arrondis
+                      .clip(RoundedCornerShape(12.dp)) // Rounded corners
                       .background(Color.LightGray)
                       .testTag("googleLogoImage"))
         }
 
-        // Reste du contenu comme les icônes de crop et settings (inchangé)
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              Image(
-                  painter = painterResource(id = R.drawable.vector),
-                  contentDescription = "Crop Photo",
-                  modifier = Modifier.size(30.dp).clickable {}.testTag("cropIcon"))
-              Image(
-                  painter = painterResource(id = R.drawable.settings),
-                  contentDescription = "Filters",
-                  modifier = Modifier.size(40.dp).clickable {}.testTag("settingsIcon"))
-            }
-
-        // Boutons Save et Next (inchangé)
+        // Save and Next buttons (updated to handle videos)
         Row(
             modifier =
                 Modifier.align(Alignment.BottomCenter)
@@ -171,7 +179,15 @@ fun PicTakenScreen(
                     bitmap?.let {
                       val byteArray = imageBitmapToByteArray(it)
                       val photo = Photo(ownerId, byteArray, path)
-                      viewModel.savePhoto(photo)
+                      photoViewModel.savePhoto(photo)
+                      navigationActions.goBack()
+                      navigationActions.goBack()
+                    }
+
+                    videoFile?.let {
+                      val videoByteArray = it.readBytes() // Convert video file to byte array
+                      val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
+                      videoViewModel.saveVideo(video)
                       navigationActions.goBack()
                       navigationActions.goBack()
                     }
@@ -194,7 +210,7 @@ fun PicTakenScreen(
                     val encodedPhotoPath = photoFile?.absolutePath?.let { Uri.encode(it) }
                     val encodedVideoPath = videoFile?.absolutePath?.let { Uri.encode(it) }
 
-                    // Si la photo existe, on passe le chemin de la photo, sinon celui de la vidéo
+                    // If photo exists, pass the photo path, otherwise pass the video path
                     navigationActions.navigateTo("nextScreen/$encodedPhotoPath/$encodedVideoPath")
                   },
                   modifier = Modifier.weight(1f).height(56.dp).testTag("nextButton"),
@@ -211,7 +227,7 @@ fun PicTakenScreen(
                   }
             }
 
-        // Bouton pour fermer l'écran (inchangé)
+        // Close button (unchanged)
         Box(
             modifier =
                 Modifier.align(Alignment.TopStart)

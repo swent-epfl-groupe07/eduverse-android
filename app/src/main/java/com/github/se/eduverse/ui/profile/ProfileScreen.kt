@@ -15,26 +15,33 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -51,13 +58,22 @@ fun ProfileScreen(
 ) {
   var selectedTab by remember { mutableStateOf(0) }
   val uiState by viewModel.profileState.collectAsState()
+  val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
   val launcher =
       rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
         ->
         uri?.let { viewModel.updateProfileImage(userId, it) }
       }
 
-  LaunchedEffect(userId) { viewModel.loadProfile(userId) }
+  LaunchedEffect(userId) {
+    if (auth.currentUser == null) {
+      navigationActions.navigateTo(Screen.AUTH)
+      return@LaunchedEffect
+    }
+
+    viewModel.loadProfile(userId)
+    viewModel.loadLikedPublications(userId)
+  }
 
   Scaffold(
       modifier = Modifier.testTag("profile_screen_container"),
@@ -78,6 +94,13 @@ fun ProfileScreen(
                   onClick = { navigationActions.goBack() },
                   modifier = Modifier.testTag("back_button")) {
                     Icon(Icons.Default.ArrowBack, "Back")
+                  }
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.SETTING) },
+                  modifier = Modifier.testTag("settings_button")) {
+                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
                   }
             })
       },
@@ -119,7 +142,6 @@ fun ProfileScreen(
                 }
                 else -> {}
               }
-
               TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
                 Tab(
                     selected = selectedTab == 0,
@@ -153,11 +175,13 @@ fun ProfileScreen(
                       if (selectedTab == 0) {
                         profile.publications
                       } else {
-                        profile.favoritePublications
+                        likedPublications // Display of liked publications
                       }
 
                   PublicationsGrid(
                       publications = publications,
+                      currentUserId = userId,
+                      profileViewModel = viewModel,
                       onPublicationClick = { /* Handle publication click */},
                       modifier = Modifier.testTag("publications_grid"))
                 }
@@ -182,11 +206,165 @@ private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun PublicationItem(
+    publication: Publication,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Card(
+      modifier = modifier.aspectRatio(1f).clickable(onClick = onClick),
+      shape = RoundedCornerShape(8.dp)) {
+        Box(modifier = Modifier.testTag("publication_content_${publication.id}").fillMaxSize()) {
+          AsyncImage(
+              model =
+                  ImageRequest.Builder(LocalContext.current)
+                      .data(publication.thumbnailUrl)
+                      .crossfade(true)
+                      .listener(
+                          onError = { _, _ ->
+                            println("Failed to load thumbnail for ${publication.id}")
+                          },
+                          onSuccess = { _, _ ->
+                            println("Successfully loaded thumbnail for ${publication.id}")
+                          })
+                      .build(),
+              contentDescription = "Publication thumbnail",
+              modifier = Modifier.testTag("publication_thumbnail_${publication.id}").fillMaxSize(),
+              contentScale = ContentScale.Crop,
+              error = painterResource(R.drawable.eduverse_logo_alone),
+              fallback = painterResource(R.drawable.eduverse_logo_alone),
+          )
+
+          // Video indicator overlay
+          if (publication.mediaType == MediaType.VIDEO) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
+
+            Icon(
+                imageVector = Icons.Default.PlayCircle,
+                contentDescription = "Video",
+                modifier =
+                    Modifier.size(48.dp)
+                        .align(Alignment.Center)
+                        .testTag("video_play_icon_${publication.id}"), // Add this testTag
+                tint = Color.White)
+          }
+        }
+      }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PublicationDetailDialog(
+    publication: Publication,
+    profileViewModel: ProfileViewModel,
+    currentUserId: String,
+    onDismiss: () -> Unit
+) {
+  val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
+  val likeCount = remember { mutableStateOf(publication.likes) }
+
+  Dialog(
+      onDismissRequest = onDismiss,
+      properties =
+          DialogProperties(
+              usePlatformDefaultWidth = false,
+              dismissOnBackPress = true,
+              dismissOnClickOutside = false)) {
+        Surface(
+            modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog"),
+            color = Color.Black) {
+              Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+                SmallTopAppBar(
+                    title = {
+                      Text(
+                          publication.title,
+                          color = Color.White,
+                          modifier = Modifier.testTag("publication_title"))
+                    },
+                    navigationIcon = {
+                      IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_button")) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                      }
+                    },
+                    colors =
+                        TopAppBarDefaults.smallTopAppBarColors(
+                            containerColor = Color.Black, titleContentColor = Color.White))
+
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth().testTag("media_container"),
+                    contentAlignment = Alignment.Center) {
+                      when (publication.mediaType) {
+                        MediaType.VIDEO -> {
+                          ExoVideoPlayer(
+                              videoUrl = publication.mediaUrl,
+                              modifier = Modifier.fillMaxWidth().testTag("video_player"))
+                        }
+                        MediaType.PHOTO -> {
+                          AsyncImage(
+                              model =
+                                  ImageRequest.Builder(LocalContext.current)
+                                      .data(publication.mediaUrl)
+                                      .crossfade(true)
+                                      .build(),
+                              contentDescription = "Publication media",
+                              modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                              contentScale = ContentScale.Fit)
+                        }
+                      }
+
+                      // Icon and Counter
+                      Column(
+                          modifier =
+                              Modifier.align(Alignment.CenterEnd)
+                                  .padding(16.dp)
+                                  .testTag("like_section"),
+                          horizontalAlignment = Alignment.CenterHorizontally) {
+                            IconButton(
+                                onClick = {
+                                  if (isLiked.value) {
+                                    profileViewModel.removeLike(currentUserId, publication.id)
+                                    isLiked.value = false
+                                    likeCount.value -= 1
+                                  } else {
+                                    profileViewModel.likeAndAddToFavorites(
+                                        currentUserId, publication.id)
+                                    isLiked.value = true
+                                    likeCount.value += 1
+                                  }
+                                },
+                                modifier = Modifier.testTag("like_button")) {
+                                  Icon(
+                                      imageVector = Icons.Default.Favorite,
+                                      contentDescription = "Like",
+                                      tint = if (isLiked.value) Color.Red else Color.White,
+                                      modifier =
+                                          Modifier.size(48.dp)
+                                              .testTag(
+                                                  if (isLiked.value) "liked_icon"
+                                                  else "unliked_icon"))
+                                }
+                            Text(
+                                text = likeCount.value.toString(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                modifier = Modifier.testTag("like_count_${publication.id}"))
+                          }
+                    }
+              }
+            }
+      }
+}
+
+@Composable
 private fun PublicationsGrid(
     publications: List<Publication>,
+    currentUserId: String,
+    profileViewModel: ProfileViewModel,
     onPublicationClick: (Publication) -> Unit,
     modifier: Modifier = Modifier
 ) {
+  var selectedPublication by remember { mutableStateOf<Publication?>(null) }
+
   if (publications.isEmpty()) {
     Box(
         modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
@@ -199,53 +377,33 @@ private fun PublicationsGrid(
         }
   } else {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(3),
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        contentPadding = PaddingValues(1.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)) {
           items(publications) { publication ->
             PublicationItem(
                 publication = publication,
-                onClick = { onPublicationClick(publication) },
+                onClick = { selectedPublication = publication },
                 modifier = Modifier.testTag("publication_item_${publication.id}"))
           }
         }
+
+    // Show detail dialog when a publication is selected
+    selectedPublication?.let { publication ->
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = profileViewModel,
+          currentUserId = currentUserId,
+          onDismiss = { selectedPublication = null })
+    }
   }
 }
 
 @Composable
-private fun PublicationItem(
-    publication: Publication,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-  Card(
-      modifier = modifier.aspectRatio(1f).clickable(onClick = onClick),
-      shape = RoundedCornerShape(8.dp)) {
-        Box(modifier = Modifier.testTag("publication_content_${publication.id}").fillMaxSize()) {
-          Box(
-              modifier =
-                  Modifier.testTag("publication_thumbnail_${publication.id}")
-                      .fillMaxSize()
-                      .background(MaterialTheme.colorScheme.surfaceVariant))
-
-          Box(
-              modifier =
-                  Modifier.testTag("publication_title_container_${publication.id}")
-                      .fillMaxWidth()
-                      .align(Alignment.BottomCenter)
-                      .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
-                      .padding(8.dp)) {
-                Text(
-                    text = publication.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("publication_title_${publication.id}"))
-              }
-        }
-      }
+private fun VideoPlayer(videoUrl: String, modifier: Modifier = Modifier) {
+  ExoVideoPlayer(videoUrl = videoUrl, modifier = modifier)
 }
 
 @Composable

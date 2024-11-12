@@ -17,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -30,7 +29,10 @@ import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
+import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.VideoScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
@@ -43,21 +45,22 @@ import com.github.se.eduverse.ui.folder.CreateFileScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
 import com.github.se.eduverse.ui.folder.FolderScreen
 import com.github.se.eduverse.ui.folder.ListFoldersScreen
+import com.github.se.eduverse.ui.gallery.GalleryScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
-import com.github.se.eduverse.ui.screens.GalleryScreen
+import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
-import com.github.se.eduverse.ui.videos.VideosScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
-import com.github.se.eduverse.viewmodel.PhotoViewModelFactory
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -69,25 +72,20 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
-  private lateinit var photoViewModel: PhotoViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
 
     super.onCreate(savedInstanceState)
-
+    /*
     // Initialiser Firebase Auth
     auth = FirebaseAuth.getInstance()
     if (auth.currentUser != null) {
       auth.signOut()
-    }
+    } */
 
-    // Instanciez le repository et le ViewModel
-    val photoRepository =
-        PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-    val photoViewModelFactory = PhotoViewModelFactory(photoRepository)
-    photoViewModel = ViewModelProvider(this, photoViewModelFactory)[PhotoViewModel::class.java]
+    // Adding the VideoRepository and the VideoViewModel
 
-    // Gestion des permissions de la caméra
+    // Managing camera permissions
     val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
           cameraPermissionGranted = isGranted
@@ -102,9 +100,7 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          EduverseApp(cameraPermissionGranted, photoViewModel)
-        }
+        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
       }
     }
   }
@@ -112,7 +108,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel) {
+fun EduverseApp(cameraPermissionGranted: Boolean) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -127,6 +123,13 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
+  val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
+  val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+  val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+
+  val pubRepo = PublicationRepository(firestore)
+  val publicationViewModel = PublicationViewModel(pubRepo)
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
@@ -149,13 +152,18 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.SEARCH) {
+        SearchProfileScreen(viewModel = profileViewModel, onProfileClick = {})
+      }
     }
 
     navigation(
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideosScreen(navigationActions) }
+      composable(Screen.VIDEOS) {
+        VideoScreen(navigationActions, publicationViewModel, profileViewModel)
+      }
     }
 
     navigation(
@@ -190,7 +198,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
 
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        GalleryScreen(ownerId = ownerId, viewModel = photoViewModel, navigationActions)
+        GalleryScreen(
+            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }
@@ -203,8 +212,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
-
-    // Écran pour afficher la photo prise
+    // Screen to display the photo taken
     navigation(
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
@@ -212,9 +220,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
       composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
-
-    // Ajoute une route dynamique pour PicTakenScreen avec des arguments optionnels pour photo et
-    // vidéo
+    // Add a dynamic route for PicTakenScreen with optional arguments for photo and
+    // video
     composable(
         "picTaken/{photoPath}?videoPath={videoPath}",
         arguments =
@@ -227,16 +234,16 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
                   type = NavType.StringType
                   nullable = true
                 })) { backStackEntry ->
-          // Récupère les chemins de photo et de vidéo depuis les arguments
+          // Get photo and video paths from arguments
           val photoPath = backStackEntry.arguments?.getString("photoPath")
           val videoPath = backStackEntry.arguments?.getString("videoPath")
 
-          // Crée les fichiers correspondants si les chemins existent
+          // Create the corresponding files if the paths exist
           val photoFile = photoPath?.let { File(it) }
           val videoFile = videoPath?.let { File(it) }
 
-          // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
-          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel)
+          // Call PicTakenScreen with the photo and video files
+          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
         }
 
     composable(
@@ -261,7 +268,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean, photoViewModel: PhotoViewModel
               photoFile = photoFile,
               videoFile = videoFile,
               navigationActions = navigationActions,
-              photoViewModel)
+              photoViewModel,
+              folderViewModel,
+              videoViewModel)
         }
   }
 }
