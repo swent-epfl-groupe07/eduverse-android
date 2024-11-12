@@ -18,31 +18,43 @@ import kotlinx.coroutines.launch
 open class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
   open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
+  private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
+  open val likedPublications: StateFlow<List<Publication>> = _likedPublications.asStateFlow()
   private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
-  val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
+  open val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
   private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
   open val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
   private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
-  val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
+  open val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
 
   private var searchJob: Job? = null
 
   private val _error = MutableStateFlow<String?>(null)
-  val error: StateFlow<String?> = _error.asStateFlow()
+  open val error: StateFlow<String?> = _error.asStateFlow()
 
   fun loadProfile(userId: String) {
     viewModelScope.launch {
       _profileState.value = ProfileUiState.Loading
       try {
-        // Try to create profile if it doesn't exist
         createProfileIfNotExists(userId)
-
-        // Load the profile (whether it existed or was just created)
         val profile = repository.getProfile(userId)
         _profileState.value =
             profile?.let { ProfileUiState.Success(it) } ?: ProfileUiState.Error("Profile not found")
       } catch (e: Exception) {
         _profileState.value = ProfileUiState.Error(e.message ?: "Unknown error")
+      }
+    }
+  }
+
+  fun loadLikedPublications(userId: String) {
+    viewModelScope.launch {
+      try {
+        val likedIds = repository.getUserLikedPublicationsIds(userId)
+        val allPublications = repository.getAllPublications()
+        val likedPublicationsList = allPublications.filter { it.id in likedIds }
+        _likedPublications.value = likedPublicationsList
+      } catch (e: Exception) {
+        _error.value = "Failed to load liked publications: ${e.message}"
       }
     }
   }
@@ -117,7 +129,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   }
 
   open fun searchProfiles(query: String) {
-    // Cancel previous search if any
     searchJob?.cancel()
 
     if (query.isBlank()) {
@@ -129,7 +140,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         viewModelScope.launch {
           _searchState.value = SearchProfileState.Loading
           try {
-            // Add delay to avoid too many requests while typing
             delay(300)
             val results = repository.searchProfiles(query)
             _searchState.value = SearchProfileState.Success(results)
@@ -148,7 +158,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     try {
       val profile = repository.getProfile(userId)
       if (profile == null) {
-        // Get Google Auth user info
         val user = FirebaseAuth.getInstance().currentUser
         val defaultUsername = user?.displayName ?: "User${userId.take(4)}"
         val photoUrl = user?.photoUrl?.toString() ?: ""
@@ -165,7 +174,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     viewModelScope.launch {
       _usernameState.value = UsernameUpdateState.Loading
       try {
-        // Validate username
         when {
           newUsername.isBlank() -> {
             _usernameState.value = UsernameUpdateState.Error("Username cannot be empty")
@@ -189,7 +197,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         }
 
         repository.updateUsername(userId, newUsername)
-        loadProfile(userId) // Reload profile to reflect changes
+        loadProfile(userId)
         _usernameState.value = UsernameUpdateState.Success
       } catch (e: Exception) {
         _usernameState.value = UsernameUpdateState.Error(e.message ?: "Failed to update username")

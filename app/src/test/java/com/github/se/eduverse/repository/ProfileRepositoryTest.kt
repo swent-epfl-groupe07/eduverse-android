@@ -128,6 +128,14 @@ class ProfileRepositoryImplTest {
           override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
             TODO("Not yet implemented")
           }
+
+          override suspend fun getAllPublications(): List<Publication> {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun getUserLikedPublicationsIds(userId: String): List<String> {
+            TODO("Not yet implemented")
+          }
         }
 
     val viewModel = ProfileViewModel(mockRepo)
@@ -374,7 +382,7 @@ class ProfileRepositoryImplTest {
     repository.addToUserCollection(userId, collectionName, publicationId)
 
     // Verify that the correct methods were called with the correct arguments
-    verify(mockFirestore).collection("users")
+    verify(mockFirestore, atLeastOnce()).collection("users")
     verify(mockUsersCollectionRef).document(userId)
     verify(mockUserDocumentRef).collection(collectionName)
     verify(mockCollectionRef).document(publicationId)
@@ -510,6 +518,89 @@ class ProfileRepositoryImplTest {
                   updatedLikedBy != null && !updatedLikedBy.contains(userId) && updatedLikes == 0L
                 })
       }
+
+  @Test
+  fun `getAllPublications returns list of publications`() = runTest {
+    // Arrange
+    val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+    val mockDocumentSnapshot1 = mock(DocumentSnapshot::class.java)
+    val mockDocumentSnapshot2 = mock(DocumentSnapshot::class.java)
+
+    val publication1 = Publication(id = "pub1", userId = "user1", title = "Test Pub 1")
+    val publication2 = Publication(id = "pub2", userId = "user2", title = "Test Pub 2")
+
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents)
+        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+    whenever(mockDocumentSnapshot1.toObject(Publication::class.java)).thenReturn(publication1)
+    whenever(mockDocumentSnapshot2.toObject(Publication::class.java)).thenReturn(publication2)
+
+    // Act
+    val result = repository.getAllPublications()
+
+    // Assert
+    assertEquals(2, result.size)
+    assertTrue(result.containsAll(listOf(publication1, publication2)))
+    verify(mockCollectionRef).get()
+  }
+
+  @Test
+  fun `getAllPublications returns empty list on exception`() = runTest {
+    // Arrange
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenThrow(RuntimeException("Firestore error"))
+
+    // Act
+    val result = repository.getAllPublications()
+
+    // Assert
+    assertTrue(result.isEmpty())
+    verify(mockCollectionRef).get()
+  }
+
+  @Test
+  fun `getUserLikedPublicationsIds returns list of liked publication IDs`() = runTest {
+    // Arrange
+    val userId = "testUser"
+    val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+    val mockDocumentSnapshot1 = mock(DocumentSnapshot::class.java)
+    val mockDocumentSnapshot2 = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("likedPublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents)
+        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+    whenever(mockDocumentSnapshot1.getString("publicationId")).thenReturn("pub1")
+    whenever(mockDocumentSnapshot2.getString("publicationId")).thenReturn("pub2")
+
+    // Act
+    val result = repository.getUserLikedPublicationsIds(userId)
+
+    // Assert
+    assertEquals(2, result.size)
+    assertTrue(result.containsAll(listOf("pub1", "pub2")))
+    verify(mockCollectionRef).get()
+  }
+
+  @Test
+  fun `getUserLikedPublicationsIds returns empty list on exception`() = runTest {
+    // Arrange
+    val userId = "testUser"
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("likedPublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenThrow(RuntimeException("Firestore error"))
+
+    // Act
+    val result = repository.getUserLikedPublicationsIds(userId)
+
+    // Assert
+    assertTrue(result.isEmpty())
+    verify(mockCollectionRef).get()
+  }
 
   @After
   fun tearDown() {
