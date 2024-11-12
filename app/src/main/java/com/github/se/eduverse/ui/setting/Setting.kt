@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
 
@@ -103,7 +104,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                   navigationActions,
                   "NotificationsScreen")
               SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, "SavedScreen")
-              SettingsOption("Archive", Icons.Default.Archive, navigationActions, "ArchiveScreen")
+              SettingsOption("Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE)
               SettingsOption(
                   "Gallery", Icons.Default.PhotoLibrary, navigationActions, Screen.GALLERY)
 

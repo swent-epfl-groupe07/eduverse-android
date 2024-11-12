@@ -52,9 +52,11 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
                   horizontalArrangement = Arrangement.SpaceBetween,
                   verticalAlignment = Alignment.CenterVertically) {
                     Text(text = "My Courses", modifier = Modifier.testTag("topBarText"))
-                    IconButton(onClick = {}, modifier = Modifier.testTag("archive")) {
-                      Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-                    }
+                    IconButton(
+                        onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
+                        modifier = Modifier.testTag("archive")) {
+                          Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                        }
                   }
             },
             navigationIcon = {
