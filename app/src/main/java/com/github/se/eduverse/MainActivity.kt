@@ -51,6 +51,7 @@ import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
+import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -153,9 +154,20 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
       composable(Screen.SEARCH) {
-        SearchProfileScreen(viewModel = profileViewModel, onProfileClick = {})
+        SearchProfileScreen(navigationActions, viewModel = profileViewModel)
       }
     }
+
+    composable(
+        route = Screen.USER_PROFILE.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId =
+              backStackEntry.arguments?.getString("userId")
+                  ?: return@composable // Handle missing userId
+
+          UserProfileScreen(
+              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
+        }
 
     navigation(
         startDestination = Screen.VIDEOS,
