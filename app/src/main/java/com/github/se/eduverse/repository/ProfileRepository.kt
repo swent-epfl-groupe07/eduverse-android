@@ -225,6 +225,7 @@ class ProfileRepositoryImpl(
   override suspend fun incrementLikes(publicationId: String, userId: String) {
     try {
       // Targeted query to retrieve the document with a matching `id` field
+
       val querySnapshot =
           firestore.collection("publications").whereEqualTo("id", publicationId).get().await()
 
@@ -237,6 +238,7 @@ class ProfileRepositoryImpl(
               val likedBy = snapshot.get("likedBy") as? List<String> ?: emptyList()
 
               // Check if the user has already liked
+
               if (!likedBy.contains(userId)) {
                 val currentLikes = snapshot.getLong("likes") ?: 0
                 transaction.update(documentRef, "likes", currentLikes + 1)
@@ -276,6 +278,7 @@ class ProfileRepositoryImpl(
   override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
     try {
       // Query to find the document with a matching `id` field
+
       val querySnapshot =
           firestore.collection("publications").whereEqualTo("id", publicationId).get().await()
 
@@ -293,6 +296,7 @@ class ProfileRepositoryImpl(
                 val newLikes = if (currentLikes > 0) currentLikes - 1 else 0
 
                 // Update the number of likes and the `likedBy` list
+
                 transaction.update(documentRef, mapOf("likedBy" to likedBy, "likes" to newLikes))
               }
             }
@@ -309,5 +313,4 @@ class ProfileRepositoryImpl(
   // publication repo
   // but I'm not sure if it's okay for the profile VM to call a function that is in the publication
   // repo.
-
 }
