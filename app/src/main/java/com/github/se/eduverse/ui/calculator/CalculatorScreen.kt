@@ -47,20 +47,10 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
           listOf("e", "x", "1", "2", "3", "-"),
           listOf("π", "%", "0", ".", "=", "+"))
 
-  val functionButtons =
-      listOf(
-          listOf("exp", "sin", "cos", "tan", "cot"),
-          listOf("ln", "arcsin", "arccos", "arctan", "arccot"),
-          listOf("log", "sinh", "cosh", "tanh", "coth"),
-          listOf("rad", "arsinh", "arcosh", "artanh", "arcoth"))
-
-  val equationButtons = listOf(listOf("<", ">", "≤", "≥", "≠"))
-
   val buttonsLayout =
       when (selectedMenu) {
         "Basic" -> basicButtons
-        "Functions" -> functionButtons
-        "Equations" -> equationButtons
+        // The other menus to be implemented later
         else -> basicButtons
       }
 
@@ -82,293 +72,232 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
           Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             MenuButton("Basic", selectedMenu == "Basic") { selectedMenu = "Basic" }
-            MenuButton("Functions", selectedMenu == "Functions") { selectedMenu = "Functions" }
-            MenuButton("Equations", selectedMenu == "Equations") { selectedMenu = "Equations" }
-            MenuButton("Graphs", selectedMenu == "Graphs") { selectedMenu = "Graphs" }
+            // The other menu buttons to be implemented later
           }
 
           Spacer(modifier = Modifier.height(16.dp))
 
-          if (selectedMenu == "Graphs") {
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Column(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .clickable {
-                          Toast.makeText(context, "Graph area clicked", Toast.LENGTH_SHORT).show()
-                        }
-                        .background(Color.Gray)
-                        .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
-                  Text(text = "Graph area", color = Color.White, fontSize = 24.sp)
-                }
-          } else {
-
-            Box(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .weight(1f)
-                        .background(Color.White)
-                        .padding(16.dp)
-                        .testTag("display"),
-                contentAlignment = Alignment.TopStart) {
-                  Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
-                          Text(
-                              text = display,
-                              fontSize = 26.sp,
-                              fontWeight = FontWeight.SemiBold,
-                              textAlign = TextAlign.Start,
-                              color = Color.Black,
-                              modifier = Modifier.weight(1f).testTag("displayText"))
-
-                          IconButton(
-                              onClick = {
-                                display = ""
-                                result = ""
-                              },
-                              modifier = Modifier.testTag("clearButton")) {
-                                Icon(
-                                    Icons.Default.Cancel,
-                                    contentDescription = "C",
-                                    tint = Color.LightGray)
-                              }
-                        }
-
-                    if (result.isNotEmpty()) {
-
-                      Spacer(modifier = Modifier.height(8.dp))
-
-                      Canvas(modifier = Modifier.fillMaxWidth().height(1.dp)) {
-                        val dashWidth = 3.dp.toPx()
-                        val gapWidth = 3.dp.toPx()
-
-                        drawLine(
-                            color = Color.LightGray,
-                            start = Offset(0f, center.y),
-                            end = Offset(size.width, center.y),
-                            strokeWidth = 1.dp.toPx(),
-                            pathEffect =
-                                PathEffect.dashPathEffect(floatArrayOf(dashWidth, gapWidth), 0f))
-                      }
-
-                      Spacer(modifier = Modifier.height(8.dp))
-
-                      Row(
-                          modifier = Modifier.fillMaxWidth(),
-                          verticalAlignment = Alignment.CenterVertically) {
-                            val barColor =
-                                if (result == "Undefined") Color(0xFFD51F1F) else Color(0xFF07A92D)
-                            Box(
-                                modifier =
-                                    Modifier.width(5.dp)
-                                        .height(50.dp)
-                                        .background(barColor)
-                                        .testTag("resultBar"))
-
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = result,
-                                fontSize = 20.sp,
-                                color = Color.Gray,
-                                textAlign = TextAlign.Start,
-                                fontWeight = FontWeight.Light,
-                                modifier = Modifier.padding(top = 8.dp).testTag("resultText"))
-                          }
-                    }
-                  }
-                }
-
-            Column(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .fillMaxSize()
-                        .align(Alignment.CenterHorizontally)
-                        .weight(3f),
-                verticalArrangement = Arrangement.Bottom) {
-                  Surface(
+          Box(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .weight(1f)
+                      .background(Color.White)
+                      .padding(16.dp)
+                      .testTag("display"),
+              contentAlignment = Alignment.TopStart) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                  Row(
                       modifier = Modifier.fillMaxWidth(),
-                      shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
-                      elevation = 10.dp,
-                      color = Color.White) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly) {
-                              IconButton(
-                                  onClick = {},
-                                  modifier =
-                                      Modifier.background(
-                                          Color.White,
-                                          shape = RoundedCornerShape(topStart = 16.dp))) {
-                                    Text("abc", fontSize = 16.sp)
-                                  }
+                      horizontalArrangement = Arrangement.SpaceBetween,
+                      verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = display,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Start,
+                            color = Color.Black,
+                            modifier = Modifier.weight(1f).testTag("displayText"))
 
-                              IconButton(onClick = {}) {
-                                Icon(Icons.Default.History, contentDescription = "History")
-                              }
-
-                              IconButton(
-                                  onClick = {
-                                    if (display.isNotEmpty()) {
-                                      display = display.dropLast(1) + display.last()
-                                    }
-                                  }) {
-                                    Icon(Icons.Default.ArrowBack, contentDescription = "Left Arrow")
-                                  }
-
-                              IconButton(onClick = {}) {
-                                Icon(Icons.Default.ArrowForward, contentDescription = "Right Arrow")
-                              }
-
-                              IconButton(
-                                  onClick = {
-                                    if (result == "Undefined") {} else {
-                                      result =
-                                          when {
-                                            display.isEmpty() -> "Undefined"
-                                            else -> {
-                                              try {
-                                                evaluateExpression(display)
-                                              } catch (e: Exception) {
-                                                "Undefined"
-                                              }
-                                            }
-                                          }
-                                    }
-                                  }) {
-                                    Icon(
-                                        Icons.Default.SubdirectoryArrowLeft,
-                                        contentDescription = "=")
-                                  }
-
-                              IconButton(
-                                  onClick = {
-                                    if (display.isNotEmpty()) {
-                                      display = display.dropLast(1)
-                                    }
-                                  },
-                                  modifier =
-                                      Modifier.background(
-                                              Color.White,
-                                              shape = RoundedCornerShape(topEnd = 16.dp))
-                                          .testTag("backspaceButton")) {
-                                    Icon(Icons.Default.Backspace, contentDescription = "DEL")
-                                  }
+                        IconButton(
+                            onClick = {
+                              display = ""
+                              result = ""
+                            },
+                            modifier = Modifier.testTag("clearButton")) {
+                              Icon(
+                                  Icons.Default.Cancel,
+                                  contentDescription = "C",
+                                  tint = Color.LightGray)
                             }
                       }
 
-                  buttonsLayout.forEach { row ->
+                  if (result.isNotEmpty()) {
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Canvas(modifier = Modifier.fillMaxWidth().height(1.dp)) {
+                      val dashWidth = 3.dp.toPx()
+                      val gapWidth = 3.dp.toPx()
+
+                      drawLine(
+                          color = Color.LightGray,
+                          start = Offset(0f, center.y),
+                          end = Offset(size.width, center.y),
+                          strokeWidth = 1.dp.toPx(),
+                          pathEffect =
+                              PathEffect.dashPathEffect(floatArrayOf(dashWidth, gapWidth), 0f))
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(0.dp)) {
-                          row.forEach { label ->
-                            CalculatorButton(
-                                label = label,
-                                onClick = {
-                                  if (!expressionContainsVariable(display)) {
-                                    if (result == "Undefined") {
-                                      when (label) {
-                                        "=" -> {}
-                                        else -> {
-                                          display = label
-                                          result = ""
-                                        }
-                                      }
-                                    } else {
-                                      when (label) {
-                                        "=" -> {
-                                          result =
-                                              try {
-                                                evaluateExpression(display)
-                                              } catch (e: Exception) {
-                                                "Undefined"
-                                              }
-                                        }
-                                        "+",
-                                        "-",
-                                        "*",
-                                        "/",
-                                        "×",
-                                        "^" -> {
-                                          if (result.isNotEmpty()) {
-                                            display = result + label
-                                            result = ""
-                                          } else {
-                                            display += label
-                                          }
-                                        }
-                                        "√",
-                                        "exp",
-                                        "sin",
-                                        "cos",
-                                        "tan",
-                                        "cot",
-                                        "ln",
-                                        "arcsin",
-                                        "arccos",
-                                        "arctan",
-                                        "arccot",
-                                        "log",
-                                        "sinh",
-                                        "cosh",
-                                        "tanh",
-                                        "coth",
-                                        "rad",
-                                        "arsinh",
-                                        "arcosh",
-                                        "artanh",
-                                        "arcoth" -> {
-                                          if (result.isNotEmpty()) {
-                                            display = "$label($result)"
-                                            result = ""
-                                          } else {
-                                            display += "$label("
-                                          }
-                                        }
-                                        else -> {
-                                          if (result.isNotEmpty()) {
-                                            display = ""
-                                            result = ""
-                                          }
-                                          display += label
-                                        }
-                                      }
-                                    }
-                                  } else {
-                                    if (expressionContainsEqual(display)) {
+                        verticalAlignment = Alignment.CenterVertically) {
+                          val barColor =
+                              if (result == "Undefined") Color(0xFFD51F1F) else Color(0xFF07A92D)
+                          Box(
+                              modifier =
+                                  Modifier.width(5.dp)
+                                      .height(50.dp)
+                                      .background(barColor)
+                                      .testTag("resultBar"))
 
-                                      display += label
-                                      try {
-                                        result = evaluateEquation(display)
-                                      } catch (e: Exception) {
-                                        "Undefined"
-                                      }
-                                    } else {
-                                      result = ""
-                                      try {
-                                        display += label
-                                        /**
-                                         * Implemente moi ici une colonne rectanglaire clickable a
-                                         * droite de la bande rouge ou verte qui mene au graph
-                                         */
-                                      } catch (e: Exception) {
-                                        "Undefined"
-                                      }
-                                    }
-                                  }
-                                },
-                                testTag = "button_$label",
-                                selectedMenu = selectedMenu)
-                          }
+                          Spacer(modifier = Modifier.width(16.dp))
+                          Text(
+                              text = result,
+                              fontSize = 20.sp,
+                              color = Color.Gray,
+                              textAlign = TextAlign.Start,
+                              fontWeight = FontWeight.Light,
+                              modifier = Modifier.padding(top = 8.dp).testTag("resultText"))
                         }
                   }
                 }
-          }
+              }
+
+          Column(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .fillMaxSize()
+                      .align(Alignment.CenterHorizontally)
+                      .weight(3f),
+              verticalArrangement = Arrangement.Bottom) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
+                    elevation = 10.dp,
+                    color = Color.White) {
+                      Row(
+                          modifier = Modifier.fillMaxWidth(),
+                          horizontalArrangement = Arrangement.SpaceEvenly) {
+                            IconButton(
+                                onClick = {
+                                  Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                      .show()
+                                },
+                                modifier =
+                                    Modifier.background(
+                                        Color.White,
+                                        shape = RoundedCornerShape(topStart = 16.dp))) {
+                                  Text("abc", fontSize = 16.sp)
+                                }
+
+                            IconButton(
+                                onClick = {
+                                  Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                      .show()
+                                }) {
+                                  Icon(Icons.Default.History, contentDescription = "History")
+                                }
+
+                            IconButton(
+                                onClick = {
+                                  Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                      .show()
+                                }) {
+                                  Icon(Icons.Default.ArrowBack, contentDescription = "Left Arrow")
+                                }
+
+                            IconButton(
+                                onClick = {
+                                  Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                      .show()
+                                }) {
+                                  Icon(
+                                      Icons.Default.ArrowForward,
+                                      contentDescription = "Right Arrow")
+                                }
+
+                            IconButton(
+                                onClick = {
+                                  if (result == "Undefined") {} else {
+                                    result =
+                                        when {
+                                          display.isEmpty() -> "Undefined"
+                                          else -> {
+                                            try {
+                                              evaluateExpression(display)
+                                            } catch (e: Exception) {
+                                              "Undefined"
+                                            }
+                                          }
+                                        }
+                                  }
+                                }) {
+                                  Icon(
+                                      Icons.Default.SubdirectoryArrowLeft, contentDescription = "=")
+                                }
+
+                            IconButton(
+                                onClick = {
+                                  if (display.isNotEmpty()) {
+                                    display = display.dropLast(1)
+                                  }
+                                },
+                                modifier =
+                                    Modifier.background(
+                                            Color.White, shape = RoundedCornerShape(topEnd = 16.dp))
+                                        .testTag("backspaceButton")) {
+                                  Icon(Icons.Default.Backspace, contentDescription = "DEL")
+                                }
+                          }
+                    }
+
+                buttonsLayout.forEach { row ->
+                  Row(
+                      modifier = Modifier.fillMaxWidth(),
+                      horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+                        row.forEach { label ->
+                          CalculatorButton(
+                              label = label,
+                              onClick = {
+                                if (result == "Undefined") {
+                                  when (label) {
+                                    "=" -> {}
+                                    else -> {
+                                      display = label
+                                      result = ""
+                                    }
+                                  }
+                                } else {
+                                  when (label) {
+                                    "=" -> {
+                                      result =
+                                          try {
+                                            evaluateExpression(display)
+                                          } catch (e: Exception) {
+                                            "Undefined"
+                                          }
+                                    }
+                                    "+",
+                                    "-",
+                                    "*",
+                                    "/",
+                                    "×",
+                                    "^" -> {
+                                      if (result.isNotEmpty()) {
+                                        display = result + label
+                                        result = ""
+                                      } else {
+                                        display += label
+                                      }
+                                    }
+                                    else -> {
+                                      if (result.isNotEmpty()) {
+                                        display = ""
+                                        result = ""
+                                      }
+                                      display += label
+                                    }
+                                  }
+                                }
+                              },
+                              testTag = "button_$label",
+                              selectedMenu = selectedMenu)
+                        }
+                      }
+                }
+              }
         }
       }
 }
@@ -420,17 +349,4 @@ fun CalculatorButton(label: String, onClick: () -> Unit, testTag: String, select
 fun evaluateExpression(expression: String): String {
   val evaluator = Evaluator()
   return evaluator.evaluate(expression)
-}
-
-fun evaluateEquation(expression: String): String {
-  val equation = Equation()
-  return equation.solveEquation(expression)
-}
-
-fun expressionContainsVariable(expression: String): Boolean {
-  return expression.any { it.isLetter() }
-}
-
-fun expressionContainsEqual(expression: String): Boolean {
-  return expression.contains("=")
 }
