@@ -84,9 +84,9 @@ class MainActivity : ComponentActivity() {
       auth.signOut()
     } */
 
-    // Ajout du VideoRepository et du VideoViewModel
+    // Adding the VideoRepository and the VideoViewModel
 
-    // Gestion des permissions de la caméra
+    // Managing camera permissions
     val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
           cameraPermissionGranted = isGranted
@@ -166,7 +166,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideoScreen(navigationActions, publicationViewModel) }
+      composable(Screen.VIDEOS) {
+        VideoScreen(navigationActions, publicationViewModel, profileViewModel)
+      }
     }
 
     navigation(
@@ -215,8 +217,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
-
-    // Écran pour afficher la photo prise
+    // Screen to display the photo taken
     navigation(
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
@@ -224,9 +225,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
-
-    // Ajoute une route dynamique pour PicTakenScreen avec des arguments optionnels pour photo et
-    // vidéo
+    // Add a dynamic route for PicTakenScreen with optional arguments for photo and
+    // video
     composable(
         "picTaken/{photoPath}?videoPath={videoPath}",
         arguments =
@@ -239,15 +239,15 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
                   type = NavType.StringType
                   nullable = true
                 })) { backStackEntry ->
-          // Récupère les chemins de photo et de vidéo depuis les arguments
+          // Get photo and video paths from arguments
           val photoPath = backStackEntry.arguments?.getString("photoPath")
           val videoPath = backStackEntry.arguments?.getString("videoPath")
 
-          // Crée les fichiers correspondants si les chemins existent
+          // Create the corresponding files if the paths exist
           val photoFile = photoPath?.let { File(it) }
           val videoFile = videoPath?.let { File(it) }
 
-          // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
+          // Call PicTakenScreen with the photo and video files
           PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
         }
 
