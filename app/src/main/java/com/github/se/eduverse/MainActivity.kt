@@ -53,6 +53,7 @@ import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
@@ -61,6 +62,7 @@ import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -130,6 +132,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
+  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -154,6 +157,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
+      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
       composable(Screen.PDF_CONVERTER) {
         PdfConverterScreen(navigationActions, pdfConverterViewModel)
       }
