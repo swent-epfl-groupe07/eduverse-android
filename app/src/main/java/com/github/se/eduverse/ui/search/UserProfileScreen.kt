@@ -59,185 +59,160 @@ fun UserProfileScreen(
     viewModel: ProfileViewModel,
     userId: String
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
-    val uiState by viewModel.profileState.collectAsState()
-    val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
+  var selectedTab by remember { mutableStateOf(0) }
+  val uiState by viewModel.profileState.collectAsState()
+  val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
 
-    LaunchedEffect(userId) {
-        viewModel.loadProfile(userId)
-        viewModel.loadLikedPublications(userId)
-    }
+  LaunchedEffect(userId) {
+    viewModel.loadProfile(userId)
+    viewModel.loadLikedPublications(userId)
+  }
 
-    Scaffold(
-        modifier = Modifier.testTag("user_profile_screen_container"),
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.testTag("user_profile_top_bar"),
-                title = {
-                    when (uiState) {
-                        is ProfileUiState.Success ->
-                            Text(
-                                text = (uiState as ProfileUiState.Success).profile.username,
-                                modifier = Modifier.testTag("user_profile_username")
-                            )
-                        else -> Text("Profile", modifier = Modifier.testTag("user_profile_title_default"))
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("back_button")
-                    ) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
+  Scaffold(
+      modifier = Modifier.testTag("user_profile_screen_container"),
+      topBar = {
+        TopAppBar(
+            modifier = Modifier.testTag("user_profile_top_bar"),
+            title = {
+              when (uiState) {
+                is ProfileUiState.Success ->
+                    Text(
+                        text = (uiState as ProfileUiState.Success).profile.username,
+                        modifier = Modifier.testTag("user_profile_username"))
+                else -> Text("Profile", modifier = Modifier.testTag("user_profile_title_default"))
+              }
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("back_button")) {
+                    Icon(Icons.Default.ArrowBack, "Back")
+                  }
+            })
+      }) { paddingValues ->
         Column(
-            modifier = Modifier
-                .testTag("user_profile_content_container")
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Profile Image (non-editable)
-            Box(
-                modifier = Modifier
-                    .testTag("user_profile_image_container")
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = if (uiState is ProfileUiState.Success)
-                        (uiState as ProfileUiState.Success).profile.profileImageUrl
-                    else "",
-                    contentDescription = "Profile Image",
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.eduverse_logo_alone)
-                )
-            }
+            modifier =
+                Modifier.testTag("user_profile_content_container")
+                    .fillMaxSize()
+                    .padding(paddingValues)) {
+              // Profile Image (non-editable)
+              Box(
+                  modifier =
+                      Modifier.testTag("user_profile_image_container")
+                          .fillMaxWidth()
+                          .padding(top = 16.dp),
+                  contentAlignment = Alignment.Center) {
+                    AsyncImage(
+                        model =
+                            if (uiState is ProfileUiState.Success)
+                                (uiState as ProfileUiState.Success).profile.profileImageUrl
+                            else "",
+                        contentDescription = "Profile Image",
+                        modifier = Modifier.size(96.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.eduverse_logo_alone))
+                  }
 
-            // Stats (Followers/Following)
-            when (uiState) {
+              // Stats (Followers/Following)
+              when (uiState) {
                 is ProfileUiState.Success -> {
-                    val profile = (uiState as ProfileUiState.Success).profile
-                    Row(
-                        modifier = Modifier
-                            .testTag("stats_row")
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
+                  val profile = (uiState as ProfileUiState.Success).profile
+                  Row(
+                      modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
+                      horizontalArrangement = Arrangement.SpaceEvenly) {
                         StatItem("Followers", profile.followers, Modifier.testTag("followers_stat"))
                         StatItem("Following", profile.following, Modifier.testTag("following_stat"))
-                    }
+                      }
 
-                    // Follow/Unfollow Button
-                    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-                    if (currentUserId != null && currentUserId != userId) {
-                        Button(
-                            onClick = {
-                                TODO()
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                        ) {
-                            Text(if (profile.followers > 0) "Unfollow" else "Follow")
+                  // Follow/Unfollow Button
+                  val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+                  if (currentUserId != null && currentUserId != userId) {
+                    Button(
+                        onClick = { TODO() },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                          Text(if (profile.followers > 0) "Unfollow" else "Follow")
                         }
-                    }
+                  }
                 }
                 else -> {}
-            }
+              }
 
-            // Publications/Favorites Tabs
-            TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
+              // Publications/Favorites Tabs
+              TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
-                    icon = { Icon(Icons.Default.Article, contentDescription = null) }
-                )
+                    icon = { Icon(Icons.Default.Article, contentDescription = null) })
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) }
-                )
-            }
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) })
+              }
 
-            // Content based on state
-            when (uiState) {
+              // Content based on state
+              when (uiState) {
                 is ProfileUiState.Loading -> {
-                    Box(
-                        modifier = Modifier
-                            .testTag("loading_container")
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                  Box(
+                      modifier = Modifier.testTag("loading_container").fillMaxSize(),
+                      contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(modifier = Modifier.testTag("loading_indicator"))
-                    }
+                      }
                 }
                 is ProfileUiState.Error -> {
-                    ErrorMessage(
-                        message = (uiState as ProfileUiState.Error).message,
-                        modifier = Modifier.testTag("error_container")
-                    )
+                  ErrorMessage(
+                      message = (uiState as ProfileUiState.Error).message,
+                      modifier = Modifier.testTag("error_container"))
                 }
                 is ProfileUiState.Success -> {
-                    val profile = (uiState as ProfileUiState.Success).profile
-                    val publications = if (selectedTab == 0) {
+                  val profile = (uiState as ProfileUiState.Success).profile
+                  val publications =
+                      if (selectedTab == 0) {
                         profile.publications
-                    } else {
+                      } else {
                         likedPublications
-                    }
+                      }
 
-                    PublicationsGrid(
-                        publications = publications,
-                        currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                        profileViewModel = viewModel,
-                        onPublicationClick = { /* Handle publication click */ },
-                        modifier = Modifier.testTag("publications_grid")
-                    )
+                  PublicationsGrid(
+                      publications = publications,
+                      currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                      profileViewModel = viewModel,
+                      onPublicationClick = { /* Handle publication click */},
+                      modifier = Modifier.testTag("publications_grid"))
                 }
+              }
             }
-        }
-    }
+      }
 }
 
 @Composable
 private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.testTag("error_message"))
-    }
+  Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Text(
+        text = message,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier.testTag("error_message"))
+  }
 }
 
 @Composable
 private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.testTag("stat_count_$label"))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.testTag("stat_label_$label"))
-    }
+  Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Text(
+        text = count.toString(),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.testTag("stat_count_$label"))
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag("stat_label_$label"))
+  }
 }
-
-
 
 @Composable
 private fun PublicationsGrid(
@@ -247,40 +222,40 @@ private fun PublicationsGrid(
     onPublicationClick: (Publication) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedPublication by remember { mutableStateOf<Publication?>(null) }
+  var selectedPublication by remember { mutableStateOf<Publication?>(null) }
 
-    if (publications.isEmpty()) {
-        Box(
-            modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
-            contentAlignment = Alignment.Center) {
-            Text(
-                text = "No publications yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("empty_publications_text"))
+  if (publications.isEmpty()) {
+    Box(
+        modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
+        contentAlignment = Alignment.Center) {
+          Text(
+              text = "No publications yet",
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              modifier = Modifier.testTag("empty_publications_text"))
         }
-    } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(1.dp),
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            items(publications) { publication ->
-                PublicationItem(
-                    publication = publication,
-                    onClick = { selectedPublication = publication },
-                    modifier = Modifier.testTag("publication_item_${publication.id}"))
-            }
-        }
-
-        // Show detail dialog when a publication is selected
-        selectedPublication?.let { publication ->
-            PublicationDetailDialog(
+  } else {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(1.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)) {
+          items(publications) { publication ->
+            PublicationItem(
                 publication = publication,
-                profileViewModel = profileViewModel,
-                currentUserId = currentUserId,
-                onDismiss = { selectedPublication = null })
+                onClick = { selectedPublication = publication },
+                modifier = Modifier.testTag("publication_item_${publication.id}"))
+          }
         }
+
+    // Show detail dialog when a publication is selected
+    selectedPublication?.let { publication ->
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = profileViewModel,
+          currentUserId = currentUserId,
+          onDismiss = { selectedPublication = null })
     }
+  }
 }

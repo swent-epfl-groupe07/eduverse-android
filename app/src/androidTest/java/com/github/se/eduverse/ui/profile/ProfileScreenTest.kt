@@ -196,8 +196,6 @@ class ProfileScreenTest {
         .assertTextContains("No publications yet")
   }
 
-
-
   @Test
   fun whenProfileImageClicked_exists() {
     val testProfile = Profile(id = "test", username = "TestUser")

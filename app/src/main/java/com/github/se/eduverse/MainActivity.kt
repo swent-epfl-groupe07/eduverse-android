@@ -154,26 +154,20 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
       composable(Screen.SEARCH) {
-        SearchProfileScreen(navigationActions,viewModel = profileViewModel)
+        SearchProfileScreen(navigationActions, viewModel = profileViewModel)
       }
-
     }
 
-      composable(
-          route = Screen.USER_PROFILE.route,
-          arguments = listOf(
-              navArgument("userId") { type = NavType.StringType }
-          )
-      ) { backStackEntry ->
-          val userId = backStackEntry.arguments?.getString("userId")
-              ?: return@composable // Handle missing userId
+    composable(
+        route = Screen.USER_PROFILE.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId =
+              backStackEntry.arguments?.getString("userId")
+                  ?: return@composable // Handle missing userId
 
           UserProfileScreen(
-              navigationActions = navigationActions,
-              viewModel = profileViewModel,
-              userId = userId
-          )
-      }
+              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
+        }
 
     navigation(
         startDestination = Screen.VIDEOS,

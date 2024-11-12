@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -199,11 +198,7 @@ private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun PublicationItem(
-    publication: Publication,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun PublicationItem(publication: Publication, onClick: () -> Unit, modifier: Modifier = Modifier) {
   Card(
       modifier = modifier.aspectRatio(1f).clickable(onClick = onClick),
       shape = RoundedCornerShape(8.dp)) {
