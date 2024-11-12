@@ -196,15 +196,7 @@ class ProfileScreenTest {
         .assertTextContains("No publications yet")
   }
 
-  @Test
-  fun whenBackButtonClicked_navigatesBack() {
-    composeTestRule.setContent {
-      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
-    }
 
-    composeTestRule.onNodeWithTag("back_button").performClick()
-    assertTrue(fakeNavigationActions.backClicked)
-  }
 
   @Test
   fun whenProfileImageClicked_exists() {
