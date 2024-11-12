@@ -86,34 +86,6 @@ class ProfileViewModelTest {
   }
 
   @Test
-  fun `toggleFavorite adds publication to favorites`() = runTest {
-    clearInvocations(mockRepository)
-    val userId = "testUser"
-
-    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
-
-    profileViewModel.toggleFavorite(userId, "pub123", false)
-    advanceUntilIdle()
-
-    verify(mockRepository).addToFavorites(userId, "pub123")
-    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
-  }
-
-  @Test
-  fun `toggleFavorite removes publication from favorites`() = runTest {
-    clearInvocations(mockRepository)
-    val userId = "testUser"
-
-    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
-
-    profileViewModel.toggleFavorite(userId, "pub123", true)
-    advanceUntilIdle()
-
-    verify(mockRepository).removeFromFavorites(userId, "pub123")
-    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
-  }
-
-  @Test
   fun `addPublication success updates profile`() = runTest {
     clearInvocations(mockRepository)
     val userId = "testUser"
@@ -309,6 +281,114 @@ class ProfileViewModelTest {
     val state = profileViewModel.usernameState.first()
     assertTrue(state is UsernameUpdateState.Error)
     assertEquals(errorMessage, (state as UsernameUpdateState.Error).message)
+  }
+
+  @Test
+  fun likeAndAddToFavorites_success() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    profileViewModel.likeAndAddToFavorites(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).incrementLikes(publicationId, userId)
+    verify(mockRepository).addToUserCollection(userId, "likedPublications", publicationId)
+    assertNull(profileViewModel.error.value)
+  }
+
+  @Test
+  fun likeAndAddToFavorites_failure() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    `when`(mockRepository.incrementLikes(publicationId, userId))
+        .thenThrow(RuntimeException("Failed to like"))
+
+    profileViewModel.likeAndAddToFavorites(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).incrementLikes(publicationId, userId)
+    verify(mockRepository, never()).addToUserCollection(userId, "likedPublications", publicationId)
+    assertNotNull(profileViewModel.error.value)
+    assertEquals("Failed to like and save publication", profileViewModel.error.value)
+  }
+
+  @Test
+  fun removeLike_success() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    profileViewModel.removeLike(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromLikedPublications(userId, publicationId)
+    verify(mockRepository).decrementLikesAndRemoveUser(publicationId, userId)
+    assertNull(profileViewModel.error.value)
+  }
+
+  @Test
+  fun removeLike_failure() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    // Simulate an exception when removing the like
+    `when`(mockRepository.removeFromLikedPublications(userId, publicationId))
+        .thenThrow(RuntimeException("Failed to remove like"))
+
+    profileViewModel.removeLike(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromLikedPublications(userId, publicationId)
+    assertNotNull(profileViewModel.error.value)
+    assertEquals("Failed to remove like: Failed to remove like", profileViewModel.error.value)
+  }
+
+  @Test
+  fun `loadLikedPublications success updates state with liked publications`() = runTest {
+    val userId = "testUser"
+    val likedPublicationIds = listOf("pub1", "pub2")
+    val allPublications =
+        listOf(
+            Publication(id = "pub1", userId = userId, title = "Publication 1"),
+            Publication(id = "pub2", userId = userId, title = "Publication 2"),
+            Publication(id = "pub3", userId = "otherUser", title = "Publication 3"))
+    val expectedLikedPublications = allPublications.filter { it.id in likedPublicationIds }
+
+    // Mock repository responses
+    `when`(mockRepository.getUserLikedPublicationsIds(userId)).thenReturn(likedPublicationIds)
+    `when`(mockRepository.getAllPublications()).thenReturn(allPublications)
+
+    // Call the method under test
+    profileViewModel.loadLikedPublications(userId)
+    advanceUntilIdle()
+
+    // Verify the state is updated correctly
+    val likedPublications = profileViewModel.likedPublications.first()
+    assertEquals(expectedLikedPublications, likedPublications)
+    assertNull(profileViewModel.error.value)
+
+    verify(mockRepository).getUserLikedPublicationsIds(userId)
+    verify(mockRepository).getAllPublications()
+  }
+
+  @Test
+  fun `loadLikedPublications failure updates state with error`() = runTest {
+    val userId = "testUser"
+
+    // Simulate an exception when fetching liked publication IDs
+    `when`(mockRepository.getUserLikedPublicationsIds(userId))
+        .thenThrow(RuntimeException("Failed to fetch liked publications"))
+
+    // Call the method under test
+    profileViewModel.loadLikedPublications(userId)
+    advanceUntilIdle()
+
+    // Verify that an error message is set
+    val error = profileViewModel.error.first()
+    assertEquals("Failed to load liked publications: Failed to fetch liked publications", error)
+
+    verify(mockRepository).getUserLikedPublicationsIds(userId)
+    verify(mockRepository, never()).getAllPublications()
   }
 
   @After

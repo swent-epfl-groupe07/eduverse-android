@@ -58,6 +58,7 @@ fun ProfileScreen(
 ) {
   var selectedTab by remember { mutableStateOf(0) }
   val uiState by viewModel.profileState.collectAsState()
+  val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
   val launcher =
       rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
         ->
@@ -71,6 +72,7 @@ fun ProfileScreen(
     }
 
     viewModel.loadProfile(userId)
+    viewModel.loadLikedPublications(userId)
   }
 
   Scaffold(
@@ -140,7 +142,6 @@ fun ProfileScreen(
                 }
                 else -> {}
               }
-
               TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
                 Tab(
                     selected = selectedTab == 0,
@@ -174,11 +175,13 @@ fun ProfileScreen(
                       if (selectedTab == 0) {
                         profile.publications
                       } else {
-                        profile.favoritePublications
+                        likedPublications // Display of liked publications
                       }
 
                   PublicationsGrid(
                       publications = publications,
+                      currentUserId = userId,
+                      profileViewModel = viewModel,
                       onPublicationClick = { /* Handle publication click */},
                       modifier = Modifier.testTag("publications_grid"))
                 }
@@ -251,7 +254,15 @@ private fun PublicationItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PublicationDetailDialog(publication: Publication, onDismiss: () -> Unit) {
+fun PublicationDetailDialog(
+    publication: Publication,
+    profileViewModel: ProfileViewModel,
+    currentUserId: String,
+    onDismiss: () -> Unit
+) {
+  val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
+  val likeCount = remember { mutableStateOf(publication.likes) }
+
   Dialog(
       onDismissRequest = onDismiss,
       properties =
@@ -259,48 +270,96 @@ private fun PublicationDetailDialog(publication: Publication, onDismiss: () -> U
               usePlatformDefaultWidth = false,
               dismissOnBackPress = true,
               dismissOnClickOutside = false)) {
-        Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
-          Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
-            SmallTopAppBar(
-                title = { Text(publication.title, color = Color.White) },
-                navigationIcon = {
-                  IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
-                  }
-                },
-                colors =
-                    TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Black, titleContentColor = Color.White))
+        Surface(
+            modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog"),
+            color = Color.Black) {
+              Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+                SmallTopAppBar(
+                    title = {
+                      Text(
+                          publication.title,
+                          color = Color.White,
+                          modifier = Modifier.testTag("publication_title"))
+                    },
+                    navigationIcon = {
+                      IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_button")) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                      }
+                    },
+                    colors =
+                        TopAppBarDefaults.smallTopAppBarColors(
+                            containerColor = Color.Black, titleContentColor = Color.White))
 
-            Box(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentAlignment = Alignment.Center) {
-                  when (publication.mediaType) {
-                    MediaType.VIDEO -> {
-                      ExoVideoPlayer(
-                          videoUrl = publication.mediaUrl, modifier = Modifier.fillMaxWidth())
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth().testTag("media_container"),
+                    contentAlignment = Alignment.Center) {
+                      when (publication.mediaType) {
+                        MediaType.VIDEO -> {
+                          ExoVideoPlayer(
+                              videoUrl = publication.mediaUrl,
+                              modifier = Modifier.fillMaxWidth().testTag("video_player"))
+                        }
+                        MediaType.PHOTO -> {
+                          AsyncImage(
+                              model =
+                                  ImageRequest.Builder(LocalContext.current)
+                                      .data(publication.mediaUrl)
+                                      .crossfade(true)
+                                      .build(),
+                              contentDescription = "Publication media",
+                              modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                              contentScale = ContentScale.Fit)
+                        }
+                      }
+
+                      // Icon and Counter
+                      Column(
+                          modifier =
+                              Modifier.align(Alignment.CenterEnd)
+                                  .padding(16.dp)
+                                  .testTag("like_section"),
+                          horizontalAlignment = Alignment.CenterHorizontally) {
+                            IconButton(
+                                onClick = {
+                                  if (isLiked.value) {
+                                    profileViewModel.removeLike(currentUserId, publication.id)
+                                    isLiked.value = false
+                                    likeCount.value -= 1
+                                  } else {
+                                    profileViewModel.likeAndAddToFavorites(
+                                        currentUserId, publication.id)
+                                    isLiked.value = true
+                                    likeCount.value += 1
+                                  }
+                                },
+                                modifier = Modifier.testTag("like_button")) {
+                                  Icon(
+                                      imageVector = Icons.Default.Favorite,
+                                      contentDescription = "Like",
+                                      tint = if (isLiked.value) Color.Red else Color.White,
+                                      modifier =
+                                          Modifier.size(48.dp)
+                                              .testTag(
+                                                  if (isLiked.value) "liked_icon"
+                                                  else "unliked_icon"))
+                                }
+                            Text(
+                                text = likeCount.value.toString(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                modifier = Modifier.testTag("like_count_${publication.id}"))
+                          }
                     }
-                    MediaType.PHOTO -> {
-                      AsyncImage(
-                          model =
-                              ImageRequest.Builder(LocalContext.current)
-                                  .data(publication.mediaUrl)
-                                  .crossfade(true)
-                                  .build(),
-                          contentDescription = "Publication media",
-                          modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
-                          contentScale = ContentScale.Fit)
-                    }
-                  }
-                }
-          }
-        }
+              }
+            }
       }
 }
 
 @Composable
 private fun PublicationsGrid(
     publications: List<Publication>,
+    currentUserId: String,
+    profileViewModel: ProfileViewModel,
     onPublicationClick: (Publication) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -333,7 +392,11 @@ private fun PublicationsGrid(
 
     // Show detail dialog when a publication is selected
     selectedPublication?.let { publication ->
-      PublicationDetailDialog(publication = publication, onDismiss = { selectedPublication = null })
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = profileViewModel,
+          currentUserId = currentUserId,
+          onDismiss = { selectedPublication = null })
     }
   }
 }
