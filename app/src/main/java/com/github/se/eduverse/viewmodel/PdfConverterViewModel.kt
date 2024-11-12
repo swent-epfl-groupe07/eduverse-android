@@ -86,9 +86,9 @@ class PdfConverterViewModel(private val pdfRepository: PdfRepository) : ViewMode
                 when (converterOption) {
                   PdfConverterOption.IMAGE_TO_PDF -> pdfRepository.convertImageToPdf(uri, context)
                   PdfConverterOption.TEXT_TO_PDF -> pdfRepository.convertTextToPdf(uri, context)
-                  PdfConverterOption.DOCUMENT_TO_PDF -> TODO()
-                  PdfConverterOption.SUMMARIZE_FILE -> TODO()
-                  PdfConverterOption.EXTRACT_TEXT -> TODO()
+                  PdfConverterOption.DOCUMENT_TO_PDF -> throw Exception("Not implemented")
+                  PdfConverterOption.SUMMARIZE_FILE -> throw Exception("Not implemented")
+                  PdfConverterOption.EXTRACT_TEXT -> throw Exception("Not implemented")
                   PdfConverterOption.NONE ->
                       throw Exception("No converter option selected") // Should never happen
                 }

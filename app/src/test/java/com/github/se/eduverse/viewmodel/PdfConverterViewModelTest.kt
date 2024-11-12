@@ -91,6 +91,27 @@ class PdfConverterViewModelTest {
   }
 
   @Test
+  fun `test setNewFileName with DOCUMENT_TO_PDF option`() = runTest {
+    viewModel.generatePdf(uri, context, PdfConverterOption.DOCUMENT_TO_PDF)
+    advanceUntilIdle()
+    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test setNewFileName with SUMMARIZE_FILE option`() = runTest {
+    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    advanceUntilIdle()
+    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test setNewFileName with EXTRACT_TEXT option`() = runTest {
+    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    advanceUntilIdle()
+    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
   fun `test setNewFileName with empty file name`() {
     viewModel.setNewFileName("")
     assertEquals("", viewModel.newFileName.value)
