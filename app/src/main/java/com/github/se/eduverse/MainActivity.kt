@@ -33,6 +33,7 @@ import com.github.se.eduverse.repository.PublicationRepository
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.VideoScreen
+import com.github.se.eduverse.ui.archive.ArchiveScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
@@ -214,6 +215,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
             ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
+    }
+
+    navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {
+      composable(Screen.ARCHIVE) { ArchiveScreen(navigationActions, folderViewModel) }
     }
 
     navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {

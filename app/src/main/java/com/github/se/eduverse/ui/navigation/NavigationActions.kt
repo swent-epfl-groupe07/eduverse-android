@@ -23,6 +23,7 @@ object Route {
   const val POMODORO = "Pomodoro"
   const val PROFILE = "Profile"
   const val LIST_FOLDERS = "ListFolders"
+  const val ARCHIVE = "Archive"
 }
 
 object Screen {
@@ -45,6 +46,7 @@ object Screen {
   const val PDF_CONVERTER = "PdfConverter screen"
   const val PROFILE = "Profile screen"
   const val SEARCH = "Search screen"
+  const val ARCHIVE = "Archive screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
