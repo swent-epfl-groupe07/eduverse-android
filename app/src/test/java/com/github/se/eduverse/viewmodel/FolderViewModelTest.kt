@@ -22,6 +22,7 @@ class FolderViewModelTest {
   private lateinit var folderViewModel: FolderViewModel
 
   lateinit var folder: Folder
+  lateinit var archivedFolder: Folder
   lateinit var folder2: Folder
 
   val file1 = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
@@ -54,9 +55,22 @@ class FolderViewModelTest {
             "folder",
             "1",
             archived = false)
+    archivedFolder =
+        Folder(
+            "uid",
+            MutableList(3) {
+              when (it) {
+                1 -> file1
+                2 -> file2
+                else -> file3
+              }
+            },
+            "archived",
+            "1",
+            archived = true)
     folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
-    folderRepository = MockFolderRepository(folder)
+    folderRepository = MockFolderRepository(folder, archivedFolder)
     auth = mock(FirebaseAuth::class.java)
     currentUser = mock(FirebaseUser::class.java)
     `when`(auth.currentUser).thenReturn(currentUser)
@@ -105,8 +119,7 @@ class FolderViewModelTest {
             archived = false)
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
-    assertEquals(folderViewModel.folders.value.size, 2)
-    assertSame(folderViewModel.folders.value[1], folder4)
+    assertEquals(folderViewModel.folders.value.size, 1)
   }
 
   @Test
@@ -190,9 +203,32 @@ class FolderViewModelTest {
     assertEquals(folder2.files[0].fileId, "fileId")
     assertEquals(folder2.files[0].name, "name")
   }
+
+  @Test
+  fun getArchivedUserFoldersTest() {
+    folderViewModel.getArchivedUserFolders()
+    assertEquals(folderViewModel.folders.value.size, 1)
+    assertEquals(folderViewModel.folders.value[0], archivedFolder)
+  }
+
+  @Test
+  fun archiveFolderTest() {
+    folderViewModel.archiveFolder(folder)
+    assertEquals(folderViewModel.folders.value.size, 0)
+    assertEquals(folder.archived, true)
+  }
+
+  @Test
+  fun unarchiveFolderTest() {
+    folderViewModel.getArchivedUserFolders()
+    folderViewModel.unarchiveFolder(archivedFolder)
+    assertEquals(folderViewModel.folders.value.size, 0)
+    assertEquals(archivedFolder.archived, false)
+  }
 }
 
-class MockFolderRepository(private val folder: Folder) : FolderRepository {
+class MockFolderRepository(private val folder: Folder, private val archivedFolder: Folder) :
+    FolderRepository {
 
   override fun getFolders(
       userId: String,
@@ -202,7 +238,7 @@ class MockFolderRepository(private val folder: Folder) : FolderRepository {
   ) {
     onSuccess(
         List(1) {
-          return@List folder
+          return@List if (archived) archivedFolder else folder
         })
   }
 

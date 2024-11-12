@@ -138,7 +138,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
             Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
           })
     } catch (_: IndexOutOfBoundsException) {
-      addFolder(folder)
+      Log.d("FolderViewModel", "Folder ${folder.name} is not in the active list of folder")
     }
   }
 
@@ -154,8 +154,9 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    */
   fun archiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are not archived, remove the archived folder
-    if (!_folders.value[_folders.value.indexOfFirst { it.id == folder.id }].archived) {
-      _folders.value.remove(folder)
+    val index = _folders.value.indexOfFirst { it.id == folder.id }
+    if (index != -1 && !_folders.value[index].archived) {
+      _folders.value.removeAt(index)
     }
     folder.archived = true
     updateFolder(folder)
@@ -168,8 +169,9 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    */
   fun unarchiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are archived, remove the unarchived folder
-    if (_folders.value[_folders.value.indexOfFirst { it.id == folder.id }].archived) {
-      _folders.value.remove(folder)
+    val index = _folders.value.indexOfFirst { it.id == folder.id }
+    if (_folders.value[index].archived) {
+      _folders.value.removeAt(index)
     }
     folder.archived = false
     updateFolder(folder)
