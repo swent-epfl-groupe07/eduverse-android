@@ -35,6 +35,7 @@ import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class DisplayFolderTest {
@@ -60,7 +61,7 @@ class DisplayFolderTest {
           },
           "folder",
           "1",
-        archived = false)
+          archived = false)
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -99,6 +100,7 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("scaffold").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("column").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("archive").assertIsDisplayed()
     composeTestRule.onNodeWithTag(file1.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file2.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file3.name).assertIsDisplayed()
@@ -314,5 +316,14 @@ class DisplayFolderTest {
 
     composeTestRule.onNodeWithTag("confirm").performClick()
     composeTestRule.onAllNodesWithText("test_input").assertCountEquals(1)
+  }
+
+  @Test
+  fun archiveButtonTest() {
+    composeTestRule.onNodeWithTag("archive").performClick()
+    verify(2) { folderRepository.updateFolder(any(), any(), any()) }
+    verify(navigationActions).goBack()
+
+    assert(folder.archived)
   }
 }

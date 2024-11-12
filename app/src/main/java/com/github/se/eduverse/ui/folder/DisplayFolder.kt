@@ -99,13 +99,12 @@ fun FolderScreen(
                         text = "The Software Enterprise", modifier = Modifier.testTag("topBarText"))
                     IconButton(
                         onClick = {
-                            folderViewModel.archiveFolder(activeFolder!!)
-                            navigationActions.goBack()
+                          folderViewModel.archiveFolder(activeFolder!!)
+                          navigationActions.goBack()
                         },
-                        modifier = Modifier.testTag("archive")
-                    ) {
-                      Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-                    }
+                        modifier = Modifier.testTag("archive")) {
+                          Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                        }
                   }
             },
             navigationIcon = {

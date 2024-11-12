@@ -39,8 +39,8 @@ class GalleryScreenUiTest {
   private lateinit var folderRepository: FolderRepository
   private lateinit var auth: FirebaseAuth
 
-  val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1")
-  val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
+  val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1", archived = false)
+  val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
   @Before
   fun setUp() {
@@ -60,7 +60,10 @@ class GalleryScreenUiTest {
 
     `when`(
             folderRepository.getFolders(
-                org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any()))
         .then {
           val callback = it.getArgument<(List<Folder>) -> Unit>(1)
           callback(listOf(folder1, folder2))

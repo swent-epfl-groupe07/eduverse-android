@@ -47,7 +47,7 @@ class ListFoldersTest {
           },
           "folder1",
           "1",
-        archived = false)
+          archived = false)
 
   val folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
@@ -78,6 +78,7 @@ class ListFoldersTest {
   @Test
   fun displayComponents() {
     composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("archive").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("createFolder").assertIsDisplayed()
