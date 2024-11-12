@@ -46,9 +46,10 @@ class ListFoldersTest {
             }
           },
           "folder1",
-          "1")
+          "1",
+        archived = false)
 
-  val folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2")
+  val folder2 = Folder("", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -58,12 +59,12 @@ class ListFoldersTest {
     navigationActions = mock(NavigationActions::class.java)
 
     doAnswer {
-          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          val callback = it.getArgument<(List<Folder>) -> Unit>(2)
           callback(listOf(folder1, folder2))
           null
         }
         .whenever(folderRepository)
-        .getFolders(any(), any(), any())
+        .getFolders(any(), any(), any(), any())
 
     val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)

@@ -97,7 +97,13 @@ fun FolderScreen(
                   verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "The Software Enterprise", modifier = Modifier.testTag("topBarText"))
-                    IconButton(onClick = {}, modifier = Modifier.testTag("archive")) {
+                    IconButton(
+                        onClick = {
+                            folderViewModel.archiveFolder(activeFolder!!)
+                            navigationActions.goBack()
+                        },
+                        modifier = Modifier.testTag("archive")
+                    ) {
                       Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
                     }
                   }

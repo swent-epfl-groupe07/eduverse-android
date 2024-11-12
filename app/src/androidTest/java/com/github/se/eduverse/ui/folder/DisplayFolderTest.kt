@@ -59,7 +59,8 @@ class DisplayFolderTest {
             }
           },
           "folder",
-          "1")
+          "1",
+        archived = false)
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -71,12 +72,12 @@ class DisplayFolderTest {
     navigationActions = mock(NavigationActions::class.java)
 
     doAnswer {
-          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          val callback = it.getArgument<(List<Folder>) -> Unit>(2)
           callback(listOf(folder))
           null
         }
         .whenever(folderRepository)
-        .getFolders(any(), any(), any())
+        .getFolders(any(), any(), any(), any())
 
     val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)
