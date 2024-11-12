@@ -169,16 +169,17 @@ class ProfileRepositoryImpl(
     profilesCollection.document(userId).update("profileImageUrl", imageUrl).await()
   }
 
-  override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
-    return profilesCollection
-        .whereGreaterThanOrEqualTo("username", query)
-        .whereLessThanOrEqualTo("username", query + '\uf8ff')
-        .limit(limit.toLong())
-        .get()
-        .await()
-        .documents
-        .mapNotNull { it.toObject(Profile::class.java) }
-  }
+    override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
+        return profilesCollection
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(Profile::class.java) }
+            .filter { profile ->
+                profile.username.lowercase().contains(query.lowercase())
+            }
+            .take(limit)
+    }
 
   override suspend fun createProfile(
       userId: String,

@@ -89,13 +89,6 @@ fun ProfileScreen(
                 else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
               }
             },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("back_button")) {
-                    Icon(Icons.Default.ArrowBack, "Back")
-                  }
-            },
             actions = {
               IconButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTING) },
