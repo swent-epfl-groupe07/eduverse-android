@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -28,7 +29,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -47,34 +50,30 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
 
   Scaffold(
       topBar = {
-        MediumTopAppBar(
-            modifier = Modifier.testTag("topAppBar"),
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-            title = {
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "The Software Enterprise", modifier = Modifier.testTag("topBarText"))
-                    IconButton(onClick = {}, modifier = Modifier.testTag("archive")) {
-                      Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-                    }
+          CenterAlignedTopAppBar(
+              modifier = Modifier.testTag("topAppBar"),
+              title = {
+                  Row(
+                      modifier = Modifier.fillMaxWidth(),
+                      horizontalArrangement = Arrangement.SpaceBetween,
+                      verticalAlignment = Alignment.CenterVertically) {
+                      Text(
+                          text = "The Software Enterprise", modifier = Modifier.testTag("topBarText"))
+                      IconButton(onClick = {}, modifier = Modifier.testTag("archive")) {
+                          Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                      }
                   }
-            },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back Arrow")
+              },
+              navigationIcon = {
+                  IconButton(
+                      onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
+                      Icon(
+                          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                          contentDescription = "Back Arrow")
                   }
-            },
-            scrollBehavior = scrollBehavior)
+              },
+              colors =
+              TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent))
       },
       bottomBar = {
         BottomNavigationMenu(
