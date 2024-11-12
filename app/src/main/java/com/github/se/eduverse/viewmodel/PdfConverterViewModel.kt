@@ -113,11 +113,15 @@ class PdfConverterViewModel(private val pdfRepository: PdfRepository) : ViewMode
   }
 
   /** Save the PDF file to the device */
-  fun savePdfToDevice(pdfFile: File, context: Context) {
+  fun savePdfToDevice(
+      pdfFile: File,
+      context: Context,
+      directory: File = DEFAULT_DESTINATION_DIRECTORY
+  ) {
     pdfRepository.savePdfToDevice(
         pdfFile,
         newFileName.value,
-        DEFAULT_DESTINATION_DIRECTORY,
+        directory,
         { context.showToast("${it.name} saved to ${DEFAULT_DESTINATION_DIRECTORY.name}") },
         {
           Log.e("savePdfToDevice", "Failed to save pdf to device", it)

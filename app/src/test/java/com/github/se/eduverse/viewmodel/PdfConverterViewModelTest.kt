@@ -19,6 +19,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -42,6 +43,11 @@ class PdfConverterViewModelTest {
     uri = mock(Uri::class.java)
     file = mock(File::class.java)
     viewModel = PdfConverterViewModel(pdfRepository)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   @Test
@@ -109,6 +115,18 @@ class PdfConverterViewModelTest {
   }
 
   @Test
+  fun `test savePdfToDevice calls repository`() {
+    val pdfFile = mock(File::class.java)
+    val context = mock(Context::class.java)
+    val fileName = "test.pdf"
+
+    viewModel.setNewFileName(fileName)
+    viewModel.savePdfToDevice(pdfFile, context, file)
+
+    verify(pdfRepository).savePdfToDevice(eq(pdfFile), eq(fileName), eq(file), any(), any())
+  }
+
+  @Test
   fun `test abortPdfGeneration cancels job and sets state`() = runTest {
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
@@ -117,5 +135,14 @@ class PdfConverterViewModelTest {
     assertTrue(viewModel.pdfGenerationJob?.isCancelled == true)
     assertEquals(
         PdfConverterViewModel.PdfGenerationState.Aborted, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test abortPdfGeneration calls deleteTempPdfFile`() = runTest {
+    viewModel.currentFile = file
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.abortPdfGeneration()
+    verify(pdfRepository).deleteTempPdfFile(eq(file))
   }
 }

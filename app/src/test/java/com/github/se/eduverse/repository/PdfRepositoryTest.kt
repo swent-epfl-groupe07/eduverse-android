@@ -6,6 +6,7 @@ import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import java.io.File
 import java.io.InputStream
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import org.junit.After
 import org.junit.Before
@@ -41,8 +42,8 @@ class PdfRepositoryTest {
 
   @Test
   fun `test savePdfToDevice saves file successfully`() {
-    val fileName = "test.pdf"
-    val pdfFile = File.createTempFile("test", ".pdf")
+    val fileName = "test"
+    val pdfFile = File.createTempFile(fileName, ".pdf")
     val destinationDirectory = File(System.getProperty("java.io.tmpdir"))
 
     pdfRepository.savePdfToDevice(
@@ -51,12 +52,26 @@ class PdfRepositoryTest {
         destinationDirectory,
         { savedFile ->
           assertTrue(savedFile.exists())
-          assertTrue(savedFile.parentFile == destinationDirectory)
+          assertEquals(savedFile.parentFile, destinationDirectory)
         },
         { e ->
           assertTrue(false) // Fail the test if onFailure is called
         })
-    pdfFile.delete()
+
+    val pdfFile2 = File.createTempFile(fileName, ".pdf")
+    pdfRepository.savePdfToDevice(
+        pdfFile2,
+        fileName,
+        destinationDirectory,
+        { savedFile ->
+          assertTrue(savedFile.exists())
+          assertEquals(savedFile.parentFile, destinationDirectory)
+          // Test create unique file works as expected
+          assertEquals(savedFile.name, fileName + "(1).pdf")
+        },
+        { e ->
+          assertTrue(false) // Fail the test if onFailure is called
+        })
   }
 
   @Test
