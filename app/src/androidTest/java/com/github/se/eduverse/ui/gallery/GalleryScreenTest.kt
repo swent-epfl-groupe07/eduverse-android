@@ -49,8 +49,8 @@ class GalleryScreenTest {
   private lateinit var folderRepository: FolderRepository
   private lateinit var auth: FirebaseAuth
 
-  val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1")
-  val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
+  val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1", archived = false)
+  val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
   @Before
   fun setup() {
@@ -61,13 +61,17 @@ class GalleryScreenTest {
     auth = mock(FirebaseAuth::class.java)
     val user = mock(FirebaseUser::class.java)
     `when`(auth.currentUser).thenReturn(user)
+
     `when`(user.uid).thenReturn("uid")
 
     `when`(
             folderRepository.getFolders(
-                org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any()))
         .then {
-          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          val callback = it.getArgument<(List<Folder>) -> Unit>(2)
           callback(listOf(folder1, folder2))
         }
     fakeFolderViewModel = FolderViewModel(folderRepository, auth)

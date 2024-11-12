@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Profile
+import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
 
@@ -33,75 +35,91 @@ const val TAG_PROFILE_IMAGE = "profile_image"
 const val TAG_PROFILE_USERNAME = "profile_username"
 const val TAG_PROFILE_STATS = "profile_stats"
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchProfileScreen(viewModel: ProfileViewModel, onProfileClick: (String) -> Unit) {
+fun SearchProfileScreen(navigationActions: NavigationActions, viewModel: ProfileViewModel) {
   var searchQuery by remember { mutableStateOf("") }
   val searchState by viewModel.searchState.collectAsState()
 
-  Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-    TextField(
-        value = searchQuery,
-        onValueChange = {
-          searchQuery = it
-          viewModel.searchProfiles(it)
-        },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).testTag(TAG_SEARCH_FIELD),
-        placeholder = { Text("Search profiles...") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        singleLine = true)
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Search Users") },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("search_back_button")) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                  }
+            })
+      }) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
+          TextField(
+              value = searchQuery,
+              onValueChange = {
+                searchQuery = it
+                viewModel.searchProfiles(it.lowercase())
+              },
+              modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).testTag(TAG_SEARCH_FIELD),
+              placeholder = { Text("Search profiles...") },
+              leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+              singleLine = true)
 
-    when (val state = searchState) {
-      is SearchProfileState.Loading -> {
-        Box(
-            modifier = Modifier.fillMaxSize().testTag(TAG_LOADING_INDICATOR),
-            contentAlignment = Alignment.Center) {
-              CircularProgressIndicator()
+          when (val state = searchState) {
+            is SearchProfileState.Loading -> {
+              Box(
+                  modifier = Modifier.fillMaxSize().testTag(TAG_LOADING_INDICATOR),
+                  contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                  }
             }
-      }
-      is SearchProfileState.Success -> {
-        if (state.profiles.isEmpty() && searchQuery.isNotEmpty()) {
-          Box(
-              modifier = Modifier.fillMaxSize().testTag(TAG_NO_RESULTS),
-              contentAlignment = Alignment.Center) {
-                Text(
-                    text = "No profiles found",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            is SearchProfileState.Success -> {
+              if (state.profiles.isEmpty() && searchQuery.isNotEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().testTag(TAG_NO_RESULTS),
+                    contentAlignment = Alignment.Center) {
+                      Text(
+                          text = "No profiles found",
+                          style = MaterialTheme.typography.bodyLarge,
+                          color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+              } else {
+                LazyColumn(
+                    modifier = Modifier.testTag(TAG_PROFILE_LIST),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                      items(items = state.profiles, key = { it.id }) { profile ->
+                        ProfileSearchItem(
+                            profile = profile,
+                            onClick = { navigationActions.navigateToUserProfile(profile.id) })
+                      }
+                    }
               }
-        } else {
-          LazyColumn(
-              modifier = Modifier.testTag(TAG_PROFILE_LIST),
-              verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(items = state.profiles, key = { it.id }) { profile ->
-                  ProfileSearchItem(profile = profile, onClick = { onProfileClick(profile.id) })
-                }
+            }
+            is SearchProfileState.Error -> {
+              Box(
+                  modifier = Modifier.fillMaxSize().testTag(TAG_ERROR_MESSAGE),
+                  contentAlignment = Alignment.Center) {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge)
+                  }
+            }
+            SearchProfileState.Idle -> {
+              if (searchQuery.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().testTag(TAG_IDLE_MESSAGE),
+                    contentAlignment = Alignment.Center) {
+                      Text(
+                          text = "Search for other users",
+                          style = MaterialTheme.typography.bodyLarge,
+                          color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
               }
+            }
+          }
         }
       }
-      is SearchProfileState.Error -> {
-        Box(
-            modifier = Modifier.fillMaxSize().testTag(TAG_ERROR_MESSAGE),
-            contentAlignment = Alignment.Center) {
-              Text(
-                  text = state.message,
-                  color = MaterialTheme.colorScheme.error,
-                  style = MaterialTheme.typography.bodyLarge)
-            }
-      }
-      SearchProfileState.Idle -> {
-        if (searchQuery.isEmpty()) {
-          Box(
-              modifier = Modifier.fillMaxSize().testTag(TAG_IDLE_MESSAGE),
-              contentAlignment = Alignment.Center) {
-                Text(
-                    text = "Search for other users",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-              }
-        }
-      }
-    }
-  }
 }
 
 @Composable

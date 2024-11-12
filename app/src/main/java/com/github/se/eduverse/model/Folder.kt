@@ -5,7 +5,8 @@ data class Folder(
     var files: MutableList<MyFile>,
     var name: String,
     val id: String,
-    var filterType: FilterTypes = FilterTypes.CREATION_UP
+    var filterType: FilterTypes = FilterTypes.CREATION_UP,
+    var archived: Boolean
 )
 
 enum class FilterTypes {

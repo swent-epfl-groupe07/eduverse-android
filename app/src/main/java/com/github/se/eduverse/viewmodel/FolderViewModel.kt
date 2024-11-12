@@ -77,6 +77,16 @@ open class FolderViewModel(val repository: FolderRepository, val auth: FirebaseA
   fun getUserFolders() {
     repository.getFolders(
         auth.currentUser!!.uid,
+        false,
+        { _folders.value = it.toMutableList() },
+        { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
+  }
+
+  /** Get the archived folders with owner id equivalent to the current user */
+  fun getArchivedUserFolders() {
+    repository.getFolders(
+        auth.currentUser!!.uid,
+        true,
         { _folders.value = it.toMutableList() },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
   }
@@ -128,13 +138,43 @@ open class FolderViewModel(val repository: FolderRepository, val auth: FirebaseA
             Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
           })
     } catch (_: IndexOutOfBoundsException) {
-      addFolder(folder)
+      Log.d("FolderViewModel", "Folder ${folder.name} is not in the active list of folder")
     }
   }
 
   /** Get new ID for a folder. */
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  /**
+   * Archive a folder
+   *
+   * @param folder the folder to archive
+   */
+  fun archiveFolder(folder: Folder = activeFolder.value!!) {
+    // If folders are not archived, remove the archived folder
+    val index = _folders.value.indexOfFirst { it.id == folder.id }
+    if (index != -1 && !_folders.value[index].archived) {
+      _folders.value.removeAt(index)
+    }
+    folder.archived = true
+    updateFolder(folder)
+  }
+
+  /**
+   * Unarchive a folder
+   *
+   * @param folder the folder to unarchive
+   */
+  fun unarchiveFolder(folder: Folder = activeFolder.value!!) {
+    // If folders are archived, remove the unarchived folder
+    val index = _folders.value.indexOfFirst { it.id == folder.id }
+    if (_folders.value[index].archived) {
+      _folders.value.removeAt(index)
+    }
+    folder.archived = false
+    updateFolder(folder)
   }
 
   /**
