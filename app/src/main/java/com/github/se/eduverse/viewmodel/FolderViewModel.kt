@@ -77,6 +77,16 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
   fun getUserFolders() {
     repository.getFolders(
         auth.currentUser!!.uid,
+        false,
+        { _folders.value = it.toMutableList() },
+        { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
+  }
+
+  /** Get the archived folders with owner id equivalent to the current user */
+  fun getArchivedUserFolders() {
+    repository.getFolders(
+        auth.currentUser!!.uid,
+        true,
         { _folders.value = it.toMutableList() },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
   }
@@ -135,6 +145,34 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
   /** Get new ID for a folder. */
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  /**
+   * Archive a folder
+   *
+   * @param folder the folder to archive
+   */
+  fun archiveFolder(folder: Folder = activeFolder.value!!) {
+    // If folders are not archived, remove the archived folder
+    if (!_folders.value[_folders.value.indexOfFirst { it.id == folder.id }].archived) {
+      _folders.value.remove(folder)
+    }
+    folder.archived = true
+    updateFolder(folder)
+  }
+
+  /**
+   * Unarchive a folder
+   *
+   * @param folder the folder to unarchive
+   */
+  fun unarchiveFolder(folder: Folder = activeFolder.value!!) {
+    // If folders are archived, remove the unarchived folder
+    if (_folders.value[_folders.value.indexOfFirst { it.id == folder.id }].archived) {
+      _folders.value.remove(folder)
+    }
+    folder.archived = false
+    updateFolder(folder)
   }
 
   /**

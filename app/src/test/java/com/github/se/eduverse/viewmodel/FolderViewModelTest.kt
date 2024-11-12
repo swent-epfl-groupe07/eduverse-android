@@ -52,8 +52,9 @@ class FolderViewModelTest {
               }
             },
             "folder",
-            "1")
-    folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
+            "1",
+            archived = false)
+    folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
     folderRepository = MockFolderRepository(folder)
     auth = mock(FirebaseAuth::class.java)
@@ -88,14 +89,20 @@ class FolderViewModelTest {
   @Test
   fun updateFolderTest() {
     folderViewModel.selectFolder(folder)
-    val folder3 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1")
+    val folder3 =
+        Folder("uid", emptyList<MyFile>().toMutableList(), "folder3", "1", archived = false)
     folderViewModel.updateFolder(folder3)
     assertSame(folderViewModel.activeFolder.value, folder3)
     assertEquals(folderViewModel.folders.value.size, 1)
     assertSame(folderViewModel.folders.value[0], folder3)
 
     val folder4 =
-        Folder("uid", emptyList<MyFile>().toMutableList(), "folder4", folderViewModel.getNewUid())
+        Folder(
+            "uid",
+            emptyList<MyFile>().toMutableList(),
+            "folder4",
+            folderViewModel.getNewUid(),
+            archived = false)
     assertEquals(folder4.id, "id test")
     folderViewModel.updateFolder(folder4)
     assertEquals(folderViewModel.folders.value.size, 2)
@@ -189,6 +196,7 @@ class MockFolderRepository(private val folder: Folder) : FolderRepository {
 
   override fun getFolders(
       userId: String,
+      archived: Boolean,
       onSuccess: (List<Folder>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
