@@ -142,7 +142,6 @@ fun ProfileScreen(
                 }
                 else -> {}
               }
-
               TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
                 Tab(
                     selected = selectedTab == 0,
