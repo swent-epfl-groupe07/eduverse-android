@@ -88,6 +88,7 @@ fun VideoScreen(
                   ->
                   val publication = publications[page]
                   // Initialize the isLiked state
+
                   val isLiked = remember {
                     mutableStateOf(publication.likedBy.contains(currentUserId))
                   }
@@ -104,6 +105,7 @@ fun VideoScreen(
                                     })
                               }
                               .testTag("PublicationItem_$page") // Add a unique testTag for each
+
                       // publication
                       ) {
                         if (publication.mediaType == MediaType.VIDEO) {
@@ -117,6 +119,7 @@ fun VideoScreen(
                             onClick = {
                               if (isLiked.value) {
                                 // Logic for removing like (to be implemented in ViewModel)
+
                                 profileViewModel.removeLike(currentUserId, publication.id)
                                 isLiked.value = false
                               } else {
@@ -133,6 +136,7 @@ fun VideoScreen(
                                     .testTag(
                                         "LikeButton_$page") // Add a unique testTag for the like
                             // button
+
                             ) {
                               Icon(
                                   imageVector = Icons.Default.Favorite,
@@ -144,6 +148,7 @@ fun VideoScreen(
                                               if (isLiked.value) "LikedIcon_$page"
                                               else "UnlikedIcon_$page") // Add a conditional
                                   // testTag for the icon
+
                                   )
                             }
                       }

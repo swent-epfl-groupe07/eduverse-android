@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.theme
 
+import androidx.compose.material3.ButtonColors
 import androidx.compose.ui.graphics.Color
 
 val md_theme_light_primary = Color(0xFF00668A)
@@ -63,3 +64,6 @@ val md_theme_dark_outlineVariant = Color(0xFF41484D)
 val md_theme_dark_scrim = Color(0xFF000000)
 
 val seed = Color(0xFF008BBB)
+
+val blackTransparentButton =
+    ButtonColors(Color.Transparent, Color.Black, Color.Transparent, Color.Transparent)

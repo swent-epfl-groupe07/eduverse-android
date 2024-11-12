@@ -345,6 +345,7 @@ class VideoScreenTest {
     every { navigationActions.currentRoute() } returns "video"
 
     // List of publications with a single item for the test
+
     val publications =
         listOf(
             Publication(
@@ -362,6 +363,7 @@ class VideoScreenTest {
     val fakeViewModel = FakePublicationViewModel(publications)
 
     // Set content for the test
+
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -373,6 +375,7 @@ class VideoScreenTest {
     composeTestRule.waitForIdle()
 
     // Check that the `UnlikedIcon` is present initially
+
     composeTestRule
         .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
         .assertExists()
@@ -385,6 +388,7 @@ class VideoScreenTest {
     composeTestRule.waitForIdle()
 
     // Check that the icon is now `LikedIcon`
+
     composeTestRule
         .onNodeWithTag("LikedIcon_0", useUnmergedTree = true)
         .assertExists()
@@ -396,6 +400,7 @@ class VideoScreenTest {
     composeTestRule.waitForIdle()
 
     // Check that the icon is now `UnlikedIcon`
+
     composeTestRule
         .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
         .assertExists()
