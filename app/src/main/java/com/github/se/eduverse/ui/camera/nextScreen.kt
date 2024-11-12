@@ -60,6 +60,7 @@ import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.UUID
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -252,6 +253,7 @@ fun NextScreen(
                         storageRef.downloadUrl.addOnSuccessListener { uri ->
                           val publication =
                               Publication(
+                                  id = UUID.randomUUID().toString(),
                                   userId = ownerId,
                                   title = title,
                                   thumbnailUrl =

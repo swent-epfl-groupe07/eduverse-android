@@ -161,7 +161,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideoScreen(navigationActions, publicationViewModel) }
+      composable(Screen.VIDEOS) {
+        VideoScreen(navigationActions, publicationViewModel, profileViewModel)
+      }
     }
 
     navigation(

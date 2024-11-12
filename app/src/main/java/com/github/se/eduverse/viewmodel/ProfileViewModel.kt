@@ -1,6 +1,7 @@
 package com.github.se.eduverse.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.Profile
@@ -25,6 +26,9 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
 
   private var searchJob: Job? = null
+
+  private val _error = MutableStateFlow<String?>(null)
+  val error: StateFlow<String?> = _error.asStateFlow()
 
   fun loadProfile(userId: String) {
     viewModelScope.launch {
@@ -54,21 +58,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun toggleFavorite(userId: String, publicationId: String, isFavorite: Boolean) {
-    viewModelScope.launch {
-      try {
-        if (isFavorite) {
-          repository.removeFromFavorites(userId, publicationId)
-        } else {
-          repository.addToFavorites(userId, publicationId)
-        }
-        loadProfile(userId)
-      } catch (e: Exception) {
-        _profileState.value = ProfileUiState.Error(e.message ?: "Failed to update favorites")
-      }
-    }
-  }
-
   fun toggleFollow(currentUserId: String, targetUserId: String, isFollowing: Boolean) {
     viewModelScope.launch {
       try {
@@ -94,6 +83,35 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         _imageUploadState.value = ImageUploadState.Success
       } catch (e: Exception) {
         _imageUploadState.value = ImageUploadState.Error(e.message ?: "Upload failed")
+      }
+    }
+  }
+
+  fun likeAndAddToFavorites(userId: String, publicationId: String) {
+    viewModelScope.launch {
+      try {
+        repository.incrementLikes(publicationId, userId)
+        addPublicationToUserCollection(userId, publicationId)
+        Log.d("REUSSIII", "POST LIKEEE $publicationId ")
+      } catch (e: Exception) {
+        _error.value = "Failed to like and save publication"
+        Log.d("DEBUG", "UserId: $userId, PublicationId: $publicationId")
+        Log.d("MAKAYENCHH", "POST NON LIKEEE")
+      }
+    }
+  }
+
+  private suspend fun addPublicationToUserCollection(userId: String, publicationId: String) {
+    repository.addToUserCollection(userId, "likedPublications", publicationId)
+  }
+
+  fun removeLike(userId: String, publicationId: String) {
+    viewModelScope.launch {
+      try {
+        repository.removeFromLikedPublications(userId, publicationId)
+        repository.decrementLikesAndRemoveUser(publicationId, userId)
+      } catch (e: Exception) {
+        _error.value = "Failed to remove like: ${e.message}"
       }
     }
   }

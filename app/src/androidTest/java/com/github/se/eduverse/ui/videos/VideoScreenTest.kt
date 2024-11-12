@@ -7,6 +7,9 @@ import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.VideoScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.profile.ProfileScreenTest.FakeProfileViewModel
+import com.github.se.eduverse.viewmodel.ProfileUiState
+import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
 import io.mockk.every
 import io.mockk.mockk
@@ -14,15 +17,26 @@ import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runBlocking
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
 class VideoScreenTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+  private lateinit var fakeViewModell:
+      com.github.se.eduverse.ui.profile.ProfileScreenTest.FakeProfileViewModel
+
+  @Before
+  fun setup() {
+    fakeViewModell = com.github.se.eduverse.ui.profile.ProfileScreenTest.FakeProfileViewModel()
+  }
 
   class FakePublicationViewModel(initialPublications: List<Publication>) :
       PublicationViewModel(mockk(relaxed = true)) {
@@ -33,6 +47,15 @@ class VideoScreenTest {
 
     override suspend fun loadMorePublications() {
       // Ne fait rien pour ce test
+    }
+  }
+
+  class FakeProfileViewModel : ProfileViewModel(mock()) {
+    private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
+    override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
+
+    fun setState(state: ProfileUiState) {
+      _profileState.value = state
     }
   }
 
@@ -47,7 +70,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée
@@ -88,7 +114,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée
@@ -129,7 +158,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée et que VideoScreen soit visible
@@ -182,7 +214,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée
@@ -217,7 +252,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée
@@ -242,7 +280,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée
@@ -275,7 +316,10 @@ class VideoScreenTest {
 
     // Définition du contenu pour le test
     composeTestRule.setContent {
-      VideoScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
     }
 
     // Attendre que l'interface soit stabilisée
@@ -294,5 +338,69 @@ class VideoScreenTest {
 
     // Vérifier qu'aucun nouvel appel supplémentaire n'est fait à loadMorePublications()
     verify(exactly = 1) { runBlocking { fakeViewModel.loadMorePublications() } }
+  }
+
+  @Test
+  fun testLikeButtonChangesStateCorrectly() {
+    // Création des NavigationActions factices
+    val navigationActions = mockk<NavigationActions>(relaxed = true)
+    every { navigationActions.currentRoute() } returns "video"
+
+    // Liste de publications avec un seul élément pour le test
+    val publications =
+        listOf(
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis(),
+                likedBy = emptyList() // Initialement non liké
+                ))
+
+    // Utilisation du FakePublicationViewModel avec la publication
+    val fakeViewModel = FakePublicationViewModel(publications)
+
+    // Définition du contenu pour le test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = navigationActions,
+          publicationViewModel = fakeViewModel,
+          profileViewModel = fakeViewModell)
+    }
+
+    // Attendre que l'interface soit stabilisée
+    composeTestRule.waitForIdle()
+
+    // Vérifier que l'icône `UnlikedIcon` est présente initialement
+    composeTestRule
+        .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Simuler un clic sur le bouton de like
+    composeTestRule.onNodeWithTag("LikeButton_0", useUnmergedTree = true).performClick()
+
+    // Attendre la stabilisation de l'interface après l'interaction
+    composeTestRule.waitForIdle()
+
+    // Vérifier que l'icône est maintenant `LikedIcon`
+    composeTestRule
+        .onNodeWithTag("LikedIcon_0", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("LikeButton_0", useUnmergedTree = true).performClick()
+
+    // Attendre la stabilisation de l'interface après l'interaction
+    composeTestRule.waitForIdle()
+
+    // Vérifier que l'icône est maintenant `UnlikedIcon`
+    composeTestRule
+        .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
   }
 }
