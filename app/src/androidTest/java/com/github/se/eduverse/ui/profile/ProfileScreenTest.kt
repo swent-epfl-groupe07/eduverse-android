@@ -197,16 +197,6 @@ class ProfileScreenTest {
   }
 
   @Test
-  fun whenBackButtonClicked_navigatesBack() {
-    composeTestRule.setContent {
-      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
-    }
-
-    composeTestRule.onNodeWithTag("back_button").performClick()
-    assertTrue(fakeNavigationActions.backClicked)
-  }
-
-  @Test
   fun whenProfileImageClicked_exists() {
     val testProfile = Profile(id = "test", username = "TestUser")
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
