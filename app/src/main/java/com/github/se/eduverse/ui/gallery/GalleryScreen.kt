@@ -29,59 +29,47 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.model.Video
-import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.profile.ExoVideoPlayer
 import com.github.se.eduverse.ui.showBottomMenu
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object VideoThumbnailUtil {
 
-    fun generateThumbnail(context: Context, videoPath: String): String? {
-        return try {
-            val retriever = MediaMetadataRetriever()
-
-            try {
-                if (videoPath.startsWith("http") || videoPath.startsWith("https")) {
-                    retriever.setDataSource(videoPath, HashMap<String, String>())
-                } else {
-                    retriever.setDataSource(videoPath)
-                }
-
-                val bitmap = retriever.getFrameAtTime(0)
-
-                if (bitmap != null) {
-                    val thumbnailFile = File(
-                        context.cacheDir,
-                        "thumbnail_${videoPath.hashCode()}.jpg"
-                    )
-
-                    FileOutputStream(thumbnailFile).use { out ->
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
-                    }
-
-                    bitmap.recycle()
-
-                    thumbnailFile.absolutePath
-                } else {
-                    null
-                }
-            } finally {
-                retriever.release()
-            }
-        } catch (e: Exception) {
-            Log.e("VideoThumbnailUtil", "Erreur lors de la génération de la miniature", e)
-            null
+  fun generateThumbnail(
+      context: Context,
+      videoPath: String,
+      retriever: MediaMetadataRetriever = MediaMetadataRetriever()
+  ): String? {
+    return try {
+      retriever.setDataSource(videoPath)
+      val bitmap = retriever.getFrameAtTime(0)
+      if (bitmap != null) {
+        val thumbnailFile = File(context.cacheDir, "thumbnail_${videoPath.hashCode()}.jpg")
+        FileOutputStream(thumbnailFile).use { out ->
+          bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
         }
+        bitmap.recycle()
+        thumbnailFile.absolutePath
+      } else {
+        null
+      }
+    } catch (e: Exception) {
+      Log.e("VideoThumbnailUtil", "Erreur lors de la génération de la miniature", e)
+      null
+    } finally {
+      retriever.release()
     }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,121 +81,106 @@ fun GalleryScreen(
     folderViewModel: FolderViewModel,
     navigationActions: NavigationActions
 ) {
-    val context = LocalContext.current
-    val photos by photoViewModel.photos.collectAsState()
-    val videos by videoViewModel.videos.collectAsState()
+  val context = LocalContext.current
+  val photos by photoViewModel.photos.collectAsState()
+  val videos by videoViewModel.videos.collectAsState()
 
-    var selectedMedia by remember { mutableStateOf<Any?>(null) }
+  var selectedMedia by remember { mutableStateOf<Any?>(null) }
 
-    LaunchedEffect(ownerId) {
-        photoViewModel.getPhotosByOwner(ownerId)
-        videoViewModel.getVideosByOwner(ownerId)
-    }
+  LaunchedEffect(ownerId) {
+    photoViewModel.getPhotosByOwner(ownerId)
+    videoViewModel.getVideosByOwner(ownerId)
+  }
 
-    val mediaItems = photos.map { it as Any } + videos.map { it as Any }
+  val mediaItems = photos.map { it as Any } + videos.map { it as Any }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Gallery") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("GoBackButton")
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = "Go back")
-                    }
-                }
-            )
-        }
-    ) { contentPadding ->
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Gallery") },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("GoBackButton")) {
+                    Icon(Icons.Default.Close, contentDescription = "Go back")
+                  }
+            })
+      }) { contentPadding ->
         if (mediaItems.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .testTag("NoPhotosText"),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No media available", style = MaterialTheme.typography.bodyLarge)
-            }
+          Box(
+              modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("NoPhotosBox"),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    "No media available",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.testTag("NoPhotosText"))
+              }
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .testTag("MediaGrid"),
-                contentPadding = PaddingValues(1.dp),
-                horizontalArrangement = Arrangement.spacedBy(1.dp),
-                verticalArrangement = Arrangement.spacedBy(1.dp)
-            ) {
+          LazyVerticalGrid(
+              columns = GridCells.Fixed(3),
+              modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("MediaGrid"),
+              contentPadding = PaddingValues(1.dp),
+              horizontalArrangement = Arrangement.spacedBy(1.dp),
+              verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 items(mediaItems) { media ->
-                    when (media) {
-                        is Photo -> {
-                            val tag = "PhotoItem_${media.path ?: "unknown"}"
-                            PublicationItem(
-                                mediaType = MediaType.PHOTO,
-                                thumbnailUrl = media.path,
-                                onClick = { selectedMedia = media },
-                                modifier = Modifier.testTag(tag)
-                            )
-                        }
-                        is Video -> {
-                            var thumbnailPath by remember { mutableStateOf<String?>(null) }
-
-                            LaunchedEffect(media.path) {
-                                thumbnailPath = withContext(Dispatchers.IO) {
-                                    media.path?.let { VideoThumbnailUtil.generateThumbnail(context, it) }
-                                }
-                            }
-
-                            val tag = "VideoItem_${media.path ?: "unknown"}"
-                            PublicationItem(
-                                mediaType = MediaType.VIDEO,
-                                thumbnailUrl = thumbnailPath ?: media.path,
-                                onClick = { selectedMedia = media },
-                                modifier = Modifier.testTag(tag)
-                            )
-                        }
+                  when (media) {
+                    is Photo -> {
+                      val tag = "PhotoItem_${media.path ?: "unknown"}"
+                      PublicationItem(
+                          mediaType = MediaType.PHOTO,
+                          thumbnailUrl = media.path,
+                          onClick = { selectedMedia = media },
+                          modifier = Modifier.testTag(tag))
                     }
+                    is Video -> {
+                      var thumbnailPath by remember { mutableStateOf<String?>(null) }
+
+                      LaunchedEffect(media.path) {
+                        thumbnailPath =
+                            withContext(Dispatchers.IO) {
+                              media.path?.let { VideoThumbnailUtil.generateThumbnail(context, it) }
+                            }
+                      }
+
+                      val tag = "VideoItem_${media.path ?: "unknown"}"
+                      PublicationItem(
+                          mediaType = MediaType.VIDEO,
+                          thumbnailUrl = thumbnailPath ?: media.path,
+                          onClick = { selectedMedia = media },
+                          modifier = Modifier.testTag(tag))
+                    }
+                  }
                 }
-            }
+              }
         }
-    }
+      }
 
-    selectedMedia?.let { media ->
-        when (media) {
-            is Photo -> {
-                MediaDetailDialog(
-                    media = media,
-                    onDismiss = { selectedMedia = null },
-                    onDownload = {
-                        downloadImage(media.path ?: "unknown")
-                    },
-                    onAddToFolder = {
-                        showBottomMenu(context, folderViewModel) { folder ->
-                            photoViewModel.makeFileFromPhoto(media) {
-                                folderViewModel.createFileInFolder(it, it, folder)
-                            }
-                        }
-                    }
-                )
-            }
-            is Video -> {
-                MediaDetailDialog(
-                    media = media,
-                    onDismiss = { selectedMedia = null },
-                    onDownload = {
-                        downloadVideo(media.path ?: "unknown")
-                    },
-                    onAddToFolder = {
-                        Log.d("GalleryScreen", "Add to folder clicked for video: ${media.path}")
-                    }
-                )
-            }
-        }
+  selectedMedia?.let { media ->
+    when (media) {
+      is Photo -> {
+        MediaDetailDialog(
+            media = media,
+            onDismiss = { selectedMedia = null },
+            onDownload = { downloadImage(media.path ?: "unknown") },
+            onAddToFolder = {
+              showBottomMenu(context, folderViewModel) { folder ->
+                photoViewModel.makeFileFromPhoto(media) {
+                  folderViewModel.createFileInFolder(it, it, folder)
+                }
+              }
+            })
+      }
+      is Video -> {
+        MediaDetailDialog(
+            media = media,
+            onDismiss = { selectedMedia = null },
+            onDownload = { downloadVideo(media.path ?: "unknown") },
+            onAddToFolder = {
+              Log.d("GalleryScreen", "Add to folder clicked for video: ${media.path}")
+            })
+      }
     }
+  }
 }
 
 @Composable
@@ -217,47 +190,48 @@ fun PublicationItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clickable(onClick = onClick)
-            .testTag(if (mediaType == MediaType.PHOTO) "PhotoCard" else "VideoCard"),
-        shape = RoundedCornerShape(8.dp)
-    ) {
+  Card(
+      modifier =
+          modifier
+              .aspectRatio(1f)
+              .clickable(onClick = onClick)
+              .testTag(if (mediaType == MediaType.PHOTO) "PhotoCard" else "VideoCard"),
+      shape = RoundedCornerShape(8.dp)) {
         Box(modifier = Modifier.fillMaxSize()) {
+          AsyncImage(
+              model =
+                  ImageRequest.Builder(LocalContext.current)
+                      .data(thumbnailUrl)
+                      .crossfade(true)
+                      .build(),
+              contentDescription = null,
+              modifier = Modifier.fillMaxSize().testTag("MediaThumbnail"),
+              contentScale = ContentScale.Crop,
+              error = painterResource(R.drawable.eduverse_logo_alone),
+              fallback = painterResource(R.drawable.eduverse_logo_alone))
+
+          if (mediaType == MediaType.VIDEO) {
+            Box(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                        .testTag("VideoOverlay")) {
+                  Icon(
+                      imageVector = Icons.Default.PlayCircle,
+                      contentDescription = "Video",
+                      modifier = Modifier.size(48.dp).align(Alignment.Center).testTag("PlayIcon"),
+                      tint = Color.White)
+                }
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(thumbnailUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("MediaThumbnail"),
+                model = thumbnailUrl,
+                contentDescription = "Video thumbnail",
+                modifier = Modifier.fillMaxSize().testTag("VideoThumbnail"),
                 contentScale = ContentScale.Crop,
                 error = painterResource(R.drawable.eduverse_logo_alone),
-                fallback = painterResource(R.drawable.eduverse_logo_alone)
-            )
-
-            if (mediaType == MediaType.VIDEO) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
-                        .testTag("VideoOverlay")
-                )
-                Icon(
-                    imageVector = Icons.Default.PlayCircle,
-                    contentDescription = "Video",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.Center)
-                        .testTag("PlayIcon"),
-                    tint = Color.White
-                )
-            }
+                fallback = painterResource(R.drawable.eduverse_logo_alone))
+          }
         }
-    }
+      }
 }
 
 @Composable
@@ -267,79 +241,63 @@ fun MediaDetailDialog(
     onDownload: (() -> Unit)? = null,
     onAddToFolder: (() -> Unit)? = null
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .testTag("MediaDetailDialog")
-        ) {
-            Column {
-                Box(modifier = Modifier.weight(1f)) {
-                    when (media) {
-                        is Photo -> {
-                            AsyncImage(
-                                model = media.path,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .testTag("PhotoDetail"),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                        is Video -> {
-                            ExoVideoPlayer(
-                                videoUrl = media.path,
-                                modifier = Modifier.testTag("VideoDetail")
-                            )
-                        }
-                    }
+  Dialog(onDismissRequest = onDismiss) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("MediaDetailDialog")) {
+          Column {
+            Box(modifier = Modifier.weight(1f)) {
+              when (media) {
+                is Photo -> {
+                  AsyncImage(
+                      model = media.path,
+                      contentDescription = null,
+                      modifier = Modifier.fillMaxSize().testTag("PhotoDetail"),
+                      contentScale = ContentScale.Fit)
                 }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(
-                        onClick = { onDownload?.invoke() },
-                        modifier = Modifier.testTag(
-                            if (media is Photo) "DownloadPhotoButton" else "DownloadVideoButton"
-                        )
-                    ) {
-                        Icon(Icons.Default.Download, contentDescription = "Download Media")
-                    }
-
-                    TextButton(
-                        onClick = { onAddToFolder?.invoke() },
-                        modifier = Modifier.testTag(
-                            if (media is Photo) "AddPhotoToFolderButton" else "AddVideoToFolderButton"
-                        )
-                    ) {
-                        Text("Add to folder")
-                    }
-
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.testTag("CloseButton")
-                    ) {
-                        Text("Close")
-                    }
+                is Video -> {
+                  ExoVideoPlayer(videoUrl = media.path, modifier = Modifier.testTag("VideoDetail"))
                 }
+              }
             }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                  IconButton(
+                      onClick = { onDownload?.invoke() },
+                      modifier =
+                          Modifier.testTag(
+                              if (media is Photo) "DownloadPhotoButton"
+                              else "DownloadVideoButton")) {
+                        Icon(Icons.Default.Download, contentDescription = "Download Media")
+                      }
+
+                  TextButton(
+                      onClick = { onAddToFolder?.invoke() },
+                      modifier =
+                          Modifier.testTag(
+                              if (media is Photo) "AddPhotoToFolderButton"
+                              else "AddVideoToFolderButton")) {
+                        Text("Add to folder")
+                      }
+
+                  TextButton(onClick = onDismiss, modifier = Modifier.testTag("CloseButton")) {
+                    Text("Close")
+                  }
+                }
+          }
         }
-    }
+  }
 }
 
 fun downloadImage(imagePath: String) {
-    Log.d("GalleryScreen", "Downloading image from: $imagePath")
-    // Implement the actual download logic here
+  Log.d("GalleryScreen", "Downloading image from: $imagePath")
+  // Implement the actual download logic here
 }
 
 fun downloadVideo(videoPath: String) {
-    Log.d("GalleryScreen", "Downloading video from: $videoPath")
-    // Implement the actual download logic here
+  Log.d("GalleryScreen", "Downloading video from: $videoPath")
+  // Implement the actual download logic here
 }
