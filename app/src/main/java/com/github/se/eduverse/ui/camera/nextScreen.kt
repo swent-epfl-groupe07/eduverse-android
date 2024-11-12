@@ -70,14 +70,14 @@ fun NextScreen(
     navigationActions: NavigationActions,
     photoViewModel: PhotoViewModel,
     folderViewModel: FolderViewModel,
-    videoViewModel: VideoViewModel // Ajout du VideoViewModel
+    videoViewModel: VideoViewModel // Added VideoViewModel
 ) {
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
   var folder: Folder? = null
 
-  // Chemin pour sauvegarder l'image ou la vidéo
+  // Path to save the image or video
   val mediaType = if (photoFile != null) "photos" else "videos"
   val path =
       "$mediaType/$ownerId/${System.currentTimeMillis()}.${if (photoFile != null) "jpg" else "mp4"}"
@@ -86,7 +86,7 @@ fun NextScreen(
 
   Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEBF1F4)).padding(16.dp)) {
     if (bitmap != null) {
-      // Affichage de l'image
+      // Display image
       Image(
           bitmap = adjustImageRotation(bitmap.asAndroidBitmap()).asImageBitmap(),
           contentDescription = "Preview Image",
@@ -100,7 +100,7 @@ fun NextScreen(
                   .background(color = Color(0xFFD9D9D9))
                   .testTag("previewImage"))
     } else if (videoFile != null) {
-      // Affichage de la vidéo
+      // Display video
       val videoUri = Uri.fromFile(videoFile)
       val player = remember {
         ExoPlayer.Builder(context).build().apply {
@@ -122,7 +122,7 @@ fun NextScreen(
           factory = {
             PlayerView(context).apply {
               this.player = player
-              useController = false // Cacher les contrôles vidéo
+              useController = false // Hide video controls
               layoutParams =
                   ViewGroup.LayoutParams(
                       ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -139,7 +139,7 @@ fun NextScreen(
                   .testTag("previewVideo"))
     }
 
-    // Autres composants inchangés
+    // Other unchanged components
     Text(
         text = "Add description...",
         color = Color.Gray,
@@ -195,7 +195,7 @@ fun NextScreen(
           }
         }
 
-    // Ajout de la fonctionnalité Save pour photo et vidéo
+    // Added Save functionality for photo and video
     Row(
         modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -236,10 +236,9 @@ fun NextScreen(
           Button(
               onClick = {
                 val title =
-                    "My Publication" // Tu peux récupérer ce titre d'un champ d'entrée utilisateur
-                // si nécessaire
+                    "My Publication" // You can get this title from a user input field if needed
 
-                // Cas de la photo
+                // Photo case
                 bitmap?.let { bmp ->
                   val byteArray = imageBitmapToByteArray(bmp)
                   val storageRef =
@@ -256,8 +255,7 @@ fun NextScreen(
                                   id = UUID.randomUUID().toString(),
                                   userId = ownerId,
                                   title = title,
-                                  thumbnailUrl =
-                                      uri.toString(), // L'URL de l'image en tant que vignette
+                                  thumbnailUrl = uri.toString(), // Image URL as thumbnail
                                   mediaUrl = uri.toString(),
                                   mediaType = MediaType.PHOTO)
                           FirebaseFirestore.getInstance()
@@ -265,7 +263,7 @@ fun NextScreen(
                               .add(publication)
                               .addOnSuccessListener {
                                 Toast.makeText(
-                                        context, "Photo publiée avec succès", Toast.LENGTH_SHORT)
+                                        context, "Photo published successfully", Toast.LENGTH_SHORT)
                                     .show()
                                 navigationActions.goBack()
                                 navigationActions.goBack()
@@ -273,12 +271,11 @@ fun NextScreen(
                         }
                       }
                       .addOnFailureListener {
-                        Toast.makeText(context, "Échec de l'upload de la photo", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "Photo upload failed", Toast.LENGTH_SHORT).show()
                       }
                 }
 
-                // Cas de la vidéo
+                // Video case
                 videoFile?.let { file ->
                   val timestamp = System.currentTimeMillis()
 
@@ -321,7 +318,7 @@ fun NextScreen(
                                         .addOnSuccessListener {
                                           Toast.makeText(
                                                   context,
-                                                  "Vidéo publiée avec succès",
+                                                  "Video published successfully",
                                                   Toast.LENGTH_SHORT)
                                               .show()
                                           navigationActions.goBack()
@@ -330,17 +327,13 @@ fun NextScreen(
                                   }
                                 }
                                 .addOnFailureListener {
-                                  Toast.makeText(
-                                          context,
-                                          "Échec de l'upload de la vidéo",
-                                          Toast.LENGTH_SHORT)
+                                  Toast.makeText(context, "Video upload failed", Toast.LENGTH_SHORT)
                                       .show()
                                 }
                           }
                         }
                         .addOnFailureListener {
-                          Toast.makeText(
-                                  context, "Échec de l'upload de la vignette", Toast.LENGTH_SHORT)
+                          Toast.makeText(context, "Thumbnail upload failed", Toast.LENGTH_SHORT)
                               .show()
                         }
                   }
@@ -434,10 +427,10 @@ fun StyledButton(text: String, iconRes: Int, testTag: String, onClick: () -> Uni
 fun handleShare(
     bitmap: ImageBitmap?,
     context: Context,
-    videoFile: File? // Ajout du fichier vidéo en paramètre
+    videoFile: File? // Added video file parameter
 ) {
   if (bitmap != null) {
-    // Partage d'une image
+    // Share an image
     val photoFile = File(context.cacheDir, "shared_image.jpg")
     val outputStream = FileOutputStream(photoFile)
     bitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
@@ -456,7 +449,7 @@ fun handleShare(
 
     context.startActivity(Intent.createChooser(shareIntent, "Share image via"))
   } else if (videoFile != null) {
-    // Partage d'une vidéo
+    // Share a video
     val videoUri =
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile)
 

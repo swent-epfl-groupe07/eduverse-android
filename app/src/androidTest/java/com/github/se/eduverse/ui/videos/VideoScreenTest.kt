@@ -46,7 +46,7 @@ class VideoScreenTest {
       get() = _publications
 
     override suspend fun loadMorePublications() {
-      // Ne fait rien pour ce test
+      // Does nothing for this test
     }
   }
 
@@ -61,14 +61,14 @@ class VideoScreenTest {
 
   @Test
   fun testLoadingIndicatorIsDisplayedWhenPublicationsAreEmpty() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Utilisation du FakePublicationViewModel avec une liste vide
+    // Use FakePublicationViewModel with an empty list
     val fakeViewModel = FakePublicationViewModel(emptyList())
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -76,20 +76,20 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Vérifier que l'indicateur de chargement est affiché
+    // Check that the loading indicator is displayed
     composeTestRule.onNodeWithTag("LoadingIndicator").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testVerticalPagerIsDisplayedWhenPublicationsAreNotEmpty() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Liste de publications non vides
+    // Non-empty list of publications
     val publications =
         listOf(
             Publication(
@@ -109,10 +109,10 @@ class VideoScreenTest {
                 thumbnailUrl = "https://via.placeholder.com/150",
                 timestamp = System.currentTimeMillis()))
 
-    // Utilisation du FakePublicationViewModel avec des publications non vides
+    // Use FakePublicationViewModel with non-empty publications
     val fakeViewModel = FakePublicationViewModel(publications)
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -120,20 +120,20 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Vérifier que le VerticalPager est affiché
+    // Check that the VerticalPager is displayed
     composeTestRule.onNodeWithTag("VerticalPager").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testCorrectDisplayOfPublications() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Liste de publications avec différents types (vidéo et photo)
+    // List of publications with different types (video and photo)
     val publications =
         listOf(
             Publication(
@@ -153,10 +153,10 @@ class VideoScreenTest {
                 thumbnailUrl = "https://via.placeholder.com/150",
                 timestamp = System.currentTimeMillis()))
 
-    // Utilisation du FakePublicationViewModel avec des publications non vides
+    // Use FakePublicationViewModel with non-empty publications
     val fakeViewModel = FakePublicationViewModel(publications)
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -164,19 +164,19 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée et que VideoScreen soit visible
+    // Wait for the UI to stabilize and ensure VideoScreen is visible
     composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
 
-    // Vérifier l'affichage correct du premier élément (vidéo)
+    // Check the correct display of the first item (video)
     composeTestRule.waitUntil {
       composeTestRule.onAllNodesWithTag("VideoItem").fetchSemanticsNodes().isNotEmpty()
     }
     composeTestRule.onNodeWithTag("VideoItem").assertIsDisplayed()
 
-    // Passer à la deuxième page (photo) en simulant un swipe
+    // Swipe to the second page (photo)
     composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
 
-    // Vérifier l'affichage correct du deuxième élément (photo)
+    // Check the correct display of the second item (photo)
     composeTestRule.waitUntil {
       composeTestRule.onAllNodesWithTag("PhotoItem").fetchSemanticsNodes().isNotEmpty()
     }
@@ -185,11 +185,11 @@ class VideoScreenTest {
 
   @Test
   fun testPaginationLoadMorePublications() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Liste initiale de publications avec quelques éléments
+    // Initial list of publications with a few items
     val initialPublications =
         listOf(
             Publication(
@@ -209,10 +209,10 @@ class VideoScreenTest {
                 thumbnailUrl = "",
                 timestamp = System.currentTimeMillis()))
 
-    // Création d'un mock pour PublicationViewModel
+    // Create a spy for PublicationViewModel
     val fakeViewModel = spyk(FakePublicationViewModel(initialPublications))
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -220,24 +220,24 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
 
-    // Simuler un scroll jusqu'à la dernière publication pour déclencher le chargement
+    // Simulate scrolling to the last publication to trigger loading more
     composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
 
-    // Vérifier que loadMorePublications() est appelé une fois que la dernière page est atteinte
+    // Verify that loadMorePublications() is called when the last page is reached
     verify { runBlocking { fakeViewModel.loadMorePublications() } }
   }
 
   @Test
   fun testBottomNavigationMenuIsDisplayed() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Création d'un mock pour le ViewModel avec quelques publications pour peupler l'écran
+    // Create a mock ViewModel with some publications to populate the screen
     val fakeViewModel =
         FakePublicationViewModel(
             listOf(
@@ -250,7 +250,7 @@ class VideoScreenTest {
                     thumbnailUrl = "",
                     timestamp = System.currentTimeMillis())))
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -258,27 +258,27 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
 
-    // Vérifier que la BottomNavigationMenu est affichée
+    // Check that the BottomNavigationMenu is displayed
     composeTestRule.onNodeWithTag("bottomNavigationMenu").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testErrorIndicatorIsDisplayedOnLoadingFailure() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Création d'un ViewModel factice avec un état d'erreur initial
+    // Create a mock ViewModel with an initial error state
     val fakeViewModel =
         object : PublicationViewModel(mockk()) {
           override val publications = MutableStateFlow<List<Publication>>(emptyList())
-          override val error = MutableStateFlow("Échec du chargement des publications")
+          override val error = MutableStateFlow("Failed to load publications")
         }
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -286,21 +286,20 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Vérifier que l'indicateur d'erreur est affiché
+    // Check that the error indicator is displayed
     composeTestRule.onNodeWithTag("ErrorIndicator").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testPublicationsAreNotReloadedUnnecessarilyOnLifecycleChanges() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Utilisation d'un mock de PublicationViewModel pour surveiller les appels à
-    // loadMorePublications()
+    // Use a mock of PublicationViewModel to monitor calls to loadMorePublications()
     val fakeViewModel =
         spyk(
             FakePublicationViewModel(
@@ -314,7 +313,7 @@ class VideoScreenTest {
                         thumbnailUrl = "",
                         timestamp = System.currentTimeMillis()))))
 
-    // Définition du contenu pour le test
+    // Set content for the test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -322,31 +321,31 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Vérifier qu'un seul appel initial a été fait à loadMorePublications()
+    // Verify that an initial call to loadMorePublications() was made once
     verify(exactly = 1) { runBlocking { fakeViewModel.loadMorePublications() } }
 
-    // Simuler un changement de cycle de vie (application en arrière-plan puis de retour au premier
-    // plan)
+    // Simulate a lifecycle change (app backgrounded then foregrounded)
     composeTestRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
     composeTestRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
 
-    // Attendre la stabilisation de l'interface
+    // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Vérifier qu'aucun nouvel appel supplémentaire n'est fait à loadMorePublications()
+    // Verify that no additional calls to loadMorePublications() are made
     verify(exactly = 1) { runBlocking { fakeViewModel.loadMorePublications() } }
   }
 
   @Test
   fun testLikeButtonChangesStateCorrectly() {
-    // Création des NavigationActions factices
+    // Create mock NavigationActions
     val navigationActions = mockk<NavigationActions>(relaxed = true)
     every { navigationActions.currentRoute() } returns "video"
 
-    // Liste de publications avec un seul élément pour le test
+    // List of publications with a single item for the test
+
     val publications =
         listOf(
             Publication(
@@ -357,13 +356,14 @@ class VideoScreenTest {
                 mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
                 thumbnailUrl = "",
                 timestamp = System.currentTimeMillis(),
-                likedBy = emptyList() // Initialement non liké
+                likedBy = emptyList() // Initially not liked
                 ))
 
-    // Utilisation du FakePublicationViewModel avec la publication
+    // Use FakePublicationViewModel with the publication
     val fakeViewModel = FakePublicationViewModel(publications)
 
-    // Définition du contenu pour le test
+    // Set content for the test
+
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = navigationActions,
@@ -371,22 +371,24 @@ class VideoScreenTest {
           profileViewModel = fakeViewModell)
     }
 
-    // Attendre que l'interface soit stabilisée
+    // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Vérifier que l'icône `UnlikedIcon` est présente initialement
+    // Check that the `UnlikedIcon` is present initially
+
     composeTestRule
         .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
         .assertExists()
         .assertIsDisplayed()
 
-    // Simuler un clic sur le bouton de like
+    // Simulate a click on the like button
     composeTestRule.onNodeWithTag("LikeButton_0", useUnmergedTree = true).performClick()
 
-    // Attendre la stabilisation de l'interface après l'interaction
+    // Wait for the UI to stabilize after the interaction
     composeTestRule.waitForIdle()
 
-    // Vérifier que l'icône est maintenant `LikedIcon`
+    // Check that the icon is now `LikedIcon`
+
     composeTestRule
         .onNodeWithTag("LikedIcon_0", useUnmergedTree = true)
         .assertExists()
@@ -394,10 +396,11 @@ class VideoScreenTest {
 
     composeTestRule.onNodeWithTag("LikeButton_0", useUnmergedTree = true).performClick()
 
-    // Attendre la stabilisation de l'interface après l'interaction
+    // Wait for the UI to stabilize after the interaction
     composeTestRule.waitForIdle()
 
-    // Vérifier que l'icône est maintenant `UnlikedIcon`
+    // Check that the icon is now `UnlikedIcon`
+
     composeTestRule
         .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
         .assertExists()

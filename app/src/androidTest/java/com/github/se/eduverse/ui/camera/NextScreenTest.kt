@@ -69,19 +69,15 @@ class NextScreenTest {
     vViewModel = mockk(relaxed = true)
     context = ApplicationProvider.getApplicationContext()
 
-    // Initialisation de mockBitmap avant de l'utiliser
     mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
 
-    // Création d'un fichier temporaire avec des données simulant une image
     currentPhotoFile =
         File.createTempFile("test_image", ".jpg").apply {
           outputStream().use { mockBitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
         }
 
-    // Initialiser l'état vidéo avec null
     videoFileState = mutableStateOf(null)
 
-    // Charger la composable avec la photo et une vidéo à l'état null par défaut
     composeTestRule.setContent {
       NextScreen(
           photoFile = currentPhotoFile,
@@ -112,15 +108,12 @@ class NextScreenTest {
 
   @Test
   fun testSaveButtonWorks() {
-    // Assurez-vous que le bitmap n'est pas null avant le test
     assertNotNull(mockBitmap)
 
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Utilisez `verify` avec des arguments relaxés pour s'assurer que savePhoto est appelé
     verify { photoViewModel.savePhoto(any(), any(), any()) }
 
-    // Vérifiez aussi que le `goBack` est appelé trois fois
     verify(exactly = 3) { navigationActions.goBack() }
   }
 
@@ -133,15 +126,12 @@ class NextScreenTest {
   fun testCloseButtonNavigatesBack() {
     composeTestRule.onNodeWithTag("closeButton").performClick()
 
-    // Vérifie que `goBack()` est appelé
     verify { navigationActions.goBack() }
   }
 
   @Test
   fun testShareToButtonTriggersShareIntent() {
     composeTestRule.onNodeWithTag("shareToButton").assertIsDisplayed().performClick()
-    // Ne peut pas tester directement le lancement de l'intention de partage dans les tests,
-    // mais cela couvrira les lignes pour atteindre une bonne couverture.
   }
 
   @Test
@@ -158,16 +148,12 @@ class NextScreenTest {
   fun testSaveButtonNavigatesBackThreeTimes() {
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Vérification que `goBack()` a été appelé trois fois
     verify(exactly = 3) { navigationActions.goBack() }
   }
 
   @Test
   fun testShareIntentIsTriggeredOnShareButtonClick() {
     composeTestRule.onNodeWithTag("shareToButton").performClick()
-
-    // Il n'est pas possible de vérifier directement l'intent dans les tests UI Compose
-    // mais ce clic couvre la logique de partage
   }
 
   @Test
@@ -180,22 +166,17 @@ class NextScreenTest {
   fun testCloseButtonTriggersGoBack() {
     composeTestRule.onNodeWithTag("closeButton").performClick()
 
-    // Vérifier que `goBack()` est appelé lorsque le bouton de fermeture est cliqué
     verify { navigationActions.goBack() }
   }
 
   @Test
   fun testVideoFileIsHandledCorrectly() {
-    // Simuler un fichier vidéo temporaire
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Mettre à jour l'état pour déclencher la recomposition avec le fichier vidéo
     composeTestRule.runOnUiThread { videoFileState.value = testVideoFile }
 
-    // Forcer la recomposition
     composeTestRule.waitForIdle()
 
-    // Vérifier que l'état du fichier vidéo a bien été mis à jour
     assertNotNull(videoFileState.value)
     assertEquals(testVideoFile, videoFileState.value)
   } // testing the testTag videoPreview is very difficult
@@ -214,21 +195,18 @@ class NextScreenTest {
   @Test
   fun testStyledButtonClick() {
 
-    // Test sur le bouton "Add link"
     composeTestRule
         .onNodeWithTag("addToFolderButton")
         .assertExists()
         .assertHasClickAction()
         .performClick()
 
-    // Test sur le bouton "More options"
     composeTestRule
         .onNodeWithTag("moreOptionsButton")
         .assertExists()
         .assertHasClickAction()
         .performClick()
 
-    // Test sur le bouton "Share to"
     composeTestRule
         .onNodeWithTag("shareToButton")
         .assertExists()
@@ -238,19 +216,14 @@ class NextScreenTest {
 
   @Test
   fun testPlayerReleased_whenDisposed() {
-    // Simuler un fichier vidéo temporaire
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Utiliser ApplicationProvider pour obtenir le contexte
     var player: ExoPlayer? = null
 
-    // Mettre à jour l'état pour déclencher la recomposition avec le fichier vidéo
     composeTestRule.runOnUiThread { videoFileState.value = testVideoFile }
 
-    // Forcer la recomposition
     composeTestRule.waitForIdle()
 
-    // Simuler la création et la gestion du player ExoPlayer dans le composant
     composeTestRule.runOnIdle {
       player =
           ExoPlayer.Builder(context).build().apply {
@@ -260,10 +233,9 @@ class NextScreenTest {
           }
     }
 
-    // Simuler la suppression de la composable et vérifier que le player est libéré
     composeTestRule.runOnIdle {
       player?.release()
-      assert(player?.isPlaying == false) // Le player ne doit plus jouer après la libération
+      assert(player?.isPlaying == false)
     }
   }
 

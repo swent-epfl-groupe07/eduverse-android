@@ -74,7 +74,7 @@ fun VideoScreen(
                         .background(Color.Red.copy(alpha = 0.2f))
                         .testTag("ErrorIndicator")) {
                   Text(
-                      text = error ?: "Une erreur est survenue",
+                      text = error ?: "An error occurred",
                       color = Color.Red,
                       modifier = Modifier.align(Alignment.Center))
                 }
@@ -87,7 +87,8 @@ fun VideoScreen(
                     Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")) { page
                   ->
                   val publication = publications[page]
-                  // Initialisation du state isLiked
+                  // Initialize the isLiked state
+
                   val isLiked = remember {
                     mutableStateOf(publication.likedBy.contains(currentUserId))
                   }
@@ -100,11 +101,11 @@ fun VideoScreen(
                                     onDoubleTap = {
                                       profileViewModel.likeAndAddToFavorites(
                                           currentUserId, publication.id)
-                                      isLiked.value = true // Mettre à jour l'état local
+                                      isLiked.value = true // Update local state
                                     })
                               }
-                              .testTag(
-                                  "PublicationItem_$page") // Ajout d'un testTag unique pour chaque
+                              .testTag("PublicationItem_$page") // Add a unique testTag for each
+
                       // publication
                       ) {
                         if (publication.mediaType == MediaType.VIDEO) {
@@ -113,11 +114,12 @@ fun VideoScreen(
                           PhotoItem(thumbnailUrl = publication.thumbnailUrl)
                         }
 
-                        // Icône de cœur pour aimer
+                        // Heart icon for liking
                         IconButton(
                             onClick = {
                               if (isLiked.value) {
-                                // Logique pour retirer le like (à implémenter dans le ViewModel)
+                                // Logic for removing like (to be implemented in ViewModel)
+
                                 profileViewModel.removeLike(currentUserId, publication.id)
                                 isLiked.value = false
                               } else {
@@ -132,8 +134,9 @@ fun VideoScreen(
                                     .offset(y = 64.dp)
                                     .padding(12.dp)
                                     .testTag(
-                                        "LikeButton_$page") // Ajout d'un testTag unique pour le
-                            // bouton like
+                                        "LikeButton_$page") // Add a unique testTag for the like
+                            // button
+
                             ) {
                               Icon(
                                   imageVector = Icons.Default.Favorite,
@@ -143,14 +146,15 @@ fun VideoScreen(
                                       Modifier.size(48.dp)
                                           .testTag(
                                               if (isLiked.value) "LikedIcon_$page"
-                                              else "UnlikedIcon_$page") // Ajout d'un testTag
-                                  // conditionnel pour l'icône
+                                              else "UnlikedIcon_$page") // Add a conditional
+                                  // testTag for the icon
+
                                   )
                             }
                       }
                 }
 
-            // Charger plus de publications lorsque l’utilisateur atteint la dernière page visible
+            // Load more publications when the user reaches the last visible page
             LaunchedEffect(pagerState.currentPage) {
               if (pagerState.currentPage == publications.size - 1) {
                 publicationViewModel.loadMorePublications()
@@ -203,7 +207,7 @@ fun PhotoItem(thumbnailUrl: String) {
   Box(modifier = Modifier.fillMaxSize().background(Color.Black).testTag("PhotoItem")) {
     SubcomposeAsyncImage(
         model = thumbnailUrl,
-        contentDescription = "Photo de la publication",
+        contentDescription = "Publication photo",
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize())
   }

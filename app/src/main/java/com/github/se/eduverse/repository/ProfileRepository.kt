@@ -192,7 +192,8 @@ class ProfileRepositoryImpl(
 
   override suspend fun incrementLikes(publicationId: String, userId: String) {
     try {
-      // Requête ciblée pour récupérer le document avec un champ `id` correspondant
+      // Targeted query to retrieve the document with a matching `id` field
+
       val querySnapshot =
           firestore.collection("publications").whereEqualTo("id", publicationId).get().await()
 
@@ -204,7 +205,8 @@ class ProfileRepositoryImpl(
               val snapshot = transaction.get(documentRef)
               val likedBy = snapshot.get("likedBy") as? List<String> ?: emptyList()
 
-              // Vérifier si l'utilisateur a déjà liké
+              // Check if the user has already liked
+
               if (!likedBy.contains(userId)) {
                 val currentLikes = snapshot.getLong("likes") ?: 0
                 transaction.update(documentRef, "likes", currentLikes + 1)
@@ -243,7 +245,8 @@ class ProfileRepositoryImpl(
 
   override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
     try {
-      // Requête pour trouver le document avec un champ `id` correspondant
+      // Query to find the document with a matching `id` field
+
       val querySnapshot =
           firestore.collection("publications").whereEqualTo("id", publicationId).get().await()
 
@@ -260,7 +263,8 @@ class ProfileRepositoryImpl(
                 val currentLikes = snapshot.getLong("likes") ?: 0
                 val newLikes = if (currentLikes > 0) currentLikes - 1 else 0
 
-                // Mettre à jour le nombre de likes et la liste `likedBy`
+                // Update the number of likes and the `likedBy` list
+
                 transaction.update(documentRef, mapOf("likedBy" to likedBy, "likes" to newLikes))
               }
             }
@@ -273,8 +277,8 @@ class ProfileRepositoryImpl(
       throw e
     }
   }
-  // IDK IF THIS FUNCTION SHOULD BE IN PROFILE REPO OR PUBLI REPO. logically it should be in
+  // IDK IF THIS FUNCTION SHOULD BE IN PROFILE REPO OR PUBLI REPO. Logically, it should be in
   // publication repo
-  // but idk if it s ok that profil VM calls a function that is in publication repo.
-
+  // but I'm not sure if it's okay for the profile VM to call a function that is in the publication
+  // repo.
 }

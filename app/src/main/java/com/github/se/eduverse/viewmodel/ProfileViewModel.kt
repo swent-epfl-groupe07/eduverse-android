@@ -92,11 +92,11 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       try {
         repository.incrementLikes(publicationId, userId)
         addPublicationToUserCollection(userId, publicationId)
-        Log.d("REUSSIII", "POST LIKEEE $publicationId ")
+        Log.d("SUCCESS", "POST LIKE $publicationId ")
       } catch (e: Exception) {
         _error.value = "Failed to like and save publication"
         Log.d("DEBUG", "UserId: $userId, PublicationId: $publicationId")
-        Log.d("MAKAYENCHH", "POST NON LIKEEE")
+        Log.d("ERROR", "POST NOT LIKED")
       }
     }
   }
