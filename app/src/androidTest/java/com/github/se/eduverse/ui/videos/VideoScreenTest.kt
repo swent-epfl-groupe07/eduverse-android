@@ -59,15 +59,6 @@ class VideoScreenTest {
     }
   }
 
-  class FakeProfileViewModel : ProfileViewModel(mock()) {
-    private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-    override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
-
-    fun setState(state: ProfileUiState) {
-      _profileState.value = state
-    }
-  }
-
   @Test
   fun testLoadingIndicatorIsDisplayedWhenPublicationsAreEmpty() {
     // Create mock NavigationActions
