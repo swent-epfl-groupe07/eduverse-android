@@ -57,34 +57,33 @@ class ProfileRepositoryImpl(
   private val favoritesCollection = firestore.collection("favorites")
   private val followersCollection = firestore.collection("followers")
 
-    private val usersCollection = firestore.collection("users")
+  private val usersCollection = firestore.collection("users")
 
-
-    override suspend fun getAllPublications(): List<Publication> {
-        return try {
-            publicationsCollection.get().await().documents.mapNotNull {
-                it.toObject(Publication::class.java)
-            }
-        } catch (e: Exception) {
-            Log.e("GET_ALL_PUBLICATIONS", "Failed to get all publications: ${e.message}")
-            emptyList()
-        }
+  override suspend fun getAllPublications(): List<Publication> {
+    return try {
+      publicationsCollection.get().await().documents.mapNotNull {
+        it.toObject(Publication::class.java)
+      }
+    } catch (e: Exception) {
+      Log.e("GET_ALL_PUBLICATIONS", "Failed to get all publications: ${e.message}")
+      emptyList()
     }
+  }
 
-    override suspend fun getUserLikedPublicationsIds(userId: String): List<String> {
-        return try {
-            usersCollection
-                .document(userId)
-                .collection("likedPublications")
-                .get()
-                .await()
-                .documents
-                .mapNotNull { it.getString("publicationId") }
-        } catch (e: Exception) {
-            Log.e("GET_LIKED_PUBLICATIONS", "Failed to get liked publications: ${e.message}")
-            emptyList()
-        }
+  override suspend fun getUserLikedPublicationsIds(userId: String): List<String> {
+    return try {
+      usersCollection
+          .document(userId)
+          .collection("likedPublications")
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.getString("publicationId") }
+    } catch (e: Exception) {
+      Log.e("GET_LIKED_PUBLICATIONS", "Failed to get liked publications: ${e.message}")
+      emptyList()
     }
+  }
 
   override suspend fun getProfile(userId: String): Profile? {
     val profileDoc = profilesCollection.document(userId).get().await()

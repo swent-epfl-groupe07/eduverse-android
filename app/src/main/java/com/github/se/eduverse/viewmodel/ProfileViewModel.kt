@@ -39,7 +39,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         createProfileIfNotExists(userId)
         val profile = repository.getProfile(userId)
         _profileState.value =
-          profile?.let { ProfileUiState.Success(it) } ?: ProfileUiState.Error("Profile not found")
+            profile?.let { ProfileUiState.Success(it) } ?: ProfileUiState.Error("Profile not found")
       } catch (e: Exception) {
         _profileState.value = ProfileUiState.Error(e.message ?: "Unknown error")
       }
@@ -137,16 +137,16 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
 
     searchJob =
-      viewModelScope.launch {
-        _searchState.value = SearchProfileState.Loading
-        try {
-          delay(300)
-          val results = repository.searchProfiles(query)
-          _searchState.value = SearchProfileState.Success(results)
-        } catch (e: Exception) {
-          _searchState.value = SearchProfileState.Error(e.message ?: "Search failed")
+        viewModelScope.launch {
+          _searchState.value = SearchProfileState.Loading
+          try {
+            delay(300)
+            val results = repository.searchProfiles(query)
+            _searchState.value = SearchProfileState.Success(results)
+          } catch (e: Exception) {
+            _searchState.value = SearchProfileState.Error(e.message ?: "Search failed")
+          }
         }
-      }
   }
 
   override fun onCleared() {
@@ -163,7 +163,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         val photoUrl = user?.photoUrl?.toString() ?: ""
 
         repository.createProfile(
-          userId = userId, defaultUsername = defaultUsername, photoUrl = photoUrl)
+            userId = userId, defaultUsername = defaultUsername, photoUrl = photoUrl)
       }
     } catch (e: Exception) {
       _profileState.value = ProfileUiState.Error(e.message ?: "Failed to create profile")
@@ -180,12 +180,14 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
             return@launch
           }
           newUsername.length < 3 -> {
-            _usernameState.value = UsernameUpdateState.Error("Username must be at least 3 characters")
+            _usernameState.value =
+                UsernameUpdateState.Error("Username must be at least 3 characters")
             return@launch
           }
           !newUsername.matches(Regex("^[a-zA-Z0-9._]+$")) -> {
-            _usernameState.value = UsernameUpdateState.Error(
-              "Username can only contain letters, numbers, dots and underscores")
+            _usernameState.value =
+                UsernameUpdateState.Error(
+                    "Username can only contain letters, numbers, dots and underscores")
             return@launch
           }
           repository.doesUsernameExist(newUsername) -> {
@@ -203,7 +205,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 }
-
 
 sealed class ProfileUiState {
   object Loading : ProfileUiState()

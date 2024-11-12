@@ -22,10 +22,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.kotlin.any
 
 @RunWith(AndroidJUnit4::class)
 class ProfileScreenTest {
@@ -39,59 +36,60 @@ class ProfileScreenTest {
     fakeViewModel = FakeProfileViewModel()
     fakeNavigationActions = FakeNavigationActions()
   }
-    class FakeProfileViewModel : ProfileViewModel(mock()) {
-        private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-        override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
-        private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
-        override val likedPublications: StateFlow<List<Publication>> = _likedPublications.asStateFlow()
+  class FakeProfileViewModel : ProfileViewModel(mock()) {
+    private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
+    override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
-        private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
-        override val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
+    private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
+    override val likedPublications: StateFlow<List<Publication>> = _likedPublications.asStateFlow()
 
-        private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
-        override val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
+    private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
+    override val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
 
-        private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
-        override val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
+    private val _searchState = MutableStateFlow<SearchProfileState>(SearchProfileState.Idle)
+    override val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
 
-        private val _error = MutableStateFlow<String?>(null)
-        override val error: StateFlow<String?> = _error.asStateFlow()
+    private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
+    override val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
 
-        // Method to set the profile state for testing
-        fun setProfileState(state: ProfileUiState) {
-            _profileState.value = state
-        }
+    private val _error = MutableStateFlow<String?>(null)
+    override val error: StateFlow<String?> = _error.asStateFlow()
 
-        // Method to set the liked publications for testing
-        fun setLikedPublications(publications: List<Publication>) {
-            _likedPublications.value = publications
-        }
-
-        // Method to set the image upload state for testing
-        fun setImageUploadState(state: ImageUploadState) {
-            _imageUploadState.value = state
-        }
-
-        fun setState(state: ProfileUiState) {
-            _profileState.value = state
-        }
-
-        // Method to set the search state for testing
-        fun setSearchState(state: SearchProfileState) {
-            _searchState.value = state
-        }
-
-        // Method to set the username state for testing
-        fun setUsernameState(state: UsernameUpdateState) {
-            _usernameState.value = state
-        }
-
-        // Method to simulate an error for testing
-        fun setError(message: String?) {
-            _error.value = message
-        }
+    // Method to set the profile state for testing
+    fun setProfileState(state: ProfileUiState) {
+      _profileState.value = state
     }
+
+    // Method to set the liked publications for testing
+    fun setLikedPublications(publications: List<Publication>) {
+      _likedPublications.value = publications
+    }
+
+    // Method to set the image upload state for testing
+    fun setImageUploadState(state: ImageUploadState) {
+      _imageUploadState.value = state
+    }
+
+    fun setState(state: ProfileUiState) {
+      _profileState.value = state
+    }
+
+    // Method to set the search state for testing
+    fun setSearchState(state: SearchProfileState) {
+      _searchState.value = state
+    }
+
+    // Method to set the username state for testing
+    fun setUsernameState(state: UsernameUpdateState) {
+      _usernameState.value = state
+    }
+
+    // Method to simulate an error for testing
+    fun setError(message: String?) {
+      _error.value = message
+    }
+  }
 
   class FakeNavigationActions : NavigationActions(mock()) {
     var backClicked = false
@@ -410,10 +408,11 @@ class ProfileScreenTest {
     composeTestRule.onAllNodesWithTag("detail_photo_view").assertCountEquals(1)
   }
 
-    @Test
-    fun testHeartIconAndLikeCounterPresence() {
-        // Créer une publication simulée
-        val publication = Publication(
+  @Test
+  fun testHeartIconAndLikeCounterPresence() {
+    // Créer une publication simulée
+    val publication =
+        Publication(
             id = "pub1",
             userId = "user1",
             title = "Test Publication",
@@ -421,39 +420,40 @@ class ProfileScreenTest {
             mediaUrl = "https://example.com/photo.jpg",
             thumbnailUrl = "",
             likedBy = listOf("user1"), // Initialement liké par l'utilisateur
-            likes = 10
-        )
+            likes = 10)
 
-        // Créer une instance simulée du ViewModel
-        val fakeViewModel = mock(ProfileViewModel::class.java)
+    // Créer une instance simulée du ViewModel
+    val fakeViewModel = mock(ProfileViewModel::class.java)
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "user1",
-                onDismiss = {}
-            )
-        }
-
-        // Attendre que l'interface se stabilise
-        composeTestRule.waitForIdle()
-
-        // Vérifier que l'icône de like est présente
-        composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true)
-            .assertExists()
-            .assertIsDisplayed()
-
-        // Vérifier que le compteur de likes est présent et affiche la bonne valeur
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("10")
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "user1",
+          onDismiss = {})
     }
 
-    @Test
-    fun testInitialLikeStateAndCount() {
-        // Create a publication that is already liked by the current user
-        val publication = Publication(
+    // Attendre que l'interface se stabilise
+    composeTestRule.waitForIdle()
+
+    // Vérifier que l'icône de like est présente
+    composeTestRule
+        .onNodeWithTag("like_button", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Vérifier que le compteur de likes est présent et affiche la bonne valeur
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("10")
+  }
+
+  @Test
+  fun testInitialLikeStateAndCount() {
+    // Create a publication that is already liked by the current user
+    val publication =
+        Publication(
             id = "pub1",
             userId = "user1",
             title = "Test Publication",
@@ -461,35 +461,36 @@ class ProfileScreenTest {
             mediaUrl = "https://example.com/photo.jpg",
             thumbnailUrl = "",
             likedBy = listOf("currentUser"),
-            likes = 42
-        )
+            likes = 42)
 
-        val fakeViewModel = mock(ProfileViewModel::class.java)
+    val fakeViewModel = mock(ProfileViewModel::class.java)
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-        composeTestRule.waitForIdle()
-        // Check initial liked state
-        composeTestRule.onNodeWithTag("liked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertIsDisplayed()
-
-        // Verify like count
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("42")
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
+    composeTestRule.waitForIdle()
+    // Check initial liked state
+    composeTestRule
+        .onNodeWithTag("liked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
 
-    @Test
-    fun testLikeButtonClickWhenInitiallyNotLiked() {
-        // Create a publication that is not liked initially
-        val publication = Publication(
+    // Verify like count
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("42")
+  }
+
+  @Test
+  fun testLikeButtonClickWhenInitiallyNotLiked() {
+    // Create a publication that is not liked initially
+    val publication =
+        Publication(
             id = "pub1",
             userId = "user1",
             title = "Test Publication",
@@ -497,47 +498,49 @@ class ProfileScreenTest {
             mediaUrl = "https://example.com/photo.jpg",
             thumbnailUrl = "",
             likedBy = emptyList(),
-            likes = 10
-        )
+            likes = 10)
 
-        val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        composeTestRule.waitForIdle()
-
-        // Verify initial unlike state
-        composeTestRule.onNodeWithTag("unliked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertIsDisplayed()
-
-        // Click the like button
-        composeTestRule.onNodeWithTag("like_button").performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Verify the icon changed to liked state
-        composeTestRule.onNodeWithTag("liked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertIsDisplayed()
-
-        // Verify like count increased
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("11")
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
-    @Test
-    fun testLikeButtonClickWhenInitiallyLiked() {
-        // Create a publication that is already liked
-        val publication = Publication(
+    composeTestRule.waitForIdle()
+
+    // Verify initial unlike state
+    composeTestRule
+        .onNodeWithTag("unliked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Click the like button
+    composeTestRule.onNodeWithTag("like_button").performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify the icon changed to liked state
+    composeTestRule
+        .onNodeWithTag("liked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Verify like count increased
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("11")
+  }
+
+  @Test
+  fun testLikeButtonClickWhenInitiallyLiked() {
+    // Create a publication that is already liked
+    val publication =
+        Publication(
             id = "pub1",
             userId = "user1",
             title = "Test Publication",
@@ -545,48 +548,49 @@ class ProfileScreenTest {
             mediaUrl = "https://example.com/photo.jpg",
             thumbnailUrl = "",
             likedBy = listOf("currentUser"),
-            likes = 10
-        )
+            likes = 10)
 
-        val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        composeTestRule.waitForIdle()
-
-        // Verify initial liked state
-        composeTestRule.onNodeWithTag("liked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertIsDisplayed()
-
-        // Click the like button
-        composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
-
-        composeTestRule.waitForIdle()
-
-
-        // Verify the icon changed to unliked state
-        composeTestRule.onNodeWithTag("unliked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertIsDisplayed()
-
-        // Verify like count decreased
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("9")
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
-    @Test
-    fun testLikeCountUpdatesCorrectly() {
-        // Create a publication with initial likes
-        val publication = Publication(
+    composeTestRule.waitForIdle()
+
+    // Verify initial liked state
+    composeTestRule
+        .onNodeWithTag("liked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Click the like button
+    composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify the icon changed to unliked state
+    composeTestRule
+        .onNodeWithTag("unliked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Verify like count decreased
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("9")
+  }
+
+  @Test
+  fun testLikeCountUpdatesCorrectly() {
+    // Create a publication with initial likes
+    val publication =
+        Publication(
             id = "pub1",
             userId = "user1",
             title = "Test Publication",
@@ -594,52 +598,54 @@ class ProfileScreenTest {
             mediaUrl = "https://example.com/photo.jpg",
             thumbnailUrl = "",
             likedBy = emptyList(),
-            likes = 5
-        )
+            likes = 5)
 
-        val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        composeTestRule.waitForIdle()
-
-        // Verify initial count
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("5")
-
-        // Like the publication
-        composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Verify count increased
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("6")
-
-        // Unlike the publication
-        composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Verify count decreased
-        composeTestRule.onNodeWithTag("like_count_pub1", useUnmergedTree = true)
-            .assertExists()
-            .assertTextEquals("5")
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
-    @Test
-    fun testLikeButtonIconColor() {
-        // Create a publication
-        val publication = Publication(
+    composeTestRule.waitForIdle()
+
+    // Verify initial count
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("5")
+
+    // Like the publication
+    composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify count increased
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("6")
+
+    // Unlike the publication
+    composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify count decreased
+    composeTestRule
+        .onNodeWithTag("like_count_pub1", useUnmergedTree = true)
+        .assertExists()
+        .assertTextEquals("5")
+  }
+
+  @Test
+  fun testLikeButtonIconColor() {
+    // Create a publication
+    val publication =
+        Publication(
             id = "pub1",
             userId = "user1",
             title = "Test Publication",
@@ -647,37 +653,35 @@ class ProfileScreenTest {
             mediaUrl = "https://example.com/photo.jpg",
             thumbnailUrl = "",
             likedBy = listOf("currentUser"),
-            likes = 10
-        )
+            likes = 10)
 
-        val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        composeTestRule.waitForIdle()
-
-        // Find the like button icon and verify its color when liked
-        composeTestRule.onNodeWithTag("liked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertHasNoClickAction()
-
-        // Click to unlike
-        composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
-
-        composeTestRule.waitForIdle()
-
-        // Verify icon color changed for unliked state
-        composeTestRule.onNodeWithTag("unliked_icon", useUnmergedTree = true)
-            .assertExists()
-            .assertHasNoClickAction()
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
+    composeTestRule.waitForIdle()
 
+    // Find the like button icon and verify its color when liked
+    composeTestRule
+        .onNodeWithTag("liked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertHasNoClickAction()
+
+    // Click to unlike
+    composeTestRule.onNodeWithTag("like_button", useUnmergedTree = true).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify icon color changed for unliked state
+    composeTestRule
+        .onNodeWithTag("unliked_icon", useUnmergedTree = true)
+        .assertExists()
+        .assertHasNoClickAction()
+  }
 }

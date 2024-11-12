@@ -56,93 +56,94 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     userId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
-    val uiState by viewModel.profileState.collectAsState()
-    val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
-    val launcher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let { viewModel.updateProfileImage(userId, it) }
-        }
+  var selectedTab by remember { mutableStateOf(0) }
+  val uiState by viewModel.profileState.collectAsState()
+  val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
+  val launcher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
+        ->
+        uri?.let { viewModel.updateProfileImage(userId, it) }
+      }
 
-    LaunchedEffect(userId) {
-        if (auth.currentUser == null) {
-            navigationActions.navigateTo(Screen.AUTH)
-            return@LaunchedEffect
-        }
-
-        viewModel.loadProfile(userId)
-        viewModel.loadLikedPublications(userId)
+  LaunchedEffect(userId) {
+    if (auth.currentUser == null) {
+      navigationActions.navigateTo(Screen.AUTH)
+      return@LaunchedEffect
     }
 
-    Scaffold(
-        modifier = Modifier.testTag("profile_screen_container"),
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.testTag("profile_top_bar"),
-                title = {
-                    when (uiState) {
-                        is ProfileUiState.Success ->
-                            Text(
-                                text = (uiState as ProfileUiState.Success).profile.username,
-                                modifier = Modifier.testTag("profile_username"))
-                        else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("back_button")) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { navigationActions.navigateTo(Screen.SETTING) },
-                        modifier = Modifier.testTag("settings_button")) {
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                })
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = navigationActions.currentRoute())
-        }) { paddingValues ->
+    viewModel.loadProfile(userId)
+    viewModel.loadLikedPublications(userId)
+  }
+
+  Scaffold(
+      modifier = Modifier.testTag("profile_screen_container"),
+      topBar = {
+        TopAppBar(
+            modifier = Modifier.testTag("profile_top_bar"),
+            title = {
+              when (uiState) {
+                is ProfileUiState.Success ->
+                    Text(
+                        text = (uiState as ProfileUiState.Success).profile.username,
+                        modifier = Modifier.testTag("profile_username"))
+                else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
+              }
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("back_button")) {
+                    Icon(Icons.Default.ArrowBack, "Back")
+                  }
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.SETTING) },
+                  modifier = Modifier.testTag("settings_button")) {
+                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                  }
+            })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute())
+      }) { paddingValues ->
         Column(
             modifier =
-            Modifier.testTag("profile_content_container")
-                .fillMaxSize()
-                .padding(paddingValues)) {
-            Box(
-                modifier =
-                Modifier.testTag("profile_image_container")
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                contentAlignment = Alignment.Center) {
-                ProfileImage(
-                    imageUrl =
-                    if (uiState is ProfileUiState.Success)
-                        (uiState as ProfileUiState.Success).profile.profileImageUrl
-                    else "",
-                    onImageClick = { launcher.launch("image/*") },
-                    modifier = Modifier.testTag("profile_image"))
-            }
+                Modifier.testTag("profile_content_container")
+                    .fillMaxSize()
+                    .padding(paddingValues)) {
+              Box(
+                  modifier =
+                      Modifier.testTag("profile_image_container")
+                          .fillMaxWidth()
+                          .padding(top = 16.dp),
+                  contentAlignment = Alignment.Center) {
+                    ProfileImage(
+                        imageUrl =
+                            if (uiState is ProfileUiState.Success)
+                                (uiState as ProfileUiState.Success).profile.profileImageUrl
+                            else "",
+                        onImageClick = { launcher.launch("image/*") },
+                        modifier = Modifier.testTag("profile_image"))
+                  }
 
-            when (uiState) {
+              when (uiState) {
                 is ProfileUiState.Success -> {
-                    val profile = (uiState as ProfileUiState.Success).profile
-                    Row(
-                        modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly) {
+                  val profile = (uiState as ProfileUiState.Success).profile
+                  Row(
+                      modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
+                      horizontalArrangement = Arrangement.SpaceEvenly) {
                         StatItem("Followers", profile.followers, Modifier.testTag("followers_stat"))
                         StatItem("Following", profile.following, Modifier.testTag("following_stat"))
-                    }
+                      }
                 }
                 else -> {}
-            }
+              }
 
-            TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
+              TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
@@ -155,43 +156,40 @@ fun ProfileScreen(
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) })
-            }
+              }
 
-            when (uiState) {
+              when (uiState) {
                 is ProfileUiState.Loading -> {
-                    Box(
-                        modifier = Modifier.testTag("loading_container").fillMaxSize(),
-                        contentAlignment = Alignment.Center) {
+                  Box(
+                      modifier = Modifier.testTag("loading_container").fillMaxSize(),
+                      contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(modifier = Modifier.testTag("loading_indicator"))
-                    }
+                      }
                 }
                 is ProfileUiState.Error ->
                     ErrorMessage(
                         message = (uiState as ProfileUiState.Error).message,
                         modifier = Modifier.testTag("error_container"))
                 is ProfileUiState.Success -> {
-                    val profile = (uiState as ProfileUiState.Success).profile
-                    val publications =
-                        if (selectedTab == 0) {
-                            profile.publications
-                        } else {
-                            likedPublications // Display of liked publications
-                        }
+                  val profile = (uiState as ProfileUiState.Success).profile
+                  val publications =
+                      if (selectedTab == 0) {
+                        profile.publications
+                      } else {
+                        likedPublications // Display of liked publications
+                      }
 
-                    PublicationsGrid(
-                        publications = publications,
-                        currentUserId = userId,
-                        profileViewModel = viewModel,
-                        onPublicationClick = { /* Handle publication click */ },
-                        modifier = Modifier.testTag("publications_grid")
-                    )
-
+                  PublicationsGrid(
+                      publications = publications,
+                      currentUserId = userId,
+                      profileViewModel = viewModel,
+                      onPublicationClick = { /* Handle publication click */},
+                      modifier = Modifier.testTag("publications_grid"))
                 }
+              }
             }
-        }
-    }
+      }
 }
-
 
 @Composable
 private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
@@ -263,118 +261,100 @@ fun PublicationDetailDialog(
     currentUserId: String,
     onDismiss: () -> Unit
 ) {
-    val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
-    val likeCount = remember { mutableStateOf(publication.likes) }
+  val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
+  val likeCount = remember { mutableStateOf(publication.likes) }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
+  Dialog(
+      onDismissRequest = onDismiss,
+      properties =
+          DialogProperties(
+              usePlatformDefaultWidth = false,
+              dismissOnBackPress = true,
+              dismissOnClickOutside = false)) {
         Surface(
             modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog"),
-            color = Color.Black
-        ) {
-            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+            color = Color.Black) {
+              Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
                 SmallTopAppBar(
                     title = {
-                        Text(
-                            publication.title,
-                            color = Color.White,
-                            modifier = Modifier.testTag("publication_title")
-                        )
+                      Text(
+                          publication.title,
+                          color = Color.White,
+                          modifier = Modifier.testTag("publication_title"))
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.testTag("close_button")
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Close",
-                                tint = Color.White
-                            )
-                        }
+                      IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_button")) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                      }
                     },
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Black,
-                        titleContentColor = Color.White
-                    )
-                )
+                    colors =
+                        TopAppBarDefaults.smallTopAppBarColors(
+                            containerColor = Color.Black, titleContentColor = Color.White))
 
                 Box(
                     modifier = Modifier.weight(1f).fillMaxWidth().testTag("media_container"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when (publication.mediaType) {
+                    contentAlignment = Alignment.Center) {
+                      when (publication.mediaType) {
                         MediaType.VIDEO -> {
-                            ExoVideoPlayer(
-                                videoUrl = publication.mediaUrl,
-                                modifier = Modifier.fillMaxWidth().testTag("video_player")
-                            )
+                          ExoVideoPlayer(
+                              videoUrl = publication.mediaUrl,
+                              modifier = Modifier.fillMaxWidth().testTag("video_player"))
                         }
                         MediaType.PHOTO -> {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(publication.mediaUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = "Publication media",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .testTag("detail_photo_view"),
-                                contentScale = ContentScale.Fit
-                            )
+                          AsyncImage(
+                              model =
+                                  ImageRequest.Builder(LocalContext.current)
+                                      .data(publication.mediaUrl)
+                                      .crossfade(true)
+                                      .build(),
+                              contentDescription = "Publication media",
+                              modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                              contentScale = ContentScale.Fit)
                         }
-                    }
+                      }
 
-                    // Icon and Counter
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(16.dp)
-                            .testTag("like_section"),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        IconButton(
-                            onClick = {
-                                if (isLiked.value) {
+                      // Icon and Counter
+                      Column(
+                          modifier =
+                              Modifier.align(Alignment.CenterEnd)
+                                  .padding(16.dp)
+                                  .testTag("like_section"),
+                          horizontalAlignment = Alignment.CenterHorizontally) {
+                            IconButton(
+                                onClick = {
+                                  if (isLiked.value) {
                                     profileViewModel.removeLike(currentUserId, publication.id)
                                     isLiked.value = false
                                     likeCount.value -= 1
-                                } else {
-                                    profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
+                                  } else {
+                                    profileViewModel.likeAndAddToFavorites(
+                                        currentUserId, publication.id)
                                     isLiked.value = true
                                     likeCount.value += 1
+                                  }
+                                },
+                                modifier = Modifier.testTag("like_button")) {
+                                  Icon(
+                                      imageVector = Icons.Default.Favorite,
+                                      contentDescription = "Like",
+                                      tint = if (isLiked.value) Color.Red else Color.White,
+                                      modifier =
+                                          Modifier.size(48.dp)
+                                              .testTag(
+                                                  if (isLiked.value) "liked_icon"
+                                                  else "unliked_icon"))
                                 }
-                            },
-                            modifier = Modifier.testTag("like_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = "Like",
-                                tint = if (isLiked.value) Color.Red else Color.White,
-                                modifier = Modifier.size(48.dp).testTag(
-                                    if (isLiked.value) "liked_icon" else "unliked_icon"
-                                )
-                            )
-                        }
-                        Text(
-                            text = likeCount.value.toString(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White,
-                            modifier = Modifier.testTag("like_count_${publication.id}")
-                        )
+                            Text(
+                                text = likeCount.value.toString(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                modifier = Modifier.testTag("like_count_${publication.id}"))
+                          }
                     }
-                }
+              }
             }
-        }
-    }
+      }
 }
-
 
 @Composable
 private fun PublicationsGrid(
@@ -384,49 +364,43 @@ private fun PublicationsGrid(
     onPublicationClick: (Publication) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedPublication by remember { mutableStateOf<Publication?>(null) }
+  var selectedPublication by remember { mutableStateOf<Publication?>(null) }
 
-    if (publications.isEmpty()) {
-        Box(
-            modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No publications yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("empty_publications_text")
-            )
+  if (publications.isEmpty()) {
+    Box(
+        modifier = Modifier.testTag("empty_publications_container").fillMaxSize(),
+        contentAlignment = Alignment.Center) {
+          Text(
+              text = "No publications yet",
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              modifier = Modifier.testTag("empty_publications_text"))
         }
-    } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(1.dp),
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-            items(publications) { publication ->
-                PublicationItem(
-                    publication = publication,
-                    onClick = { selectedPublication = publication },
-                    modifier = Modifier.testTag("publication_item_${publication.id}")
-                )
-            }
-        }
-
-        // Show detail dialog when a publication is selected
-        selectedPublication?.let { publication ->
-            PublicationDetailDialog(
+  } else {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(1.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        verticalArrangement = Arrangement.spacedBy(1.dp)) {
+          items(publications) { publication ->
+            PublicationItem(
                 publication = publication,
-                profileViewModel = profileViewModel,
-                currentUserId = currentUserId,
-                onDismiss = { selectedPublication = null }
-            )
+                onClick = { selectedPublication = publication },
+                modifier = Modifier.testTag("publication_item_${publication.id}"))
+          }
         }
-    }
-}
 
+    // Show detail dialog when a publication is selected
+    selectedPublication?.let { publication ->
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = profileViewModel,
+          currentUserId = currentUserId,
+          onDismiss = { selectedPublication = null })
+    }
+  }
+}
 
 @Composable
 private fun VideoPlayer(videoUrl: String, modifier: Modifier = Modifier) {
