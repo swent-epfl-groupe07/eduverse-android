@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Profile
+import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
 
@@ -34,7 +36,7 @@ const val TAG_PROFILE_USERNAME = "profile_username"
 const val TAG_PROFILE_STATS = "profile_stats"
 
 @Composable
-fun SearchProfileScreen(viewModel: ProfileViewModel, onProfileClick: (String) -> Unit) {
+fun SearchProfileScreen(navigationActions: NavigationActions,viewModel: ProfileViewModel) {
   var searchQuery by remember { mutableStateOf("") }
   val searchState by viewModel.searchState.collectAsState()
 
@@ -73,7 +75,7 @@ fun SearchProfileScreen(viewModel: ProfileViewModel, onProfileClick: (String) ->
               modifier = Modifier.testTag(TAG_PROFILE_LIST),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(items = state.profiles, key = { it.id }) { profile ->
-                  ProfileSearchItem(profile = profile, onClick = { onProfileClick(profile.id) })
+                  ProfileSearchItem(profile = profile, onClick = { navigationActions.navigateToUserProfile(profile.id) })
                 }
               }
         }

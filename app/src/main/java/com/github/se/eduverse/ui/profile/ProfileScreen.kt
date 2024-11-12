@@ -206,7 +206,7 @@ private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PublicationItem(
+fun PublicationItem(
     publication: Publication,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
