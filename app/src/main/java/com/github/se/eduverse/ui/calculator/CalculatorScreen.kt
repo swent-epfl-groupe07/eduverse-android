@@ -47,11 +47,17 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
           listOf("e", "x", "1", "2", "3", "-"),
           listOf("π", "%", "0", ".", "=", "+"))
 
+  val functionButtons =
+      listOf(
+          listOf("exp", "sin", "cos", "tan", "cot"),
+          listOf("ln", "arcsin", "arccos", "arctan", "arccot"),
+          listOf("log", "sinh", "cosh", "tanh", "coth"),
+          listOf("rad", "arsinh", "arcosh", "artanh", "arcoth"))
+
   val buttonsLayout =
       when (selectedMenu) {
         "Basic" -> basicButtons
-        // The other menus to be implemented later
-        else -> basicButtons
+        else -> functionButtons
       }
 
   Scaffold(
@@ -72,7 +78,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
           Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             MenuButton("Basic", selectedMenu == "Basic") { selectedMenu = "Basic" }
-            // The other menu buttons to be implemented later
+            MenuButton("Functions", selectedMenu == "Functions") { selectedMenu = "Functions" }
           }
 
           Spacer(modifier = Modifier.height(16.dp))
@@ -280,6 +286,34 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                                         result = ""
                                       } else {
                                         display += label
+                                      }
+                                    }
+                                    "√",
+                                    "exp",
+                                    "sin",
+                                    "cos",
+                                    "tan",
+                                    "cot",
+                                    "ln",
+                                    "arcsin",
+                                    "arccos",
+                                    "arctan",
+                                    "arccot",
+                                    "log",
+                                    "sinh",
+                                    "cosh",
+                                    "tanh",
+                                    "coth",
+                                    "rad",
+                                    "arsinh",
+                                    "arcosh",
+                                    "artanh",
+                                    "arcoth" -> {
+                                      if (result.isNotEmpty()) {
+                                        display = "$label($result)"
+                                        result = ""
+                                      } else {
+                                        display += "$label("
                                       }
                                     }
                                     else -> {
