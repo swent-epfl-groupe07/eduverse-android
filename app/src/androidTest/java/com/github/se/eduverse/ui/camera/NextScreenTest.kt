@@ -241,11 +241,13 @@ class NextScreenTest {
 
   @Test
   fun openBottomMenuWithFolders() {
-    val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1")
-    val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2")
+    val folder1 =
+        Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1", archived = false)
+    val folder2 =
+        Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
 
-    `when`(folderRepository.getFolders(any(), any(), any())).then {
-      val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+    `when`(folderRepository.getFolders(any(), any(), any(), any())).then {
+      val callback = it.getArgument<(List<Folder>) -> Unit>(2)
       callback(listOf(folder1, folder2))
     }
 

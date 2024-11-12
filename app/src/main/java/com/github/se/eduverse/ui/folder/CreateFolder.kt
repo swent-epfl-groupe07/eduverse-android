@@ -69,7 +69,8 @@ fun CreateFolderScreen(
           ownerID = folderViewModel.auth.currentUser!!.uid,
           files = files.toMutableList(),
           name = name,
-          id = folderViewModel.getNewUid())
+          id = folderViewModel.getNewUid(),
+          archived = false)
 
   Scaffold(
       topBar = {
