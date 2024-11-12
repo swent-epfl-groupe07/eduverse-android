@@ -56,6 +56,7 @@ class GalleryScreenUiTest {
     auth = mock(FirebaseAuth::class.java)
     val user = mock(FirebaseUser::class.java)
     `when`(auth.currentUser).thenReturn(user)
+
     `when`(user.uid).thenReturn("uid")
 
     `when`(
@@ -65,7 +66,7 @@ class GalleryScreenUiTest {
                 org.mockito.kotlin.any(),
                 org.mockito.kotlin.any()))
         .then {
-          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          val callback = it.getArgument<(List<Folder>) -> Unit>(2)
           callback(listOf(folder1, folder2))
         }
     folderViewModel = FolderViewModel(folderRepository, auth)
