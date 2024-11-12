@@ -158,19 +158,20 @@ class ProfileScreenTest {
         Profile(
             id = "test",
             username = "TestUser",
-            publications = listOf(Publication(id = "pub1", title = "Test Publication")),
-            favoritePublications = listOf(Publication(id = "fav1", title = "Favorite Publication")))
-    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+            publications = listOf(Publication(id = "pub1", title = "Test Publication")))
+    val likedPublications =
+        listOf(Publication(id = "fav1", title = "Favorite Publication", userId = "testUser"))
+
+    fakeViewModel.setProfileState(ProfileUiState.Success(testProfile))
+    fakeViewModel.setLikedPublications(likedPublications)
 
     composeTestRule.setContent {
       ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    // Check Publications tab
     composeTestRule.onNodeWithTag("publications_tab").performClick()
     composeTestRule.onNodeWithTag("publication_item_pub1").assertExists()
 
-    // Switch to Favorites tab
     composeTestRule.onNodeWithTag("favorites_tab").performClick()
     composeTestRule.onNodeWithTag("publication_item_fav1").assertExists()
   }
@@ -345,25 +346,22 @@ class ProfileScreenTest {
 
   @Test
   fun whenSwitchingTabs_maintainsCorrectPublications() {
-    val publication = Publication(id = "pub1", title = "Regular Publication")
-    val favorite = Publication(id = "fav1", title = "Favorite Publication")
+    val publication = Publication(id = "pub1", title = "Regular Publication", userId = "testUser")
+    val likedPublication =
+        Publication(id = "fav1", title = "Favorite Publication", userId = "testUser")
+
     val testProfile =
-        Profile(
-            id = "test",
-            username = "TestUser",
-            publications = listOf(publication),
-            favoritePublications = listOf(favorite))
-    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+        Profile(id = "test", username = "TestUser", publications = listOf(publication))
+    fakeViewModel.setProfileState(ProfileUiState.Success(testProfile))
+    fakeViewModel.setLikedPublications(listOf(likedPublication))
 
     composeTestRule.setContent {
       ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    // Check regular publications
     composeTestRule.onNodeWithTag("publication_item_pub1").assertExists()
     composeTestRule.onNodeWithTag("publication_item_fav1").assertDoesNotExist()
 
-    // Switch to favorites
     composeTestRule.onNodeWithTag("favorites_tab").performClick()
     composeTestRule.onNodeWithTag("publication_item_pub1").assertDoesNotExist()
     composeTestRule.onNodeWithTag("publication_item_fav1").assertExists()
