@@ -368,19 +368,33 @@ class ProfileRepositoryImpl(
 
     override suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean) {
         firestore.runTransaction { transaction ->
-            // Update target user's followers count
+            // First do all reads
             val targetUserRef = profilesCollection.document(targetUserId)
-            val targetUserSnapshot = transaction.get(targetUserRef)
-            val currentFollowers = targetUserSnapshot.getLong("followers") ?: 0
-            transaction.update(targetUserRef, "followers",
-                if (isFollowing) currentFollowers + 1 else currentFollowers - 1)
-
-            // Update current user's following count
             val followerRef = profilesCollection.document(followerId)
+
+            // Read both documents first
+            val targetUserSnapshot = transaction.get(targetUserRef)
             val followerSnapshot = transaction.get(followerRef)
+
+            // Get current counts
+            val currentFollowers = targetUserSnapshot.getLong("followers") ?: 0
             val currentFollowing = followerSnapshot.getLong("following") ?: 0
-            transaction.update(followerRef, "following",
-                if (isFollowing) currentFollowing + 1 else currentFollowing - 1)
+
+            // Then do all writes
+            transaction.update(
+                targetUserRef,
+                "followers",
+                if (isFollowing) currentFollowers + 1 else currentFollowers - 1
+            )
+
+            transaction.update(
+                followerRef,
+                "following",
+                if (isFollowing) currentFollowing + 1 else currentFollowing - 1
+            )
+
+            // Return a dummy value since we don't need to return anything
+            null
         }.await()
     }
 

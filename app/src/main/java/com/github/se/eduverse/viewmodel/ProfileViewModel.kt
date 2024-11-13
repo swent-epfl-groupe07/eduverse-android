@@ -100,7 +100,13 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       } catch (e: Exception) {
         // Revert the optimistic update if there's an error
         loadProfile(targetUserId)
-        _followActionState.value = FollowActionState.Error(e.message ?: "Failed to update follow status")
+        _followActionState.value = FollowActionState.Error(
+          when {
+            e.message?.contains("Firestore transactions require all reads") == true ->
+              "Failed to update follow status"
+            else -> e.message ?: "Failed to update follow status"
+          }
+        )
         _error.value = "Failed to update follow status: ${e.message}"
       }
     }
