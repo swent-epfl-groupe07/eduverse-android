@@ -26,7 +26,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
-import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
@@ -119,8 +118,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       ProfileRepositoryImpl(
           firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
-  val folderRepo = FolderRepositoryImpl(db = firestore)
-  val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
@@ -211,7 +209,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         GalleryScreen(
-            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
+            ownerId = ownerId,
+            photoViewModel = photoViewModel,
+            videoViewModel,
+            folderViewModel,
+            navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }

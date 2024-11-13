@@ -1,6 +1,8 @@
 package com.github.se.eduverse.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.AbstractSavedStateViewModelFactory
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.github.se.eduverse.model.FilterTypes
@@ -15,15 +17,23 @@ import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) : ViewModel() {
+open class FolderViewModel(
+    val repository: FolderRepository,
+    val auth: FirebaseAuth,
+    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
+) : ViewModel() {
 
   companion object {
     val Factory: ViewModelProvider.Factory =
-        object : ViewModelProvider.Factory {
+        object : AbstractSavedStateViewModelFactory() {
           @Suppress("UNCHECKED_CAST")
-          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+          override fun <T : ViewModel> create(
+              key: String,
+              modelClass: Class<T>,
+              handle: SavedStateHandle
+          ): T {
             return FolderViewModel(
-                FolderRepositoryImpl(Firebase.firestore), FirebaseAuth.getInstance())
+                FolderRepositoryImpl(Firebase.firestore), FirebaseAuth.getInstance(), handle)
                 as T
           }
         }
@@ -31,9 +41,10 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
 
   private var _folders: MutableStateFlow<MutableList<Folder>> =
       MutableStateFlow(emptyList<Folder>().toMutableList())
-  val folders: StateFlow<MutableList<Folder>> = _folders
+  open val folders: StateFlow<MutableList<Folder>> = _folders
 
-  private var _activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
+  private var _activeFolder: MutableStateFlow<Folder?> =
+      MutableStateFlow(savedStateHandle["activeFolder"])
   val activeFolder: StateFlow<Folder?> = _activeFolder
 
   init {
@@ -51,6 +62,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    */
   fun selectFolder(folder: Folder?) {
     _activeFolder.value = folder
+    savedStateHandle["activeFolder"] = folder
   }
 
   /**
@@ -96,7 +108,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    *
    * @param folder the folder to add
    */
-  fun addFolder(folder: Folder) {
+  open fun addFolder(folder: Folder) {
     repository.addFolder(
         folder,
         { _folders.value.add(folder) },
@@ -125,7 +137,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    *
    * @param folder the folder to update
    */
-  fun updateFolder(folder: Folder) {
+  open fun updateFolder(folder: Folder) {
     try {
       repository.updateFolder(
           folder,
@@ -218,7 +230,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    * @param name the name of the file to add
    * @param folder the folder in which to add
    */
-  fun createFileInFolder(fileId: String, name: String, folder: Folder) {
+  open fun createFileInFolder(fileId: String, name: String, folder: Folder) {
     val newFile =
         MyFile(
             id = "",

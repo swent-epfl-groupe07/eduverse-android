@@ -12,7 +12,9 @@ plugins {
     alias(libs.plugins.gms)
     alias(libs.plugins.sonar)
     kotlin("kapt")
-    alias(libs.plugins.hilt)}
+    alias(libs.plugins.hilt)
+    id("kotlin-parcelize")}
+
 
 val hiltVersion = "2.48"
 
@@ -147,6 +149,7 @@ sonar {
 
 
 dependencies {
+    implementation("androidx.media:media:1.6.0")
 
 
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
