@@ -11,6 +11,7 @@ import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.fail
@@ -808,6 +809,7 @@ class ProfileRepositoryImplTest {
   @After
   fun tearDown() {
     Dispatchers.resetMain() // Reset main dispatcher after the test
+    unmockkAll()
   }
 }
 
