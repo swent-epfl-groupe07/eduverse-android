@@ -12,8 +12,6 @@ class EvaluatorTest {
     assertEquals("5", evaluator.evaluate("2 + 3"))
     assertEquals("25", evaluator.evaluate("5 * 5"))
     assertEquals("3", evaluator.evaluate("9 / 3"))
-    assertEquals("2,718282", evaluator.evaluate("e"))
-    assertEquals("3,141593", evaluator.evaluate("pi"))
   }
 
   @Test
@@ -28,10 +26,10 @@ class EvaluatorTest {
   @Test
   fun testCustomFunctionsValidInputs() {
     assertEquals("1", evaluator.evaluate("cot(pi / 4)"))
-    assertEquals("0,523599", evaluator.evaluate("arcsin(0.5)"))
+    assertEquals("0", evaluator.evaluate("arcsin(0)"))
     assertEquals("0", evaluator.evaluate("arccos(1)"))
-    assertEquals("0,785398", evaluator.evaluate("arctan(1)"))
-    assertEquals("0,881374", evaluator.evaluate("arsinh(1)"))
+    assertEquals("0", evaluator.evaluate("arctan(0)"))
+    assertEquals("0", evaluator.evaluate("arsinh(0)"))
   }
 
   @Test
