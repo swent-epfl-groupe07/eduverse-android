@@ -4,7 +4,6 @@ import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.google.android.gms.tasks.Tasks
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
@@ -21,8 +20,8 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.whenever
 
 private class TestProfileRepositoryForGetProfile(
-  firestore: FirebaseFirestore,
-  storage: FirebaseStorage
+    firestore: FirebaseFirestore,
+    storage: FirebaseStorage
 ) : ProfileRepositoryImpl(firestore, storage) {
   override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean = true
 }
@@ -49,8 +48,9 @@ class GetProfileTests {
   fun setUp() {
     // Mock FirebaseAuth singleton
     Mockito.mockStatic(FirebaseAuth::class.java).use { mockedFirebaseAuth ->
-      mockedFirebaseAuth.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
-        .thenReturn(mockFirebaseAuth)
+      mockedFirebaseAuth
+          .`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
+          .thenReturn(mockFirebaseAuth)
 
       // Mock current user
       whenever(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
@@ -70,31 +70,32 @@ class GetProfileTests {
   @Test
   fun `getProfile returns complete profile with publications and favorites`() = runTest {
     Mockito.mockStatic(FirebaseAuth::class.java).use { mockedFirebaseAuth ->
-      mockedFirebaseAuth.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
-        .thenReturn(mockFirebaseAuth)
+      mockedFirebaseAuth
+          .`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
+          .thenReturn(mockFirebaseAuth)
 
       // Given
-      val testProfile = Profile(
-        id = testUserId,
-        username = "testUser",
-        profileImageUrl = "test.jpg",
-        followers = 0,
-        following = 0,
-        publications = emptyList(),
-        favoritePublications = emptyList()
-      )
+      val testProfile =
+          Profile(
+              id = testUserId,
+              username = "testUser",
+              profileImageUrl = "test.jpg",
+              followers = 0,
+              following = 0,
+              publications = emptyList(),
+              favoritePublications = emptyList())
 
-      val testPublication = Publication(
-        id = "pub1",
-        userId = testUserId,
-        title = "Test Publication",
-        thumbnailUrl = "thumbnail.jpg",
-        mediaUrl = "media.jpg",
-        mediaType = MediaType.PHOTO,
-        timestamp = testTimestamp,
-        likes = 10,
-        likedBy = listOf(currentUserId)
-      )
+      val testPublication =
+          Publication(
+              id = "pub1",
+              userId = testUserId,
+              title = "Test Publication",
+              thumbnailUrl = "thumbnail.jpg",
+              mediaUrl = "media.jpg",
+              mediaType = MediaType.PHOTO,
+              timestamp = testTimestamp,
+              likes = 10,
+              likedBy = listOf(currentUserId))
 
       // Mock Profile document chain
       val mockProfileDoc: DocumentReference = mock()
@@ -107,7 +108,9 @@ class GetProfileTests {
       val mockPublicationsQuery: Query = mock()
       val mockPublicationsSnapshot: QuerySnapshot = mock()
       val mockPublicationDoc: DocumentSnapshot = mock()
-      doReturn(mockPublicationsQuery).`when`(mockPublicationsCollection).whereEqualTo("userId", testUserId)
+      doReturn(mockPublicationsQuery)
+          .`when`(mockPublicationsCollection)
+          .whereEqualTo("userId", testUserId)
       doReturn(Tasks.forResult(mockPublicationsSnapshot)).`when`(mockPublicationsQuery).get()
       doReturn(listOf(mockPublicationDoc)).`when`(mockPublicationsSnapshot).documents
       doReturn(testPublication).`when`(mockPublicationDoc).toObject(Publication::class.java)
@@ -118,18 +121,24 @@ class GetProfileTests {
       val mockFollowersSnapshot: QuerySnapshot = mock()
       val mockFollowingSnapshot: QuerySnapshot = mock()
 
-      doReturn(mockFollowersQuery).`when`(mockFollowersCollection).whereEqualTo("followedId", testUserId)
+      doReturn(mockFollowersQuery)
+          .`when`(mockFollowersCollection)
+          .whereEqualTo("followedId", testUserId)
       doReturn(Tasks.forResult(mockFollowersSnapshot)).`when`(mockFollowersQuery).get()
       doReturn(5).`when`(mockFollowersSnapshot).size()
 
-      doReturn(mockFollowingQuery).`when`(mockFollowersCollection).whereEqualTo("followerId", testUserId)
+      doReturn(mockFollowingQuery)
+          .`when`(mockFollowersCollection)
+          .whereEqualTo("followerId", testUserId)
       doReturn(Tasks.forResult(mockFollowingSnapshot)).`when`(mockFollowingQuery).get()
       doReturn(3).`when`(mockFollowingSnapshot).size()
 
       // Mock empty favorites
       val mockFavoritesQuery: Query = mock()
       val mockFavoritesSnapshot: QuerySnapshot = mock()
-      doReturn(mockFavoritesQuery).`when`(mockFavoritesCollection).whereEqualTo("userId", testUserId)
+      doReturn(mockFavoritesQuery)
+          .`when`(mockFavoritesCollection)
+          .whereEqualTo("userId", testUserId)
       doReturn(Tasks.forResult(mockFavoritesSnapshot)).`when`(mockFavoritesQuery).get()
       doReturn(emptyList<DocumentSnapshot>()).`when`(mockFavoritesSnapshot).documents
 
@@ -163,8 +172,9 @@ class GetProfileTests {
   @Test
   fun `getProfile returns null when profile doesn't exist`() = runTest {
     Mockito.mockStatic(FirebaseAuth::class.java).use { mockedFirebaseAuth ->
-      mockedFirebaseAuth.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
-        .thenReturn(mockFirebaseAuth)
+      mockedFirebaseAuth
+          .`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
+          .thenReturn(mockFirebaseAuth)
 
       // Given
       val mockProfileDoc: DocumentReference = mock()
@@ -176,28 +186,36 @@ class GetProfileTests {
       // Mock Publications query
       val mockPublicationsQuery: Query = mock()
       val mockPublicationsSnapshot: QuerySnapshot = mock()
-      doReturn(mockPublicationsQuery).`when`(mockPublicationsCollection).whereEqualTo("userId", testUserId)
+      doReturn(mockPublicationsQuery)
+          .`when`(mockPublicationsCollection)
+          .whereEqualTo("userId", testUserId)
       doReturn(Tasks.forResult(mockPublicationsSnapshot)).`when`(mockPublicationsQuery).get()
       doReturn(emptyList<DocumentSnapshot>()).`when`(mockPublicationsSnapshot).documents
 
       // Mock Favorites query
       val mockFavoritesQuery: Query = mock()
       val mockFavoritesSnapshot: QuerySnapshot = mock()
-      doReturn(mockFavoritesQuery).`when`(mockFavoritesCollection).whereEqualTo("userId", testUserId)
+      doReturn(mockFavoritesQuery)
+          .`when`(mockFavoritesCollection)
+          .whereEqualTo("userId", testUserId)
       doReturn(Tasks.forResult(mockFavoritesSnapshot)).`when`(mockFavoritesQuery).get()
       doReturn(emptyList<DocumentSnapshot>()).`when`(mockFavoritesSnapshot).documents
 
       // Mock Followers query
       val mockFollowersQuery: Query = mock()
       val mockFollowersSnapshot: QuerySnapshot = mock()
-      doReturn(mockFollowersQuery).`when`(mockFollowersCollection).whereEqualTo("followedId", testUserId)
+      doReturn(mockFollowersQuery)
+          .`when`(mockFollowersCollection)
+          .whereEqualTo("followedId", testUserId)
       doReturn(Tasks.forResult(mockFollowersSnapshot)).`when`(mockFollowersQuery).get()
       doReturn(0).`when`(mockFollowersSnapshot).size()
 
       // Mock Following query
       val mockFollowingQuery: Query = mock()
       val mockFollowingSnapshot: QuerySnapshot = mock()
-      doReturn(mockFollowingQuery).`when`(mockFollowersCollection).whereEqualTo("followerId", testUserId)
+      doReturn(mockFollowingQuery)
+          .`when`(mockFollowersCollection)
+          .whereEqualTo("followerId", testUserId)
       doReturn(Tasks.forResult(mockFollowingSnapshot)).`when`(mockFollowingQuery).get()
       doReturn(0).`when`(mockFollowingSnapshot).size()
 

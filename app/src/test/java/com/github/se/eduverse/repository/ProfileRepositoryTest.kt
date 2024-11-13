@@ -7,18 +7,13 @@ import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.android.gms.tasks.Tasks
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertNotNull
-import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -811,8 +806,6 @@ class ProfileRepositoryImplTest {
       assertEquals("Firestore error", e.message)
     }
   }
-
-
 
   @Test
   fun `getProfile handles errors gracefully`() = runTest {
