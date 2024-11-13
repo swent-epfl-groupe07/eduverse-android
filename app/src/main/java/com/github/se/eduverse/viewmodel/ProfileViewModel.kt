@@ -82,13 +82,13 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         val currentState = _profileState.value
         if (currentState is ProfileUiState.Success) {
           // Update UI optimistically
-          val updatedProfile = currentState.profile.copy(
-            isFollowedByCurrentUser = !currentState.profile.isFollowedByCurrentUser,
-            followers = if (currentState.profile.isFollowedByCurrentUser)
-              currentState.profile.followers - 1
-            else
-              currentState.profile.followers + 1
-          )
+          val updatedProfile =
+              currentState.profile.copy(
+                  isFollowedByCurrentUser = !currentState.profile.isFollowedByCurrentUser,
+                  followers =
+                      if (currentState.profile.isFollowedByCurrentUser)
+                          currentState.profile.followers - 1
+                      else currentState.profile.followers + 1)
           _profileState.value = ProfileUiState.Success(updatedProfile)
         }
 
@@ -97,30 +97,27 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
 
         // No need to reload entire profile
         _followActionState.value = FollowActionState.Success
-
       } catch (e: Exception) {
         // On error, just update the affected fields instead of reloading entire profile
         when (val state = _profileState.value) {
           is ProfileUiState.Success -> {
-            _profileState.value = ProfileUiState.Success(
-              state.profile.copy(
-                isFollowedByCurrentUser = !state.profile.isFollowedByCurrentUser,
-                followers = if (state.profile.isFollowedByCurrentUser)
-                  state.profile.followers + 1
-                else
-                  state.profile.followers - 1
-              )
-            )
+            _profileState.value =
+                ProfileUiState.Success(
+                    state.profile.copy(
+                        isFollowedByCurrentUser = !state.profile.isFollowedByCurrentUser,
+                        followers =
+                            if (state.profile.isFollowedByCurrentUser) state.profile.followers + 1
+                            else state.profile.followers - 1))
           }
           else -> {} // Handle other states if needed
         }
-        _followActionState.value = FollowActionState.Error(
-          when {
-            e.message?.contains("Firestore transactions require all reads") == true ->
-              "Failed to update follow status"
-            else -> e.message ?: "Failed to update follow status"
-          }
-        )
+        _followActionState.value =
+            FollowActionState.Error(
+                when {
+                  e.message?.contains("Firestore transactions require all reads") == true ->
+                      "Failed to update follow status"
+                  else -> e.message ?: "Failed to update follow status"
+                })
       }
     }
   }
@@ -284,10 +281,12 @@ sealed class UsernameUpdateState {
   data class Error(val message: String) : UsernameUpdateState()
 }
 
-
 sealed class FollowActionState {
   object Idle : FollowActionState()
+
   object Loading : FollowActionState()
+
   object Success : FollowActionState()
+
   data class Error(val message: String) : FollowActionState()
 }

@@ -127,45 +127,43 @@ fun UserProfileScreen(
                       }
 
                   // Follow/Unfollow Button
-                    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-                    if (currentUserId != null && currentUserId != userId) {
-                        Button(
-                            onClick = { viewModel.toggleFollow(currentUserId, userId) },
-                            modifier = Modifier
-                                .fillMaxWidth()
+                  val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+                  if (currentUserId != null && currentUserId != userId) {
+                    Button(
+                        onClick = { viewModel.toggleFollow(currentUserId, userId) },
+                        modifier =
+                            Modifier.fillMaxWidth()
                                 .padding(horizontal = 16.dp)
                                 .testTag("follow_button"),
-                            enabled = followActionState != FollowActionState.Loading
-                        ) {
-                            when (followActionState) {
-                                FollowActionState.Loading -> {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                }
-                                else -> {
-                                    when (uiState) {
-                                        is ProfileUiState.Success -> {
-                                            val profile = (uiState as ProfileUiState.Success).profile
-                                            Text(if (profile.isFollowedByCurrentUser) "Unfollow" else "Follow")
-                                        }
-                                        else -> Text("Follow")
-                                    }
-                                }
+                        enabled = followActionState != FollowActionState.Loading) {
+                          when (followActionState) {
+                            FollowActionState.Loading -> {
+                              CircularProgressIndicator(
+                                  modifier = Modifier.size(24.dp),
+                                  color = MaterialTheme.colorScheme.onPrimary)
                             }
+                            else -> {
+                              when (uiState) {
+                                is ProfileUiState.Success -> {
+                                  val profile = (uiState as ProfileUiState.Success).profile
+                                  Text(
+                                      if (profile.isFollowedByCurrentUser) "Unfollow" else "Follow")
+                                }
+                                else -> Text("Follow")
+                              }
+                            }
+                          }
                         }
 
-                        // Show error if follow action failed
-                        if (followActionState is FollowActionState.Error) {
-                            Text(
-                                text = (followActionState as FollowActionState.Error).message,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
+                    // Show error if follow action failed
+                    if (followActionState is FollowActionState.Error) {
+                      Text(
+                          text = (followActionState as FollowActionState.Error).message,
+                          color = MaterialTheme.colorScheme.error,
+                          style = MaterialTheme.typography.bodySmall,
+                          modifier = Modifier.padding(horizontal = 16.dp))
                     }
+                  }
                 }
                 else -> {}
               }

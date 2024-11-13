@@ -49,9 +49,10 @@ interface ProfileRepository {
   suspend fun getUserLikedPublicationsIds(userId: String): List<String>
 
   suspend fun isFollowing(followerId: String, targetUserId: String): Boolean
-  suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean
-  suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
 
+  suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean
+
+  suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
 }
 
 class ProfileRepositoryImpl(
@@ -91,61 +92,44 @@ class ProfileRepositoryImpl(
     }
   }
 
-    override suspend fun getProfile(userId: String): Profile? {
-        val profileDoc = profilesCollection.document(userId).get().await()
-        val profile = profileDoc.toObject(Profile::class.java)
+  override suspend fun getProfile(userId: String): Profile? {
+    val profileDoc = profilesCollection.document(userId).get().await()
+    val profile = profileDoc.toObject(Profile::class.java)
 
-        // Get current user ID
-        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    // Get current user ID
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
 
-        // Get publications
-        val publications = publicationsCollection
-            .whereEqualTo("userId", userId)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { it.toObject(Publication::class.java) }
+    // Get publications
+    val publications =
+        publicationsCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
+          it.toObject(Publication::class.java)
+        }
 
-        // Get favorites
-        val favorites = favoritesCollection
-            .whereEqualTo("userId", userId)
-            .get()
-            .await()
-            .documents
-            .mapNotNull {
-                publicationsCollection
-                    .document(it.getString("publicationId") ?: "")
-                    .get()
-                    .await()
-                    .toObject(Publication::class.java)
-            }
+    // Get favorites
+    val favorites =
+        favoritesCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
+          publicationsCollection
+              .document(it.getString("publicationId") ?: "")
+              .get()
+              .await()
+              .toObject(Publication::class.java)
+        }
 
-        // Get followers/following count
-        val followersCount = followersCollection
-            .whereEqualTo("followedId", userId)
-            .get()
-            .await()
-            .size()
+    // Get followers/following count
+    val followersCount = followersCollection.whereEqualTo("followedId", userId).get().await().size()
 
-        val followingCount = followersCollection
-            .whereEqualTo("followerId", userId)
-            .get()
-            .await()
-            .size()
+    val followingCount = followersCollection.whereEqualTo("followerId", userId).get().await().size()
 
-        // Check if the current user is following this profile
-        val isFollowedByCurrentUser = currentUserId?.let {
-            isFollowing(it, userId)
-        } ?: false
+    // Check if the current user is following this profile
+    val isFollowedByCurrentUser = currentUserId?.let { isFollowing(it, userId) } ?: false
 
-        return profile?.copy(
-            publications = publications,
-            favoritePublications = favorites,
-            followers = followersCount,
-            following = followingCount,
-            isFollowedByCurrentUser = isFollowedByCurrentUser
-        )
-    }
+    return profile?.copy(
+        publications = publications,
+        favoritePublications = favorites,
+        followers = followersCount,
+        following = followingCount,
+        isFollowedByCurrentUser = isFollowedByCurrentUser)
+  }
 
   override suspend fun updateProfile(userId: String, profile: Profile) {
     profilesCollection.document(userId).set(profile).await()
@@ -339,63 +323,66 @@ class ProfileRepositoryImpl(
     }
   }
 
-    override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean {
-        return followersCollection
-            .whereEqualTo("followerId", followerId)
-            .whereEqualTo("followedId", targetUserId)
-            .get()
-            .await()
-            .documents
-            .isNotEmpty()
+  override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean {
+    return followersCollection
+        .whereEqualTo("followerId", followerId)
+        .whereEqualTo("followedId", targetUserId)
+        .get()
+        .await()
+        .documents
+        .isNotEmpty()
+  }
+
+  override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
+    val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
+
+    if (isCurrentlyFollowing) {
+      // Unfollow
+      unfollowUser(followerId, targetUserId)
+    } else {
+      // Follow
+      followUser(followerId, targetUserId)
     }
 
-    override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
-        val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
+    // Update the follower counts for both users
+    updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
 
-        if (isCurrentlyFollowing) {
-            // Unfollow
-            unfollowUser(followerId, targetUserId)
-        } else {
-            // Follow
-            followUser(followerId, targetUserId)
+    return !isCurrentlyFollowing
+  }
+
+  override suspend fun updateFollowCounts(
+      followerId: String,
+      targetUserId: String,
+      isFollowing: Boolean
+  ) {
+    firestore
+        .runTransaction { transaction ->
+          // First do all reads
+          val targetUserRef = profilesCollection.document(targetUserId)
+          val followerRef = profilesCollection.document(followerId)
+
+          // Read both documents first
+          val targetUserSnapshot = transaction.get(targetUserRef)
+          val followerSnapshot = transaction.get(followerRef)
+
+          // Get current counts
+          val currentFollowers = targetUserSnapshot.getLong("followers") ?: 0
+          val currentFollowing = followerSnapshot.getLong("following") ?: 0
+
+          // Then do all writes
+          transaction.update(
+              targetUserRef,
+              "followers",
+              if (isFollowing) currentFollowers + 1 else currentFollowers - 1)
+
+          transaction.update(
+              followerRef,
+              "following",
+              if (isFollowing) currentFollowing + 1 else currentFollowing - 1)
+
+          // Return a dummy value since we don't need to return anything
+          null
         }
-
-        // Update the follower counts for both users
-        updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
-
-        return !isCurrentlyFollowing
-    }
-
-    override suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean) {
-        firestore.runTransaction { transaction ->
-            // First do all reads
-            val targetUserRef = profilesCollection.document(targetUserId)
-            val followerRef = profilesCollection.document(followerId)
-
-            // Read both documents first
-            val targetUserSnapshot = transaction.get(targetUserRef)
-            val followerSnapshot = transaction.get(followerRef)
-
-            // Get current counts
-            val currentFollowers = targetUserSnapshot.getLong("followers") ?: 0
-            val currentFollowing = followerSnapshot.getLong("following") ?: 0
-
-            // Then do all writes
-            transaction.update(
-                targetUserRef,
-                "followers",
-                if (isFollowing) currentFollowers + 1 else currentFollowers - 1
-            )
-
-            transaction.update(
-                followerRef,
-                "following",
-                if (isFollowing) currentFollowing + 1 else currentFollowing - 1
-            )
-
-            // Return a dummy value since we don't need to return anything
-            null
-        }.await()
-    }
-
+        .await()
+  }
 }
