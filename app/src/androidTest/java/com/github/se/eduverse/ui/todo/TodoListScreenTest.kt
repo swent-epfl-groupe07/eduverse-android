@@ -31,10 +31,11 @@ class TodoListScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  private var todos =
+  private val sampleTodos =
       listOf(
           Todo("2", "Second ToDo", 60, TodoStatus.ACTUAL, "3"),
           Todo("1", "First ToDo", 60, TodoStatus.DONE, "3"))
+  private var todos = sampleTodos
 
   @Before
   fun setUp() {
@@ -54,6 +55,11 @@ class TodoListScreenTest {
 
     `when`(mockRepository.addNewTodo(any(), any(), any())).then {
       todos += it.getArgument<Todo>(0)
+      it.getArgument<() -> Unit>(1)()
+    }
+    `when`(mockRepository.deleteTodoById(any(), any(), any())).then {
+      val todoToDeleteId = it.getArgument<String>(0)
+      todos = todos.filter { todo -> todo.uid != todoToDeleteId }
       it.getArgument<() -> Unit>(1)()
     }
     composeTestRule.setContent {
@@ -137,6 +143,7 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoItem_uid").assertIsDisplayed()
     composeTestRule.onNodeWithTag("todoDoneButton_uid").assertIsDisplayed()
     composeTestRule.onNodeWithTag("todoOptionsButton_uid").assertIsDisplayed()
+    todos = sampleTodos
   }
 
   @Test
@@ -152,6 +159,7 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoItem_2").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("completedTasksButton").performClick()
     composeTestRule.onNodeWithTag("todoItem_2").assertIsDisplayed()
+    todos = sampleTodos
   }
 
   @Test
@@ -171,6 +179,7 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("currentTasksButton").performClick()
     composeTestRule.onNodeWithTag("todoItem_1").assertIsDisplayed()
+    todos = sampleTodos
   }
 
   @Test
@@ -196,5 +205,26 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
     composeTestRule.onNodeWithTag("renameTodoButton_1").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("deleteTodoButton_1").assertIsNotDisplayed()
+  }
+
+  @Test
+  fun deleteTodoButtonClickResultsInCorrectBehaviour_onActualTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("deleteTodoButton_2").performClick()
+    composeTestRule.onNodeWithTag("todoItem_2").assertIsNotDisplayed()
+    todos = sampleTodos
+  }
+
+  @Test
+  fun deleteTodoButtonClickResultsInCorrectBehaviour_onDoneTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getDoneTodos()
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("deleteTodoButton_1").performClick()
+    composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
+    todos = sampleTodos
   }
 }
