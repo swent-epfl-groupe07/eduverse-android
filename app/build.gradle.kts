@@ -12,7 +12,9 @@ plugins {
     alias(libs.plugins.gms)
     alias(libs.plugins.sonar)
     kotlin("kapt")
-    alias(libs.plugins.hilt)}
+    alias(libs.plugins.hilt)
+    id("kotlin-parcelize")}
+
 
 val hiltVersion = "2.48"
 
