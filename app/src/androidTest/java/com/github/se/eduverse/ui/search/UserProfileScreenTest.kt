@@ -8,6 +8,7 @@ import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import io.mockk.unmockkAll
@@ -42,12 +43,21 @@ class UserProfileScreenTest {
     private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
     override val likedPublications: StateFlow<List<Publication>> = _likedPublications.asStateFlow()
 
+    // Add these lines
+    private val _followActionState = MutableStateFlow<FollowActionState>(FollowActionState.Idle)
+    override val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
+
     fun setState(state: ProfileUiState) {
       _profileState.value = state
     }
 
     fun setLikedPublications(publications: List<Publication>) {
       _likedPublications.value = publications
+    }
+
+    // Add this function
+    fun setFollowActionState(state: FollowActionState) {
+      _followActionState.value = state
     }
   }
 
@@ -241,6 +251,79 @@ class UserProfileScreenTest {
     composeTestRule.onNodeWithTag("favorites_tab").performClick()
     composeTestRule.onNodeWithTag("publication_item_pub1").assertDoesNotExist()
     composeTestRule.onNodeWithTag("publication_item_fav1").assertExists()
+  }
+
+  @Test
+  fun verifyFollowButtonStates() {
+    val testProfile =
+        Profile(id = "other_user_id", username = "TestUser", isFollowedByCurrentUser = false)
+
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+    fakeViewModel.setFollowActionState(FollowActionState.Idle)
+
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = "other_user_id", // Profile we're viewing
+          currentUserId = "current_user_id" // Logged in user
+          )
+    }
+
+    // Debug prints to help identify the issue
+    println("Profile ID: other_user_id")
+    println("Current User ID: current_user_id")
+
+    composeTestRule
+        .onNodeWithTag("follow_button")
+        .assertExists()
+        .assertTextContains("Follow")
+        .assertIsEnabled()
+
+    fakeViewModel.setFollowActionState(FollowActionState.Loading)
+    composeTestRule.onNodeWithTag("follow_button").assertExists().assertIsNotEnabled()
+
+    fakeViewModel.setFollowActionState(FollowActionState.Error("Follow failed"))
+    composeTestRule.onNodeWithText("Follow failed").assertExists()
+
+    val updatedProfile = testProfile.copy(isFollowedByCurrentUser = true)
+    fakeViewModel.setState(ProfileUiState.Success(updatedProfile))
+    fakeViewModel.setFollowActionState(FollowActionState.Success)
+    composeTestRule.onNodeWithTag("follow_button").assertExists().assertTextContains("Unfollow")
+  }
+
+  @Test
+  fun whenFollowButtonClicked_showsLoadingAndUpdatesState() {
+    val testProfile =
+        Profile(id = "other_user_id", username = "TestUser", isFollowedByCurrentUser = false)
+
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+    fakeViewModel.setFollowActionState(FollowActionState.Idle)
+
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = "other_user_id", // Profile we're viewing
+          currentUserId = "current_user_id" // Logged in user
+          )
+    }
+
+    // Debug prints to help identify the issue
+    println("Profile ID: other_user_id")
+    println("Current User ID: current_user_id")
+
+    composeTestRule
+        .onNodeWithTag("follow_button")
+        .assertExists()
+        .assertTextContains("Follow")
+        .performClick()
+
+    fakeViewModel.setFollowActionState(FollowActionState.Loading)
+    composeTestRule.onNodeWithTag("follow_button").assertExists().assertIsNotEnabled()
+
+    fakeViewModel.setFollowActionState(FollowActionState.Error("Failed to follow"))
+    composeTestRule.onNodeWithText("Failed to follow").assertExists()
   }
 
   @After

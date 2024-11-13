@@ -58,7 +58,9 @@ import com.google.firebase.auth.FirebaseAuth
 fun UserProfileScreen(
     navigationActions: NavigationActions,
     viewModel: ProfileViewModel,
-    userId: String
+    userId: String,
+    currentUserId: String? =
+        FirebaseAuth.getInstance().currentUser?.uid // Default for production code
 ) {
   var selectedTab by remember { mutableStateOf(0) }
   val uiState by viewModel.profileState.collectAsState()
@@ -127,7 +129,6 @@ fun UserProfileScreen(
                       }
 
                   // Follow/Unfollow Button
-                  val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
                   if (currentUserId != null && currentUserId != userId) {
                     Button(
                         onClick = { viewModel.toggleFollow(currentUserId, userId) },
@@ -209,7 +210,7 @@ fun UserProfileScreen(
 
                   PublicationsGrid(
                       publications = publications,
-                      currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                      currentUserId = currentUserId ?: "",
                       profileViewModel = viewModel,
                       onPublicationClick = { /* Handle publication click */},
                       modifier = Modifier.testTag("publications_grid"))

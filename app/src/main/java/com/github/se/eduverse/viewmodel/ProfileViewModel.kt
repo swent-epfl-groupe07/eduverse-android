@@ -27,7 +27,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
   open val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
   private val _followActionState = MutableStateFlow<FollowActionState>(FollowActionState.Idle)
-  val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
+  open val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
 
   private var searchJob: Job? = null
 
