@@ -1,5 +1,9 @@
 package com.github.se.eduverse.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Folder(
     val ownerID: String,
     var files: MutableList<MyFile>,
@@ -7,7 +11,7 @@ data class Folder(
     val id: String,
     var filterType: FilterTypes = FilterTypes.CREATION_UP,
     var archived: Boolean
-)
+) : Parcelable
 
 enum class FilterTypes {
   NAME,
