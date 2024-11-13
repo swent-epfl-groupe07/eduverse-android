@@ -183,15 +183,51 @@ class ProfileRepositoryImpl(
     profilesCollection.document(userId).update("profileImageUrl", imageUrl).await()
   }
 
-  override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
-    return profilesCollection
-        .get()
-        .await()
-        .documents
-        .mapNotNull { it.toObject(Profile::class.java) }
-        .filter { profile -> profile.username.lowercase().contains(query.lowercase()) }
-        .take(limit)
-  }
+    override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
+        return try {
+            profilesCollection
+                .get()
+                .await()
+                .documents
+                .mapNotNull { doc ->
+                    val profile = doc.toObject(Profile::class.java)
+                    profile?.let {
+                        // Get real-time follower and following counts for each profile
+                        val followersCount = followersCollection
+                            .whereEqualTo("followedId", it.id)
+                            .get()
+                            .await()
+                            .size()
+
+                        val followingCount = followersCollection
+                            .whereEqualTo("followerId", it.id)
+                            .get()
+                            .await()
+                            .size()
+
+                        // Get current user's follow status if logged in
+                        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+                        val isFollowedByCurrentUser = currentUserId?.let { uid ->
+                            isFollowing(uid, it.id)
+                        } ?: false
+
+                        // Return profile with updated counts
+                        it.copy(
+                            followers = followersCount,
+                            following = followingCount,
+                            isFollowedByCurrentUser = isFollowedByCurrentUser
+                        )
+                    }
+                }
+                .filter { profile ->
+                    profile.username.lowercase().contains(query.lowercase())
+                }
+                .take(limit)
+        } catch (e: Exception) {
+            Log.e("SEARCH_PROFILES", "Failed to search profiles: ${e.message}")
+            emptyList()
+        }
+    }
 
   override suspend fun createProfile(
       userId: String,
