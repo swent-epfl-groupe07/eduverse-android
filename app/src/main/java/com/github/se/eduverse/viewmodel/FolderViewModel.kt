@@ -15,7 +15,7 @@ import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) : ViewModel() {
+open class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) : ViewModel() {
 
   companion object {
     val Factory: ViewModelProvider.Factory =
@@ -31,7 +31,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
 
   private var _folders: MutableStateFlow<MutableList<Folder>> =
       MutableStateFlow(emptyList<Folder>().toMutableList())
-  val folders: StateFlow<MutableList<Folder>> = _folders
+  open val folders: StateFlow<MutableList<Folder>> = _folders
 
   private var _activeFolder: MutableStateFlow<Folder?> = MutableStateFlow(null)
   val activeFolder: StateFlow<Folder?> = _activeFolder
@@ -96,7 +96,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    *
    * @param folder the folder to add
    */
-  fun addFolder(folder: Folder) {
+  open fun addFolder(folder: Folder) {
     repository.addFolder(
         folder,
         { _folders.value.add(folder) },
@@ -125,7 +125,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    *
    * @param folder the folder to update
    */
-  fun updateFolder(folder: Folder) {
+  open fun updateFolder(folder: Folder) {
     try {
       repository.updateFolder(
           folder,
@@ -218,7 +218,7 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    * @param name the name of the file to add
    * @param folder the folder in which to add
    */
-  fun createFileInFolder(fileId: String, name: String, folder: Folder) {
+  open fun createFileInFolder(fileId: String, name: String, folder: Folder) {
     val newFile =
         MyFile(
             id = "",
