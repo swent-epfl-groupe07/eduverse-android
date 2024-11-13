@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.calculator
 
+import kotlin.math.PI
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -48,5 +49,54 @@ class EvaluatorTest {
     assertEquals("Undefined", evaluator.evaluate("2 + "))
     assertEquals("NaN", evaluator.evaluate("sqrt(-1)"))
     assertEquals("Undefined", evaluator.evaluate("arcsin(abc)"))
+  }
+
+  @Test
+  fun testInvalidCot() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "cot" }!!.apply(PI)
+    }
+  }
+
+  @Test
+  fun testInvalidArcsin() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "arcsin" }!!.apply(2.0)
+    }
+  }
+
+  @Test
+  fun testInvalidArccos() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "arccos" }!!.apply(2.0)
+    }
+  }
+
+  @Test
+  fun testInvalidCoth() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "coth" }!!.apply(0.0)
+    }
+  }
+
+  @Test
+  fun testInvalidArcosh() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "arcosh" }!!.apply(0.5)
+    }
+  }
+
+  @Test
+  fun testInvalidArtanh() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "artanh" }!!.apply(1.5)
+    }
+  }
+
+  @Test
+  fun testInvalidArcoth() {
+    assertThrows(IllegalArgumentException::class.java) {
+      evaluator.customFunctions.find { it.name == "arcoth" }!!.apply(0.5)
+    }
   }
 }
