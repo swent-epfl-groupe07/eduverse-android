@@ -55,7 +55,7 @@ interface ProfileRepository {
   suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
 }
 
-class ProfileRepositoryImpl(
+open class ProfileRepositoryImpl(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) : ProfileRepository {
