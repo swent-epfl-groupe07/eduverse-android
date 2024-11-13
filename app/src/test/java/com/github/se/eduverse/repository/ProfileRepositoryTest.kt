@@ -7,13 +7,18 @@ import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.android.gms.tasks.TaskCompletionSource
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,6 +45,7 @@ class ProfileRepositoryImplTest {
   private val mockStorageRef: StorageReference = mock(StorageReference::class.java)
   private val mockQuerySnapshot: QuerySnapshot = mock(QuerySnapshot::class.java)
   private val mockTransaction: Transaction = mock(Transaction::class.java)
+  private val mockQuery = mock(Query::class.java)
 
   @Before
   fun setUp() {
@@ -804,6 +810,28 @@ class ProfileRepositoryImplTest {
       assertTrue(e is RuntimeException)
       assertEquals("Firestore error", e.message)
     }
+  }
+
+
+
+  @Test
+  fun `getProfile handles errors gracefully`() = runTest {
+    val userId = "testUser"
+
+    // Mock profile document to throw exception
+    val profileDocRef = mock(DocumentReference::class.java)
+    whenever(mockCollectionRef.document(userId)).thenReturn(profileDocRef)
+    whenever(profileDocRef.get()).thenThrow(RuntimeException("Firestore error"))
+
+    try {
+      repository.getProfile(userId)
+      fail("Expected an exception to be thrown")
+    } catch (e: Exception) {
+      assertTrue(e is RuntimeException)
+      assertEquals("Firestore error", e.message)
+    }
+
+    verify(profileDocRef).get()
   }
 
   @After

@@ -10,9 +10,11 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -239,5 +241,10 @@ class UserProfileScreenTest {
     composeTestRule.onNodeWithTag("favorites_tab").performClick()
     composeTestRule.onNodeWithTag("publication_item_pub1").assertDoesNotExist()
     composeTestRule.onNodeWithTag("publication_item_fav1").assertExists()
+  }
+
+  @After
+  fun tearDown() {
+    unmockkAll()
   }
 }

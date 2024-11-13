@@ -4,6 +4,7 @@ import android.net.Uri
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
+import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -462,5 +463,6 @@ class ProfileViewModelTest {
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+    unmockkAll()
   }
 }
