@@ -72,14 +72,16 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
+  // ProfileViewModel.kt
   fun toggleFollow(currentUserId: String, targetUserId: String) {
     viewModelScope.launch {
       try {
         _followActionState.value = FollowActionState.Loading
 
-        // Immediately update UI state optimistically
+        // Get current state
         val currentState = _profileState.value
         if (currentState is ProfileUiState.Success) {
+          // Update UI optimistically
           val updatedProfile = currentState.profile.copy(
             isFollowedByCurrentUser = !currentState.profile.isFollowedByCurrentUser,
             followers = if (currentState.profile.isFollowedByCurrentUser)
@@ -90,16 +92,28 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
           _profileState.value = ProfileUiState.Success(updatedProfile)
         }
 
-        // Perform the actual database update
+        // Perform database update
         repository.toggleFollow(currentUserId, targetUserId)
 
-        // Refresh the profile data in the background to ensure consistency
-        loadProfile(targetUserId)
-
+        // No need to reload entire profile
         _followActionState.value = FollowActionState.Success
+
       } catch (e: Exception) {
-        // Revert the optimistic update if there's an error
-        loadProfile(targetUserId)
+        // On error, just update the affected fields instead of reloading entire profile
+        when (val state = _profileState.value) {
+          is ProfileUiState.Success -> {
+            _profileState.value = ProfileUiState.Success(
+              state.profile.copy(
+                isFollowedByCurrentUser = !state.profile.isFollowedByCurrentUser,
+                followers = if (state.profile.isFollowedByCurrentUser)
+                  state.profile.followers + 1
+                else
+                  state.profile.followers - 1
+              )
+            )
+          }
+          else -> {} // Handle other states if needed
+        }
         _followActionState.value = FollowActionState.Error(
           when {
             e.message?.contains("Firestore transactions require all reads") == true ->
@@ -107,7 +121,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
             else -> e.message ?: "Failed to update follow status"
           }
         )
-        _error.value = "Failed to update follow status: ${e.message}"
       }
     }
   }
