@@ -82,6 +82,9 @@ val LIST_TOP_LEVEL_DESTINATION =
 open class NavigationActions(
     private val navController: NavHostController,
 ) {
+
+  private var previousRoute: String? = null
+
   /**
    * Navigate to the specified [TopLevelDestination]
    *
@@ -123,12 +126,22 @@ open class NavigationActions(
    * @param screen The screen to navigate to
    */
   open fun navigateTo(screen: String) {
+    previousRoute = currentRoute()
     navController.navigate(screen)
   }
 
   /** Navigate back to the previous screen. */
   open fun goBack() {
     navController.popBackStack()
+  }
+
+  open fun goBackToPreviousRoute() {
+    if (previousRoute != null) {
+      navController.popBackStack(previousRoute!!, inclusive = false)
+      previousRoute = null // Réinitialise après la navigation pour éviter des boucles
+    } else {
+      navController.popBackStack() // Retourne simplement en arrière si aucune route n'est stockée
+    }
   }
 
   /**

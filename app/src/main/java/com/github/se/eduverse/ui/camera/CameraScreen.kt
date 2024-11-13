@@ -109,7 +109,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
             Modifier.align(Alignment.TopStart)
                 .padding(16.dp)
                 .size(32.dp)
-                .clickable { navigationActions.goBack() }
+                .clickable { navigationActions.goBackToPreviousRoute() }
                 .testTag("closeButton"))
 
     // Button to switch camera (front/back)
