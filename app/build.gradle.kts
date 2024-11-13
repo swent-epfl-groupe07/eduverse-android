@@ -147,6 +147,7 @@ sonar {
 
 
 dependencies {
+    implementation("androidx.media:media:1.6.0")
 
 
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")

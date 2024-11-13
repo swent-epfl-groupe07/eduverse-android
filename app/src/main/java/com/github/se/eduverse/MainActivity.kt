@@ -212,7 +212,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         GalleryScreen(
-            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
+            ownerId = ownerId,
+            photoViewModel = photoViewModel,
+            videoViewModel,
+            folderViewModel,
+            navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }
