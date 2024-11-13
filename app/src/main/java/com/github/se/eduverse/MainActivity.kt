@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +36,7 @@ import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.NextScreen
+import com.github.se.eduverse.ui.camera.PermissionDeniedScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
@@ -70,20 +70,11 @@ import java.io.File
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
 
     super.onCreate(savedInstanceState)
-    /*
-    // Initialiser Firebase Auth
-    auth = FirebaseAuth.getInstance()
-    if (auth.currentUser != null) {
-      auth.signOut()
-    } */
-
-    // Adding the VideoRepository and the VideoViewModel
 
     // Managing camera permissions
     val requestPermissionLauncher =
@@ -191,7 +182,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         if (cameraPermissionGranted) {
           CameraScreen(navigationActions)
         } else {
-          PermissionDeniedScreen()
+          PermissionDeniedScreen(navigationActions)
         }
       }
     }
@@ -287,9 +278,4 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
               videoViewModel)
         }
   }
-}
-
-@Composable
-fun PermissionDeniedScreen() {
-  Text("Permission Denied")
 }
