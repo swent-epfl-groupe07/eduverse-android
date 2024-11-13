@@ -17,11 +17,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupProperties
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.TodoListViewModel
+import kotlinx.serialization.json.JsonNull.content
 
 /** Composable that represents the user's todo list screen */
 @Composable
@@ -63,7 +65,9 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
               TodoItem(
                   todo,
                   { todoListViewModel.setTodoActual(it) },
-                  { todoListViewModel.setTodoDone(it) })
+                  { todoListViewModel.setTodoDone(it) },
+                  { todoListViewModel.deleteTodo(it.uid) },
+                  { currTodo, newName -> todoListViewModel.renameTodo(currTodo, newName) })
             }
           }
         }
@@ -78,12 +82,22 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
  * @param onDone code executed when the done button is clicked while the todo is not completed
  */
 @Composable
-fun TodoItem(todo: Todo, onUndo: (Todo) -> Unit, onDone: (Todo) -> Unit) {
+fun TodoItem(
+    todo: Todo,
+    onUndo: (Todo) -> Unit,
+    onDone: (Todo) -> Unit,
+    onDelete: (Todo) -> Unit,
+    onRename: (Todo, String) -> Unit
+) {
   val completed = todo.status == TodoStatus.DONE
   Card(
-      modifier = Modifier.testTag("todoItem_${todo.uid}").fillMaxWidth().padding(vertical = 4.dp),
+      modifier =
+          Modifier.testTag("todoItem_${todo.uid}")
+              .wrapContentSize()
+              .fillMaxWidth()
+              .padding(vertical = 4.dp),
       shape = RoundedCornerShape(16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.wrapContentSize()) {
           IconButton(
               onClick = {
                 if (completed) {
@@ -112,11 +126,16 @@ fun TodoItem(todo: Todo, onUndo: (Todo) -> Unit, onDone: (Todo) -> Unit) {
                       .testTag("todoName_${todo.uid}"),
               textDecoration = if (completed) TextDecoration.LineThrough else TextDecoration.None,
               color = if (completed) Color.Gray else Color.Unspecified)
-          IconButton(
-              onClick = {},
-              modifier = Modifier.testTag("todoOptionsButton_${todo.uid}").padding(8.dp)) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Todo Options")
-              }
+
+          Box {
+            var expanded by remember { mutableStateOf(false) }
+            IconButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.testTag("todoOptionsButton_${todo.uid}").padding(8.dp)) {
+                  Icon(Icons.Default.MoreVert, contentDescription = "Todo Options")
+                }
+            TodoOptionsMenu(todo.uid, expanded, { expanded = false }, { onDelete(todo) }, {})
+          }
         }
       }
 }
@@ -158,5 +177,44 @@ fun AddTodoEntry(onAdd: (String) -> Unit) {
                 innerTextField()
               })
         }
+      }
+}
+
+/**
+ * Composable that represents the options menu to display when the TodoItem options button is
+ * clicked
+ *
+ * @param expanded whether the menu is expanded
+ * @param onDismiss code executed when the menu is dismissed
+ * @param onDelete code executed when the delete option is clicked
+ * @param onRename code executed when the rename option is clicked
+ */
+@Composable
+fun TodoOptionsMenu(
+    todoId: String,
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+    onRename: () -> Unit,
+) {
+  DropdownMenu(
+      expanded = expanded,
+      onDismissRequest = { onDismiss() },
+      properties = PopupProperties(focusable = false)) {
+        DropdownMenuItem(
+            text = { Text("Delete", color = Color.Red) },
+            onClick = {
+              onDelete()
+              onDismiss()
+            },
+            modifier = Modifier.testTag("deleteTodoButton_${todoId}"))
+
+        DropdownMenuItem(
+            text = { Text("Rename") },
+            onClick = {
+              onRename()
+              onDismiss()
+            },
+            modifier = Modifier.testTag("renameTodoButton_${todoId}"))
       }
 }

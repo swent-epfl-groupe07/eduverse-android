@@ -172,4 +172,29 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("currentTasksButton").performClick()
     composeTestRule.onNodeWithTag("todoItem_1").assertIsDisplayed()
   }
+
+  @Test
+  fun todoOptionsButtonClickHasCorrectBehaviour_onActualTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_2").assertIsNotDisplayed()
+  }
+
+  @Test
+  fun todoOptionsButtonClickHasCorrectBehaviour_onDoneTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getDoneTodos()
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_1").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_1").assertIsNotDisplayed()
+  }
 }
