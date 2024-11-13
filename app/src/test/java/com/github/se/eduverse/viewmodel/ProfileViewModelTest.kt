@@ -121,12 +121,12 @@ class ProfileViewModelTest {
   fun `toggleFollow updates UI state optimistically on follow action`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = false
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
     // Set initial state
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
@@ -151,12 +151,9 @@ class ProfileViewModelTest {
   fun `toggleFollow updates UI state optimistically on unfollow action`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = true
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId, username = "testUser", followers = 5, isFollowedByCurrentUser = true)
 
     // Set initial state
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
@@ -181,17 +178,17 @@ class ProfileViewModelTest {
   fun `toggleFollow shows error state on failure`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = false
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
     // Set initial state and mock error
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
     `when`(mockRepository.toggleFollow(currentUserId, targetUserId))
-      .thenThrow(RuntimeException("Network error"))
+        .thenThrow(RuntimeException("Network error"))
 
     profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
@@ -203,27 +200,24 @@ class ProfileViewModelTest {
     // Verify follow action error state
     val followState = profileViewModel.followActionState.first()
     assertTrue(followState is FollowActionState.Error)
-    assertEquals(
-      "Network error",
-      (followState as FollowActionState.Error).message
-    )
+    assertEquals("Network error", (followState as FollowActionState.Error).message)
   }
 
   @Test
   fun `toggleFollow handles transaction error gracefully`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = false
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
     // Set initial state and mock transaction error
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
     `when`(mockRepository.toggleFollow(currentUserId, targetUserId))
-      .thenThrow(RuntimeException("Firestore transactions require all reads"))
+        .thenThrow(RuntimeException("Firestore transactions require all reads"))
 
     profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
@@ -235,10 +229,7 @@ class ProfileViewModelTest {
     // Verify error is handled properly
     val followState = profileViewModel.followActionState.first()
     assertTrue(followState is FollowActionState.Error)
-    assertEquals(
-      "Failed to update follow status",
-      (followState as FollowActionState.Error).message
-    )
+    assertEquals("Failed to update follow status", (followState as FollowActionState.Error).message)
   }
 
   @Test

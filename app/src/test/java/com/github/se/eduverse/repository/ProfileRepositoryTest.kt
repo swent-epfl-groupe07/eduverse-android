@@ -148,14 +148,12 @@ class ProfileRepositoryImplTest {
           }
 
           override suspend fun updateFollowCounts(
-            followerId: String,
-            targetUserId: String,
-            isFollowing: Boolean
+              followerId: String,
+              targetUserId: String,
+              isFollowing: Boolean
           ) {
             TODO("Not yet implemented")
           }
-
-
         }
 
     val viewModel = ProfileViewModel(mockRepo)
@@ -656,8 +654,6 @@ class ProfileRepositoryImplTest {
     assertFalse(result)
   }
 
-
-
   @Test
   fun `updateFollowCounts handles transaction correctly`() = runTest {
     val followerId = "user1"
@@ -688,7 +684,6 @@ class ProfileRepositoryImplTest {
     verify(mockTransaction).update(mockDocumentRef, "followers", 6L)
     verify(mockTransaction).update(mockDocumentRef, "following", 4L)
   }
-
 
   @Test
   fun `toggleFollow follows user when not currently following - using spy`() = runTest {
@@ -727,13 +722,13 @@ class ProfileRepositoryImplTest {
     assertTrue(result)
 
     // Verify follow document was added
-    verify(mockCollectionRef).add(
-      argThat { map: Map<String, Any> ->
-        map["followerId"] == followerId &&
-                map["followedId"] == targetId &&
-                map.containsKey("timestamp")
-      }
-    )
+    verify(mockCollectionRef)
+        .add(
+            argThat { map: Map<String, Any> ->
+              map["followerId"] == followerId &&
+                  map["followedId"] == targetId &&
+                  map.containsKey("timestamp")
+            })
   }
 
   @Test
@@ -816,10 +811,8 @@ class ProfileRepositoryImplTest {
   }
 }
 
-class TestableProfileRepositoryImpl(
-  firestore: FirebaseFirestore,
-  storage: FirebaseStorage
-) : ProfileRepositoryImpl(firestore, storage) {
+class TestableProfileRepositoryImpl(firestore: FirebaseFirestore, storage: FirebaseStorage) :
+    ProfileRepositoryImpl(firestore, storage) {
   // Make isFollowing public so we can override it in tests
   public override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean {
     return super.isFollowing(followerId, targetUserId)
