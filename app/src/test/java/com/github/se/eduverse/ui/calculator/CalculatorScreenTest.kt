@@ -1,6 +1,9 @@
 package com.github.se.eduverse.ui.calculator
 
 import kotlin.math.PI
+import kotlin.math.atan
+import kotlin.math.ln
+import kotlin.math.tanh
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -98,5 +101,72 @@ class EvaluatorTest {
     assertThrows(IllegalArgumentException::class.java) {
       evaluator.customFunctions.find { it.name == "arcoth" }!!.apply(0.5)
     }
+  }
+
+  @Test
+  fun testArctan() {
+    val arctan = evaluator.customFunctions.find { it.name == "arctan" }!!
+    assert(arctan.apply(1.0) == atan(1.0))
+  }
+
+  @Test
+  fun testSinh() {
+    val sinh = evaluator.customFunctions.find { it.name == "sinh" }!!
+    assert(sinh.apply(0.0).toInt() == 0)
+  }
+
+  @Test
+  fun testCosh() {
+    val cosh = evaluator.customFunctions.find { it.name == "cosh" }!!
+    assert(cosh.apply(0.0).toInt() == 1)
+  }
+
+  @Test
+  fun testTanh() {
+    val tanh = evaluator.customFunctions.find { it.name == "tanh" }!!
+    assert(tanh.apply(1.0) == tanh(1.0))
+  }
+
+  @Test
+  fun testCoth() {
+    val coth = evaluator.customFunctions.find { it.name == "coth" }!!
+
+    assert(coth.apply(1.0) == 1 / tanh(1.0))
+
+    assertThrows(IllegalArgumentException::class.java) { coth.apply(0.0) }
+  }
+
+  @Test
+  fun testArsinh() {
+    val arsinh = evaluator.customFunctions.find { it.name == "arsinh" }!!
+    assert(arsinh.apply(0.0).toInt() == 0)
+  }
+
+  @Test
+  fun testArcosh() {
+    val arcosh = evaluator.customFunctions.find { it.name == "arcosh" }!!
+
+    assert(arcosh.apply(1.0).toInt() == 0)
+
+    assertThrows(IllegalArgumentException::class.java) { arcosh.apply(0.5) }
+  }
+
+  @Test
+  fun testArtanh() {
+    val artanh = evaluator.customFunctions.find { it.name == "artanh" }!!
+
+    assert(artanh.apply(0.5) == 0.5 * ln((1 + 0.5) / (1 - 0.5)))
+
+    assertThrows(IllegalArgumentException::class.java) { artanh.apply(1.0) }
+    assertThrows(IllegalArgumentException::class.java) { artanh.apply(-1.0) }
+  }
+
+  @Test
+  fun testArcoth() {
+    val arcoth = evaluator.customFunctions.find { it.name == "arcoth" }!!
+
+    assert(arcoth.apply(2.0) == 0.5 * ln((2.0 + 1) / (2.0 - 1)))
+
+    assertThrows(IllegalArgumentException::class.java) { arcoth.apply(0.5) }
   }
 }
