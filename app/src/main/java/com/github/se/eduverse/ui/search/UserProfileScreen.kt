@@ -48,6 +48,7 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.profile.PublicationDetailDialog
 import com.github.se.eduverse.ui.profile.PublicationItem
+import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -62,6 +63,7 @@ fun UserProfileScreen(
   var selectedTab by remember { mutableStateOf(0) }
   val uiState by viewModel.profileState.collectAsState()
   val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
+  val followActionState by viewModel.followActionState.collectAsState()
 
   LaunchedEffect(userId) {
     viewModel.loadProfile(userId)
@@ -125,14 +127,45 @@ fun UserProfileScreen(
                       }
 
                   // Follow/Unfollow Button
-                  val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-                  if (currentUserId != null && currentUserId != userId) {
-                    Button(
-                        onClick = { TODO() },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                          Text(if (profile.followers > 0) "Unfollow" else "Follow")
+                    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+                    if (currentUserId != null && currentUserId != userId) {
+                        Button(
+                            onClick = { viewModel.toggleFollow(currentUserId, userId) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .testTag("follow_button"),
+                            enabled = followActionState != FollowActionState.Loading
+                        ) {
+                            when (followActionState) {
+                                FollowActionState.Loading -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                                else -> {
+                                    when (uiState) {
+                                        is ProfileUiState.Success -> {
+                                            val profile = (uiState as ProfileUiState.Success).profile
+                                            Text(if (profile.isFollowedByCurrentUser) "Unfollow" else "Follow")
+                                        }
+                                        else -> Text("Follow")
+                                    }
+                                }
+                            }
                         }
-                  }
+
+                        // Show error if follow action failed
+                        if (followActionState is FollowActionState.Error) {
+                            Text(
+                                text = (followActionState as FollowActionState.Error).message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
                 }
                 else -> {}
               }

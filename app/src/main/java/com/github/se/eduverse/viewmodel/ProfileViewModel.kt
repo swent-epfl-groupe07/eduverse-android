@@ -26,6 +26,8 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open val searchState: StateFlow<SearchProfileState> = _searchState.asStateFlow()
   private val _usernameState = MutableStateFlow<UsernameUpdateState>(UsernameUpdateState.Idle)
   open val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
+  private val _followActionState = MutableStateFlow<FollowActionState>(FollowActionState.Idle)
+  val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
 
   private var searchJob: Job? = null
 
@@ -70,17 +72,36 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun toggleFollow(currentUserId: String, targetUserId: String, isFollowing: Boolean) {
+  fun toggleFollow(currentUserId: String, targetUserId: String) {
     viewModelScope.launch {
       try {
-        if (isFollowing) {
-          repository.unfollowUser(currentUserId, targetUserId)
-        } else {
-          repository.followUser(currentUserId, targetUserId)
+        _followActionState.value = FollowActionState.Loading
+
+        // Immediately update UI state optimistically
+        val currentState = _profileState.value
+        if (currentState is ProfileUiState.Success) {
+          val updatedProfile = currentState.profile.copy(
+            isFollowedByCurrentUser = !currentState.profile.isFollowedByCurrentUser,
+            followers = if (currentState.profile.isFollowedByCurrentUser)
+              currentState.profile.followers - 1
+            else
+              currentState.profile.followers + 1
+          )
+          _profileState.value = ProfileUiState.Success(updatedProfile)
         }
-        loadProfile(currentUserId)
+
+        // Perform the actual database update
+        repository.toggleFollow(currentUserId, targetUserId)
+
+        // Refresh the profile data in the background to ensure consistency
+        loadProfile(targetUserId)
+
+        _followActionState.value = FollowActionState.Success
       } catch (e: Exception) {
-        _profileState.value = ProfileUiState.Error(e.message ?: "Failed to update follow status")
+        // Revert the optimistic update if there's an error
+        loadProfile(targetUserId)
+        _followActionState.value = FollowActionState.Error(e.message ?: "Failed to update follow status")
+        _error.value = "Failed to update follow status: ${e.message}"
       }
     }
   }
@@ -242,4 +263,12 @@ sealed class UsernameUpdateState {
   object Success : UsernameUpdateState()
 
   data class Error(val message: String) : UsernameUpdateState()
+}
+
+
+sealed class FollowActionState {
+  object Idle : FollowActionState()
+  object Loading : FollowActionState()
+  object Success : FollowActionState()
+  data class Error(val message: String) : FollowActionState()
 }

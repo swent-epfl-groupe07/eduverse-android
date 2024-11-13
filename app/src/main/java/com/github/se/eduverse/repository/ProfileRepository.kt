@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -46,6 +47,11 @@ interface ProfileRepository {
   suspend fun getAllPublications(): List<Publication>
 
   suspend fun getUserLikedPublicationsIds(userId: String): List<String>
+
+  suspend fun isFollowing(followerId: String, targetUserId: String): Boolean
+  suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean
+  suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
+
 }
 
 class ProfileRepositoryImpl(
@@ -85,37 +91,61 @@ class ProfileRepositoryImpl(
     }
   }
 
-  override suspend fun getProfile(userId: String): Profile? {
-    val profileDoc = profilesCollection.document(userId).get().await()
-    val profile = profileDoc.toObject(Profile::class.java)
+    override suspend fun getProfile(userId: String): Profile? {
+        val profileDoc = profilesCollection.document(userId).get().await()
+        val profile = profileDoc.toObject(Profile::class.java)
 
-    // Get publications
-    val publications =
-        publicationsCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
-          it.toObject(Publication::class.java)
-        }
+        // Get current user ID
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
 
-    // Get favorites
-    val favorites =
-        favoritesCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
-          publicationsCollection
-              .document(it.getString("publicationId") ?: "")
-              .get()
-              .await()
-              .toObject(Publication::class.java)
-        }
+        // Get publications
+        val publications = publicationsCollection
+            .whereEqualTo("userId", userId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(Publication::class.java) }
 
-    // Get followers/following count
-    val followersCount = followersCollection.whereEqualTo("followedId", userId).get().await().size()
+        // Get favorites
+        val favorites = favoritesCollection
+            .whereEqualTo("userId", userId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull {
+                publicationsCollection
+                    .document(it.getString("publicationId") ?: "")
+                    .get()
+                    .await()
+                    .toObject(Publication::class.java)
+            }
 
-    val followingCount = followersCollection.whereEqualTo("followerId", userId).get().await().size()
+        // Get followers/following count
+        val followersCount = followersCollection
+            .whereEqualTo("followedId", userId)
+            .get()
+            .await()
+            .size()
 
-    return profile?.copy(
-        publications = publications,
-        favoritePublications = favorites,
-        followers = followersCount,
-        following = followingCount)
-  }
+        val followingCount = followersCollection
+            .whereEqualTo("followerId", userId)
+            .get()
+            .await()
+            .size()
+
+        // Check if the current user is following this profile
+        val isFollowedByCurrentUser = currentUserId?.let {
+            isFollowing(it, userId)
+        } ?: false
+
+        return profile?.copy(
+            publications = publications,
+            favoritePublications = favorites,
+            followers = followersCount,
+            following = followingCount,
+            isFollowedByCurrentUser = isFollowedByCurrentUser
+        )
+    }
 
   override suspend fun updateProfile(userId: String, profile: Profile) {
     profilesCollection.document(userId).set(profile).await()
@@ -308,8 +338,50 @@ class ProfileRepositoryImpl(
       throw e
     }
   }
-  // IDK IF THIS FUNCTION SHOULD BE IN PROFILE REPO OR PUBLI REPO. Logically, it should be in
-  // publication repo
-  // but I'm not sure if it's okay for the profile VM to call a function that is in the publication
-  // repo.
+
+    override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean {
+        return followersCollection
+            .whereEqualTo("followerId", followerId)
+            .whereEqualTo("followedId", targetUserId)
+            .get()
+            .await()
+            .documents
+            .isNotEmpty()
+    }
+
+    override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
+        val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
+
+        if (isCurrentlyFollowing) {
+            // Unfollow
+            unfollowUser(followerId, targetUserId)
+        } else {
+            // Follow
+            followUser(followerId, targetUserId)
+        }
+
+        // Update the follower counts for both users
+        updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
+
+        return !isCurrentlyFollowing
+    }
+
+    override suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean) {
+        firestore.runTransaction { transaction ->
+            // Update target user's followers count
+            val targetUserRef = profilesCollection.document(targetUserId)
+            val targetUserSnapshot = transaction.get(targetUserRef)
+            val currentFollowers = targetUserSnapshot.getLong("followers") ?: 0
+            transaction.update(targetUserRef, "followers",
+                if (isFollowing) currentFollowers + 1 else currentFollowers - 1)
+
+            // Update current user's following count
+            val followerRef = profilesCollection.document(followerId)
+            val followerSnapshot = transaction.get(followerRef)
+            val currentFollowing = followerSnapshot.getLong("following") ?: 0
+            transaction.update(followerRef, "following",
+                if (isFollowing) currentFollowing + 1 else currentFollowing - 1)
+        }.await()
+    }
+
 }
