@@ -126,20 +126,18 @@ class FolderViewModel(val repository: FolderRepository, val auth: FirebaseAuth) 
    * @param folder the folder to update
    */
   fun updateFolder(folder: Folder) {
-    try {
-      repository.updateFolder(
-          folder,
-          {
+    repository.updateFolder(
+        folder,
+        {
+          try {
             _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
             if (activeFolder.value != null && activeFolder.value!!.id == folder.id)
                 selectFolder(folder)
-          },
-          {
-            Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}")
-          })
-    } catch (_: IndexOutOfBoundsException) {
-      Log.d("FolderViewModel", "Folder ${folder.name} is not in the active list of folder")
-    }
+          } catch (_: IndexOutOfBoundsException) {
+            Log.d("FolderViewModel", "Folder ${folder.name} is not in the active list of folder")
+          }
+        },
+        { Log.e("FolderViewModel", "Exception $it while trying to update folder ${folder.name}") })
   }
 
   /** Get new ID for a folder. */
