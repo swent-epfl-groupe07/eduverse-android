@@ -26,7 +26,7 @@ class Evaluator {
     }
   }
 
-  private val customFunctions =
+  val customFunctions =
       listOf(
           object : Function("cot", 1) {
             override fun apply(args: DoubleArray): Double {
