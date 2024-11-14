@@ -66,6 +66,7 @@ import com.github.se.eduverse.model.millisecInHour
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.text.SimpleDateFormat
@@ -118,24 +119,18 @@ fun TimeTableScreen(
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
-        Column(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()) {
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
 
           // Buttons to add new event/task
           Row(
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .padding(15.dp),
+              modifier = Modifier.fillMaxWidth().padding(15.dp),
               horizontalArrangement = Arrangement.SpaceBetween) {
                 Button(
                     onClick = {
                       newElementType = ScheduledType.TASK
                       showDialog = true
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(0.45f)
-                        .testTag("addTaskButton"),
+                    modifier = Modifier.fillMaxWidth(0.45f).testTag("addTaskButton"),
                     colors = orange) {
                       Text("Add task")
                     }
@@ -144,9 +139,7 @@ fun TimeTableScreen(
                       newElementType = ScheduledType.EVENT
                       showDialog = true
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(0.82f)
-                        .testTag("addEventButton"),
+                    modifier = Modifier.fillMaxWidth(0.82f).testTag("addEventButton"),
                     colors = blue) {
                       Text("Add event")
                     }
@@ -174,13 +167,8 @@ fun TimeTableScreen(
           // Table
           LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(1) {
-              Row(modifier = Modifier
-                  .fillMaxWidth()
-                  .padding(bottom = 2.dp)
-                  .testTag("days")) {
-                Spacer(modifier = Modifier
-                    .fillMaxWidth(0.12f)
-                    .padding(top = 25.dp))
+              Row(modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp).testTag("days")) {
+                Spacer(modifier = Modifier.fillMaxWidth(0.12f).padding(top = 25.dp))
                 for (c in weeklyTable.indices) {
                   Text(
                       text = timeTableViewModel.getDateAtDay(c, currentWeek),
@@ -190,22 +178,21 @@ fun TimeTableScreen(
               }
               Row(modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth(0.12f)
-                        .padding(top = 25.dp)
-                        .testTag("hours"),
+                    modifier = Modifier.fillMaxWidth(0.12f).padding(top = 25.dp).testTag("hours"),
                     horizontalAlignment = Alignment.End) {
                       for (i in 1..23) {
                         Text(
                             "${i}h",
                             modifier =
-                            Modifier
-                                .padding(top = 15.dp, bottom = 15.dp, end = 5.dp)
-                                .height(20.dp))
+                                Modifier.padding(top = 15.dp, bottom = 15.dp, end = 5.dp)
+                                    .height(20.dp))
                       }
                     }
                 for (c in 0..6) {
-                  TableColumn((1.0 / (7 - c)).toFloat(), weeklyTable[c])
+                  TableColumn((1.0 / (7 - c)).toFloat(), weeklyTable[c]) {
+                    timeTableViewModel.opened = it
+                    navigationActions.navigateTo(Screen.DETAILS_EVENT)
+                  }
                 }
               }
             }
@@ -215,24 +202,19 @@ fun TimeTableScreen(
 }
 
 @Composable
-fun TableColumn(width: Float, content: List<Scheduled>) {
-  BoxWithConstraints(modifier = Modifier
-      .fillMaxWidth(width)
-      .fillMaxHeight()) {
+fun TableColumn(width: Float, content: List<Scheduled>, navigate: (Scheduled) -> Unit) {
+  BoxWithConstraints(modifier = Modifier.fillMaxWidth(width).fillMaxHeight()) {
     val boxWidth = maxWidth
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("tableColumn"),
+        modifier = Modifier.fillMaxSize().testTag("tableColumn"),
         horizontalAlignment = Alignment.End) {
           for (i in 0..23) {
             Row(
                 modifier =
-                Modifier
-                    .border(width = 0.5.dp, color = Color.LightGray)
-                    .height(50.dp)
-                    .fillMaxWidth()) {}
+                    Modifier.border(width = 0.5.dp, color = Color.LightGray)
+                        .height(50.dp)
+                        .fillMaxWidth()) {}
           }
         }
     val openedButton = emptyList<Scheduled>().toMutableList()
@@ -255,21 +237,17 @@ fun TableColumn(width: Float, content: List<Scheduled>) {
       var xOffset = lastButtonEnd
       if (xOffset + widthPercent > 1f) xOffset = 0f
       Button(
-          onClick = {},
+          onClick = { navigate(new) },
           modifier =
-          Modifier
-              .fillMaxWidth(widthPercent)
-              .height((new.length.toDouble() / millisecInHour * 50).dp)
-              .offset(
-                  x = boxWidth * xOffset,
-                  y =
-                  (new.start.get(Calendar.HOUR_OF_DAY) * 50).dp +
-                          (new.start
-                              .get(Calendar.MINUTE)
-                              .toDouble() / 60 * 50).dp
-              )
-              .padding(1.dp)
-              .testTag("buttonOf${new.name}"),
+              Modifier.fillMaxWidth(widthPercent)
+                  .height((new.length.toDouble() / millisecInHour * 50).dp)
+                  .offset(
+                      x = boxWidth * xOffset,
+                      y =
+                          (new.start.get(Calendar.HOUR_OF_DAY) * 50).dp +
+                              (new.start.get(Calendar.MINUTE).toDouble() / 60 * 50).dp)
+                  .padding(1.dp)
+                  .testTag("buttonOf${new.name}"),
           shape = RoundedCornerShape(5.dp),
           colors = if (new.type == ScheduledType.TASK) orange else blue,
           contentPadding = PaddingValues(1.dp)) {
@@ -301,9 +279,7 @@ fun DialogCreate(
   val actualTodos by todoViewModel.actualTodos.collectAsState()
 
   AlertDialog(
-      modifier = Modifier
-          .fillMaxWidth()
-          .testTag("dialog"),
+      modifier = Modifier.fillMaxWidth().testTag("dialog"),
       onDismissRequest = { onDismiss() },
       title = {
         if (newElementType == ScheduledType.TASK) {
@@ -316,31 +292,24 @@ fun DialogCreate(
         if (newElementType == ScheduledType.TASK) {
           todoViewModel.getActualTodos()
           Column(
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .testTag("addTaskDialog"),
+              modifier = Modifier.fillMaxWidth().testTag("addTaskDialog"),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Title("Todo")
-                LazyColumn(modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.25f)) {
+                LazyColumn(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.25f)) {
                   items(actualTodos.size) { index ->
                     Card(
                         modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clickable {
-                                addedTodo = actualTodos[index]
-                                name = actualTodos[index].name
-                                idTaskOrEvent = actualTodos[index].uid
-                            }
-                            .testTag(actualTodos[index].name),
+                            Modifier.fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                  addedTodo = actualTodos[index]
+                                  name = actualTodos[index].name
+                                  idTaskOrEvent = actualTodos[index].uid
+                                }
+                                .testTag(actualTodos[index].name),
                         shape = RoundedCornerShape(16.dp)) {
                           Row(
-                              modifier = Modifier
-                                  .fillMaxWidth()
-                                  .padding(4.dp),
+                              modifier = Modifier.fillMaxWidth().padding(4.dp),
                               horizontalArrangement = Arrangement.spacedBy(5.dp),
                               verticalAlignment = Alignment.CenterVertically) {
                                 if (addedTodo == actualTodos[index]) {
@@ -366,16 +335,12 @@ fun DialogCreate(
               }
         } else {
           Column(
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .testTag("addEventDialog"),
+              modifier = Modifier.fillMaxWidth().testTag("addEventDialog"),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Title("Name")
                 OutlinedTextField(
                     value = name,
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .testTag("nameTextField"),
+                    modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
                     onValueChange = { name = it },
                     placeholder = { Text("Name the task") })
                 DateAndTimePickers(
@@ -455,20 +420,14 @@ fun DateAndTimePickers(
                 day)
             .show()
       },
-      modifier = Modifier
-          .fillMaxWidth(0.9f)
-          .testTag("datePicker"),
+      modifier = Modifier.fillMaxWidth(0.9f).testTag("datePicker"),
       shape = OutlinedTextFieldDefaults.shape) {
-      Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween
-      ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
           Text(
               text = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(selectedDate.time),
-              textAlign = TextAlign.Start
-          )
+              textAlign = TextAlign.Start)
           icon("date")
-      }
+        }
       }
 
   // Pick the time
@@ -497,23 +456,16 @@ fun DateAndTimePickers(
                 )
             .show()
       },
-      modifier = Modifier
-          .fillMaxWidth(0.9f)
-          .testTag("timePicker"),
+      modifier = Modifier.fillMaxWidth(0.9f).testTag("timePicker"),
       shape = OutlinedTextFieldDefaults.shape) {
-      Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween
-      ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
           Text(
               text =
-              hourToString(
-                  selectedDate.get(Calendar.HOUR_OF_DAY), selectedDate.get(Calendar.MINUTE)
-              ),
-              textAlign = TextAlign.Start
-          )
+                  hourToString(
+                      selectedDate.get(Calendar.HOUR_OF_DAY), selectedDate.get(Calendar.MINUTE)),
+              textAlign = TextAlign.Start)
           icon("time")
-      }
+        }
       }
 
   // Pick the length
@@ -528,20 +480,12 @@ fun DateAndTimePickers(
                 true)
             .show()
       },
-      modifier = Modifier
-          .fillMaxWidth(0.9f)
-          .testTag("lengthPicker"),
+      modifier = Modifier.fillMaxWidth(0.9f).testTag("lengthPicker"),
       shape = OutlinedTextFieldDefaults.shape) {
-      Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween
-      ) {
-          Text(
-              text = hourToString(lengthHour, lengthMin),
-              textAlign = TextAlign.Start
-          )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text(text = hourToString(lengthHour, lengthMin), textAlign = TextAlign.Start)
           icon("length")
-      }
+        }
       }
 }
 

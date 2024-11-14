@@ -9,12 +9,12 @@ import java.util.Calendar
 open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableRepository {
   private val collection = db.collection("scheduled")
 
-    private val type = "type"
-    private val startTime = "startTime"
-    private val endTime = "endTime"
-    private val content = "content"
-    private val ownerId = "ownerId"
-    private val name = "name"
+  private val type = "type"
+  private val startTime = "startTime"
+  private val endTime = "endTime"
+  private val content = "content"
+  private val ownerId = "ownerId"
+  private val name = "name"
 
   override fun getNewUid(): String {
     return collection.document().id
@@ -31,7 +31,8 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
           timeInMillis = firstDay.timeInMillis
           add(Calendar.WEEK_OF_YEAR, 1)
         }
-    collection.whereEqualTo(ownerId, ownerId)
+    collection
+        .whereEqualTo(ownerId, ownerId)
         .whereGreaterThanOrEqualTo(startTime, firstDay.timeInMillis)
         .whereLessThan(endTime, lastDay.timeInMillis)
         .get()
@@ -55,7 +56,8 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
             ownerId to scheduled.ownerId,
             name to scheduled.name)
 
-    collection.document(scheduled.id)
+    collection
+        .document(scheduled.id)
         .set(mappedScheduled)
         .addOnSuccessListener { onSuccess() }
         .addOnFailureListener(onFailure)
@@ -75,7 +77,8 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
             ownerId to scheduled.ownerId,
             name to scheduled.name)
 
-    collection.document(scheduled.id)
+    collection
+        .document(scheduled.id)
         .update(mappedScheduled)
         .addOnSuccessListener { onSuccess() }
         .addOnFailureListener(onFailure)
@@ -86,7 +89,8 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    collection.document(scheduled.id)
+    collection
+        .document(scheduled.id)
         .delete()
         .addOnSuccessListener { onSuccess() }
         .addOnFailureListener(onFailure)
