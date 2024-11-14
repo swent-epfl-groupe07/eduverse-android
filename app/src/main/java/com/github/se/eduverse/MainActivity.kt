@@ -137,7 +137,6 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
-  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
