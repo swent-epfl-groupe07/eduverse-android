@@ -229,7 +229,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
                                           rotateImageIfSelfie(
                                               bitmap,
                                               isCameraSelfie)) // Apply rotation and mirror for
-                                                               // selfie
+                                      // selfie
                                     } else {
                                       bitmap // Use the original bitmap if it's not a selfie
                                     }
