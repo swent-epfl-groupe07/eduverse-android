@@ -122,8 +122,11 @@ class CameraScreenTest {
     // Start video recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
 
-    // Simulate a second click to stop recording
-    composeTestRule.onNodeWithTag("takePhotoButton").performClick()
+    // Verify that the recording indicator is displayed (indicating that recording is active)
+    composeTestRule.onNodeWithTag("recordingIndicator").assertIsDisplayed()
+
+    // Simulate a second click to stop recording by clicking the recording indicator
+    composeTestRule.onNodeWithTag("recordingIndicator").performClick()
   }
 
   @Test
@@ -136,10 +139,24 @@ class CameraScreenTest {
     // Start recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
 
-    // Verify that the recording state is active
-    composeTestRule.onNodeWithTag("takePhotoButton").assert(hasClickAction())
+    // Verify that the recording indicator is displayed when recording is active
+    composeTestRule.onNodeWithTag("recordingIndicator").assertIsDisplayed()
 
     // Stop recording
+    composeTestRule.onNodeWithTag("recordingIndicator").performClick()
+  }
+
+  @Test
+  fun recordingIndicator_isDisplayedWhenRecording() {
+    composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
+
+    // Switch to video mode
+    composeTestRule.onNodeWithTag("videoButton").performClick()
+
+    // Start video recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
+
+    // Verify that the recording indicator is displayed when recording is active
+    composeTestRule.onNodeWithTag("recordingIndicator").assertIsDisplayed()
   }
 }
