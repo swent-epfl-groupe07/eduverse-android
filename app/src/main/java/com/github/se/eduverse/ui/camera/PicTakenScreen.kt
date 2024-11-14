@@ -76,10 +76,10 @@ fun PicTakenScreen(
         if (photoFile != null) "jpg" else "mp4"
     }"
 
-  val bitmap =
-      photoFile?.let {
-        BitmapFactory.decodeFile(it.path)?.let { adjustImageRotation(it) }?.asImageBitmap()
-      }
+  val bitmap = remember {
+    adjustImageRotation(BitmapFactory.decodeFile(photoFile?.path))
+        .asImageBitmap() // Ta fonction pour ajuster la rotation
+  }
 
   Box(
       modifier =
