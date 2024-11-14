@@ -156,7 +156,6 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
       composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
       composable(Screen.PDF_CONVERTER) {
         PdfConverterScreen(navigationActions, pdfConverterViewModel)
