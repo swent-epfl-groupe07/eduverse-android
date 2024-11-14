@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.Scheduled
+import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInHour
 import com.github.se.eduverse.model.millisecInMin
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -52,14 +53,12 @@ fun DetailsEventScreen(
     navigationActions: NavigationActions
 ) {
   val context = LocalContext.current
-  lateinit var event: Scheduled
-
-  LaunchedEffect(Unit) {
-    if (timeTableViewModel.opened == null) {
+  val event: Scheduled = timeTableViewModel.opened ?: run {
       navigationActions.goBack()
-    } else {
-      event = timeTableViewModel.opened!!
-    }
+
+      /* The value there doesn't mather as we will leave the screen anyway, but it is important
+       to make event non-null*/
+      Scheduled("", ScheduledType.EVENT, Calendar.getInstance(), 0, "", "", "")
   }
 
   var newName by remember { mutableStateOf(event.name) }
@@ -104,7 +103,9 @@ fun DetailsEventScreen(
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
         LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
               item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -112,7 +113,9 @@ fun DetailsEventScreen(
                   Title("Name")
                   OutlinedTextField(
                       value = newName,
-                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
+                      modifier = Modifier
+                          .fillMaxWidth(0.9f)
+                          .testTag("nameTextField"),
                       onValueChange = { newName = it },
                       placeholder = { Text("Name the event") },
                       suffix = {
@@ -127,7 +130,9 @@ fun DetailsEventScreen(
                   Title("Description")
                   OutlinedTextField(
                       value = description,
-                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
+                      modifier = Modifier
+                          .fillMaxWidth(0.9f)
+                          .testTag("nameTextField"),
                       onValueChange = { description = it },
                       placeholder = { Text("No description provided") },
                       suffix = {
@@ -209,6 +214,8 @@ fun SaveIcon(onClick: () -> Unit, isEnabled: () -> Boolean) {
   Icon(
       imageVector = Icons.Default.Save,
       contentDescription = "Delete",
-      modifier = Modifier.clickable(enabled = isEnabled()) { onClick() }.testTag("saveIcon"),
+      modifier = Modifier
+          .clickable(enabled = isEnabled()) { onClick() }
+          .testTag("saveIcon"),
       tint = MaterialTheme.colors.primary)
 }
