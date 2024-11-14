@@ -21,7 +21,7 @@ class CameraScreenTest {
   private fun createFakeNavigationActions(): NavigationActions {
     val navController = rememberNavController()
 
-    // Crée un navGraph simulé pour le test
+    // Create a simulated navGraph for the test
     navController.graph =
         navController.createGraph(startDestination = "start") {
           composable("start") {}
@@ -104,11 +104,11 @@ class CameraScreenTest {
   fun videoButton_clickAction_switchToVideoMode() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
 
-    // Initialement, le mode est Photo
+    // Initially, the mode is Photo
     composeTestRule.onNodeWithTag("photoButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("videoButton").performClick()
 
-    // Après le clic, on devrait être en mode Vidéo
+    // After clicking, it should switch to Video mode
     composeTestRule.onNodeWithTag("videoButton").assertIsDisplayed()
   }
 
@@ -116,13 +116,13 @@ class CameraScreenTest {
   fun takeVideoButton_startAndStopRecording() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
 
-    // Passer en mode vidéo
+    // Switch to video mode
     composeTestRule.onNodeWithTag("videoButton").performClick()
 
-    // Démarrer l'enregistrement de la vidéo
+    // Start video recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
 
-    // Simuler un second clic pour arrêter l'enregistrement
+    // Simulate a second click to stop recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
   }
 
@@ -130,16 +130,16 @@ class CameraScreenTest {
   fun takeVideoButton_isRecordingState() {
     composeTestRule.setContent { CameraScreen(navigationActions = createFakeNavigationActions()) }
 
-    // Passer en mode vidéo
+    // Switch to video mode
     composeTestRule.onNodeWithTag("videoButton").performClick()
 
-    // Démarrer l'enregistrement
+    // Start recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
 
-    // Vérifier que l'état d'enregistrement est bien activé
+    // Verify that the recording state is active
     composeTestRule.onNodeWithTag("takePhotoButton").assert(hasClickAction())
 
-    // Arrêter l'enregistrement
+    // Stop recording
     composeTestRule.onNodeWithTag("takePhotoButton").performClick()
   }
 }

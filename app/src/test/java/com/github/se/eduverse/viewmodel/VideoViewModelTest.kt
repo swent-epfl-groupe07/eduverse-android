@@ -66,7 +66,7 @@ class VideoViewModelTest {
     val video = Video("ownerId", byteArrayOf(0x01, 0x02), "videos/path.mp4")
     whenever(videoRepositoryMock.saveVideo(video)).thenReturn(true)
 
-    val folder = Folder("uid", emptyList<MyFile>().toMutableList(), "name", "id")
+    val folder = Folder("uid", emptyList<MyFile>().toMutableList(), "name", "id", archived = false)
     whenever(fileRepositoryMock.getNewUid()).thenReturn("fileUid")
     whenever(
             fileRepositoryMock.savePathToFirestore(

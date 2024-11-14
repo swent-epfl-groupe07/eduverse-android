@@ -20,7 +20,14 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,20 +66,18 @@ fun CameraScreen(navigationActions: NavigationActions) {
   var recording by remember { mutableStateOf<Recording?>(null) }
   val preview = remember { Preview.Builder().build() }
   var cameraSelector by remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
-  var isVideoMode by remember { mutableStateOf(false) } // Pour suivre le mode Photo/Vidéo
-  var isRecording by remember {
-    mutableStateOf(false)
-  } // Pour suivre si l'enregistrement est en cours
-  var clickCount by remember { mutableStateOf(0) } // Compteur pour suivre les clics
+  var isVideoMode by remember { mutableStateOf(false) } // To track Photo/Video mode
+  var isRecording by remember { mutableStateOf(false) } // To track if recording is in progress
+  var clickCount by remember { mutableStateOf(0) } // Counter to track clicks
   var isCameraSelfie by remember {
     mutableStateOf(false)
-  } // Pour suivre si la caméra frontale est utilisée
+  } // To track if the front camera is being used
 
   LaunchedEffect(cameraSelector) {
     val cameraProvider = cameraProviderFuture.get()
     cameraProvider.unbindAll()
 
-    // Configurer la capture de vidéo
+    // Configure video capture
     val recorder =
         Recorder.Builder().setQualitySelector(QualitySelector.from(Quality.HIGHEST)).build()
 
@@ -96,7 +101,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
         },
         modifier = Modifier.fillMaxSize().testTag("cameraPreview"))
 
-    // Bouton pour fermer
+    // Close button
     Image(
         painter = painterResource(id = R.drawable.close),
         contentDescription = "Close",
@@ -107,7 +112,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
                 .clickable { navigationActions.goBack() }
                 .testTag("closeButton"))
 
-    // Bouton pour changer de caméra (avant/arrière)
+    // Button to switch camera (front/back)
     Image(
         painter = painterResource(id = R.drawable.flip_camera_ios),
         contentDescription = "Switch Camera",
@@ -118,16 +123,16 @@ fun CameraScreen(navigationActions: NavigationActions) {
                 .clickable {
                   cameraSelector =
                       if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
-                        isCameraSelfie = true // Caméra frontale activée
+                        isCameraSelfie = true // Front camera activated
                         CameraSelector.DEFAULT_FRONT_CAMERA
                       } else {
-                        isCameraSelfie = false // Caméra arrière activée
+                        isCameraSelfie = false // Back camera activated
                         CameraSelector.DEFAULT_BACK_CAMERA
                       }
                 }
                 .testTag("switchCameraButton"))
 
-    // Bouton pour prendre une photo ou enregistrer une vidéo
+    // Button to take a photo or start/stop video recording
     Image(
         painter = painterResource(id = R.drawable.radio_button_checked),
         contentDescription = if (isVideoMode) "Start/Stop Recording Video" else "Take Photo",
@@ -138,32 +143,30 @@ fun CameraScreen(navigationActions: NavigationActions) {
                   if (isVideoMode) {
                     clickCount++
                     if (clickCount == 1) {
-                      // Démarrer l'enregistrement vidéo au premier clic
+                      // Start video recording on first click
                       val videoFile = File(context.filesDir, "video.mp4")
                       val outputOptions = FileOutputOptions.Builder(videoFile).build()
 
                       recording =
                           videoCapture?.output?.prepareRecording(context, outputOptions)?.start(
                               ContextCompat.getMainExecutor(context)) {
-                                // L'enregistrement est en cours
+                                // Recording is in progress
                                 Log.e("VIDEO RECORDING", "Recording started")
                               }
 
                       isRecording = true
 
-                      // Limiter la durée de l'enregistrement à 1 minute
+                      // Limit recording duration to 1 minute
                       CoroutineScope(Dispatchers.IO).launch {
-                        delay(60_000L) // 60 secondes
+                        delay(60_000L) // 60 seconds
                         if (isRecording) {
-                          recording?.stop() // Arrêter automatiquement après 1 minute
+                          recording?.stop() // Automatically stop after 1 minute
                           isRecording = false
                           clickCount = 0
 
-                          // Ajouter un délai pour s'assurer que le fichier vidéo est bien écrit
+                          // Add delay to ensure video file is properly written
                           CoroutineScope(Dispatchers.IO).launch {
-                            delay(
-                                2000) // Attendre 2 secondes pour être sûr que le fichier vidéo est
-                            // bien enregistré
+                            delay(2000) // Wait 2 seconds to ensure video file is saved
                             val videoFile = File(context.filesDir, "video.mp4")
                             val encodedPath = Uri.encode(videoFile.absolutePath)
                             CoroutineScope(Dispatchers.Main).launch {
@@ -173,16 +176,14 @@ fun CameraScreen(navigationActions: NavigationActions) {
                         }
                       }
                     } else if (clickCount == 2) {
-                      // Arrêter l'enregistrement au deuxième clic
+                      // Stop recording on second click
                       recording?.stop()
                       isRecording = false
-                      clickCount = 0 // Remettre le compteur à 0
+                      clickCount = 0 // Reset the counter
 
-                      // Ajouter un délai pour s'assurer que le fichier vidéo est bien écrit
+                      // Add delay to ensure video file is properly written
                       CoroutineScope(Dispatchers.IO).launch {
-                        delay(
-                            2000) // Attendre 2 secondes pour être sûr que le fichier vidéo est bien
-                        // enregistré
+                        delay(2000) // Wait 2 seconds to ensure video file is saved
                         val videoFile = File(context.filesDir, "video.mp4")
                         val encodedPath = Uri.encode(videoFile.absolutePath)
                         CoroutineScope(Dispatchers.Main).launch {
@@ -191,7 +192,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
                       }
                     }
                   } else {
-                    // Logique pour prendre la photo
+                    // Logic to take a photo
                     CoroutineScope(Dispatchers.IO).launch {
                       val photoFile = File(context.filesDir, "photo.jpg")
                       val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -205,22 +206,21 @@ fun CameraScreen(navigationActions: NavigationActions) {
                             ) {
                               Log.e("IMAGE SAVED", "IMAGE SAVED")
 
-                              // Charger le bitmap de l'image sauvegardée
+                              // Load the bitmap of the saved image
                               val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
 
-                              // Appliquer la rotation de 180° si la caméra selfie a été utilisée
+                              // Apply 180° rotation if selfie camera was used
                               val finalBitmap =
                                   if (isCameraSelfie) {
                                     mirrorImage(
                                         rotateImageIfSelfie(
                                             bitmap,
-                                            isCameraSelfie)) // Appliquer la rotation et le miroir
-                                    // si selfie
+                                            isCameraSelfie)) // Apply rotation and mirror for selfie
                                   } else {
-                                    bitmap // Utiliser le bitmap original si ce n'est pas un selfie
-                                  } // val finalBitmap = bitmap
+                                    bitmap // Use original bitmap if not a selfie
+                                  }
 
-                              // Sauvegarder l'image corrigée
+                              // Save the corrected image
                               val outputStream = FileOutputStream(photoFile)
                               finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
                               outputStream.flush()
@@ -243,7 +243,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
     Row(
         modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 140.dp),
         horizontalArrangement = Arrangement.Center) {
-          // Bouton Photo
+          // Photo button
           Text(
               text = "Photo",
               modifier =
@@ -251,22 +251,22 @@ fun CameraScreen(navigationActions: NavigationActions) {
                           if (!isVideoMode) Color(0xFFD6DCE5) else Color.Transparent, CircleShape)
                       .padding(8.dp)
                       .clickable {
-                        isVideoMode = false // Bascule en mode Photo
+                        isVideoMode = false // Switch to Photo mode
                       }
                       .testTag("photoButton"),
               color = if (!isVideoMode) Color.Black else Color.Gray)
 
           Spacer(modifier = Modifier.width(32.dp))
 
-          // Bouton Vidéo
+          // Video button
           Text(
-              text = "Vidéo",
+              text = "Video",
               modifier =
                   Modifier.background(
                           if (isVideoMode) Color(0xFFD6DCE5) else Color.Transparent, CircleShape)
                       .padding(8.dp)
                       .clickable {
-                        isVideoMode = true // Bascule en mode Vidéo
+                        isVideoMode = true // Switch to Video mode
                       }
                       .testTag("videoButton"),
               color = if (isVideoMode) Color.Black else Color.Gray)
@@ -274,12 +274,12 @@ fun CameraScreen(navigationActions: NavigationActions) {
   }
 }
 
-// Fonction pour ajuster l'image si elle a été prise en selfie
+// Function to rotate the image if taken with the front camera
 fun rotateImageIfSelfie(bitmap: Bitmap, isSelfie: Boolean): Bitmap {
   if (isSelfie) {
     val matrix =
         Matrix().apply {
-          postRotate(180f) // Appliquer une rotation de 180 degrés
+          postRotate(180f) // Apply a 180-degree rotation
         }
     return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
   }
@@ -289,7 +289,7 @@ fun rotateImageIfSelfie(bitmap: Bitmap, isSelfie: Boolean): Bitmap {
 fun mirrorImage(bitmap: Bitmap): Bitmap {
   val matrix =
       Matrix().apply {
-        preScale(1f, -1f) // Flip horizontal
+        preScale(1f, -1f) // Flip horizontally
       }
   return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 }

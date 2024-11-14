@@ -38,28 +38,30 @@ class TodoRepositoryTest {
   @Test
   fun `getActualTodos should call documents`() {
     whenever(mockFirestore.collection("todos")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("ownerId", "userId")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.whereEqualTo("status", "ACTUAL")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockSnapshot))
     whenever(mockSnapshot.documents).thenReturn(listOf())
 
-    repository.getActualTodos(onSuccess = {}, onFailure = { throw it })
+    repository.getActualTodos("userId", onSuccess = {}, onFailure = { throw it })
     verify(timeout(100)) { (mockSnapshot).documents }
   }
 
   @Test
   fun `getDoneTodos should call documents`() {
     whenever(mockFirestore.collection("todos")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("ownerId", "userId")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.whereEqualTo("status", "DONE")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockSnapshot))
     whenever(mockSnapshot.documents).thenReturn(listOf())
 
-    repository.getDoneTodos(onSuccess = {}, onFailure = { throw it })
+    repository.getDoneTodos("userId", onSuccess = {}, onFailure = { throw it })
     verify(timeout(100)) { (mockSnapshot).documents }
   }
 
   @Test
   fun `addNewTodo should add a todo to Firestore`() {
-    val newTodo = Todo("1", "Task", 60, TodoStatus.ACTUAL)
+    val newTodo = Todo("1", "Task", 60, TodoStatus.ACTUAL, "3")
 
     whenever(mockFirestore.collection("todos")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.document(newTodo.uid)).thenReturn(mockDocumentRef)
@@ -72,7 +74,7 @@ class TodoRepositoryTest {
 
   @Test
   fun `updateTodo should update a todo in Firestore`() {
-    val updatedTodo = Todo("1", "Updated Task", 120, TodoStatus.ACTUAL)
+    val updatedTodo = Todo("1", "Updated Task", 120, TodoStatus.ACTUAL, "3")
 
     whenever(mockFirestore.collection("todos")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.document(updatedTodo.uid)).thenReturn(mockDocumentRef)

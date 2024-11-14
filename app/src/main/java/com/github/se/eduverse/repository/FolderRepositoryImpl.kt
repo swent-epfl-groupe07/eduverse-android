@@ -10,6 +10,17 @@ import java.util.Calendar
 import java.util.HashMap
 
 class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository {
+  private val folderNameText = "name"
+  private val ownerIdText = "ownerId"
+  private val filesText = "files"
+  private val filterTypeText = "filterType"
+  private val archivedText = "archived"
+
+  private val fileNameText = "name"
+  private val fileIdText = "fileId"
+  private val creationTimeText = "creationTime"
+  private val lastAccessText = "lastAccess"
+  private val numberAccessText = "numberAccess"
 
   private val collectionPath = "folders"
 
@@ -17,19 +28,24 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
    * Access the list of folders associated to a user.
    *
    * @param userId the id of the active user
+   * @param archived if we want the archived folders
    * @param onSuccess code executed if the folders are successfully accessed
    * @param onFailure code executed if the folders can't be accessed
    */
   override fun getFolders(
       userId: String,
+      archived: Boolean,
       onSuccess: (List<Folder>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(collectionPath)
-        .whereEqualTo("ownerId", userId)
+        .whereEqualTo(ownerIdText, userId)
         .get()
         .addOnSuccessListener { folders ->
-          onSuccess(folders.documents.map { document -> convertFolder(document) })
+          onSuccess(
+              folders.documents
+                  .map { document -> convertFolder(document) }
+                  .filter { it.archived == archived })
         }
         .addOnFailureListener(onFailure)
   }
@@ -44,10 +60,11 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
   override fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     val mappedFolders =
         hashMapOf(
-            "name" to folder.name,
-            "ownerId" to folder.ownerID,
-            "files" to folder.files.map { fileToMap(it) },
-            "filterType" to filterToString(folder.filterType))
+            folderNameText to folder.name,
+            ownerIdText to folder.ownerID,
+            filesText to folder.files.map { fileToMap(it) },
+            filterTypeText to filterToString(folder.filterType),
+            archivedText to folder.archived)
 
     db.collection(collectionPath)
         .document(folder.id)
@@ -66,10 +83,11 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
   override fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     val mappedFolders =
         hashMapOf(
-            "name" to folder.name,
-            "ownerId" to folder.ownerID,
-            "files" to folder.files.map { fileToMap(it) },
-            "filterType" to filterToString(folder.filterType))
+            folderNameText to folder.name,
+            ownerIdText to folder.ownerID,
+            filesText to folder.files.map { fileToMap(it) },
+            filterTypeText to filterToString(folder.filterType),
+            archivedText to folder.archived)
 
     db.collection(collectionPath)
         .document(folder.id)
@@ -104,33 +122,34 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
 
   private fun fileToMap(file: MyFile): HashMap<String, String> {
     return hashMapOf(
-        "name" to file.name,
-        "fileId" to file.fileId,
-        "creationTime" to file.creationTime.timeInMillis.toString(),
-        "lastAccess" to file.lastAccess.timeInMillis.toString(),
-        "numberAccess" to file.numberAccess.toString())
+        fileNameText to file.name,
+        fileIdText to file.fileId,
+        creationTimeText to file.creationTime.timeInMillis.toString(),
+        lastAccessText to file.lastAccess.timeInMillis.toString(),
+        numberAccessText to file.numberAccess.toString())
   }
 
   private fun mapToFile(map: Map<String, String>): MyFile {
     return MyFile(
         "",
-        map["fileId"]!!,
-        map["name"]!!,
-        Calendar.getInstance().apply { timeInMillis = (map["creationTime"]!!.toLong()) },
-        Calendar.getInstance().apply { timeInMillis = (map["lastAccess"]!!.toLong()) },
-        map["numberAccess"]!!.toInt())
+        map[fileIdText]!!,
+        map[fileNameText]!!,
+        Calendar.getInstance().apply { timeInMillis = (map[creationTimeText]!!.toLong()) },
+        Calendar.getInstance().apply { timeInMillis = (map[lastAccessText]!!.toLong()) },
+        map[numberAccessText]!!.toInt())
   }
 
   fun convertFolder(document: DocumentSnapshot): Folder {
-    val rawFiles = document.get("files") as? List<Map<String, String>>
+    val rawFiles = document.get(filesText) as? List<Map<String, String>>
     val files: List<MyFile> = rawFiles?.map { mapToFile(it) } ?: emptyList()
 
     return Folder(
-        ownerID = document.getString("ownerId")!!,
+        ownerID = document.getString(ownerIdText)!!,
         files = files.toMutableList(),
-        name = document.getString("name")!!,
+        name = document.getString(folderNameText)!!,
         id = document.id,
-        filterType = stringToFilter(document.getString("filterType")!!))
+        filterType = stringToFilter(document.getString(filterTypeText)!!),
+        archived = document.getBoolean(archivedText) ?: false)
   }
 
   private fun stringToFilter(string: String): FilterTypes {

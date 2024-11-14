@@ -4,6 +4,7 @@ import android.net.Uri
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
+import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -20,10 +21,15 @@ class ProfileViewModelTest {
   private lateinit var profileViewModel: ProfileViewModel
   private val mockRepository: ProfileRepository = mock(ProfileRepository::class.java)
 
+  private val defaultProfile = Profile(id = "testId", username = "testUser")
+
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     profileViewModel = ProfileViewModel(mockRepository)
+
+    // Setup default profile without using matchers
+    runTest { `when`(mockRepository.getProfile("testUser")).thenReturn(defaultProfile) }
   }
 
   @Test
@@ -37,6 +43,7 @@ class ProfileViewModelTest {
             publications = listOf(),
             favoritePublications = listOf())
 
+    // Use specific value instead of matcher
     `when`(mockRepository.getProfile("testUser")).thenReturn(testProfile)
 
     profileViewModel.loadProfile("testUser")
@@ -45,6 +52,7 @@ class ProfileViewModelTest {
     val state = profileViewModel.profileState.first()
     assertTrue(state is ProfileUiState.Success)
     assertEquals(testProfile, (state as ProfileUiState.Success).profile)
+    verify(mockRepository, times(2)).getProfile("testUser")
   }
 
   @Test
@@ -61,47 +69,36 @@ class ProfileViewModelTest {
 
   @Test
   fun `updateProfileImage success updates state`() = runTest {
+    clearInvocations(mockRepository)
     val imageUri = mock(Uri::class.java)
     val imageUrl = "http://example.com/image.jpg"
+    val userId = "testUser"
 
-    `when`(mockRepository.uploadProfileImage("testUser", imageUri)).thenReturn(imageUrl)
+    `when`(mockRepository.uploadProfileImage(userId, imageUri)).thenReturn(imageUrl)
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
-    profileViewModel.updateProfileImage("testUser", imageUri)
+    profileViewModel.updateProfileImage(userId, imageUri)
     advanceUntilIdle()
 
     val state = profileViewModel.imageUploadState.first()
     assertTrue(state is ImageUploadState.Success)
-    verify(mockRepository).updateProfileImage("testUser", imageUrl)
-  }
-
-  @Test
-  fun `toggleFavorite adds publication to favorites`() = runTest {
-    profileViewModel.toggleFavorite("testUser", "pub123", false)
-    advanceUntilIdle()
-
-    verify(mockRepository).addToFavorites("testUser", "pub123")
-    verify(mockRepository).getProfile("testUser")
-  }
-
-  @Test
-  fun `toggleFavorite removes publication from favorites`() = runTest {
-    profileViewModel.toggleFavorite("testUser", "pub123", true)
-    advanceUntilIdle()
-
-    verify(mockRepository).removeFromFavorites("testUser", "pub123")
-    verify(mockRepository).getProfile("testUser")
+    verify(mockRepository).updateProfileImage(userId, imageUrl)
+    verify(mockRepository, times(2)).getProfile(userId)
   }
 
   @Test
   fun `addPublication success updates profile`() = runTest {
+    clearInvocations(mockRepository)
     val userId = "testUser"
     val publication = Publication(id = "pub1", userId = userId, title = "Test")
+
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.addPublication(userId, publication)
     advanceUntilIdle()
 
     verify(mockRepository).addPublication(userId, publication)
-    verify(mockRepository).getProfile(userId)
+    verify(mockRepository, times(2)).getProfile(userId) // Changed from 1 to 2
   }
 
   @Test
@@ -111,6 +108,7 @@ class ProfileViewModelTest {
 
     `when`(mockRepository.addPublication(userId, publication))
         .thenThrow(RuntimeException("Failed to add"))
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.addPublication(userId, publication)
     advanceUntilIdle()
@@ -121,59 +119,118 @@ class ProfileViewModelTest {
   }
 
   @Test
-  fun `toggleFollow follows user when not following`() = runTest {
+  fun `toggleFollow updates UI state optimistically on follow action`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
-    profileViewModel.toggleFollow(currentUserId, targetUserId, false)
+    // Set initial state
+    `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
+    profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
 
-    verify(mockRepository).followUser(currentUserId, targetUserId)
-    verify(mockRepository).getProfile(currentUserId)
+    // Perform follow action
+    profileViewModel.toggleFollow(currentUserId, targetUserId)
+    advanceUntilIdle()
+
+    // Verify UI state was updated optimistically
+    val state = profileViewModel.profileState.first() as ProfileUiState.Success
+    assertTrue(state.profile.isFollowedByCurrentUser)
+    assertEquals(6, state.profile.followers)
+
+    // Verify follow action state
+    val followState = profileViewModel.followActionState.first()
+    assertTrue(followState is FollowActionState.Success)
   }
 
   @Test
-  fun `toggleFollow unfollows user when following`() = runTest {
+  fun `toggleFollow updates UI state optimistically on unfollow action`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
+    val initialProfile =
+        Profile(
+            id = targetUserId, username = "testUser", followers = 5, isFollowedByCurrentUser = true)
 
-    profileViewModel.toggleFollow(currentUserId, targetUserId, true)
+    // Set initial state
+    `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
+    profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
 
-    verify(mockRepository).unfollowUser(currentUserId, targetUserId)
-    verify(mockRepository).getProfile(currentUserId)
+    // Perform unfollow action
+    profileViewModel.toggleFollow(currentUserId, targetUserId)
+    advanceUntilIdle()
+
+    // Verify UI state was updated optimistically
+    val state = profileViewModel.profileState.first() as ProfileUiState.Success
+    assertFalse(state.profile.isFollowedByCurrentUser)
+    assertEquals(4, state.profile.followers)
+
+    // Verify follow action state
+    val followState = profileViewModel.followActionState.first()
+    assertTrue(followState is FollowActionState.Success)
   }
 
   @Test
-  fun `toggleFollow failure updates state with error`() = runTest {
+  fun `toggleFollow shows error state on failure`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
-    `when`(mockRepository.followUser(currentUserId, targetUserId))
-        .thenThrow(RuntimeException("Failed to follow"))
+    // Set initial state and mock error
+    `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
+    `when`(mockRepository.toggleFollow(currentUserId, targetUserId))
+        .thenThrow(RuntimeException("Network error"))
 
-    profileViewModel.toggleFollow(currentUserId, targetUserId, false)
+    profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
 
-    val state = profileViewModel.profileState.first()
-    assertTrue(state is ProfileUiState.Error)
-    assertEquals("Failed to follow", (state as ProfileUiState.Error).message)
+    // Perform follow action
+    profileViewModel.toggleFollow(currentUserId, targetUserId)
+    advanceUntilIdle()
+
+    // Verify follow action error state
+    val followState = profileViewModel.followActionState.first()
+    assertTrue(followState is FollowActionState.Error)
+    assertEquals("Network error", (followState as FollowActionState.Error).message)
   }
 
   @Test
-  fun `toggleFavorite failure updates state with error`() = runTest {
-    val userId = "testUser"
-    val pubId = "pub123"
+  fun `toggleFollow handles transaction error gracefully`() = runTest {
+    val currentUserId = "user1"
+    val targetUserId = "user2"
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
-    `when`(mockRepository.addToFavorites(userId, pubId))
-        .thenThrow(RuntimeException("Failed to favorite"))
+    // Set initial state and mock transaction error
+    `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
+    `when`(mockRepository.toggleFollow(currentUserId, targetUserId))
+        .thenThrow(RuntimeException("Firestore transactions require all reads"))
 
-    profileViewModel.toggleFavorite(userId, pubId, false)
+    profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
 
-    val state = profileViewModel.profileState.first()
-    assertTrue(state is ProfileUiState.Error)
-    assertEquals("Failed to favorite", (state as ProfileUiState.Error).message)
+    // Perform follow action
+    profileViewModel.toggleFollow(currentUserId, targetUserId)
+    advanceUntilIdle()
+
+    // Verify error is handled properly
+    val followState = profileViewModel.followActionState.first()
+    assertTrue(followState is FollowActionState.Error)
+    assertEquals("Failed to update follow status", (followState as FollowActionState.Error).message)
   }
 
   @Test
@@ -183,6 +240,7 @@ class ProfileViewModelTest {
 
     `when`(mockRepository.uploadProfileImage(userId, imageUri))
         .thenThrow(RuntimeException("Upload failed"))
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
 
     profileViewModel.updateProfileImage(userId, imageUri)
     advanceUntilIdle()
@@ -204,8 +262,207 @@ class ProfileViewModelTest {
     assertEquals("Profile not found", (state as ProfileUiState.Error).message)
   }
 
+  @Test
+  fun `updateUsername when username is blank returns error state`() = runTest {
+    profileViewModel.updateUsername("testUser", "")
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals("Username cannot be empty", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername("testUser", "")
+  }
+
+  @Test
+  fun `updateUsername when username is too short returns error state`() = runTest {
+    profileViewModel.updateUsername("testUser", "ab")
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(
+        "Username must be at least 3 characters", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername("testUser", "ab")
+  }
+
+  @Test
+  fun `updateUsername with invalid characters returns error state`() = runTest {
+    val userId = "testUser"
+    val invalidUsername = "user@name!"
+
+    profileViewModel.updateUsername(userId, invalidUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(
+        "Username can only contain letters, numbers, dots and underscores",
+        (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername(userId, invalidUsername)
+  }
+
+  @Test
+  fun `updateUsername when username already exists returns error state`() = runTest {
+    val userId = "testUser"
+    val existingUsername = "existingUser"
+
+    `when`(mockRepository.doesUsernameExist(existingUsername)).thenReturn(true)
+
+    profileViewModel.updateUsername(userId, existingUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals("Username already taken", (state as UsernameUpdateState.Error).message)
+    verify(mockRepository, never()).updateUsername(userId, existingUsername)
+  }
+
+  @Test
+  fun `updateUsername with valid username updates successfully`() = runTest {
+    val userId = "testUser"
+    val newUsername = "validUser123"
+
+    `when`(mockRepository.doesUsernameExist(newUsername)).thenReturn(false)
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
+
+    profileViewModel.updateUsername(userId, newUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Success)
+    verify(mockRepository).updateUsername(userId, newUsername)
+    verify(mockRepository, times(2)).getProfile(userId)
+  }
+
+  @Test
+  fun `updateUsername when repository throws exception returns error state`() = runTest {
+    val userId = "testUser"
+    val newUsername = "validUser123"
+    val errorMessage = "Database error"
+
+    `when`(mockRepository.doesUsernameExist(newUsername)).thenReturn(false)
+    `when`(mockRepository.updateUsername(userId, newUsername))
+        .thenThrow(RuntimeException(errorMessage))
+
+    profileViewModel.updateUsername(userId, newUsername)
+    advanceUntilIdle()
+
+    val state = profileViewModel.usernameState.first()
+    assertTrue(state is UsernameUpdateState.Error)
+    assertEquals(errorMessage, (state as UsernameUpdateState.Error).message)
+  }
+
+  @Test
+  fun likeAndAddToFavorites_success() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    profileViewModel.likeAndAddToFavorites(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).incrementLikes(publicationId, userId)
+    verify(mockRepository).addToUserCollection(userId, "likedPublications", publicationId)
+    assertNull(profileViewModel.error.value)
+  }
+
+  @Test
+  fun likeAndAddToFavorites_failure() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    `when`(mockRepository.incrementLikes(publicationId, userId))
+        .thenThrow(RuntimeException("Failed to like"))
+
+    profileViewModel.likeAndAddToFavorites(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).incrementLikes(publicationId, userId)
+    verify(mockRepository, never()).addToUserCollection(userId, "likedPublications", publicationId)
+    assertNotNull(profileViewModel.error.value)
+    assertEquals("Failed to like and save publication", profileViewModel.error.value)
+  }
+
+  @Test
+  fun removeLike_success() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    profileViewModel.removeLike(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromLikedPublications(userId, publicationId)
+    verify(mockRepository).decrementLikesAndRemoveUser(publicationId, userId)
+    assertNull(profileViewModel.error.value)
+  }
+
+  @Test
+  fun removeLike_failure() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    // Simulate an exception when removing the like
+    `when`(mockRepository.removeFromLikedPublications(userId, publicationId))
+        .thenThrow(RuntimeException("Failed to remove like"))
+
+    profileViewModel.removeLike(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromLikedPublications(userId, publicationId)
+    assertNotNull(profileViewModel.error.value)
+    assertEquals("Failed to remove like: Failed to remove like", profileViewModel.error.value)
+  }
+
+  @Test
+  fun `loadLikedPublications success updates state with liked publications`() = runTest {
+    val userId = "testUser"
+    val likedPublicationIds = listOf("pub1", "pub2")
+    val allPublications =
+        listOf(
+            Publication(id = "pub1", userId = userId, title = "Publication 1"),
+            Publication(id = "pub2", userId = userId, title = "Publication 2"),
+            Publication(id = "pub3", userId = "otherUser", title = "Publication 3"))
+    val expectedLikedPublications = allPublications.filter { it.id in likedPublicationIds }
+
+    // Mock repository responses
+    `when`(mockRepository.getUserLikedPublicationsIds(userId)).thenReturn(likedPublicationIds)
+    `when`(mockRepository.getAllPublications()).thenReturn(allPublications)
+
+    // Call the method under test
+    profileViewModel.loadLikedPublications(userId)
+    advanceUntilIdle()
+
+    // Verify the state is updated correctly
+    val likedPublications = profileViewModel.likedPublications.first()
+    assertEquals(expectedLikedPublications, likedPublications)
+    assertNull(profileViewModel.error.value)
+
+    verify(mockRepository).getUserLikedPublicationsIds(userId)
+    verify(mockRepository).getAllPublications()
+  }
+
+  @Test
+  fun `loadLikedPublications failure updates state with error`() = runTest {
+    val userId = "testUser"
+
+    // Simulate an exception when fetching liked publication IDs
+    `when`(mockRepository.getUserLikedPublicationsIds(userId))
+        .thenThrow(RuntimeException("Failed to fetch liked publications"))
+
+    // Call the method under test
+    profileViewModel.loadLikedPublications(userId)
+    advanceUntilIdle()
+
+    // Verify that an error message is set
+    val error = profileViewModel.error.first()
+    assertEquals("Failed to load liked publications: Failed to fetch liked publications", error)
+
+    verify(mockRepository).getUserLikedPublicationsIds(userId)
+    verify(mockRepository, never()).getAllPublications()
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+    unmockkAll()
   }
 }

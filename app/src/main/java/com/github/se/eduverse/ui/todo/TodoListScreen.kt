@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -26,21 +25,16 @@ import com.github.se.eduverse.viewmodel.TodoListViewModel
 
 /** Composable that represents the user's todo list screen */
 @Composable
-fun TodoListScreen(
-    navigationActions: NavigationActions,
-    todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
-) {
+fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: TodoListViewModel) {
   val actualTodos = todoListViewModel.actualTodos.collectAsState()
   val doneTodos = todoListViewModel.doneTodos.collectAsState()
   var showCompleted by remember { mutableStateOf(false) }
+
   Scaffold(
       topBar = { TopNavigationBar("Todo List", navigationActions = navigationActions) },
       content = { pd ->
         Column(modifier = Modifier.fillMaxSize().padding(pd).testTag("todoListScreen")) {
-          AddTodoEntry { name ->
-            val newTodo = Todo(todoListViewModel.getNewUid(), name, status = TodoStatus.ACTUAL)
-            todoListViewModel.addNewTodo(newTodo)
-          }
+          AddTodoEntry { name -> todoListViewModel.addNewTodo(name) }
           Spacer(modifier = Modifier.height(10.dp))
           Row(
               modifier = Modifier.padding(8.dp),
@@ -112,9 +106,12 @@ fun TodoItem(todo: Todo, onUndo: (Todo) -> Unit, onDone: (Todo) -> Unit) {
               }
           Text(
               todo.name,
-              modifier = Modifier.weight(1f).padding(start = 8.dp, end = 8.dp),
+              modifier =
+                  Modifier.weight(1f)
+                      .padding(start = 8.dp, end = 8.dp)
+                      .testTag("todoName_${todo.uid}"),
               textDecoration = if (completed) TextDecoration.LineThrough else TextDecoration.None,
-              color = if (completed) Color.Gray else Color.Black)
+              color = if (completed) Color.Gray else Color.Unspecified)
           IconButton(
               onClick = {},
               modifier = Modifier.testTag("todoOptionsButton_${todo.uid}").padding(8.dp)) {
@@ -144,7 +141,8 @@ fun AddTodoEntry(onAdd: (String) -> Unit) {
               modifier = Modifier.padding(8.dp).testTag("addTodoButton"),
               enabled = name.isNotEmpty(),
               colors =
-                  IconButtonColors(Color(0xFF217384), Color.White, Color.White, Color.LightGray)) {
+                  IconButtonColors(
+                      Color(0xFF217384), Color.White, Color.Transparent, Color.LightGray)) {
                 Icon(Icons.Default.Add, contentDescription = "Add Todo")
               }
           BasicTextField(

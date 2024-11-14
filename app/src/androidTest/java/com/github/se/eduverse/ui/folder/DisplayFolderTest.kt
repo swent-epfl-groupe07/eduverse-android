@@ -1,11 +1,16 @@
 package com.github.se.eduverse.ui.folder
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
@@ -30,6 +35,7 @@ import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class DisplayFolderTest {
@@ -54,7 +60,8 @@ class DisplayFolderTest {
             }
           },
           "folder",
-          "1")
+          "1",
+          archived = false)
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -66,12 +73,12 @@ class DisplayFolderTest {
     navigationActions = mock(NavigationActions::class.java)
 
     doAnswer {
-          val callback = it.getArgument<(List<Folder>) -> Unit>(1)
+          val callback = it.getArgument<(List<Folder>) -> Unit>(2)
           callback(listOf(folder))
           null
         }
         .whenever(folderRepository)
-        .getFolders(any(), any(), any())
+        .getFolders(any(), any(), any(), any())
 
     val auth = mock(FirebaseAuth::class.java)
     val currentUser = mock(FirebaseUser::class.java)
@@ -93,6 +100,7 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("scaffold").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("column").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("archive").assertIsDisplayed()
     composeTestRule.onNodeWithTag(file1.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file2.name).assertIsDisplayed()
     composeTestRule.onNodeWithTag(file3.name).assertIsDisplayed()
@@ -254,12 +262,12 @@ class DisplayFolderTest {
       callback()
     }
 
-    composeTestRule.onNodeWithTag("name 1").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(3)
 
-    composeTestRule.onNodeWithTag("delete_icon_name 1").performClick()
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete").performClick()
 
     composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
     composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
@@ -267,10 +275,10 @@ class DisplayFolderTest {
 
     composeTestRule.onNodeWithTag("yes").performClick()
 
-    composeTestRule.onNodeWithTag("name 1").assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 1").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(2)
 
-    composeTestRule.onNodeWithTag("delete_icon_name 2").performClick()
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+    composeTestRule.onNodeWithTag("delete").performClick()
 
     composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
     composeTestRule.onNodeWithTag("yes").assertIsDisplayed()
@@ -278,7 +286,44 @@ class DisplayFolderTest {
 
     composeTestRule.onNodeWithTag("no").performClick()
 
-    composeTestRule.onNodeWithTag("name 2").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("delete_icon_name 2").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(2)
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+  }
+
+  @Test
+  fun renameFileWorkLikeExpected() {
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(3)
+
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+
+    composeTestRule.onNodeWithTag("rename").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("rename").performClick()
+
+    composeTestRule.onNodeWithTag("renameDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("textField").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("textField").performTextInput("test_input")
+
+    composeTestRule.onNodeWithTag("cancel").performClick()
+    composeTestRule.onAllNodesWithText("test_input").assertCountEquals(0)
+
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+    composeTestRule.onNodeWithTag("rename").performClick()
+
+    composeTestRule.onNodeWithTag("textField").performTextInput("test_input")
+
+    composeTestRule.onNodeWithTag("confirm").performClick()
+    composeTestRule.onAllNodesWithText("test_input").assertCountEquals(1)
+  }
+
+  @Test
+  fun archiveButtonTest() {
+    composeTestRule.onNodeWithTag("archive").performClick()
+    verify(2) { folderRepository.updateFolder(any(), any(), any()) }
+    verify(navigationActions).goBack()
+
+    assert(folder.archived)
   }
 }
