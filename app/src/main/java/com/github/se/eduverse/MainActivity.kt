@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,10 +25,10 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
-import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.VideoScreen
@@ -39,6 +38,7 @@ import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.CropPhotoScreen
 import com.github.se.eduverse.ui.camera.NextScreen
+import com.github.se.eduverse.ui.camera.PermissionDeniedScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
@@ -51,15 +51,22 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
+import com.github.se.eduverse.ui.search.SearchProfileScreen
+import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.timetable.TimeTableScreen
+import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
+import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -70,38 +77,68 @@ import java.io.File
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
+  private var audioPermissionGranted by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
-
     super.onCreate(savedInstanceState)
 
-    // Initialiser Firebase Auth
-    auth = FirebaseAuth.getInstance()
-    if (auth.currentUser != null) {
-      auth.signOut()
-    }
+    // Handling camera and microphone permissions
+    val requestPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            permissions ->
+          // Update variables based on granted permissions
+          cameraPermissionGranted =
+              permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
+          audioPermissionGranted =
+              permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
 
-    // Ajout du VideoRepository et du VideoViewModel
-
-    // Gestion des permissions de la caméra
-    val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-          cameraPermissionGranted = isGranted
+          // Now that permissions are handled, you can set the content
+          setContent {
+            EduverseTheme {
+              Surface(modifier = Modifier.fillMaxSize()) {
+                EduverseApp(
+                    cameraPermissionGranted = cameraPermissionGranted,
+                )
+              }
+            }
+          }
         }
 
-    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-        PackageManager.PERMISSION_GRANTED) {
+    // Check the status of each permission individually
+    val cameraPermissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+    val audioPermissionStatus =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+
+    // Create a list to store permissions to request
+    val permissionsToRequest = mutableListOf<String>()
+
+    if (cameraPermissionStatus == PackageManager.PERMISSION_GRANTED) {
       cameraPermissionGranted = true
     } else {
-      requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+      permissionsToRequest.add(Manifest.permission.CAMERA)
     }
 
-    setContent {
-      EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
+    if (audioPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+      audioPermissionGranted = true
+    } else {
+      permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+    }
+
+    if (permissionsToRequest.isEmpty()) {
+      // All permissions are already granted, you can set the content
+      setContent {
+        EduverseTheme {
+          Surface(modifier = Modifier.fillMaxSize()) {
+            EduverseApp(
+                cameraPermissionGranted = cameraPermissionGranted,
+            )
+          }
+        }
       }
+    } else {
+      // Request only the missing permissions
+      requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
     }
   }
 }
@@ -118,8 +155,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       ProfileRepositoryImpl(
           firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
-  val folderRepo = FolderRepositoryImpl(db = firestore)
-  val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
@@ -127,6 +163,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
   val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
+  val timeTableRepo = TimeTableRepositoryImpl(firestore)
+  val timeTableViewModel = TimeTableViewModel(timeTableRepo, FirebaseAuth.getInstance())
+  val pdfConverterViewModel: PdfConverterViewModel =
+      viewModel(factory = PdfConverterViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -151,14 +192,36 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
+      composable(Screen.PDF_CONVERTER) {
+        PdfConverterScreen(navigationActions, pdfConverterViewModel)
+      }
+      composable(Screen.SEARCH) {
+        SearchProfileScreen(navigationActions, viewModel = profileViewModel)
+      }
+      composable(Screen.TIME_TABLE) {
+        TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
+      }
     }
+
+    composable(
+        route = Screen.USER_PROFILE.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId =
+              backStackEntry.arguments?.getString("userId")
+                  ?: return@composable // Handle missing userId
+
+          UserProfileScreen(
+              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
+        }
 
     navigation(
         startDestination = Screen.VIDEOS,
         route = Route.VIDEOS,
     ) {
-      composable(Screen.VIDEOS) { VideoScreen(navigationActions, publicationViewModel) }
+      composable(Screen.VIDEOS) {
+        VideoScreen(navigationActions, publicationViewModel, profileViewModel)
+      }
     }
 
     navigation(
@@ -176,7 +239,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         if (cameraPermissionGranted) {
           CameraScreen(navigationActions)
         } else {
-          PermissionDeniedScreen()
+          PermissionDeniedScreen(navigationActions)
         }
       }
     }
@@ -194,7 +257,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         GalleryScreen(
-            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
+            ownerId = ownerId,
+            photoViewModel = photoViewModel,
+            videoViewModel,
+            folderViewModel,
+            navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }
@@ -207,8 +274,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
-
-    // Écran pour afficher la photo prise
+    // Screen to display the photo taken
     navigation(
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
@@ -216,9 +282,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
-
-    // Ajoute une route dynamique pour PicTakenScreen avec des arguments optionnels pour photo et
-    // vidéo
+    // Add a dynamic route for PicTakenScreen with optional arguments for photo and
+    // video
     composable(
         "picTaken/{photoPath}?videoPath={videoPath}",
         arguments =
@@ -231,15 +296,15 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
                   type = NavType.StringType
                   nullable = true
                 })) { backStackEntry ->
-          // Récupère les chemins de photo et de vidéo depuis les arguments
+          // Get photo and video paths from arguments
           val photoPath = backStackEntry.arguments?.getString("photoPath")
           val videoPath = backStackEntry.arguments?.getString("videoPath")
 
-          // Crée les fichiers correspondants si les chemins existent
+          // Create the corresponding files if the paths exist
           val photoFile = photoPath?.let { File(it) }
           val videoFile = videoPath?.let { File(it) }
 
-          // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
+          // Call PicTakenScreen with the photo and video files
           PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
         }
     composable(
@@ -281,9 +346,4 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
               videoViewModel)
         }
   }
-}
-
-@Composable
-fun PermissionDeniedScreen() {
-  Text("Permission Denied")
 }

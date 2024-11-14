@@ -1,16 +1,43 @@
 package com.github.se.eduverse.ui
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -83,5 +110,92 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
         }
 
     (context as LifecycleOwner).lifecycle.addObserver(lifecycleObserver)
+  }
+}
+
+@Composable
+fun DeleteFileDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+  Dialog(onDismissRequest = onDismiss) {
+    Column(
+        modifier =
+            Modifier.clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFFE0F7FA))
+                .padding(16.dp)
+                .testTag("confirm")) {
+          Text("Are you sure you want to delete this file ?")
+          Row(
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.testTag("yes"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                      Text("Yes")
+                    }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.testTag("no"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                      Text("No")
+                    }
+              }
+        }
+  }
+}
+
+@Composable
+fun RenameFileDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+  var name by remember { mutableStateOf("") }
+
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      confirmButton = {
+        TextButton(onClick = { onConfirm(name) }, modifier = Modifier.testTag("confirm")) {
+          Text("Confirm")
+        }
+      },
+      modifier = Modifier.testTag("renameDialog"),
+      dismissButton = {
+        TextButton(onClick = onDismiss, modifier = Modifier.testTag("cancel")) { Text("Cancel") }
+      },
+      title = { Text("Rename file") },
+      text = {
+        OutlinedTextField(
+            value = name,
+            modifier = Modifier.testTag("textField"),
+            onValueChange = { name = it },
+            label = { Text("Enter new name") })
+      })
+}
+
+@Composable
+fun EditFileMenu(modifier: Modifier, onRename: () -> Unit, onDelete: () -> Unit) {
+  var expanded by remember { mutableStateOf(false) }
+
+  Box(modifier) {
+    IconButton(onClick = { expanded = true }, modifier = Modifier.testTag("editButton")) {
+      Icon(Icons.Default.Edit, contentDescription = "Edit File")
+    }
+
+    DropdownMenu(
+        expanded = expanded,
+        modifier = Modifier.width(IntrinsicSize.Min),
+        onDismissRequest = { expanded = false },
+        properties = PopupProperties(focusable = false)) {
+          DropdownMenuItem(
+              text = { Text("Rename", modifier = Modifier.fillMaxWidth()) },
+              modifier = Modifier.fillMaxWidth().testTag("rename"),
+              onClick = {
+                onRename()
+                expanded = false
+              })
+          DropdownMenuItem(
+              text = { Text("Delete", modifier = Modifier.fillMaxWidth()) },
+              modifier = Modifier.fillMaxWidth().testTag("delete"),
+              onClick = {
+                onDelete()
+                expanded = false
+              })
+        }
   }
 }

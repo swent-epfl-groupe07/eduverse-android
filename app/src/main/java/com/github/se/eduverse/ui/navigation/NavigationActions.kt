@@ -44,6 +44,16 @@ object Screen {
   const val POMODORO = "Pomodoro screen"
   const val PDF_CONVERTER = "PdfConverter screen"
   const val PROFILE = "Profile screen"
+  const val TODO_LIST = "TodoList screen"
+  const val TIME_TABLE = "TimeTable screen"
+  const val SEARCH = "Search screen"
+
+  object USER_PROFILE {
+    const val route = "user_profile/{userId}"
+
+    // Helper function to create route with actual userId
+    fun createRoute(userId: String) = "user_profile/$userId"
+  }
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -130,5 +140,9 @@ open class NavigationActions(
    */
   open fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
+  }
+
+  fun navigateToUserProfile(userId: String) {
+    navController.navigate(Screen.USER_PROFILE.createRoute(userId))
   }
 }

@@ -3,7 +3,12 @@ package com.github.se.eduverse.repository
 import com.github.se.eduverse.model.Folder
 
 interface FolderRepository {
-  fun getFolders(userId: String, onSuccess: (List<Folder>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getFolders(
+      userId: String,
+      archived: Boolean = false,
+      onSuccess: (List<Folder>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun addFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
