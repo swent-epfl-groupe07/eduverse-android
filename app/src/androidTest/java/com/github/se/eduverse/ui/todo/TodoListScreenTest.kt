@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.todo
 
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
@@ -225,6 +227,65 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
     composeTestRule.onNodeWithTag("deleteTodoButton_1").performClick()
     composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
+    todos = sampleTodos
+  }
+
+  @Test
+  fun renameTodoDialogIsCorrectlyDisplayed() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoDialogTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoDialogTitle").assertTextContains("Rename Todo")
+    composeTestRule.onNodeWithTag("renameTodoTextField").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertTextContains("Rename")
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertIsEnabled()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("renameTodoDismissButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoDismissButton").assertTextContains("Cancel")
+    composeTestRule.onNodeWithTag("renameTodoDismissButton").assertHasClickAction()
+  }
+
+  @Test
+  fun renameTodoButtonClickResultsInCorrectBehaviour_onActualTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    val newName = "Renamed ToDo"
+    `when`(mockRepository.updateTodo(any(), any(), any())).then {
+      todos -= it.getArgument<Todo>(0).copy(name = "Second ToDo")
+      todos += it.getArgument<Todo>(0)
+      it.getArgument<() -> Unit>(1)()
+    }
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextInput(newName)
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").performClick()
+    composeTestRule.onNodeWithTag("todoName_2").assertTextContains("Renamed ToDo")
+    todos = sampleTodos
+  }
+
+  @Test
+  fun renameTodoButtonClickResultsInCorrectBehaviour_onDoneTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getDoneTodos()
+    val newName = "Renamed ToDo"
+    `when`(mockRepository.updateTodo(any(), any(), any())).then {
+      todos -= it.getArgument<Todo>(0).copy(name = "First ToDo")
+      todos += it.getArgument<Todo>(0)
+      it.getArgument<() -> Unit>(1)()
+    }
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextInput(newName)
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").performClick()
+    composeTestRule.onNodeWithTag("todoName_1").assertTextContains("Renamed ToDo")
     todos = sampleTodos
   }
 }
