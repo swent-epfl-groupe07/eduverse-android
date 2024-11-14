@@ -58,7 +58,7 @@ class NextScreenTest {
     navigationActions = mockk(relaxed = true)
     photoViewModel = mockk(relaxed = true)
     folderRepository = mock(FolderRepository::class.java)
-    
+
     // Properly mock Firebase Auth
     auth = mock(FirebaseAuth::class.java)
     val mockUser = mock(FirebaseUser::class.java)
