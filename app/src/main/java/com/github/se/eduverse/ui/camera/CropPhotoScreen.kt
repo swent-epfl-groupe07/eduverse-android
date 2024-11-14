@@ -3,6 +3,7 @@ package com.github.se.eduverse.ui.camera
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -83,6 +84,8 @@ fun CropPhotoScreen(
                     .background(Color.LightGray)
                     .testTag("cropImage"))
 
+        val topLimit = -100f // Example threshold in pixels from the top
+
         Canvas(
             modifier =
                 Modifier.fillMaxWidth().fillMaxHeight(0.9f).align(Alignment.Center).pointerInput(
@@ -91,28 +94,30 @@ fun CropPhotoScreen(
                         // Move the angle
                         val position = change.position
                         when {
+                          // For the top left corner, lock vertical movement above the topLimit
                           position.isNear(topLeft) -> {
-                            topLeft += dragAmount
-                            // Link the other corners based on the movement of topLeft
-                            topRight = Offset(topRight.x, topLeft.y)
-                            bottomLeft = Offset(topLeft.x, bottomLeft.y)
+                            val newTopLeftY = (topLeft + dragAmount).y.coerceAtLeast(topLimit)
+                            topLeft = Offset(topLeft.x + dragAmount.x, newTopLeftY)
+                            bottomLeft = Offset(topLeft.x, bottomRight.y)
+                            topRight = Offset(topRight.x, newTopLeftY) // Keep the top side level
                           }
+                          // For the top right corner, lock vertical movement above the topLimit
                           position.isNear(topRight) -> {
-                            topRight += dragAmount
-                            // Link the other corners based on the movement of topRight
-                            topLeft = Offset(bottomLeft.x, topRight.y)
+                            val newTopRightY = (topRight + dragAmount).y.coerceAtLeast(topLimit)
+                            topRight = Offset(topRight.x + dragAmount.x, newTopRightY)
                             bottomRight = Offset(topRight.x, bottomLeft.y)
+                            topLeft = Offset(topLeft.x, newTopRightY) // Keep the top side level
                           }
+                          // For bottom left, allow unrestricted movement and keep left side level
                           position.isNear(bottomLeft) -> {
                             bottomLeft += dragAmount
-                            // Link the other corners based on the movement of bottomLeft
                             bottomRight = Offset(topRight.x, bottomLeft.y)
                             topLeft = Offset(bottomLeft.x, topLeft.y)
                           }
+                          // For bottom right, allow unrestricted movement and keep right side level
                           position.isNear(bottomRight) -> {
                             bottomRight += dragAmount
-                            // Link the other corners based on the movement of bottomRight
-                            topRight = Offset(bottomRight.x, topLeft.y)
+                            topRight = Offset(bottomRight.x, topRight.y)
                             bottomLeft = Offset(topLeft.x, bottomRight.y)
                           }
                         }
@@ -160,20 +165,24 @@ fun CropPhotoScreen(
 
                     val cropRect =
                         Rect(
-                            mappedTopLeft.x.toInt(),
-                            mappedTopLeft.y.toInt(),
-                            mappedBottomRight.x.toInt(),
-                            mappedBottomRight.y.toInt())
-                    // Crop the image based on the selected corners
-                    val croppedBitmap = cropBitmap(originalBitmap, cropRect)
-                    saveCroppedImage(croppedBitmap, photoFile)
-                    val croppedImageBitmap = croppedBitmap.asImageBitmap()
-                    val byteArray = imageBitmapToByteArray(croppedImageBitmap)
-                    val photo = Photo(ownerId, byteArray, path)
-                    photoViewModel.savePhoto(photo)
-                    navigationActions.goBack()
-                    navigationActions.goBack()
-                    // Callback to go back to CameraScreen
+                            mappedTopLeft.x.toInt().coerceIn(0, originalBitmap.width),
+                            mappedTopLeft.y.toInt().coerceIn(0, originalBitmap.height),
+                            mappedBottomRight.x.toInt().coerceIn(0, originalBitmap.width),
+                            mappedBottomRight.y.toInt().coerceIn(0, originalBitmap.height))
+                    // Ensure the crop rectangle has a positive width and height
+                    if (cropRect.width() > 0 && cropRect.height() > 0) {
+                      val croppedBitmap = cropBitmap(originalBitmap, cropRect)
+                      saveCroppedImage(croppedBitmap, photoFile)
+                      val croppedImageBitmap = croppedBitmap.asImageBitmap()
+                      val byteArray = imageBitmapToByteArray(croppedImageBitmap)
+                      val photo = Photo(ownerId, byteArray, path)
+                      photoViewModel.savePhoto(photo)
+                      navigationActions.goBack()
+                      navigationActions.goBack()
+                    } else {
+                      // Show a toast message if the crop area is invalid
+                      Toast.makeText(context, "Cannot make this crop", Toast.LENGTH_SHORT).show()
+                    }
                   },
                   modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
                   colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
@@ -207,7 +216,7 @@ fun CropPhotoScreen(
       }
 }
 
-private fun Offset.isNear(target: Offset, threshold: Float = 100f): Boolean {
+private fun Offset.isNear(target: Offset, threshold: Float = 150f): Boolean {
   return (this - target).getDistance() < threshold
 }
 
