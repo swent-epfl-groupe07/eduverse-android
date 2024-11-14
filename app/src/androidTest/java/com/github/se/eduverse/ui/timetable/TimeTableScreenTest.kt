@@ -111,6 +111,7 @@ class TimeTableScreenTest {
       callback()
     }
 
+    `when`(todoRepository.init(any())).then { it.getArgument<(String?) -> Unit>(0)("3") }
     `when`(todoRepository.getActualTodos(any(), any(), any())).then {
       val callback = it.getArgument<(List<Todo>) -> Unit>(1)
       callback(listOf(todo1, todo2, todo3))
