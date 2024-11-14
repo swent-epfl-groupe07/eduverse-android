@@ -42,8 +42,8 @@ fun CropPhotoScreen(
     photoViewModel: PhotoViewModel,
     navigationActions: NavigationActions
 ) {
-  val originalBitmap =
-      photoFile.let { adjustImageRotation(BitmapFactory.decodeFile(it.path)).asImageBitmap() }
+
+  val originalBitmap = adjustImageRotation(BitmapFactory.decodeFile(photoFile.path)).asImageBitmap()
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
 
