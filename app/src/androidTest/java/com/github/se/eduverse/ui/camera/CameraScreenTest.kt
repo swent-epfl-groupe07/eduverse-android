@@ -155,7 +155,5 @@ class CameraScreenTest {
 
     // Verify that the recording indicator is displayed when recording is active
     composeTestRule.onNodeWithTag("recordingIndicator").assertIsDisplayed()
-
-    }
-
+  }
 }
