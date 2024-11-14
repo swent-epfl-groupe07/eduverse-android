@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +39,7 @@ fun PermissionDeniedScreen(navigationActions: NavigationActions) {
 
   LaunchedEffect(cameraPermissionGranted) {
     if (cameraPermissionGranted) {
-      navigationActions.navigateTo("Camera screen")
+      navigationActions.navigateTo(Screen.CAMERA)
     }
   }
 
