@@ -1,14 +1,18 @@
 package com.github.se.eduverse.ui.timetable
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,17 +48,16 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun DetailsEventScreen(/*
+fun DetailsEventScreen(
     event: Scheduled,
     timeTableViewModel: TimeTableViewModel,
-    navigationActions: NavigationActions*/
+    navigationActions: NavigationActions
 ) {
     val context = LocalContext.current
 
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(event.name) }
+    var description by remember { mutableStateOf(event.content) }
 
     Scaffold(
         topBar = {
@@ -68,7 +71,7 @@ fun DetailsEventScreen(/*
                 modifier = Modifier.testTag("topBar"),
                 navigationIcon = {
                     IconButton(
-                        onClick = { },//navigationActions.goBack() },
+                        onClick = { navigationActions.goBack() },
                         modifier = Modifier.testTag("backButton")) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
                     }
@@ -76,8 +79,8 @@ fun DetailsEventScreen(/*
                 actions = {
                     IconButton(
                         onClick = {
-                            /*timeTableViewModel.deleteScheduled(event)
-                            navigationActions.goBack()*/
+                            timeTableViewModel.deleteScheduled(event)
+                            navigationActions.goBack()
                         },
                         modifier = Modifier.testTag("deleteButton")) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
@@ -87,11 +90,13 @@ fun DetailsEventScreen(/*
                 TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent))
         },
         bottomBar = {
-            BottomNavigationMenu({ /*navigationActions.navigateTo(it)*/ }, LIST_TOP_LEVEL_DESTINATION, "")
+            BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
@@ -105,7 +110,7 @@ fun DetailsEventScreen(/*
                             .testTag("nameTextField"),
                         onValueChange = { name = it },
                         placeholder = { Text("Name the event") },
-                        suffix = {})
+                        suffix = { SaveIcon {} })
 
                     Title("Description")
                     OutlinedTextField(
@@ -113,15 +118,33 @@ fun DetailsEventScreen(/*
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
                             .testTag("nameTextField"),
-                        onValueChange = { name = it },
+                        onValueChange = { description = it },
                         placeholder = { Text("No description provided") },
-                        suffix = {},
+                        suffix = { SaveIcon {} },
                         minLines = 7)
 
-                    DateAndTimePickers(context, Calendar.getInstance(), 0, 0, {}) { _, _ ->
+                    DateAndTimePickers(
+                        context,
+                        Calendar.getInstance(),
+                        0,
+                        0,
+                        {},
+                        { _, _ -> }
+                    ) {
+                        SaveIcon {}
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SaveIcon(onClick: () -> Unit) {
+    Icon(
+        imageVector = Icons.Default.Save,
+        contentDescription = "Delete",
+        modifier = Modifier.clickable { onClick() },
+        tint = MaterialTheme.colors.primary
+    )
 }
