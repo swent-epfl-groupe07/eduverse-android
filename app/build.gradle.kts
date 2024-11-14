@@ -12,7 +12,9 @@ plugins {
     alias(libs.plugins.gms)
     alias(libs.plugins.sonar)
     kotlin("kapt")
-    alias(libs.plugins.hilt)}
+    alias(libs.plugins.hilt)
+    id("kotlin-parcelize")}
+
 
 val hiltVersion = "2.48"
 
@@ -147,6 +149,7 @@ sonar {
 
 
 dependencies {
+    implementation("androidx.media:media:1.6.0")
 
 
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
@@ -270,12 +273,12 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
 
-    // CameraX
-    implementation("androidx.camera:camera-core:1.1.0")
-    implementation("androidx.camera:camera-camera2:1.1.0")
-    implementation("androidx.camera:camera-lifecycle:1.1.0")
-    implementation("androidx.camera:camera-view:1.0.0-alpha30")
-    implementation("androidx.camera:camera-video:1.1.0")
+// CameraX
+    implementation("androidx.camera:camera-core:1.3.0")
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
+    implementation("androidx.camera:camera-video:1.3.0")
     implementation("com.google.guava:guava:31.1-android")
 
     // Apache Poi
@@ -300,6 +303,9 @@ dependencies {
     testImplementation ("org.mockito:mockito-core:4.5.1")
     testImplementation ("org.mockito:mockito-inline:4.5.1")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+
+    //Itext
+    implementation("com.github.librepdf:openpdf:1.3.30")
 
 }
 
