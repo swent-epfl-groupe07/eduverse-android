@@ -74,9 +74,12 @@ class TimeTableScreenTest {
           "ownerId",
           "name3")
 
-  private val todo1 = Todo(uid = "1", name = "todo1", timeSpent = 60, status = TodoStatus.ACTUAL)
-  private val todo2 = Todo(uid = "2", name = "todo2", timeSpent = 60, status = TodoStatus.ACTUAL)
-  private val todo3 = Todo(uid = "3", name = "todo3", timeSpent = 60, status = TodoStatus.ACTUAL)
+  private val todo1 =
+      Todo(uid = "1", name = "todo1", timeSpent = 60, status = TodoStatus.ACTUAL, ownerId = "owner")
+  private val todo2 =
+      Todo(uid = "2", name = "todo2", timeSpent = 60, status = TodoStatus.ACTUAL, ownerId = "owner")
+  private val todo3 =
+      Todo(uid = "3", name = "todo3", timeSpent = 60, status = TodoStatus.ACTUAL, ownerId = "owner")
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -108,8 +111,8 @@ class TimeTableScreenTest {
       callback()
     }
 
-    `when`(todoRepository.getActualTodos(any(), any())).then {
-      val callback = it.getArgument<(List<Todo>) -> Unit>(0)
+    `when`(todoRepository.getActualTodos(any(), any(), any())).then {
+      val callback = it.getArgument<(List<Todo>) -> Unit>(1)
       callback(listOf(todo1, todo2, todo3))
     }
 
