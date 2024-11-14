@@ -26,7 +26,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
-import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
@@ -51,6 +50,7 @@ import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
+import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.ui.todo.TodoListScreen
@@ -121,8 +121,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       ProfileRepositoryImpl(
           firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
-  val folderRepo = FolderRepositoryImpl(db = firestore)
-  val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
@@ -163,9 +162,20 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         PdfConverterScreen(navigationActions, pdfConverterViewModel)
       }
       composable(Screen.SEARCH) {
-        SearchProfileScreen(viewModel = profileViewModel, onProfileClick = {})
+        SearchProfileScreen(navigationActions, viewModel = profileViewModel)
       }
     }
+
+    composable(
+        route = Screen.USER_PROFILE.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId =
+              backStackEntry.arguments?.getString("userId")
+                  ?: return@composable // Handle missing userId
+
+          UserProfileScreen(
+              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
+        }
 
     navigation(
         startDestination = Screen.VIDEOS,
@@ -209,7 +219,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         GalleryScreen(
-            ownerId = ownerId, photoViewModel = photoViewModel, folderViewModel, navigationActions)
+            ownerId = ownerId,
+            photoViewModel = photoViewModel,
+            videoViewModel,
+            folderViewModel,
+            navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
     }

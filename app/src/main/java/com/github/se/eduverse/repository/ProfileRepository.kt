@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -46,9 +47,15 @@ interface ProfileRepository {
   suspend fun getAllPublications(): List<Publication>
 
   suspend fun getUserLikedPublicationsIds(userId: String): List<String>
+
+  suspend fun isFollowing(followerId: String, targetUserId: String): Boolean
+
+  suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean
+
+  suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
 }
 
-class ProfileRepositoryImpl(
+open class ProfileRepositoryImpl(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) : ProfileRepository {
@@ -89,6 +96,9 @@ class ProfileRepositoryImpl(
     val profileDoc = profilesCollection.document(userId).get().await()
     val profile = profileDoc.toObject(Profile::class.java)
 
+    // Get current user ID
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
     // Get publications
     val publications =
         publicationsCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
@@ -110,11 +120,15 @@ class ProfileRepositoryImpl(
 
     val followingCount = followersCollection.whereEqualTo("followerId", userId).get().await().size()
 
+    // Check if the current user is following this profile
+    val isFollowedByCurrentUser = currentUserId?.let { isFollowing(it, userId) } ?: false
+
     return profile?.copy(
         publications = publications,
         favoritePublications = favorites,
         followers = followersCount,
-        following = followingCount)
+        following = followingCount,
+        isFollowedByCurrentUser = isFollowedByCurrentUser)
   }
 
   override suspend fun updateProfile(userId: String, profile: Profile) {
@@ -170,14 +184,39 @@ class ProfileRepositoryImpl(
   }
 
   override suspend fun searchProfiles(query: String, limit: Int): List<Profile> {
-    return profilesCollection
-        .whereGreaterThanOrEqualTo("username", query)
-        .whereLessThanOrEqualTo("username", query + '\uf8ff')
-        .limit(limit.toLong())
-        .get()
-        .await()
-        .documents
-        .mapNotNull { it.toObject(Profile::class.java) }
+    return try {
+      profilesCollection
+          .get()
+          .await()
+          .documents
+          .mapNotNull { doc ->
+            val profile = doc.toObject(Profile::class.java)
+            profile?.let {
+              // Get real-time follower and following counts for each profile
+              val followersCount =
+                  followersCollection.whereEqualTo("followedId", it.id).get().await().size()
+
+              val followingCount =
+                  followersCollection.whereEqualTo("followerId", it.id).get().await().size()
+
+              // Get current user's follow status if logged in
+              val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+              val isFollowedByCurrentUser =
+                  currentUserId?.let { uid -> isFollowing(uid, it.id) } ?: false
+
+              // Return profile with updated counts
+              it.copy(
+                  followers = followersCount,
+                  following = followingCount,
+                  isFollowedByCurrentUser = isFollowedByCurrentUser)
+            }
+          }
+          .filter { profile -> profile.username.lowercase().contains(query.lowercase()) }
+          .take(limit)
+    } catch (e: Exception) {
+      Log.e("SEARCH_PROFILES", "Failed to search profiles: ${e.message}")
+      emptyList()
+    }
   }
 
   override suspend fun createProfile(
@@ -309,8 +348,67 @@ class ProfileRepositoryImpl(
       throw e
     }
   }
-  // IDK IF THIS FUNCTION SHOULD BE IN PROFILE REPO OR PUBLI REPO. Logically, it should be in
-  // publication repo
-  // but I'm not sure if it's okay for the profile VM to call a function that is in the publication
-  // repo.
+
+  override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean {
+    return followersCollection
+        .whereEqualTo("followerId", followerId)
+        .whereEqualTo("followedId", targetUserId)
+        .get()
+        .await()
+        .documents
+        .isNotEmpty()
+  }
+
+  override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
+    val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
+
+    if (isCurrentlyFollowing) {
+      // Unfollow
+      unfollowUser(followerId, targetUserId)
+    } else {
+      // Follow
+      followUser(followerId, targetUserId)
+    }
+
+    // Update the follower counts for both users
+    updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
+
+    return !isCurrentlyFollowing
+  }
+
+  override suspend fun updateFollowCounts(
+      followerId: String,
+      targetUserId: String,
+      isFollowing: Boolean
+  ) {
+    firestore
+        .runTransaction { transaction ->
+          // First do all reads
+          val targetUserRef = profilesCollection.document(targetUserId)
+          val followerRef = profilesCollection.document(followerId)
+
+          // Read both documents first
+          val targetUserSnapshot = transaction.get(targetUserRef)
+          val followerSnapshot = transaction.get(followerRef)
+
+          // Get current counts
+          val currentFollowers = targetUserSnapshot.getLong("followers") ?: 0
+          val currentFollowing = followerSnapshot.getLong("following") ?: 0
+
+          // Then do all writes
+          transaction.update(
+              targetUserRef,
+              "followers",
+              if (isFollowing) currentFollowers + 1 else currentFollowers - 1)
+
+          transaction.update(
+              followerRef,
+              "following",
+              if (isFollowing) currentFollowing + 1 else currentFollowing - 1)
+
+          // Return a dummy value since we don't need to return anything
+          null
+        }
+        .await()
+  }
 }
