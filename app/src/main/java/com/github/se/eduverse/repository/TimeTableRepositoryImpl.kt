@@ -100,7 +100,8 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
     return Scheduled(
         id = document.id,
         type =
-            if (document.getString(typeString)!! == "TASK") ScheduledType.TASK else ScheduledType.EVENT,
+            if (document.getString(typeString)!! == "TASK") ScheduledType.TASK
+            else ScheduledType.EVENT,
         start = Calendar.getInstance().apply { timeInMillis = document.getLong(startTimeString)!! },
         length = document.getLong(endTimeString)!! - document.getLong(startTimeString)!!,
         content = document.getString(contentString)!!,

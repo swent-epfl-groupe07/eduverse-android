@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,13 +52,15 @@ fun DetailsEventScreen(
     navigationActions: NavigationActions
 ) {
   val context = LocalContext.current
-  val event: Scheduled = timeTableViewModel.opened ?: run {
-      navigationActions.goBack()
+  val event: Scheduled =
+      timeTableViewModel.opened
+          ?: run {
+            navigationActions.goBack()
 
-      /* The value there doesn't mather as we will leave the screen anyway, but it is important
-       to make event non-null*/
-      Scheduled("", ScheduledType.EVENT, Calendar.getInstance(), 0, "", "", "")
-  }
+            /* The value there doesn't mather as we will leave the screen anyway, but it is important
+            to make event non-null*/
+            Scheduled("", ScheduledType.EVENT, Calendar.getInstance(), 0, "", "", "")
+          }
 
   var newName by remember { mutableStateOf(event.name) }
   var description by remember { mutableStateOf(event.content) }
@@ -103,9 +104,7 @@ fun DetailsEventScreen(
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
+            modifier = Modifier.padding(padding).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
               item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -113,26 +112,24 @@ fun DetailsEventScreen(
                   Title("Name")
                   OutlinedTextField(
                       value = newName,
-                      modifier = Modifier
-                          .fillMaxWidth(0.9f)
-                          .testTag("nameTextField"),
+                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
                       onValueChange = { newName = it },
                       placeholder = { Text("Name the event") },
                       suffix = {
                         SaveIcon(
                             onClick = {
                               timeTableViewModel.updateScheduled(event.apply { name = newName })
+                              newName += " " // Change the value to trigger calculation of isEnabled
+                              newName.dropLast(1)
                             },
-                            isEnabled = { event.name == newName })
+                            isEnabled = { event.name != newName })
                       })
 
                   // Description of the event
                   Title("Description")
                   OutlinedTextField(
                       value = description,
-                      modifier = Modifier
-                          .fillMaxWidth(0.9f)
-                          .testTag("nameTextField"),
+                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
                       onValueChange = { description = it },
                       placeholder = { Text("No description provided") },
                       suffix = {
@@ -140,8 +137,11 @@ fun DetailsEventScreen(
                             onClick = {
                               timeTableViewModel.updateScheduled(
                                   event.apply { content = description })
+                              description +=
+                                  " " // Change the value to trigger calculation of isEnabled
+                              description.dropLast(1)
                             },
-                            isEnabled = { event.content == description })
+                            isEnabled = { event.content != description })
                       },
                       minLines = 7)
 
@@ -184,16 +184,19 @@ fun DetailsEventScreen(
                                             ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
                                                 .toLong()
                                       })
+                                  lengthH +=
+                                      1 // Change the value to trigger calculation of isEnabled
+                                  lengthH -= 1
                                 }
                                 else -> Log.e("DetailsEventScreen", "Unknown save icon : $type")
                               }
                             },
                             isEnabled = {
                               when (type) {
-                                "date" -> date.timeInMillis == event.start.timeInMillis
-                                "time" -> date.timeInMillis == event.start.timeInMillis
+                                "date" -> date.timeInMillis != event.start.timeInMillis
+                                "time" -> date.timeInMillis != event.start.timeInMillis
                                 "length" ->
-                                    event.length ==
+                                    event.length !=
                                         ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
                                             .toLong()
                                 else -> {
@@ -214,8 +217,6 @@ fun SaveIcon(onClick: () -> Unit, isEnabled: () -> Boolean) {
   Icon(
       imageVector = Icons.Default.Save,
       contentDescription = "Delete",
-      modifier = Modifier
-          .clickable(enabled = isEnabled()) { onClick() }
-          .testTag("saveIcon"),
-      tint = MaterialTheme.colors.primary)
+      modifier = Modifier.clickable(enabled = isEnabled()) { onClick() }.testTag("saveIcon"),
+      tint = if (isEnabled()) MaterialTheme.colors.primary else Color.Gray)
 }
