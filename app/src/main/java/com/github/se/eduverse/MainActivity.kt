@@ -29,6 +29,7 @@ import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.VideoScreen
@@ -53,6 +54,7 @@ import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
@@ -61,6 +63,7 @@ import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
+import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
@@ -159,9 +162,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
   val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
+  val timeTableRepo = TimeTableRepositoryImpl(firestore)
+  val timeTableViewModel = TimeTableViewModel(timeTableRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
-  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -192,6 +197,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       }
       composable(Screen.SEARCH) {
         SearchProfileScreen(navigationActions, viewModel = profileViewModel)
+      }
+      composable(Screen.TIME_TABLE) {
+        TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
       }
     }
 

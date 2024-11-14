@@ -11,7 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 open class TodoRepository(private val db: FirebaseFirestore) {
   private val collectionPath = "todos"
 
-  fun init(onAuthStateChanged: (userId: String?) -> Unit) {
+  open fun init(onAuthStateChanged: (userId: String?) -> Unit) {
     Firebase.auth.addAuthStateListener {
       if (it.currentUser != null) {
         onAuthStateChanged(it.currentUser!!.uid)
