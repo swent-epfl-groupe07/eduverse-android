@@ -49,7 +49,7 @@ enum class PdfConverterOption {
 @Composable
 fun PdfConverterScreen(
     navigationActions: NavigationActions,
-    converterViewModel: PdfConverterViewModel = viewModel()
+    converterViewModel: PdfConverterViewModel = viewModel(factory = PdfConverterViewModel.Factory)
 ) {
   val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
@@ -177,8 +177,8 @@ fun PdfConverterScreen(
     }
     is PdfConverterViewModel.PdfGenerationState.Ready -> {}
     is PdfConverterViewModel.PdfGenerationState.Success -> {
-      context.showToast(
-          "${conversionState.pdfFile.name} created successfully and saved in ${conversionState.pdfFile.parent}")
+      context.showToast("Pdf created successfully")
+      converterViewModel.savePdfToDevice(conversionState.pdfFile, context)
       converterViewModel.setPdfGenerationStateToReady()
     }
   }
@@ -259,7 +259,7 @@ fun OptionCard(
 @Composable
 fun LoadingIndicator(onAbort: () -> Unit) {
   Column(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag("loadingIndicator"),
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(
@@ -268,7 +268,9 @@ fun LoadingIndicator(onAbort: () -> Unit) {
             strokeWidth = 10.dp,
             strokeCap = StrokeCap.Round)
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onAbort) { Text("Abort PDF Generation") }
+        Button(onClick = onAbort, modifier = Modifier.testTag("abortButton")) {
+          Text("Abort PDF Generation")
+        }
       }
 }
 

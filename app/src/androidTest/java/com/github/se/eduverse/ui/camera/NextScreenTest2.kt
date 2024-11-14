@@ -41,7 +41,7 @@ class NextScreenTest2 {
     vViewModel = mockk(relaxed = true) // Ensure vViewModel is initialized
     context = ApplicationProvider.getApplicationContext()
 
-    // Simuler un fichier image temporaire
+    // Simulate a temporary image file
     mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
     testFile =
         File.createTempFile("test_image", ".jpg").apply {
@@ -51,13 +51,13 @@ class NextScreenTest2 {
 
   @Test
   fun testVideoPreviewIsDisplayedWhenVideoFileProvided() {
-    // Simuler un fichier vidéo temporaire
+    // Simulate a temporary video file
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Mettre à jour la variable `currentVideoFile` directement avec le fichier vidéo simulé
+    // Update `currentVideoFile` directly with the simulated video file
     currentVideoFile = testVideoFile
 
-    // Charger à nouveau la composable avec la vidéo mise à jour
+    // Reload the composable with the updated video
     composeTestRule.setContent {
       NextScreen(
           photoFile = currentPhotoFile,
@@ -68,19 +68,19 @@ class NextScreenTest2 {
           vViewModel)
     }
 
-    // Forcer la recomposition
+    // Force recomposition
     composeTestRule.waitForIdle()
 
-    // Vérifier que le nœud avec le tag de prévisualisation de la vidéo est affiché
+    // Verify that the node with the video preview tag is displayed
     composeTestRule.onNodeWithTag("previewVideo").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testVideoPlayerReleasedOnDispose() {
-    // Simuler un fichier vidéo temporaire
+    // Simulate a temporary video file
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Charger la composable avec le fichier vidéo
+    // Load the composable with the video file
     composeTestRule.setContent {
       NextScreen(
           photoFile = currentPhotoFile,
@@ -91,12 +91,12 @@ class NextScreenTest2 {
           vViewModel)
     }
 
-    // Forcer la recomposition
+    // Force recomposition
     composeTestRule.waitForIdle()
 
-    // Manipuler ExoPlayer sur le thread principal
+    // Manipulate ExoPlayer on the main thread
     composeTestRule.runOnUiThread {
-      // Simuler la création du player ExoPlayer
+      // Simulate creating the ExoPlayer instance
       val player =
           ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.fromFile(testVideoFile)))
@@ -104,11 +104,11 @@ class NextScreenTest2 {
             playWhenReady = true
           }
 
-      // Simuler la suppression de la composable et libérer le player
+      // Simulate disposing of the composable and release the player
       player.release()
 
-      // Vérifier que le player est libéré correctement
-      assert(player.isPlaying.not()) // Le player ne doit plus jouer après la libération
+      // Verify that the player is correctly released
+      assert(player.isPlaying.not()) // The player should not be playing after release
     }
   }
 }

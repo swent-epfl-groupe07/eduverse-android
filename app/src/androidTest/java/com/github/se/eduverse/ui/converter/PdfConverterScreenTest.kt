@@ -1,8 +1,7 @@
-package com.github.se.eduverse.ui.converter
-
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
+import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -18,8 +17,15 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.repository.PdfRepository
+import com.github.se.eduverse.ui.converter.PdfConverterOption
+import com.github.se.eduverse.ui.converter.PdfConverterScreen
+import com.github.se.eduverse.ui.converter.PdfNameInputDialog
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
+import java.io.File
+import junit.framework.TestCase.assertEquals
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -27,12 +33,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
 class PdfConverterScreenTest {
 
   private lateinit var mockNavigationActions: NavigationActions
+  private lateinit var pdfConverterViewModel: PdfConverterViewModel
+  private lateinit var mockPdfRepository: PdfRepository
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -41,6 +50,8 @@ class PdfConverterScreenTest {
     Intents.init()
 
     mockNavigationActions = mock(NavigationActions::class.java)
+    mockPdfRepository = mock(PdfRepository::class.java)
+    pdfConverterViewModel = PdfConverterViewModel(mockPdfRepository)
 
     `when`(mockNavigationActions.currentRoute()).thenReturn(Screen.PDF_CONVERTER)
   }
@@ -52,7 +63,7 @@ class PdfConverterScreenTest {
 
   @Test
   fun topNavigationBarIsCorrectlyDisplayed() {
-    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions) }
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("screenTitle").assertTextEquals("PDF Converter")
@@ -63,7 +74,7 @@ class PdfConverterScreenTest {
 
   @Test
   fun allPdfConverterOptionsAreCorrectlyDisplayed() {
-    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions) }
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
     composeTestRule.onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name)
@@ -91,8 +102,25 @@ class PdfConverterScreenTest {
   }
 
   @Test
+  fun notImplementedOptionsClickDoesNotChangeGenerationState() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
+    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).performClick()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Ready,
+        pdfConverterViewModel.pdfGenerationState.value)
+    composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).performClick()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Ready,
+        pdfConverterViewModel.pdfGenerationState.value)
+    composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).performClick()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Ready,
+        pdfConverterViewModel.pdfGenerationState.value)
+  }
+
+  @Test
   fun clickingTextToPdfOption_launchesFilePicker() {
-    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions) }
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
 
     // Set up the activity result for the intent
     // Simulate the file picker intent
@@ -106,11 +134,14 @@ class PdfConverterScreenTest {
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
     composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Ready,
+        pdfConverterViewModel.pdfGenerationState.value)
   }
 
   @Test
-  fun clickingImageToPdfOption_launchesFilePicker() {
-    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions) }
+  fun pdfGenerationStateIsSetToReadyOnError() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
     // Set up the activity result for the intent
     // Simulate the file picker intent
     val expectedUri = Uri.parse("content://test-image-uri")
@@ -118,11 +149,64 @@ class PdfConverterScreenTest {
     Intent().apply { data = expectedUri }
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
-
+    `when`(mockPdfRepository.convertImageToPdf(any(), any())).then { throw Exception() }
     composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()
+    composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
+    composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    assertEquals("test.pdf", pdfConverterViewModel.newFileName.value)
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Ready,
+        pdfConverterViewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun pdfGenerationStateIsSetToReadyOnSuccess() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
+    // Set up the activity result for the intent
+    // Simulate the file picker intent
+    val expectedUri = Uri.parse("content://test-image-uri")
+    val resultIntent = Intent().apply { data = expectedUri }
+    Intent().apply { data = expectedUri }
+    Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
+    `when`(mockPdfRepository.convertImageToPdf(any(), any())).thenReturn(PdfDocument())
+    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any())).thenReturn(File("test.pdf"))
+    `when`(mockPdfRepository.savePdfToDevice(any(), any(), any(), any(), any())).then {
+      assertEquals(
+          pdfConverterViewModel.pdfGenerationState.value,
+          PdfConverterViewModel.PdfGenerationState.Ready)
+    }
+    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
+    composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    assertEquals("test.pdf", pdfConverterViewModel.newFileName.value)
+  }
+
+  @Test
+  fun clickingImageToPdfOption_launchesFilePicker() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
+    // Set up the activity result for the intent
+    // Simulate the file picker intent
+    val expectedUri = Uri.parse("content://test-image-uri")
+    val resultIntent = Intent().apply { data = expectedUri }
+    Intent().apply { data = expectedUri }
+    Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
+    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
+    composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("loadingIndicator").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("abortButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("abortButton").performClick()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Aborted,
+        pdfConverterViewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -194,5 +278,17 @@ class PdfConverterScreenTest {
 
     composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()
     assert(dismissed)
+  }
+
+  @Test
+  fun filePickerWithNullUri_showsToastMessage() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
+
+    Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null))
+
+    composeTestRule.onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name).performClick()
+
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
   }
 }

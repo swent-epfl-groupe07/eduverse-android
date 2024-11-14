@@ -19,6 +19,8 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
   private val _doneTodos = MutableStateFlow<List<Todo>>(emptyList())
   val doneTodos: StateFlow<List<Todo>> = _doneTodos.asStateFlow()
 
+  var currentUid: String? = null
+
   // create viewmodel factory
   companion object {
     val Factory: ViewModelProvider.Factory =
@@ -31,8 +33,11 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
   }
 
   init {
-    getActualTodos()
-    getDoneTodos()
+    todoRepository.init {
+      currentUid = it
+      getActualTodos()
+      getDoneTodos()
+    }
   }
 
   fun getNewUid(): String {
@@ -40,28 +45,36 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
   }
 
   fun getActualTodos() {
-    todoRepository.getActualTodos(
-        onSuccess = { todos -> _actualTodos.value = todos },
-        onFailure = { exception -> Log.e("getActualTodos", "Error getting todos", exception) })
+    currentUid?.let { uid ->
+      todoRepository.getActualTodos(
+          uid,
+          onSuccess = { todos -> _actualTodos.value = todos },
+          onFailure = { exception -> Log.e("getActualTodos", "Error getting todos", exception) })
+    } ?: { _actualTodos.value = emptyList() }
   }
 
   fun getDoneTodos() {
-    todoRepository.getDoneTodos(
-        onSuccess = { todos -> _doneTodos.value = todos },
-        onFailure = { exception -> Log.e("getDoneTodos", "Error getting todos", exception) })
+    currentUid?.let { uid ->
+      todoRepository.getDoneTodos(
+          uid,
+          onSuccess = { todos -> _doneTodos.value = todos },
+          onFailure = { exception -> Log.e("getDoneTodos", "Error getting todos", exception) })
+    } ?: { _doneTodos.value = emptyList() }
   }
 
-  fun addNewTodo(todo: Todo) {
-    todoRepository.addNewTodo(
-        todo = todo,
-        onSuccess = { getActualTodos() },
-        onFailure = { exception -> Log.e("addNewTodo", "Error adding todo", exception) })
+  fun addNewTodo(name: String) {
+    currentUid?.let { uid ->
+      val newTodo = Todo(uid = getNewUid(), name = name, status = TodoStatus.ACTUAL, ownerId = uid)
+      todoRepository.addNewTodo(
+          newTodo,
+          onSuccess = { getActualTodos() },
+          onFailure = { exception -> Log.e("addNewTodo", "Error adding todo", exception) })
+    } ?: { Log.e("addNewTodo", "Error adding todo: currentUid is null") }
   }
 
   /** Sets the todo state to done */
   fun setTodoDone(todo: Todo) {
-    val doneTodo =
-        Todo(uid = todo.uid, name = todo.name, timeSpent = todo.timeSpent, status = TodoStatus.DONE)
+    val doneTodo = todo.copy(status = TodoStatus.DONE)
     todoRepository.updateTodo(
         todo = doneTodo,
         onSuccess = {
@@ -73,12 +86,7 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
 
   /** Sets the todo state to actual */
   fun setTodoActual(todo: Todo) {
-    val actualTodo =
-        Todo(
-            uid = todo.uid,
-            name = todo.name,
-            timeSpent = todo.timeSpent,
-            status = TodoStatus.ACTUAL)
+    val actualTodo = todo.copy(status = TodoStatus.ACTUAL)
     todoRepository.updateTodo(
         todo = actualTodo,
         onSuccess = {
