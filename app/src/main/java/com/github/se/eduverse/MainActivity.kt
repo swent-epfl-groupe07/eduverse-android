@@ -28,6 +28,7 @@ import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.VideoScreen
@@ -53,13 +54,18 @@ import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.timetable.TimeTableScreen
+import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
+import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -71,28 +77,68 @@ import java.io.File
 class MainActivity : ComponentActivity() {
 
   private var cameraPermissionGranted by mutableStateOf(false)
+  private var audioPermissionGranted by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
-
     super.onCreate(savedInstanceState)
 
-    // Managing camera permissions
-    val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-          cameraPermissionGranted = isGranted
+
+    // Handling camera and microphone permissions
+    val requestPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            permissions ->
+          // Update variables based on granted permissions
+          cameraPermissionGranted =
+              permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
+          audioPermissionGranted =
+              permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
+
+          // Now that permissions are handled, you can set the content
+          setContent {
+            EduverseTheme {
+              Surface(modifier = Modifier.fillMaxSize()) {
+                EduverseApp(
+                    cameraPermissionGranted = cameraPermissionGranted,
+                )
+              }
+            }
+          }
         }
 
-    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-        PackageManager.PERMISSION_GRANTED) {
+    // Check the status of each permission individually
+    val cameraPermissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+    val audioPermissionStatus =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+
+    // Create a list to store permissions to request
+    val permissionsToRequest = mutableListOf<String>()
+
+    if (cameraPermissionStatus == PackageManager.PERMISSION_GRANTED) {
       cameraPermissionGranted = true
     } else {
-      requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+      permissionsToRequest.add(Manifest.permission.CAMERA)
     }
 
-    setContent {
-      EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
+    if (audioPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+      audioPermissionGranted = true
+    } else {
+      permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+    }
+
+    if (permissionsToRequest.isEmpty()) {
+      // All permissions are already granted, you can set the content
+      setContent {
+        EduverseTheme {
+          Surface(modifier = Modifier.fillMaxSize()) {
+            EduverseApp(
+                cameraPermissionGranted = cameraPermissionGranted,
+            )
+          }
+        }
       }
+    } else {
+      // Request only the missing permissions
+      requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
     }
   }
 }
@@ -117,6 +163,11 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
   val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
+  val timeTableRepo = TimeTableRepositoryImpl(firestore)
+  val timeTableViewModel = TimeTableViewModel(timeTableRepo, FirebaseAuth.getInstance())
+  val pdfConverterViewModel: PdfConverterViewModel =
+      viewModel(factory = PdfConverterViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -141,9 +192,15 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
+      composable(Screen.PDF_CONVERTER) {
+        PdfConverterScreen(navigationActions, pdfConverterViewModel)
+      }
       composable(Screen.SEARCH) {
         SearchProfileScreen(navigationActions, viewModel = profileViewModel)
+      }
+      composable(Screen.TIME_TABLE) {
+        TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
       }
     }
 
