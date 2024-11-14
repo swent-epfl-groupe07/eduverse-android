@@ -301,9 +301,3 @@ fun downloadVideo(videoPath: String) {
   Log.d("GalleryScreen", "Downloading video from: $videoPath")
   // Implement the actual download logic here
 }
-
-@Composable
-@Preview
-fun PreviewDialog() {
-  ImageDialog(Photo("", byteArrayOf(0x01, 0x02)), {}, {}, {})
-}

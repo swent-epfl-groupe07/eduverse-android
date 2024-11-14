@@ -32,7 +32,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
@@ -309,10 +308,6 @@ class FakePhotoViewModel : PhotoViewModel(mockRepository(), mock(FileRepository:
 
   override fun getPhotosByOwner(ownerId: String) {
     // No-op for tests
-  }
-
-  override fun makeFileFromPhoto(photo: Photo, onSuccess: (String) -> Unit) {
-    onSuccess("success")
   }
 
   override fun makeFileFromPhoto(photo: Photo, onSuccess: (String) -> Unit) {
