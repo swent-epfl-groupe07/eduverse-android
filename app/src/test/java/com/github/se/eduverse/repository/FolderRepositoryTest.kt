@@ -41,7 +41,7 @@ class FolderRepositoryTest {
 
   private val file = MyFile("", "", "name 1", Calendar.getInstance(), Calendar.getInstance(), 0)
 
-  private val folder = Folder("uid", MutableList(1) { file }, "folder", "1")
+  private val folder = Folder("uid", MutableList(1) { file }, "folder", "1", archived = false)
 
   @Before
   fun setUp() {
@@ -143,7 +143,8 @@ class FolderRepositoryTest {
 
       val folder = folderRepositoryImpl.convertFolder(mockFolderDocumentSnapshot)
 
-      assertEquals(folder, Folder("field", mutableListOf(file), "field", "id", it.value))
+      assertEquals(
+          folder, Folder("field", mutableListOf(file), "field", "id", it.value, archived = false))
     }
   }
 }

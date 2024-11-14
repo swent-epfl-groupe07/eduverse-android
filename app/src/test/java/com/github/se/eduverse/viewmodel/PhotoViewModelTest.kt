@@ -80,7 +80,7 @@ class PhotoViewModelTest {
     val photo = Photo("ownerId", byteArrayOf(0x01, 0x02), "path")
     whenever(photoRepositoryMock.savePhoto(photo)).thenReturn(true)
 
-    val folder = Folder("uid", emptyList<MyFile>().toMutableList(), "name", "id")
+    val folder = Folder("uid", emptyList<MyFile>().toMutableList(), "name", "id", archived = false)
     whenever(fileRepositoryMock.getNewUid()).thenReturn("fileUid")
     whenever(fileRepositoryMock.savePathToFirestore(eq("path"), eq(".jpg"), eq("fileUid"), any()))
         .then {

@@ -40,7 +40,7 @@ class PicTakenScreenTest {
     vViewModel = mockk(relaxed = true)
     navigationActions = mockk(relaxed = true)
 
-    // Création d'une image bitmap et d'un fichier temporaire simulant une photo capturée
+    // Create a bitmap image and a temporary file simulating a captured photo
     mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
     testFile =
         File.createTempFile("test_image", ".jpg").apply {
@@ -64,20 +64,20 @@ class PicTakenScreenTest {
 
   @Test
   fun testVideoPlayerIsDisplayed() {
-    // Crée un fichier vidéo temporaire pour simuler une vidéo valide
+    // Create a temporary video file to simulate a valid video
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Charger la composable avec un fichier vidéo valide
+    // Load the composable with a valid video file
     composeTestRule.setContent {
       PicTakenScreen(
-          photoFile = null, // Pas de fichier photo
-          videoFile = testVideoFile, // Fichier vidéo valide
+          photoFile = null, // No photo file
+          videoFile = testVideoFile, // Valid video file
           navigationActions = navigationActions,
           pViewModel,
           vViewModel)
     }
 
-    // Vérifier que le composant vidéo avec le tag "videoPlayer" est bien affiché
+    // Verify that the video component with the tag "videoPlayer" is displayed
     composeTestRule.onNodeWithTag("videoPlayer").assertIsDisplayed()
   }
 
@@ -85,14 +85,14 @@ class PicTakenScreenTest {
   fun testGoogleLogoDisplayedWhenBitmapAndVideoAreNull() {
     composeTestRule.setContent {
       PicTakenScreen(
-          photoFile = null, // Assurez-vous que le fichier photo est null
-          videoFile = null, // Assurez-vous que le fichier vidéo est null
+          photoFile = null, // Ensure photo file is null
+          videoFile = null, // Ensure video file is null
           navigationActions = navigationActions,
           pViewModel,
           vViewModel)
     }
 
-    // Vérifier que l'image du logo Google est affichée
+    // Verify that the Google logo image is displayed
     composeTestRule.onNodeWithTag("googleLogoImage").assertExists().assertIsDisplayed()
   }
 
@@ -109,10 +109,10 @@ class PicTakenScreenTest {
 
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Vérifier si `viewModel.savePhoto()` est appelé avec un objet `Photo`
+    // Verify if `viewModel.savePhoto()` is called with a `Photo` object
     verify { pViewModel.savePhoto(any<Photo>()) }
 
-    // Vérifier si `navigationActions.goBack()` est appelé deux fois
+    // Verify if `navigationActions.goBack()` is called twice
     verify(exactly = 2) { navigationActions.goBack() }
   }
 
@@ -129,30 +129,30 @@ class PicTakenScreenTest {
 
     composeTestRule.onNodeWithTag("nextButton").performClick()
 
-    // Vérifier si la navigation vers l'écran suivant est déclenchée
+    // Verify if navigation to the next screen is triggered
     val encodedPath = Uri.encode(testFile.absolutePath)
     verify { navigationActions.navigateTo("nextScreen/$encodedPath/null") }
   }
 
   @Test
   fun testNextButtonFunctionalityWithVideo() {
-    // Crée un fichier vidéo temporaire pour simuler une vidéo
+    // Create a temporary video file to simulate a video
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Charger la composable avec un fichier vidéo valide
+    // Load the composable with a valid video file
     composeTestRule.setContent {
       PicTakenScreen(
-          photoFile = null, // Pas de fichier photo
-          videoFile = testVideoFile, // Fichier vidéo valide
+          photoFile = null, // No photo file
+          videoFile = testVideoFile, // Valid video file
           navigationActions = navigationActions,
           pViewModel,
           vViewModel)
     }
 
-    // Simuler le clic sur le bouton "Next"
+    // Simulate clicking the "Next" button
     composeTestRule.onNodeWithTag("nextButton").performClick()
 
-    // Vérifier si la navigation vers l'écran suivant est déclenchée avec la vidéo
+    // Verify if navigation to the next screen is triggered with the video
     val encodedVideoPath = Uri.encode(testVideoFile.absolutePath)
     verify { navigationActions.navigateTo("nextScreen/null/$encodedVideoPath") }
   }
@@ -170,7 +170,7 @@ class PicTakenScreenTest {
 
     composeTestRule.onNodeWithTag("closeButton").performClick()
 
-    // Vérifier si `navigationActions.goBack()` est appelé pour fermer l'écran
+    // Verify if `navigationActions.goBack()` is called to close the screen
     verify { navigationActions.goBack() }
   }
 
@@ -200,37 +200,37 @@ class PicTakenScreenTest {
           vViewModel)
     }
 
-    // Vérifie que l'image est affichée après rotation
+    // Verify that the image is displayed after rotation
     composeTestRule.onNodeWithTag("capturedImage").assertIsDisplayed()
 
-    // Simuler une rotation (si applicable dans le contexte)
+    // Simulate rotation (if applicable in the context)
     val rotatedBitmap = adjustImageRotation(mockBitmap)
     assertNotNull(rotatedBitmap)
   }
 
   @Test
   fun testPlayerReleased_whenDisposed() {
-    // Créer un fichier vidéo temporaire pour simuler la vidéo
+    // Create a temporary video file to simulate a video
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
-    // Utiliser ApplicationProvider pour obtenir le contexte
+    // Use ApplicationProvider to get the context
     val context = ApplicationProvider.getApplicationContext<Context>()
     var player: ExoPlayer? = null
 
-    // Charger la composable avec un fichier vidéo valide
+    // Load the composable with a valid video file
     composeTestRule.setContent {
       PicTakenScreen(
-          photoFile = null, // Pas de fichier photo
-          videoFile = testVideoFile, // Fichier vidéo valide
+          photoFile = null, // No photo file
+          videoFile = testVideoFile, // Valid video file
           navigationActions = navigationActions,
           pViewModel,
           vViewModel)
     }
 
-    // Vérifier que le composant vidéo avec le tag "videoPlayer" est bien rendu
+    // Verify that the video component with the tag "videoPlayer" is rendered
     composeTestRule.onNodeWithTag("videoPlayer").assertExists()
 
-    // Simule la création du player et vérifie son état
+    // Simulate player creation and verify its state
     composeTestRule.runOnIdle {
       player =
           ExoPlayer.Builder(context).build().apply {
@@ -240,10 +240,10 @@ class PicTakenScreenTest {
           }
     }
 
-    // Simule la fin du cycle de vie et vérifie si le player est libéré
+    // Simulate the end of the lifecycle and verify if the player is released
     composeTestRule.runOnIdle {
-      player?.release() // Libère explicitement le player
-      assert(player?.isPlaying == false) // Vérifie qu'il ne joue plus après la libération
+      player?.release() // Explicitly release the player
+      assert(player?.isPlaying == false) // Verify it is no longer playing after release
     }
   }
 
@@ -259,7 +259,7 @@ class PicTakenScreenTest {
     }
     composeTestRule.onNodeWithTag("nextButton").performClick()
 
-    // Vérifier si le chemin encodé pour la photo est correct
+    // Verify if the encoded path for the photo is correct
     val encodedPhotoPath = Uri.encode(testFile.absolutePath)
     verify { navigationActions.navigateTo("nextScreen/$encodedPhotoPath/null") }
   }
@@ -271,7 +271,7 @@ class PicTakenScreenTest {
     composeTestRule.setContent {
       PicTakenScreen(
           photoFile = null,
-          videoFile = testVideoFile, // Assurez-vous que la vidéo est utilisée ici
+          videoFile = testVideoFile, // Ensure the video is used here
           navigationActions = navigationActions,
           pViewModel,
           vViewModel)
@@ -279,34 +279,34 @@ class PicTakenScreenTest {
 
     composeTestRule.onNodeWithTag("nextButton").performClick()
 
-    // Vérifier si le chemin encodé pour la vidéo est correct
+    // Verify if the encoded path for the video is correct
     val encodedVideoPath = Uri.encode(testVideoFile.absolutePath)
 
-    // Assurez-vous que le chemin encodé pour la vidéo est utilisé ici
+    // Ensure the encoded path for the video is used here
     verify { navigationActions.navigateTo("nextScreen/null/$encodedVideoPath") }
   }
 
   @Test
   fun testSaveButtonSavesVideoWhenVideoFileIsPresent() {
-    // Crée un fichier vidéo temporaire pour simuler une vidéo capturée
+    // Create a temporary video file to simulate a captured video
     val testVideoFile = File.createTempFile("test_video", ".mp4")
 
     composeTestRule.setContent {
       PicTakenScreen(
-          photoFile = null, // Pas de fichier photo
-          videoFile = testVideoFile, // Fichier vidéo valide
+          photoFile = null, // No photo file
+          videoFile = testVideoFile, // Valid video file
           navigationActions = navigationActions,
           pViewModel,
           vViewModel)
     }
 
-    // Effectuer un clic sur le bouton "Save"
+    // Perform click on the "Save" button
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    // Vérifier que `videoViewModel.saveVideo` est appelé avec un objet `Video`
+    // Verify that `videoViewModel.saveVideo` is called with a `Video` object
     verify { vViewModel.saveVideo(any<Video>()) }
 
-    // Vérifier que `navigationActions.goBack()` est appelé deux fois après la sauvegarde
+    // Verify that `navigationActions.goBack()` is called twice after saving
     verify(exactly = 2) { navigationActions.goBack() }
   }
 }
