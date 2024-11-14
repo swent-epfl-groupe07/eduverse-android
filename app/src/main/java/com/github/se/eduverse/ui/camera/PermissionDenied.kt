@@ -38,7 +38,7 @@ fun PermissionDeniedScreen(navigationActions: NavigationActions) {
 
   LaunchedEffect(cameraPermissionGranted) {
     if (cameraPermissionGranted) {
-      navigationActions.navigateTo("cameraScreen")
+      navigationActions.navigateTo("Camera screen")
     }
   }
 
