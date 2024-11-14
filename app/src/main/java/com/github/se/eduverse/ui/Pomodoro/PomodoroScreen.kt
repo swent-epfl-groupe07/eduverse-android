@@ -1,18 +1,27 @@
 package com.github.se.eduverse.ui.Pomodoro
 
+//noinspection UsingMaterialAndMaterial3Libraries
+import android.graphics.DashPathEffect
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -30,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,26 +49,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.toComposePathEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
+import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.todo.TodoItem
 import com.github.se.eduverse.viewmodel.TimerViewModel
+import com.github.se.eduverse.viewmodel.TodoListViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PomodoroScreen(
     navigationActions: NavigationActions,
-    timerViewModel: TimerViewModel = viewModel()
+    timerViewModel: TimerViewModel = viewModel(),
+    todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
 ) {
   val timerState by timerViewModel.timerState.collectAsState()
+  val todos = todoListViewModel.actualTodos.collectAsState()
+  val selectedTodo = todoListViewModel.selectedTodo.collectAsState()
+  var showTodoDialog by remember { mutableStateOf(false) }
 
   Scaffold(
       topBar = {
@@ -84,6 +105,36 @@ fun PomodoroScreen(
                 Modifier.padding(paddingValues).fillMaxSize().testTag("pomodoroScreenContent"),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
+
+              // If a todo is selected the todoItem is displayed, otherwise the button to select a
+              // todo is displayed
+              selectedTodo.value?.let { selectedTodo ->
+                TodoItem(
+                    selectedTodo,
+                    {
+                      /** Nothing to do on undo on this screen */
+                    },
+                    { todoListViewModel.setTodoDone(selectedTodo) }) {
+                      IconButton(
+                          onClick = { todoListViewModel.unselectTodo() },
+                          modifier = Modifier.testTag("unselectTodoButton")) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Unselect Todo",
+                                tint = Color.Red)
+                          }
+                    }
+              }
+                  ?: SelectTodoButton(
+                      enabled = todos.value.isNotEmpty(),
+                      onClick = {
+                        timerViewModel.stopTimer()
+                        showTodoDialog = true
+                      },
+                      text = "Choose a Todo to work on")
+
+              Spacer(modifier = Modifier.height(48.dp))
+
               // Timer display
               Box(
                   modifier = Modifier.padding(16.dp).testTag("timerDisplay"),
@@ -180,6 +231,17 @@ fun PomodoroScreen(
                     onSave = { focus, short, long, cycles ->
                       timerViewModel.updateSettings(focus * 60, short * 60, long * 60, cycles)
                       showSettings = false
+                    })
+              }
+
+              // Select todo dialog
+              if (showTodoDialog) {
+                SelectTodoDialog(
+                    todos = todos.value,
+                    onDismiss = { showTodoDialog = false },
+                    onSelect = {
+                      todoListViewModel.selectTodo(it)
+                      showTodoDialog = false
                     })
               }
             }
@@ -279,4 +341,89 @@ fun SliderSetting(
         steps = (valueRange.endInclusive - valueRange.start).toInt() - 1,
         modifier = Modifier.testTag("$label Slider"))
   }
+}
+
+/**
+ * Composable that represents a dialog to select a todo to work on
+ *
+ * @param todos the list of todos to select from
+ * @param onDismiss code executed when the dialog is dismissed
+ * @param onSelect code executed when a todo is selected
+ */
+@Composable
+fun SelectTodoDialog(todos: List<Todo>, onDismiss: () -> Unit, onSelect: (Todo) -> Unit) {
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            "Select Todo",
+            modifier = Modifier.fillMaxWidth().testTag("selectTodoDialogTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        LazyColumn {
+          items(todos.size) { i ->
+            val todo = todos[i]
+            TextButton(
+                modifier = Modifier.testTag("todoOption_${todo.uid}"),
+                onClick = { onSelect(todo) }) {
+                  Text(todo.name)
+                }
+            Divider()
+          }
+        }
+      },
+      confirmButton = {
+        Button(onClick = onDismiss, modifier = Modifier.testTag("selectTodoDismissButton")) {
+          Text("Cancel")
+        }
+      },
+      modifier = Modifier.testTag("selectTodoDialog"))
+}
+
+/**
+ * Composable for the button that allows the user to select a todo to work on
+ *
+ * @param enabled whether the button is enabled
+ * @param onClick the action to perform when the button is clicked
+ * @param text the text to display inside the button
+ */
+@Composable
+fun SelectTodoButton(enabled: Boolean, onClick: () -> Unit, text: String) {
+  Box(
+      modifier =
+          Modifier.testTag("selectTodoButton")
+              .height(48.dp)
+              .padding(start = 24.dp, end = 24.dp)
+              .fillMaxWidth()
+              .background(Color.Transparent)
+              .drawBehind {
+                val strokeWidth = 1.dp.toPx()
+                val halfStrokeWidth = strokeWidth / 2
+                val pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
+
+                drawRoundRect(
+                    color = Color.Gray,
+                    size =
+                        this.size.copy(
+                            width = this.size.width - strokeWidth,
+                            height = this.size.height - strokeWidth),
+                    topLeft = androidx.compose.ui.geometry.Offset(halfStrokeWidth, halfStrokeWidth),
+                    style =
+                        Stroke(width = strokeWidth, pathEffect = pathEffect.toComposePathEffect()),
+                    cornerRadius =
+                        androidx.compose.ui.geometry.CornerRadius(8.dp.toPx(), 8.dp.toPx()))
+              }
+              .clickable(enabled = enabled, onClick = onClick),
+      contentAlignment = Alignment.Center) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(Icons.Default.Add, contentDescription = null, tint = Color.Gray)
+          Text(
+              text = text,
+              color = Color.Gray,
+              fontSize = 16.sp,
+              fontWeight = FontWeight.Medium,
+              modifier = Modifier.padding(start = 8.dp))
+        }
+      }
 }
