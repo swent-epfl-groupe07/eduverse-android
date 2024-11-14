@@ -37,6 +37,7 @@ import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
+import com.github.se.eduverse.ui.camera.CropPhotoScreen
 import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.converter.PdfConverterScreen
@@ -240,6 +241,17 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
 
           // Appelle PicTakenScreen avec les fichiers de photo et de vidéo
           PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
+        }
+    composable(
+        route = "cropPhotoScreen/{photoPath}",
+        arguments = listOf(navArgument("photoPath") { type = NavType.StringType })) { backStackEntry
+          ->
+          val photoPath = backStackEntry.arguments?.getString("photoPath") ?: ""
+          val photoFile = File(photoPath)
+          CropPhotoScreen(
+              photoFile = photoFile,
+              photoViewModel = photoViewModel,
+              navigationActions = navigationActions)
         }
 
     composable(

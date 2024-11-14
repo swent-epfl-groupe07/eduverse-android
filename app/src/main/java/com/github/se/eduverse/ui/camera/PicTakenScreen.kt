@@ -76,10 +76,10 @@ fun PicTakenScreen(
         if (photoFile != null) "jpg" else "mp4"
     }"
 
-  val bitmap =
-      photoFile?.let {
-        BitmapFactory.decodeFile(it.path)?.let { adjustImageRotation(it) }?.asImageBitmap()
-      }
+  val bitmap = remember {
+    adjustImageRotation(BitmapFactory.decodeFile(photoFile?.path))
+        .asImageBitmap() // Ta fonction pour ajuster la rotation
+  }
 
   Box(
       modifier =
@@ -107,7 +107,13 @@ fun PicTakenScreen(
                 Image(
                     painter = painterResource(id = R.drawable.vector),
                     contentDescription = "Crop Photo",
-                    modifier = Modifier.size(30.dp).clickable {}.testTag("cropIcon"))
+                    modifier =
+                        Modifier.size(30.dp)
+                            .clickable {
+                              val encodedPath = Uri.encode(photoFile?.absolutePath)
+                              navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
+                            }
+                            .testTag("cropIcon"))
                 Image(
                     painter = painterResource(id = R.drawable.settings),
                     contentDescription = "Filters",
