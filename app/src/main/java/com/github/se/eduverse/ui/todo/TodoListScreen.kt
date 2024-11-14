@@ -249,8 +249,9 @@ fun TodoOptionsMenu(
 fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: () -> Unit) {
   var newName by remember { mutableStateOf(TextFieldValue(todoName, TextRange(todoName.length))) }
   AlertDialog(
+      modifier = Modifier.testTag("renameTodoDialog"),
       onDismissRequest = { onDismiss() },
-      title = { Text("Rename Todo") },
+      title = { Text("Rename Todo", modifier = Modifier.testTag("renameTodoDialogTitle")) },
       text = {
         OutlinedTextField(
             value = newName,
@@ -262,6 +263,7 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
       },
       confirmButton = {
         TextButton(
+            modifier = Modifier.testTag("renameTodoConfirmButton"),
             onClick = {
               onRename(newName.text)
               onDismiss()
@@ -275,6 +277,7 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
       },
       dismissButton = {
         TextButton(
+            modifier = Modifier.testTag("renameTodoDismissButton"),
             onClick = { onDismiss() },
             colors =
                 ButtonColors(
