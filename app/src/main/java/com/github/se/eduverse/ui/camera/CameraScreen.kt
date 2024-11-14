@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.camera
 
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
@@ -67,11 +68,11 @@ fun CameraScreen(navigationActions: NavigationActions) {
   val preview = remember { Preview.Builder().build() }
   var cameraSelector by remember { mutableStateOf(CameraSelector.DEFAULT_BACK_CAMERA) }
   var isVideoMode by remember { mutableStateOf(false) } // To track Photo/Video mode
-  var isRecording by remember { mutableStateOf(false) } // To track if recording is in progress
+  var isRecording by remember { mutableStateOf(false) } // To track recording state
   var clickCount by remember { mutableStateOf(0) } // Counter to track clicks
   var isCameraSelfie by remember {
     mutableStateOf(false)
-  } // To track if the front camera is being used
+  } // To know if the front camera is being used
 
   LaunchedEffect(cameraSelector) {
     val cameraProvider = cameraProviderFuture.get()
@@ -109,13 +110,13 @@ fun CameraScreen(navigationActions: NavigationActions) {
             Modifier.align(Alignment.TopStart)
                 .padding(16.dp)
                 .size(32.dp)
-                .clickable { navigationActions.goBackToPreviousRoute() }
+                .clickable { navigationActions.goBack() }
                 .testTag("closeButton"))
 
     // Button to switch camera (front/back)
     Image(
         painter = painterResource(id = R.drawable.flip_camera_ios),
-        contentDescription = "Switch Camera",
+        contentDescription = "Switch camera",
         modifier =
             Modifier.align(Alignment.TopEnd)
                 .padding(16.dp)
@@ -135,7 +136,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
     // Button to take a photo or start/stop video recording
     Image(
         painter = painterResource(id = R.drawable.radio_button_checked),
-        contentDescription = if (isVideoMode) "Start/Stop Recording Video" else "Take Photo",
+        contentDescription = if (isVideoMode) "Start/Stop video recording" else "Take a photo",
         modifier =
             Modifier.size(120.dp)
                 .align(Alignment.BottomCenter)
@@ -143,16 +144,33 @@ fun CameraScreen(navigationActions: NavigationActions) {
                   if (isVideoMode) {
                     clickCount++
                     if (clickCount == 1) {
-                      // Start video recording on first click
+                      // Start video recording on the first click
                       val videoFile = File(context.filesDir, "video.mp4")
                       val outputOptions = FileOutputOptions.Builder(videoFile).build()
 
-                      recording =
-                          videoCapture?.output?.prepareRecording(context, outputOptions)?.start(
-                              ContextCompat.getMainExecutor(context)) {
-                                // Recording is in progress
-                                Log.e("VIDEO RECORDING", "Recording started")
-                              }
+                      // Check if permission is granted
+                      if (ContextCompat.checkSelfPermission(
+                          context, android.Manifest.permission.RECORD_AUDIO) ==
+                          PackageManager.PERMISSION_GRANTED) {
+
+                        recording =
+                            videoCapture
+                                ?.output
+                                ?.prepareRecording(context, outputOptions)
+                                ?.withAudioEnabled() // Include audio
+                                ?.start(ContextCompat.getMainExecutor(context)) {
+                                  // Recording in progress
+                                  Log.e("VIDEO RECORDING", "Recording started with audio")
+                                }
+                      } else {
+                        // Start recording without audio
+                        recording =
+                            videoCapture?.output?.prepareRecording(context, outputOptions)?.start(
+                                ContextCompat.getMainExecutor(context)) {
+                                  // Recording in progress
+                                  Log.e("VIDEO RECORDING", "Recording started without audio")
+                                }
+                      }
 
                       isRecording = true
 
@@ -160,13 +178,13 @@ fun CameraScreen(navigationActions: NavigationActions) {
                       CoroutineScope(Dispatchers.IO).launch {
                         delay(60_000L) // 60 seconds
                         if (isRecording) {
-                          recording?.stop() // Automatically stop after 1 minute
+                          recording?.stop() // Stop automatically after 1 minute
                           isRecording = false
                           clickCount = 0
 
-                          // Add delay to ensure video file is properly written
+                          // Add delay to ensure the video file is properly written
                           CoroutineScope(Dispatchers.IO).launch {
-                            delay(2000) // Wait 2 seconds to ensure video file is saved
+                            delay(2000) // Wait 2 seconds to ensure the video file is saved
                             val videoFile = File(context.filesDir, "video.mp4")
                             val encodedPath = Uri.encode(videoFile.absolutePath)
                             CoroutineScope(Dispatchers.Main).launch {
@@ -176,14 +194,14 @@ fun CameraScreen(navigationActions: NavigationActions) {
                         }
                       }
                     } else if (clickCount == 2) {
-                      // Stop recording on second click
+                      // Stop recording on the second click
                       recording?.stop()
                       isRecording = false
-                      clickCount = 0 // Reset the counter
+                      clickCount = 0 // Reset counter
 
-                      // Add delay to ensure video file is properly written
+                      // Add delay to ensure the video file is properly written
                       CoroutineScope(Dispatchers.IO).launch {
-                        delay(2000) // Wait 2 seconds to ensure video file is saved
+                        delay(2000) // Wait 2 seconds to ensure the video file is saved
                         val videoFile = File(context.filesDir, "video.mp4")
                         val encodedPath = Uri.encode(videoFile.absolutePath)
                         CoroutineScope(Dispatchers.Main).launch {
@@ -204,12 +222,12 @@ fun CameraScreen(navigationActions: NavigationActions) {
                             override fun onImageSaved(
                                 outputFileResults: ImageCapture.OutputFileResults
                             ) {
-                              Log.e("IMAGE SAVED", "IMAGE SAVED")
+                              Log.e("IMAGE SAVED", "Image saved")
 
                               // Load the bitmap of the saved image
                               val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
 
-                              // Apply 180° rotation if selfie camera was used
+                              // Apply 180° rotation if the selfie camera was used
                               val finalBitmap =
                                   if (isCameraSelfie) {
                                     mirrorImage(
@@ -217,7 +235,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
                                             bitmap,
                                             isCameraSelfie)) // Apply rotation and mirror for selfie
                                   } else {
-                                    bitmap // Use original bitmap if not a selfie
+                                    bitmap // Use the original bitmap if it's not a selfie
                                   }
 
                               // Save the corrected image
@@ -231,7 +249,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
                             }
 
                             override fun onError(exception: ImageCaptureException) {
-                              Log.e("IMAGE NOT SAVED", "IMAGE NOT SAVED")
+                              Log.e("IMAGE NOT SAVED", "Image not saved")
                             }
                           })
                     }
@@ -274,18 +292,19 @@ fun CameraScreen(navigationActions: NavigationActions) {
   }
 }
 
-// Function to rotate the image if taken with the front camera
+// Function to rotate the image if it was taken with the front camera
 fun rotateImageIfSelfie(bitmap: Bitmap, isSelfie: Boolean): Bitmap {
   if (isSelfie) {
     val matrix =
         Matrix().apply {
-          postRotate(180f) // Apply a 180-degree rotation
+          postRotate(180f) // Apply 180-degree rotation
         }
     return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
   }
   return bitmap
 }
 
+// Function to mirror the image
 fun mirrorImage(bitmap: Bitmap): Bitmap {
   val matrix =
       Matrix().apply {

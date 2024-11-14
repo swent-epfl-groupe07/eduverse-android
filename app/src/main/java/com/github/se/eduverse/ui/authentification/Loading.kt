@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoGraph
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,7 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.R
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.navigation.Route
+import com.github.se.eduverse.ui.navigation.TopLevelDestination
+import com.github.se.eduverse.ui.navigation.TopLevelDestinations
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
@@ -36,9 +40,10 @@ fun LoadingScreen(navigationActions: NavigationActions) {
     delay(1300)
     // Wait for Firebase Auth to initialize
     if (auth.currentUser != null) {
-      navigationActions.navigateTo(Screen.DASHBOARD)
+      navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
     } else {
-      navigationActions.navigateTo(Screen.AUTH)
+      navigationActions.navigateTo(
+          TopLevelDestination(route = Route.AUTH, icon = Icons.Outlined.AutoGraph, textId = "Auth"))
     }
   }
 

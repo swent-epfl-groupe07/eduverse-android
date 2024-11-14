@@ -271,12 +271,12 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
 
-    // CameraX
-    implementation("androidx.camera:camera-core:1.1.0")
-    implementation("androidx.camera:camera-camera2:1.1.0")
-    implementation("androidx.camera:camera-lifecycle:1.1.0")
-    implementation("androidx.camera:camera-view:1.0.0-alpha30")
-    implementation("androidx.camera:camera-video:1.1.0")
+// CameraX
+    implementation("androidx.camera:camera-core:1.3.0")
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
+    implementation("androidx.camera:camera-video:1.3.0")
     implementation("com.google.guava:guava:31.1-android")
 
     // Apache Poi
