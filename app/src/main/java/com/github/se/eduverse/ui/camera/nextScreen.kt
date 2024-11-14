@@ -267,6 +267,7 @@ fun NextScreen(
                                     .show()
                                 navigationActions.goBack()
                                 navigationActions.goBack()
+                                navigationActions.goBack()
                               }
                         }
                       }
@@ -305,6 +306,7 @@ fun NextScreen(
                                     // Create publication with correct URLs
                                     val publication =
                                         Publication(
+                                            id = UUID.randomUUID().toString(),
                                             userId = ownerId,
                                             title = title,
                                             thumbnailUrl =
@@ -321,6 +323,7 @@ fun NextScreen(
                                                   "Video published successfully",
                                                   Toast.LENGTH_SHORT)
                                               .show()
+                                          navigationActions.goBack()
                                           navigationActions.goBack()
                                           navigationActions.goBack()
                                         }

@@ -73,38 +73,68 @@ import java.io.File
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
   private var cameraPermissionGranted by mutableStateOf(false)
+  private var audioPermissionGranted by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
-
     super.onCreate(savedInstanceState)
-    /*
-    // Initialiser Firebase Auth
-    auth = FirebaseAuth.getInstance()
-    if (auth.currentUser != null) {
-      auth.signOut()
-    } */
 
-    // Adding the VideoRepository and the VideoViewModel
+    // Handling camera and microphone permissions
+    val requestPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            permissions ->
+          // Update variables based on granted permissions
+          cameraPermissionGranted =
+              permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
+          audioPermissionGranted =
+              permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
 
-    // Managing camera permissions
-    val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-          cameraPermissionGranted = isGranted
+          // Now that permissions are handled, you can set the content
+          setContent {
+            EduverseTheme {
+              Surface(modifier = Modifier.fillMaxSize()) {
+                EduverseApp(
+                    cameraPermissionGranted = cameraPermissionGranted,
+                )
+              }
+            }
+          }
         }
 
-    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-        PackageManager.PERMISSION_GRANTED) {
+    // Check the status of each permission individually
+    val cameraPermissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+    val audioPermissionStatus =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+
+    // Create a list to store permissions to request
+    val permissionsToRequest = mutableListOf<String>()
+
+    if (cameraPermissionStatus == PackageManager.PERMISSION_GRANTED) {
       cameraPermissionGranted = true
     } else {
-      requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+      permissionsToRequest.add(Manifest.permission.CAMERA)
     }
 
-    setContent {
-      EduverseTheme {
-        Surface(modifier = Modifier.fillMaxSize()) { EduverseApp(cameraPermissionGranted) }
+    if (audioPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+      audioPermissionGranted = true
+    } else {
+      permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+    }
+
+    if (permissionsToRequest.isEmpty()) {
+      // All permissions are already granted, you can set the content
+      setContent {
+        EduverseTheme {
+          Surface(modifier = Modifier.fillMaxSize()) {
+            EduverseApp(
+                cameraPermissionGranted = cameraPermissionGranted,
+            )
+          }
+        }
       }
+    } else {
+      // Request only the missing permissions
+      requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
     }
   }
 }

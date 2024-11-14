@@ -323,7 +323,7 @@ class NextScreenFirebaseTests {
     assertTrue(capturedPublication.timestamp > 0)
 
     // Verify navigation
-    verify(exactly = 2) { navigationActions.goBack() }
+    verify(exactly = 3) { navigationActions.goBack() }
   }
 
   @Test
