@@ -76,10 +76,10 @@ fun PicTakenScreen(
         if (photoFile != null) "jpg" else "mp4"
     }"
 
-  val bitmap = remember {
-    adjustImageRotation(BitmapFactory.decodeFile(photoFile?.path))
-        .asImageBitmap() // Ta fonction pour ajuster la rotation
-  }
+  val bitmap =
+      photoFile?.let {
+        BitmapFactory.decodeFile(it.path)?.let { adjustImageRotation(it) }?.asImageBitmap()
+      }
 
   Box(
       modifier =
@@ -110,7 +110,7 @@ fun PicTakenScreen(
                     modifier =
                         Modifier.size(30.dp)
                             .clickable {
-                              val encodedPath = Uri.encode(photoFile?.absolutePath)
+                              val encodedPath = Uri.encode(photoFile.absolutePath)
                               navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
                             }
                             .testTag("cropIcon"))
