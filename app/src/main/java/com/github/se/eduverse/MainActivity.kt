@@ -26,7 +26,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
-import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
@@ -57,6 +56,7 @@ import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
@@ -149,8 +149,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       ProfileRepositoryImpl(
           firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
-  val folderRepo = FolderRepositoryImpl(db = firestore)
-  val folderViewModel = FolderViewModel(folderRepo, FirebaseAuth.getInstance())
+  val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
   val fileViewModel = FileViewModel(fileRepo)
@@ -158,6 +157,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
   val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+  val pdfConverterViewModel: PdfConverterViewModel =
+      viewModel(factory = PdfConverterViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -182,7 +183,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.PDF_CONVERTER) {
+        PdfConverterScreen(navigationActions, pdfConverterViewModel)
+      }
       composable(Screen.SEARCH) {
         SearchProfileScreen(navigationActions, viewModel = profileViewModel)
       }

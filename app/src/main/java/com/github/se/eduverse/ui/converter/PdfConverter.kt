@@ -12,18 +12,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Scanner
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.PdfConverterViewModel
@@ -32,7 +34,7 @@ import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 enum class PdfConverterOption {
   TEXT_TO_PDF,
   IMAGE_TO_PDF,
-  SCANNER_TOOL,
+  DOCUMENT_TO_PDF,
   SUMMARIZE_FILE,
   EXTRACT_TEXT,
   NONE
@@ -47,24 +49,25 @@ enum class PdfConverterOption {
 @Composable
 fun PdfConverterScreen(
     navigationActions: NavigationActions,
-    converterViewModel: PdfConverterViewModel = viewModel()
+    converterViewModel: PdfConverterViewModel = viewModel(factory = PdfConverterViewModel.Factory)
 ) {
   val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
   var showNameInputDialog by remember { mutableStateOf(false) }
   val pdfFileName = converterViewModel.newFileName.collectAsState()
   var currentPdfConverterOption by remember { mutableStateOf(PdfConverterOption.NONE) }
+  val pdfConversionState = converterViewModel.pdfGenerationState.collectAsState()
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        uri?.let { selectedFileUri = it }
-        if (selectedFileUri != null) {
+        if (uri != null) {
+          selectedFileUri = uri
           val defaultFileName = getFileNameFromUri(context, selectedFileUri!!)
           converterViewModel.setNewFileName(defaultFileName)
           showNameInputDialog = true
         } else {
-          Toast.makeText(context, "No file selected", Toast.LENGTH_LONG).show()
+          context.showToast("No file selected")
         }
       }
 
@@ -85,11 +88,11 @@ fun PdfConverterScreen(
                         icon = Icons.AutoMirrored.Filled.TextSnippet,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.TEXT_TO_PDF
-                          filePickerLauncher.launch(
-                              arrayOf(
-                                  "text/plain",
-                                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
-                        })
+                          filePickerLauncher.launch(arrayOf("text/plain"))
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfConverterViewModel.PdfGenerationState.Ready)
                     OptionCard(
                         testTag = PdfConverterOption.IMAGE_TO_PDF.name,
                         optionName = "Image to PDF",
@@ -97,20 +100,26 @@ fun PdfConverterScreen(
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.IMAGE_TO_PDF
                           filePickerLauncher.launch(arrayOf("image/*"))
-                        })
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfConverterViewModel.PdfGenerationState.Ready)
                   }
 
               Row(
                   modifier = Modifier.fillMaxWidth(),
                   horizontalArrangement = Arrangement.SpaceEvenly) {
                     OptionCard(
-                        testTag = PdfConverterOption.SCANNER_TOOL.name,
-                        optionName = "Scanner tool",
-                        icon = Icons.Default.Scanner,
+                        testTag = PdfConverterOption.DOCUMENT_TO_PDF.name,
+                        optionName = "Doc to PDF",
+                        icon = Icons.Default.PictureAsPdf,
                         onClick = {
-                          currentPdfConverterOption = PdfConverterOption.SCANNER_TOOL
+                          currentPdfConverterOption = PdfConverterOption.DOCUMENT_TO_PDF
                           Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
-                        })
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfConverterViewModel.PdfGenerationState.Ready)
                     OptionCard(
                         testTag = PdfConverterOption.SUMMARIZE_FILE.name,
                         optionName = "Summarize file",
@@ -118,7 +127,10 @@ fun PdfConverterScreen(
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.SUMMARIZE_FILE
                           Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
-                        })
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfConverterViewModel.PdfGenerationState.Ready)
                   }
 
               OptionCard(
@@ -128,7 +140,9 @@ fun PdfConverterScreen(
                   onClick = {
                     currentPdfConverterOption = PdfConverterOption.EXTRACT_TEXT
                     Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
-                  })
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfConverterViewModel.PdfGenerationState.Ready)
             }
       }
 
@@ -139,25 +153,34 @@ fun PdfConverterScreen(
         pdfFileName = pdfFileName.value,
         onDismiss = {
           showNameInputDialog = false
-          selectedFileUri = null
-          Toast.makeText(context, "PDF creation canceled", Toast.LENGTH_SHORT).show()
-        }, // On dismiss the pdf file creation is aborted
+          context.showToast("PDF file creation cancelled")
+        }, // On dismiss the pdf file creation is not launched
         onConfirm = { name ->
           converterViewModel.setNewFileName(name)
           showNameInputDialog = false
-          when (currentPdfConverterOption) { // For each option, the corresponding actions are
-            // performed
-            PdfConverterOption.TEXT_TO_PDF -> {
-              converterViewModel.convertDocumentToPdf(selectedFileUri, context)
-            }
-            PdfConverterOption.IMAGE_TO_PDF -> {
-              converterViewModel.convertImageToPdf(selectedFileUri, context)
-            }
-            else -> {}
-          }
-          currentPdfConverterOption = PdfConverterOption.NONE // Reset the selected option
-          selectedFileUri = null // Reset the selected file URI
+          converterViewModel.generatePdf(selectedFileUri!!, context, currentPdfConverterOption)
         })
+  }
+
+  // Handle the different states of the PDF generation process
+  when (val conversionState = pdfConversionState.value) {
+    is PdfConverterViewModel.PdfGenerationState.InProgress -> {
+      LoadingIndicator { converterViewModel.abortPdfGeneration() }
+    }
+    is PdfConverterViewModel.PdfGenerationState.Aborted -> {
+      context.showToast("PDF generation aborted")
+      converterViewModel.setPdfGenerationStateToReady()
+    }
+    is PdfConverterViewModel.PdfGenerationState.Error -> {
+      context.showToast("Failed to generate PDF")
+      converterViewModel.setPdfGenerationStateToReady()
+    }
+    is PdfConverterViewModel.PdfGenerationState.Ready -> {}
+    is PdfConverterViewModel.PdfGenerationState.Success -> {
+      context.showToast("Pdf created successfully")
+      converterViewModel.savePdfToDevice(conversionState.pdfFile, context)
+      converterViewModel.setPdfGenerationStateToReady()
+    }
   }
 }
 
@@ -208,9 +231,19 @@ fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (S
  * @param onClick Action to be performed when the option is clicked
  */
 @Composable
-fun OptionCard(testTag: String, optionName: String, icon: ImageVector, onClick: () -> Unit) {
+fun OptionCard(
+    testTag: String,
+    optionName: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    optionEnabled: Boolean
+) {
   Card(
-      modifier = Modifier.padding(16.dp).size(150.dp).clickable(onClick = onClick).testTag(testTag),
+      modifier =
+          Modifier.padding(16.dp)
+              .size(150.dp)
+              .clickable(onClick = onClick, enabled = optionEnabled)
+              .testTag(testTag),
       elevation = CardDefaults.cardElevation(8.dp),
       colors = CardDefaults.cardColors(containerColor = Color(0xFFC2F5F0))) {
         Column(
@@ -220,6 +253,24 @@ fun OptionCard(testTag: String, optionName: String, icon: ImageVector, onClick: 
               Icon(imageVector = icon, contentDescription = null, Modifier.size(80.dp))
               Text(optionName)
             }
+      }
+}
+
+@Composable
+fun LoadingIndicator(onAbort: () -> Unit) {
+  Column(
+      modifier = Modifier.fillMaxSize().testTag("loadingIndicator"),
+      verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally) {
+        CircularProgressIndicator(
+            color = Color.Gray,
+            trackColor = Color.Cyan,
+            strokeWidth = 10.dp,
+            strokeCap = StrokeCap.Round)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onAbort, modifier = Modifier.testTag("abortButton")) {
+          Text("Abort PDF Generation")
+        }
       }
 }
 

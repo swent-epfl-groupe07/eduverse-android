@@ -12,7 +12,9 @@ plugins {
     alias(libs.plugins.gms)
     alias(libs.plugins.sonar)
     kotlin("kapt")
-    alias(libs.plugins.hilt)}
+    alias(libs.plugins.hilt)
+    id("kotlin-parcelize")}
+
 
 val hiltVersion = "2.48"
 
@@ -301,6 +303,9 @@ dependencies {
     testImplementation ("org.mockito:mockito-core:4.5.1")
     testImplementation ("org.mockito:mockito-inline:4.5.1")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+
+    //Itext
+    implementation("com.github.librepdf:openpdf:1.3.30")
 
 }
 
