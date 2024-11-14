@@ -56,6 +56,7 @@ import com.github.se.eduverse.ui.theme.EduverseTheme
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
@@ -126,6 +127,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
   val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+  val pdfConverterViewModel: PdfConverterViewModel =
+      viewModel(factory = PdfConverterViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -150,7 +153,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         route = Route.DASHBOARD,
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.PDF_CONVERTER) { PdfConverterScreen(navigationActions) }
+      composable(Screen.PDF_CONVERTER) {
+        PdfConverterScreen(navigationActions, pdfConverterViewModel)
+      }
       composable(Screen.SEARCH) {
         SearchProfileScreen(navigationActions, viewModel = profileViewModel)
       }
