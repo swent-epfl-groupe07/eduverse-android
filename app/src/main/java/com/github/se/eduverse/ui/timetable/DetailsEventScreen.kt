@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.timetable
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
+import com.github.se.eduverse.model.millisecInHour
+import com.github.se.eduverse.model.millisecInMin
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -56,8 +61,11 @@ fun DetailsEventScreen(
 ) {
     val context = LocalContext.current
 
-    var name by remember { mutableStateOf(event.name) }
+    var newName by remember { mutableStateOf(event.name) }
     var description by remember { mutableStateOf(event.content) }
+    var date by remember { mutableStateOf((event.start.clone() as Calendar)) }
+    var lengthH by remember { mutableIntStateOf((event.length / millisecInHour).toInt()) }
+    var lengthM by remember { mutableIntStateOf((event.length % millisecInHour / millisecInMin).toInt()) }
 
     Scaffold(
         topBar = {
@@ -104,14 +112,22 @@ fun DetailsEventScreen(
                     // Name of the event
                     Title("Name")
                     OutlinedTextField(
-                        value = name,
+                        value = newName,
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
                             .testTag("nameTextField"),
-                        onValueChange = { name = it },
+                        onValueChange = { newName = it },
                         placeholder = { Text("Name the event") },
-                        suffix = { SaveIcon {} })
+                        suffix = { SaveIcon(
+                            onClick = {
+                                timeTableViewModel.updateScheduled(event.apply {
+                                    name = newName
+                                })
+                            },
+                            isEnabled = { event.name == newName }
+                        )})
 
+                    // Description of the event
                     Title("Description")
                     OutlinedTextField(
                         value = description,
@@ -120,18 +136,69 @@ fun DetailsEventScreen(
                             .testTag("nameTextField"),
                         onValueChange = { description = it },
                         placeholder = { Text("No description provided") },
-                        suffix = { SaveIcon {} },
+                        suffix = { SaveIcon(
+                            onClick = {
+                                timeTableViewModel.updateScheduled(event.apply {
+                                    content = description
+                                })
+                            },
+                            isEnabled = { event.content == description }
+                        )},
                         minLines = 7)
 
+                    // Date, time and length of the event
                     DateAndTimePickers(
-                        context,
-                        Calendar.getInstance(),
-                        0,
-                        0,
-                        {},
-                        { _, _ -> }
-                    ) {
-                        SaveIcon {}
+                        context = context,
+                        selectedDate = date,
+                        lengthHour = lengthH,
+                        lengthMin = lengthM,
+                        selectDate = { date = it },
+                        selectTime = { hour, min ->
+                            lengthH = hour
+                            lengthM = min
+                        }
+                    ) { type ->
+                        SaveIcon (
+                            onClick = {
+                                when(type) {
+                                    "date" -> {
+                                        // Get the date of the new event but not the time
+                                        event.start.set(Calendar.YEAR, date.get(Calendar.YEAR))
+                                        event.start.set(Calendar.MONTH, date.get(Calendar.MONTH))
+                                        event.start.set(Calendar.DAY_OF_MONTH, date.get(Calendar.DAY_OF_MONTH))
+                                        timeTableViewModel.updateScheduled(event)
+                                    }
+                                    "time" -> {
+                                        // Get the time of the new event but not the date
+                                        event.start.set(Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
+                                        event.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
+                                        event.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
+                                        event.start.set(Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
+                                        timeTableViewModel.updateScheduled(event)
+                                    }
+                                    "length" -> {
+                                        timeTableViewModel.updateScheduled(
+                                            event.apply { length =
+                                                ((lengthH + lengthM.toDouble()/60) * millisecInHour).toLong()
+                                            }
+                                        )
+                                    }
+                                    else -> Log.e("DetailsEventScreen", "Unknown save icon : $type")
+                                }
+                            },
+                            isEnabled = {
+                                when(type) {
+                                    "date" -> date.timeInMillis == event.start.timeInMillis
+                                    "time" -> date.timeInMillis == event.start.timeInMillis
+                                    "length" -> event.length ==
+                                            ((lengthH + lengthM.toDouble()/60) * millisecInHour).toLong()
+                                    else -> {
+                                        Log.e("DetailsEventScreen", "Unknown save icon : $type")
+                                        false
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -140,11 +207,11 @@ fun DetailsEventScreen(
 }
 
 @Composable
-fun SaveIcon(onClick: () -> Unit) {
+fun SaveIcon(onClick: () -> Unit, isEnabled: () -> Boolean) {
     Icon(
         imageVector = Icons.Default.Save,
         contentDescription = "Delete",
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier.clickable(enabled = isEnabled()) { onClick() }.testTag("saveIcon"),
         tint = MaterialTheme.colors.primary
     )
 }

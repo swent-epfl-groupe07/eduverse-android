@@ -431,7 +431,7 @@ fun DateAndTimePickers(
     lengthMin: Int,
     selectDate: (Calendar) -> Unit,
     selectTime: (Int, Int) -> Unit,
-    icon: @Composable () -> Unit = {}
+    icon: @Composable (String) -> Unit = {}
 ) {
   // Pick the date
   Title("Date")
@@ -467,7 +467,7 @@ fun DateAndTimePickers(
               text = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(selectedDate.time),
               textAlign = TextAlign.Start
           )
-          icon()
+          icon("date")
       }
       }
 
@@ -512,7 +512,7 @@ fun DateAndTimePickers(
               ),
               textAlign = TextAlign.Start
           )
-          icon()
+          icon("time")
       }
       }
 
@@ -540,7 +540,7 @@ fun DateAndTimePickers(
               text = hourToString(lengthHour, lengthMin),
               textAlign = TextAlign.Start
           )
-          icon()
+          icon("length")
       }
       }
 }
