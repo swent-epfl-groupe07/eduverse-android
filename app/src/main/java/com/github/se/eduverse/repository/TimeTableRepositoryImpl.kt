@@ -45,7 +45,7 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
             "type" to scheduled.type,
             "startTime" to scheduled.start.timeInMillis,
             "endTime" to scheduled.start.timeInMillis + scheduled.length,
-            "taskOrEventId" to scheduled.taskOrEventId,
+            "content" to scheduled.content,
             "ownerId" to scheduled.ownerId,
             "name" to scheduled.name)
 
@@ -66,7 +66,7 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
             "type" to scheduled.type,
             "startTime" to scheduled.start.timeInMillis,
             "endTime" to scheduled.start.timeInMillis + scheduled.length,
-            "taskOrEventId" to scheduled.taskOrEventId,
+            "content" to scheduled.content,
             "ownerId" to scheduled.ownerId,
             "name" to scheduled.name)
 
@@ -96,7 +96,7 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
             if (document.getString("type")!! == "TASK") ScheduledType.TASK else ScheduledType.EVENT,
         start = Calendar.getInstance().apply { timeInMillis = document.getLong("startTime")!! },
         length = document.getLong("endTime")!! - document.getLong("startTime")!!,
-        taskOrEventId = document.getString("taskOrEventId")!!,
+        content = document.getString("content")!!,
         ownerId = document.getString("ownerId")!!,
         name = document.getString("name")!!)
   }

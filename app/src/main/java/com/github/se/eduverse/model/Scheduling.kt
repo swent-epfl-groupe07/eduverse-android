@@ -11,7 +11,7 @@ data class Scheduled(
     val type: ScheduledType,
     val start: Calendar,
     val length: Long,
-    val taskOrEventId: String,
+    val content: String, // The id of the task or the description of the event
     val ownerId: String,
     var name: String
 )
