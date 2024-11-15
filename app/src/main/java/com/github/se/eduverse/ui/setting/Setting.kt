@@ -105,7 +105,8 @@ fun SettingsScreen(navigationActions: NavigationActions) {
               SettingsOption(
                   "Notifications", Icons.Default.Notifications, navigationActions, null, context)
               SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, null, context)
-              SettingsOption("Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
+              SettingsOption(
+                  "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
               SettingsOption(
                   "Gallery", Icons.Default.PhotoLibrary, navigationActions, Screen.GALLERY, context)
 
