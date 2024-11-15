@@ -49,9 +49,10 @@ class TimeTableRepositoryTest {
   fun setUp() {
     MockitoAnnotations.openMocks(this)
 
+    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
+
     timeTableRepository = TimeTableRepositoryImpl(mockFirestore)
 
-    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
