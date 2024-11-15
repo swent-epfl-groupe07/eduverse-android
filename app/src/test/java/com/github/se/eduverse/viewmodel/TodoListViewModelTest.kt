@@ -5,6 +5,7 @@ import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.repository.TodoRepository
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.core.IsNull.nullValue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
@@ -91,5 +92,26 @@ class TodoListViewModelTest {
     viewModel.renameTodo(todo, newTodoName)
     val renamedTodo = todo.copy(name = newTodoName)
     verify(mockRepository).updateTodo(eq(renamedTodo), any(), any())
+  }
+
+  @Test
+  fun selectTodoUpdatesSelectedTodo() {
+    viewModel.selectTodo(todo)
+    assertThat(viewModel.selectedTodo.value, `is`(todo))
+  }
+
+  @Test
+  fun unselectTodoSetsSelectedTodoToNull() {
+    viewModel.selectTodo(todo)
+    viewModel.unselectTodo()
+    assertThat(viewModel.selectedTodo.value, `is`(nullValue()))
+  }
+
+  @Test
+  fun updateTodoTimeSpentCallsRepositoryWithCorrectlyUpdatedTodo() {
+    val newTimeSpent = 120L
+    viewModel.updateTodoTimeSpent(todo, newTimeSpent)
+    val updatedTodo = todo.copy(timeSpent = newTimeSpent)
+    verify(mockRepository).updateTodo(eq(updatedTodo), any(), any())
   }
 }

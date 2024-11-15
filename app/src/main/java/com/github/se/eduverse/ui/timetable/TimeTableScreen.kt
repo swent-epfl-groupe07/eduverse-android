@@ -66,6 +66,7 @@ import com.github.se.eduverse.model.millisecInHour
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.text.SimpleDateFormat
@@ -188,7 +189,14 @@ fun TimeTableScreen(
                       }
                     }
                 for (c in 0..6) {
-                  TableColumn((1.0 / (7 - c)).toFloat(), weeklyTable[c])
+                  TableColumn((1.0 / (7 - c)).toFloat(), weeklyTable[c]) {
+                    timeTableViewModel.opened = it
+                    if (it.type == ScheduledType.EVENT) {
+                      navigationActions.navigateTo(Screen.DETAILS_EVENT)
+                    } else {
+                      navigationActions.navigateTo(Screen.DETAILS_TASKS)
+                    }
+                  }
                 }
               }
             }
@@ -198,7 +206,7 @@ fun TimeTableScreen(
 }
 
 @Composable
-fun TableColumn(width: Float, content: List<Scheduled>) {
+fun TableColumn(width: Float, content: List<Scheduled>, navigate: (Scheduled) -> Unit) {
   BoxWithConstraints(modifier = Modifier.fillMaxWidth(width).fillMaxHeight()) {
     val boxWidth = maxWidth
 
@@ -233,7 +241,7 @@ fun TableColumn(width: Float, content: List<Scheduled>) {
       var xOffset = lastButtonEnd
       if (xOffset + widthPercent > 1f) xOffset = 0f
       Button(
-          onClick = {},
+          onClick = { navigate(new) },
           modifier =
               Modifier.fillMaxWidth(widthPercent)
                   .height((new.length.toDouble() / millisecInHour * 50).dp)
@@ -391,7 +399,8 @@ fun DateAndTimePickers(
     lengthHour: Int,
     lengthMin: Int,
     selectDate: (Calendar) -> Unit,
-    selectTime: (Int, Int) -> Unit
+    selectTime: (Int, Int) -> Unit,
+    icon: @Composable (String) -> Unit = {}
 ) {
   // Pick the date
   Title("Date")
@@ -417,10 +426,12 @@ fun DateAndTimePickers(
       },
       modifier = Modifier.fillMaxWidth(0.9f).testTag("datePicker"),
       shape = OutlinedTextFieldDefaults.shape) {
-        Text(
-            text = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(selectedDate.time),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Start)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text(
+              text = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(selectedDate.time),
+              textAlign = TextAlign.Start)
+          icon("date")
+        }
       }
 
   // Pick the time
@@ -451,12 +462,14 @@ fun DateAndTimePickers(
       },
       modifier = Modifier.fillMaxWidth(0.9f).testTag("timePicker"),
       shape = OutlinedTextFieldDefaults.shape) {
-        Text(
-            text =
-                hourToString(
-                    selectedDate.get(Calendar.HOUR_OF_DAY), selectedDate.get(Calendar.MINUTE)),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Start)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text(
+              text =
+                  hourToString(
+                      selectedDate.get(Calendar.HOUR_OF_DAY), selectedDate.get(Calendar.MINUTE)),
+              textAlign = TextAlign.Start)
+          icon("time")
+        }
       }
 
   // Pick the length
@@ -473,10 +486,10 @@ fun DateAndTimePickers(
       },
       modifier = Modifier.fillMaxWidth(0.9f).testTag("lengthPicker"),
       shape = OutlinedTextFieldDefaults.shape) {
-        Text(
-            text = hourToString(lengthHour, lengthMin),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Start)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text(text = hourToString(lengthHour, lengthMin), textAlign = TextAlign.Start)
+          icon("length")
+        }
       }
 }
 
