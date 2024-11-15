@@ -23,6 +23,7 @@ object Route {
   const val POMODORO = "Pomodoro"
   const val PROFILE = "Profile"
   const val LIST_FOLDERS = "ListFolders"
+  const val ARCHIVE = "Archive"
 }
 
 object Screen {
@@ -47,6 +48,9 @@ object Screen {
   const val TODO_LIST = "TodoList screen"
   const val TIME_TABLE = "TimeTable screen"
   const val SEARCH = "Search screen"
+  const val ARCHIVE = "Archive screen"
+  const val DETAILS_EVENT = "DetailsEvent screen"
+  const val DETAILS_TASKS = "DetailsTasks screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
@@ -142,7 +146,7 @@ open class NavigationActions(
     return navController.currentDestination?.route ?: ""
   }
 
-  fun navigateToUserProfile(userId: String) {
+  open fun navigateToUserProfile(userId: String) {
     navController.navigate(Screen.USER_PROFILE.createRoute(userId))
   }
 }

@@ -2,6 +2,7 @@ package com.github.se.eduverse.ui.timetable
 
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,9 +12,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.Todo
@@ -22,6 +20,7 @@ import com.github.se.eduverse.model.millisecInHour
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.repository.TodoRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -34,6 +33,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 
 class TimeTableScreenTest {
@@ -203,23 +203,9 @@ class TimeTableScreenTest {
 
     composeTestRule.onNodeWithTag("nameTextField").performTextInput("name4")
 
-    composeTestRule.onNodeWithTag("datePicker").performClick()
-    composeTestRule.waitForIdle()
-
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("timePicker").performClick()
-    composeTestRule.waitForIdle()
-
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("lengthPicker").performClick()
-    composeTestRule.waitForIdle()
-
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("datePicker").assertHasClickAction()
+    composeTestRule.onNodeWithTag("timePicker").assertHasClickAction()
+    composeTestRule.onNodeWithTag("lengthPicker").assertHasClickAction()
 
     composeTestRule.onNodeWithTag("confirm").performClick()
     composeTestRule.waitForIdle()
@@ -245,5 +231,16 @@ class TimeTableScreenTest {
 
     composeTestRule.onNodeWithTag("dialog").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("buttonOftodo1").assertExists()
+  }
+
+  @Test
+  fun openEventTest() {
+    assert(timeTableViewModel.opened == null)
+
+    composeTestRule.onNodeWithTag("buttonOfname2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("buttonOfname2").performClick()
+
+    assert(timeTableViewModel.opened == scheduled2)
+    verify(navigationActions).navigateTo(eq(Screen.DETAILS_EVENT))
   }
 }

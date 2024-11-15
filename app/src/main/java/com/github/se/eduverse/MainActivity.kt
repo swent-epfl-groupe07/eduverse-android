@@ -32,6 +32,7 @@ import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.VideoScreen
+import com.github.se.eduverse.ui.archive.ArchiveScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
@@ -54,6 +55,8 @@ import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.timetable.DetailsEventScreen
+import com.github.se.eduverse.ui.timetable.DetailsTasksScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -201,6 +204,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.TIME_TABLE) {
         TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
       }
+      composable(Screen.DETAILS_EVENT) { DetailsEventScreen(timeTableViewModel, navigationActions) }
+      composable(Screen.DETAILS_TASKS) {
+        DetailsTasksScreen(timeTableViewModel, todoListViewModel, navigationActions)
+      }
     }
 
     composable(
@@ -265,6 +272,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       }
     }
 
+    navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {
+      composable(Screen.ARCHIVE) { ArchiveScreen(navigationActions, folderViewModel) }
+    }
+
     navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FOLDER) {
@@ -278,7 +289,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
     ) {
-      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.POMODORO) {
+        PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
+      }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
     // Add a dynamic route for PicTakenScreen with optional arguments for photo and
