@@ -140,6 +140,10 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
         onFailure = { exception -> Log.e("renameTodo", "Error renaming todo", exception) })
   }
 
+  fun getTodoById(id: String): Todo? {
+    return _actualTodos.value.find { it.uid == id } ?: _doneTodos.value.find { it.uid == id }
+  }
+
   fun selectTodo(todo: Todo) {
     _selectedTodo.value = todo
   }

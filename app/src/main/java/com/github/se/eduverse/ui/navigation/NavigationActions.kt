@@ -50,6 +50,7 @@ object Screen {
   const val SEARCH = "Search screen"
   const val ARCHIVE = "Archive screen"
   const val DETAILS_EVENT = "DetailsEvent screen"
+  const val DETAILS_TASKS = "DetailsTasks screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
