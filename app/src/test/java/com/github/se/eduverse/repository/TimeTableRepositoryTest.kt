@@ -49,9 +49,10 @@ class TimeTableRepositoryTest {
   fun setUp() {
     MockitoAnnotations.openMocks(this)
 
+    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
+
     timeTableRepository = TimeTableRepositoryImpl(mockFirestore)
 
-    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
@@ -65,7 +66,7 @@ class TimeTableRepositoryTest {
     `when`(documentSnapshot.getString(eq("type"))).thenReturn("TASK")
     `when`(documentSnapshot.getLong(eq("startTime"))).thenReturn(12)
     `when`(documentSnapshot.getLong(eq("endTime"))).thenReturn(19)
-    `when`(documentSnapshot.getString(eq("taskOrEventId"))).thenReturn("taskId")
+    `when`(documentSnapshot.getString(eq("content"))).thenReturn("taskId")
     `when`(documentSnapshot.getString(eq("ownerId"))).thenReturn("ownerId")
     `when`(documentSnapshot.getString(eq("name"))).thenReturn("name")
   }

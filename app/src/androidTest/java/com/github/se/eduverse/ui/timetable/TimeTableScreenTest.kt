@@ -20,6 +20,7 @@ import com.github.se.eduverse.model.millisecInHour
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.repository.TodoRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -32,6 +33,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 
 class TimeTableScreenTest {
@@ -229,5 +231,16 @@ class TimeTableScreenTest {
 
     composeTestRule.onNodeWithTag("dialog").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("buttonOftodo1").assertExists()
+  }
+
+  @Test
+  fun openEventTest() {
+    assert(timeTableViewModel.opened == null)
+
+    composeTestRule.onNodeWithTag("buttonOfname2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("buttonOfname2").performClick()
+
+    assert(timeTableViewModel.opened == scheduled2)
+    verify(navigationActions).navigateTo(eq(Screen.DETAILS_EVENT))
   }
 }
