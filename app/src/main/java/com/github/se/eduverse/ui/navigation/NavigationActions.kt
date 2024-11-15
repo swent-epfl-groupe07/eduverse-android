@@ -146,7 +146,7 @@ open class NavigationActions(
     return navController.currentDestination?.route ?: ""
   }
 
-  fun navigateToUserProfile(userId: String) {
+  open fun navigateToUserProfile(userId: String) {
     navController.navigate(Screen.USER_PROFILE.createRoute(userId))
   }
 }
