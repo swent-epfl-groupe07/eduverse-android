@@ -3,6 +3,7 @@ package com.github.se.eduverse
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -81,6 +82,16 @@ class MainActivity : ComponentActivity() {
 
   private var cameraPermissionGranted by mutableStateOf(false)
   private var audioPermissionGranted by mutableStateOf(false)
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+
+    if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+      // Handle landscape orientation
+    } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+      // Handle portrait orientation
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
