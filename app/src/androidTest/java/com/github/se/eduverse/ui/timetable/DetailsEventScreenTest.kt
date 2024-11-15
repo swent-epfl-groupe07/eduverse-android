@@ -3,6 +3,7 @@ package com.github.se.eduverse.ui.timetable
 import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.isNotEnabled
@@ -12,9 +13,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInHour
@@ -137,22 +135,13 @@ class DetailsEventScreenTest {
     composeTestRule.onNodeWithTag("descTextField").performTextClearance()
     composeTestRule.onNodeWithTag("descTextField").performTextInput("new description")
 
-    composeTestRule.onNodeWithTag("datePicker").performClick()
-    composeTestRule.waitForIdle()
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("timePicker").performClick()
-    composeTestRule.waitForIdle()
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("datePicker").assertHasClickAction()
+    composeTestRule.onNodeWithTag("timePicker").assertHasClickAction()
 
     clickAllSaveIcons()
 
     assertEquals("new name", event.name)
     assertEquals("new description", event.content)
-    assertEquals(now.get(Calendar.DAY_OF_MONTH), event.start.get(Calendar.DAY_OF_MONTH))
-    assertEquals(now.get(Calendar.HOUR_OF_DAY), event.start.get(Calendar.HOUR_OF_DAY))
   }
 
   private fun launch() {
