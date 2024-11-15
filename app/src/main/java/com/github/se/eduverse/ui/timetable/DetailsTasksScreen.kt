@@ -17,7 +17,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -189,39 +191,44 @@ fun DetailsTasksScreen(
 
                   // Status of the task
                   Title("Status")
-                  OutlinedTextField(
-                      value = if (todo?.status == TodoStatus.DONE) "Completed" else "Current",
-                      onValueChange = {},
-                      enabled = false)
+                  OutlinedCard(
+                      modifier = Modifier.fillMaxWidth(0.9f),
+                      shape = OutlinedTextFieldDefaults.shape) {
+                        Text(
+                            text = if (todo?.status == TodoStatus.DONE) "Completed" else "Current",
+                            modifier = Modifier.padding(horizontal = 25.dp, vertical = 10.dp))
+                      }
 
                   // Buttons related to todo
-                  Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                    OutlinedButton(
-                        onClick = { navigationActions.navigateTo(Screen.TODO_LIST) },
-                        modifier = Modifier.fillMaxWidth(2f / 5) // Both buttons take 40%
-                        ) {
-                          Text("See todo")
+                  Row(
+                      modifier = Modifier.fillMaxWidth(0.9f),
+                      horizontalArrangement = Arrangement.SpaceBetween) {
+                        OutlinedButton(
+                            onClick = { navigationActions.navigateTo(Screen.TODO_LIST) },
+                            modifier = Modifier.fillMaxWidth(2f / 5) // Both buttons take 40%
+                            ) {
+                              Text("See todo")
+                            }
+                        if (todo?.status == TodoStatus.ACTUAL) {
+                          OutlinedButton(
+                              onClick = {
+                                todoListViewModel.setTodoDone(todo!!)
+                                todo = todoListViewModel.getTodoById(todo!!.uid)
+                              }) {
+                                Text("Mark as done")
+                              }
+                        } else {
+                          OutlinedButton(
+                              onClick = {
+                                todoListViewModel.setTodoActual(todo!!)
+                                todo = todoListViewModel.getTodoById(todo!!.uid)
+                              },
+                              modifier = Modifier.fillMaxWidth(2f / 3) // Both buttons take 40%
+                              ) {
+                                Text("Mark as current")
+                              }
                         }
-                    if (todo?.status == TodoStatus.ACTUAL) {
-                      OutlinedButton(
-                          onClick = {
-                            todoListViewModel.setTodoDone(todo!!)
-                            todo = todoListViewModel.getTodoById(todo!!.uid)
-                          }) {
-                            Text("Mark as done")
-                          }
-                    } else {
-                      OutlinedButton(
-                          onClick = {
-                            todoListViewModel.setTodoActual(todo!!)
-                            todo = todoListViewModel.getTodoById(todo!!.uid)
-                          },
-                          modifier = Modifier.fillMaxWidth(2f / 3) // Both buttons take 40%
-                          ) {
-                            Text("Mark as current")
-                          }
-                    }
-                  }
+                      }
                 }
               }
             }
