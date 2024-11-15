@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.todo
 
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
@@ -31,10 +33,11 @@ class TodoListScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  private var todos =
+  private val sampleTodos =
       listOf(
           Todo("2", "Second ToDo", 60, TodoStatus.ACTUAL, "3"),
           Todo("1", "First ToDo", 60, TodoStatus.DONE, "3"))
+  private var todos = sampleTodos
 
   @Before
   fun setUp() {
@@ -54,6 +57,11 @@ class TodoListScreenTest {
 
     `when`(mockRepository.addNewTodo(any(), any(), any())).then {
       todos += it.getArgument<Todo>(0)
+      it.getArgument<() -> Unit>(1)()
+    }
+    `when`(mockRepository.deleteTodoById(any(), any(), any())).then {
+      val todoToDeleteId = it.getArgument<String>(0)
+      todos = todos.filter { todo -> todo.uid != todoToDeleteId }
       it.getArgument<() -> Unit>(1)()
     }
     composeTestRule.setContent {
@@ -137,6 +145,7 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoItem_uid").assertIsDisplayed()
     composeTestRule.onNodeWithTag("todoDoneButton_uid").assertIsDisplayed()
     composeTestRule.onNodeWithTag("todoOptionsButton_uid").assertIsDisplayed()
+    todos = sampleTodos
   }
 
   @Test
@@ -152,6 +161,7 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoItem_2").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("completedTasksButton").performClick()
     composeTestRule.onNodeWithTag("todoItem_2").assertIsDisplayed()
+    todos = sampleTodos
   }
 
   @Test
@@ -171,5 +181,111 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("currentTasksButton").performClick()
     composeTestRule.onNodeWithTag("todoItem_1").assertIsDisplayed()
+    todos = sampleTodos
+  }
+
+  @Test
+  fun todoOptionsButtonClickHasCorrectBehaviour_onActualTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_2").assertIsNotDisplayed()
+  }
+
+  @Test
+  fun todoOptionsButtonClickHasCorrectBehaviour_onDoneTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getDoneTodos()
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_1").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("deleteTodoButton_1").assertIsNotDisplayed()
+  }
+
+  @Test
+  fun deleteTodoButtonClickResultsInCorrectBehaviour_onActualTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("deleteTodoButton_2").performClick()
+    composeTestRule.onNodeWithTag("todoItem_2").assertIsNotDisplayed()
+    todos = sampleTodos
+  }
+
+  @Test
+  fun deleteTodoButtonClickResultsInCorrectBehaviour_onDoneTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getDoneTodos()
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("deleteTodoButton_1").performClick()
+    composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
+    todos = sampleTodos
+  }
+
+  @Test
+  fun renameTodoDialogIsCorrectlyDisplayed() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoDialogTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoDialogTitle").assertTextContains("Rename Todo")
+    composeTestRule.onNodeWithTag("renameTodoTextField").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertTextContains("Rename")
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertIsEnabled()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("renameTodoDismissButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("renameTodoDismissButton").assertTextContains("Cancel")
+    composeTestRule.onNodeWithTag("renameTodoDismissButton").assertHasClickAction()
+  }
+
+  @Test
+  fun renameTodoButtonClickResultsInCorrectBehaviour_onActualTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getActualTodos()
+    val newName = "Renamed ToDo"
+    `when`(mockRepository.updateTodo(any(), any(), any())).then {
+      todos -= it.getArgument<Todo>(0).copy(name = "Second ToDo")
+      todos += it.getArgument<Todo>(0)
+      it.getArgument<() -> Unit>(1)()
+    }
+    composeTestRule.onNodeWithTag("todoOptionsButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_2").performClick()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextInput(newName)
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").performClick()
+    composeTestRule.onNodeWithTag("todoName_2").assertTextContains("Renamed ToDo")
+    todos = sampleTodos
+  }
+
+  @Test
+  fun renameTodoButtonClickResultsInCorrectBehaviour_onDoneTodos() {
+    todoListViewModel.currentUid = "3"
+    todoListViewModel.getDoneTodos()
+    val newName = "Renamed ToDo"
+    `when`(mockRepository.updateTodo(any(), any(), any())).then {
+      todos -= it.getArgument<Todo>(0).copy(name = "First ToDo")
+      todos += it.getArgument<Todo>(0)
+      it.getArgument<() -> Unit>(1)()
+    }
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoOptionsButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoButton_1").performClick()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("renameTodoTextField").performTextInput(newName)
+    composeTestRule.onNodeWithTag("renameTodoConfirmButton").performClick()
+    composeTestRule.onNodeWithTag("todoName_1").assertTextContains("Renamed ToDo")
+    todos = sampleTodos
   }
 }
