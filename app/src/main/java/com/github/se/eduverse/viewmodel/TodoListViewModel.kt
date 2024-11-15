@@ -105,4 +105,15 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
         },
         onFailure = { exception -> Log.e("deleteTodo", "Error deleting todo", exception) })
   }
+
+  fun renameTodo(todo: Todo, newName: String) {
+    val newTodo = todo.copy(name = newName)
+    todoRepository.updateTodo(
+        todo = newTodo,
+        onSuccess = {
+          getActualTodos()
+          getDoneTodos()
+        },
+        onFailure = { exception -> Log.e("renameTodo", "Error renaming todo", exception) })
+  }
 }

@@ -84,4 +84,12 @@ class TodoListViewModelTest {
     viewModel.deleteTodo("1")
     verify(mockRepository).deleteTodoById(eq("1"), any(), any())
   }
+
+  @Test
+  fun renameTodoCallsRepositoryWithCorrectlyUpdatedTodo() {
+    val newTodoName = "new name"
+    viewModel.renameTodo(todo, newTodoName)
+    val renamedTodo = todo.copy(name = newTodoName)
+    verify(mockRepository).updateTodo(eq(renamedTodo), any(), any())
+  }
 }
