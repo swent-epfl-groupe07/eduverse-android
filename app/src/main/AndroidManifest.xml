@@ -35,7 +35,8 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Eduverse">
+            android:theme="@style/Theme.Eduverse"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -48,6 +49,7 @@
                 <data android:scheme="file" />    <!-- For file URIs -->
             </intent-filter>
         </activity>
+
 
         <!-- API Key for Google Maps -->
         <meta-data
