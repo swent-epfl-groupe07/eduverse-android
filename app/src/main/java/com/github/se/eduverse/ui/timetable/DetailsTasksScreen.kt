@@ -4,6 +4,7 @@ package com.github.se.eduverse.ui.timetable
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,44 +36,49 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
+import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.model.millisecInHour
 import com.github.se.eduverse.model.millisecInMin
 import com.github.se.eduverse.ui.SaveIcon
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
+import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsTasksScreen(
     timeTableViewModel: TimeTableViewModel,
+    todoListViewModel: TodoListViewModel,
     navigationActions: NavigationActions
 ) {
   val context = LocalContext.current
-  val event: Scheduled =
+  val task: Scheduled =
       timeTableViewModel.opened
           ?: run {
             navigationActions.goBack()
 
             /* The value there doesn't mather as we will leave the screen anyway, but it is important
-            to make event non-null*/
-            Scheduled("", ScheduledType.EVENT, Calendar.getInstance(), 0, "", "", "")
+            to make task non-null*/
+            Scheduled("", ScheduledType.TASK, Calendar.getInstance(), 0, "", "", "")
           }
+  var todo by remember { mutableStateOf(todoListViewModel.getTodoById(task.content)) }
+  if (todo == null) navigationActions.goBack()
 
-  var newName by remember { mutableStateOf(event.name) }
-  var description by remember { mutableStateOf(event.content) }
-  var date by remember { mutableStateOf((event.start.clone() as Calendar)) }
-  var lengthH by remember { mutableIntStateOf((event.length / millisecInHour).toInt()) }
+  var newName by remember { mutableStateOf(task.name) }
+  var date by remember { mutableStateOf((task.start.clone() as Calendar)) }
+  var lengthH by remember { mutableIntStateOf((task.length / millisecInHour).toInt()) }
   var lengthM by remember {
-    mutableIntStateOf((event.length % millisecInHour / millisecInMin).toInt())
+    mutableIntStateOf((task.length % millisecInHour / millisecInMin).toInt())
   }
 
   Scaffold(
       topBar = {
         CenterAlignedTopAppBar(
-            title = { Text("event.name", fontWeight = FontWeight.Bold) },
+            title = { Text(task.name, fontWeight = FontWeight.Bold) },
             modifier = Modifier.testTag("topBar"),
             navigationIcon = {
               IconButton(
@@ -83,7 +90,7 @@ fun DetailsTasksScreen(
             actions = {
               IconButton(
                   onClick = {
-                    timeTableViewModel.deleteScheduled(event)
+                    timeTableViewModel.deleteScheduled(task)
                     navigationActions.goBack()
                   },
                   modifier = Modifier.testTag("deleteButton")) {
@@ -97,48 +104,32 @@ fun DetailsTasksScreen(
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
         LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
               item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                  // Name of the event
+                  // Name of the task
                   Title("Name")
                   OutlinedTextField(
                       value = newName,
-                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
+                      modifier = Modifier
+                          .fillMaxWidth(0.9f)
+                          .testTag("nameTextField"),
                       onValueChange = { newName = it },
-                      placeholder = { Text("Name the event") },
+                      placeholder = { Text("Name the task") },
                       suffix = {
                         SaveIcon(
                             onClick = {
-                              timeTableViewModel.updateScheduled(event.apply { name = newName })
+                              timeTableViewModel.updateScheduled(task.apply { name = newName })
                               newName += " " // Change the value to trigger calculation of isEnabled
                               newName.dropLast(1)
                             },
-                            isEnabled = { event.name != newName })
+                            isEnabled = { task.name != newName })
                       })
 
-                  // Description of the event
-                  Title("Description")
-                  OutlinedTextField(
-                      value = description,
-                      modifier = Modifier.fillMaxWidth(0.9f).testTag("descTextField"),
-                      onValueChange = { description = it },
-                      placeholder = { Text("No description provided") },
-                      suffix = {
-                        SaveIcon(
-                            onClick = {
-                              timeTableViewModel.updateScheduled(
-                                  event.apply { content = description })
-                              description +=
-                                  " " // Change the value to trigger calculation of isEnabled
-                              description.dropLast(1)
-                            },
-                            isEnabled = { event.content != description })
-                      },
-                      minLines = 7)
-
-                  // Date, time and length of the event
+                  // Date, time and length of the task
                   DateAndTimePickers(
                       context = context,
                       selectedDate = date,
@@ -154,25 +145,25 @@ fun DetailsTasksScreen(
                               when (type) {
                                 "date" -> {
                                   // Get the date of the new event but not the time
-                                  event.start.set(Calendar.YEAR, date.get(Calendar.YEAR))
-                                  event.start.set(Calendar.MONTH, date.get(Calendar.MONTH))
-                                  event.start.set(
+                                  task.start.set(Calendar.YEAR, date.get(Calendar.YEAR))
+                                  task.start.set(Calendar.MONTH, date.get(Calendar.MONTH))
+                                  task.start.set(
                                       Calendar.DAY_OF_MONTH, date.get(Calendar.DAY_OF_MONTH))
-                                  timeTableViewModel.updateScheduled(event)
+                                  timeTableViewModel.updateScheduled(task)
                                 }
                                 "time" -> {
                                   // Get the time of the new event but not the date
-                                  event.start.set(
+                                  task.start.set(
                                       Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
-                                  event.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
-                                  event.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
-                                  event.start.set(
+                                  task.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
+                                  task.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
+                                  task.start.set(
                                       Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
-                                  timeTableViewModel.updateScheduled(event)
+                                  timeTableViewModel.updateScheduled(task)
                                 }
                                 "length" -> {
                                   timeTableViewModel.updateScheduled(
-                                      event.apply {
+                                      task.apply {
                                         length =
                                             ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
                                                 .toLong()
@@ -181,24 +172,66 @@ fun DetailsTasksScreen(
                                       1 // Change the value to trigger calculation of isEnabled
                                   lengthH -= 1
                                 }
-                                else -> Log.e("DetailsEventScreen", "Unknown save icon : $type")
+                                else -> Log.e("DetailsTasksScreen", "Unknown save icon : $type")
                               }
                             },
                             isEnabled = {
                               when (type) {
-                                "date" -> date.timeInMillis != event.start.timeInMillis
-                                "time" -> date.timeInMillis != event.start.timeInMillis
+                                "date" -> date.timeInMillis != task.start.timeInMillis
+                                "time" -> date.timeInMillis != task.start.timeInMillis
                                 "length" ->
-                                    event.length !=
+                                    task.length !=
                                         ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
                                             .toLong()
                                 else -> {
-                                  Log.e("DetailsEventScreen", "Unknown save icon : $type")
+                                  Log.e("DetailsTasksScreen", "Unknown save icon : $type")
                                   false
                                 }
                               }
                             })
                       }
+
+                    // Status of the task
+                    Title("Status")
+                    OutlinedTextField(
+                        value = if (todo?.status == TodoStatus.DONE) "Completed" else "Current",
+                        onValueChange = {},
+                        enabled = false
+                    )
+
+                    // Buttons related to todo
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                navigationActions.navigateTo(Screen.TODO_LIST)
+                            },
+                            modifier = Modifier.fillMaxWidth(2f/5) // Both buttons take 40%
+                        ) {
+                            Text("See todo")
+                        }
+                        if (todo?.status == TodoStatus.ACTUAL) {
+                            OutlinedButton(
+                                onClick = {
+                                    todoListViewModel.setTodoDone(todo!!)
+                                    todo = todoListViewModel.getTodoById(todo!!.uid)
+                                }
+                            ) {
+                                Text("Mark as done")
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    todoListViewModel.setTodoActual(todo!!)
+                                    todo = todoListViewModel.getTodoById(todo!!.uid)
+                                },
+                                modifier = Modifier.fillMaxWidth(2f/3) // Both buttons take 40%
+                            ) {
+                                Text("Mark as current")
+                            }
+                        }
+                    }
                 }
               }
             }
