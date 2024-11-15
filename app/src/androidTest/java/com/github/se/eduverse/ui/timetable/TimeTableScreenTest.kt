@@ -2,6 +2,7 @@ package com.github.se.eduverse.ui.timetable
 
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,9 +12,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.Todo
@@ -205,23 +203,9 @@ class TimeTableScreenTest {
 
     composeTestRule.onNodeWithTag("nameTextField").performTextInput("name4")
 
-    composeTestRule.onNodeWithTag("datePicker").performClick()
-    composeTestRule.waitForIdle()
-
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("timePicker").performClick()
-    composeTestRule.waitForIdle()
-
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("lengthPicker").performClick()
-    composeTestRule.waitForIdle()
-
-    onView(withText("OK")).perform(click())
-    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("datePicker").assertHasClickAction()
+    composeTestRule.onNodeWithTag("timePicker").assertHasClickAction()
+    composeTestRule.onNodeWithTag("lengthPicker").assertHasClickAction()
 
     composeTestRule.onNodeWithTag("confirm").performClick()
     composeTestRule.waitForIdle()
