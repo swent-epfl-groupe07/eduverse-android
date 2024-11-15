@@ -2,6 +2,12 @@ package com.github.se.eduverse.ui.Pomodoro
 
 //noinspection UsingMaterialAndMaterial3Libraries
 import android.graphics.DashPathEffect
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,8 +33,11 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.twotone.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -64,6 +74,7 @@ import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.todo.DefaultTodoTimeIcon
 import com.github.se.eduverse.ui.todo.TodoItem
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
@@ -80,6 +91,8 @@ fun PomodoroScreen(
   val todos = todoListViewModel.actualTodos.collectAsState()
   val selectedTodo = todoListViewModel.selectedTodo.collectAsState()
   var showTodoDialog by remember { mutableStateOf(false) }
+  val currentTodoElapsedTime by timerViewModel.currentTodoElapsedTime.collectAsState()
+  var lastTimerPausedState by remember { mutableStateOf(false) }
 
   Scaffold(
       topBar = {
@@ -114,20 +127,37 @@ fun PomodoroScreen(
                     {
                       /** Nothing to do on undo on this screen */
                     },
-                    { todoListViewModel.setTodoDone(selectedTodo) }) {
+                    {
+                      todoListViewModel.setTodoDoneFromPomodoro(
+                          selectedTodo.copy(timeSpent = currentTodoElapsedTime!!))
+                      todoListViewModel.unselectTodo()
+                      timerViewModel.unbindTodoFromTimer()
+                    },
+                    {
+                      if (timerViewModel.pomodoroSessionActive()) AnimatedTodoTimeIcon()
+                      else DefaultTodoTimeIcon(selectedTodo)
+                    },
+                    {
                       IconButton(
-                          onClick = { todoListViewModel.unselectTodo() },
+                          onClick = {
+                            todoListViewModel.updateTodoTimeSpent(
+                                selectedTodo, currentTodoElapsedTime!!)
+                            todoListViewModel.unselectTodo()
+                            timerViewModel.unbindTodoFromTimer()
+                          },
                           modifier = Modifier.testTag("unselectTodoButton")) {
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "Unselect Todo",
                                 tint = Color.Red)
                           }
-                    }
+                    },
+                    currentTodoElapsedTime?.let { "${it/3600}h${it/60}" } ?: "")
               }
                   ?: SelectTodoButton(
                       enabled = todos.value.isNotEmpty(),
                       onClick = {
+                        lastTimerPausedState = timerState.isPaused
                         timerViewModel.stopTimer()
                         showTodoDialog = true
                       },
@@ -238,10 +268,13 @@ fun PomodoroScreen(
               if (showTodoDialog) {
                 SelectTodoDialog(
                     todos = todos.value,
-                    onDismiss = { showTodoDialog = false },
+                    onDismiss = {
+                      if (!lastTimerPausedState) timerViewModel.startTimer()
+                      showTodoDialog = false
+                    },
                     onSelect = {
                       todoListViewModel.selectTodo(it)
-                      showTodoDialog = false
+                      timerViewModel.bindTodoToTimer(it.timeSpent)
                     })
               }
             }
@@ -366,7 +399,10 @@ fun SelectTodoDialog(todos: List<Todo>, onDismiss: () -> Unit, onSelect: (Todo) 
             val todo = todos[i]
             TextButton(
                 modifier = Modifier.testTag("todoOption_${todo.uid}"),
-                onClick = { onSelect(todo) }) {
+                onClick = {
+                  onSelect(todo)
+                  onDismiss()
+                }) {
                   Text(todo.name)
                 }
             Divider()
@@ -426,4 +462,24 @@ fun SelectTodoButton(enabled: Boolean, onClick: () -> Unit, text: String) {
               modifier = Modifier.padding(start = 8.dp))
         }
       }
+}
+
+/** Composable to display an animated timer icon when the timer is running */
+@Composable
+fun AnimatedTodoTimeIcon() {
+  val infiniteTransition = rememberInfiniteTransition(label = "opacity")
+  val alpha by
+      infiniteTransition.animateFloat(
+          initialValue = 0.1f,
+          targetValue = 1f,
+          animationSpec =
+              infiniteRepeatable(
+                  animation = tween(durationMillis = 30000, easing = LinearEasing),
+                  repeatMode = RepeatMode.Reverse),
+          label = "opacity")
+  Icon(
+      imageVector = Icons.Filled.Timer,
+      contentDescription = "Animated Timer Icon",
+      modifier = Modifier.size(22.dp).alpha(alpha),
+      tint = Color(0xFF217384))
 }
