@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.setting
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -29,6 +31,8 @@ private val LightBackgroundColor = Color.White
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navigationActions: NavigationActions) {
+  val context = LocalContext.current
+
   var privacySettings by remember { mutableStateOf(true) }
   var selectedTheme by remember { mutableStateOf("Light") }
   var selectedLanguage by remember { mutableStateOf("English") }
@@ -98,14 +102,11 @@ fun SettingsScreen(navigationActions: NavigationActions) {
 
               // Notifications, Saved, Archive, and Gallery Fields
               SettingsOption(
-                  "Notifications",
-                  Icons.Default.Notifications,
-                  navigationActions,
-                  "NotificationsScreen")
-              SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, "SavedScreen")
-              SettingsOption("Archive", Icons.Default.Archive, navigationActions, "ArchiveScreen")
+                  "Notifications", Icons.Default.Notifications, navigationActions, null, context)
+              SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, null, context)
+              SettingsOption("Archive", Icons.Default.Archive, navigationActions, null, context)
               SettingsOption(
-                  "Gallery", Icons.Default.PhotoLibrary, navigationActions, Screen.GALLERY)
+                  "Gallery", Icons.Default.PhotoLibrary, navigationActions, Screen.GALLERY, context)
 
               Spacer(modifier = Modifier.height(16.dp))
 
@@ -135,7 +136,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
               // Add Account and Log Out Buttons
               Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Button(
-                    onClick = { /* Add account functionality here */},
+                    onClick = { showNotImplementedToast(context) },
                     modifier = Modifier.fillMaxWidth().testTag("addAccountButton"),
                     colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor)) {
                       Icon(
@@ -164,19 +165,24 @@ fun SettingsScreen(navigationActions: NavigationActions) {
 
 // Other helper functions (SettingsOption and SettingsDropdown) remain the same
 
-// Other helper functions (SettingsOption and SettingsDropdown) remain the same
-
 @Composable
 fun SettingsOption(
     title: String,
     icon: ImageVector,
     navigationActions: NavigationActions,
-    route: String
+    route: String?,
+    context: android.content.Context
 ) {
   Row(
       modifier =
           Modifier.fillMaxWidth()
-              .clickable { navigationActions.navigateTo(route) }
+              .clickable {
+                if (route != null) {
+                  navigationActions.navigateTo(route)
+                } else {
+                  showNotImplementedToast(context)
+                }
+              }
               .padding(16.dp)
               .testTag("settingsOption_$title"),
       verticalAlignment = Alignment.CenterVertically) {
@@ -235,4 +241,9 @@ fun SettingsDropdown(
 private fun logout(navigationActions: NavigationActions) {
   FirebaseAuth.getInstance().signOut()
   navigationActions.navigateTo(Screen.AUTH) // Replace "LoginScreen" with your login screen route
+}
+
+// Helper function to show a toast
+fun showNotImplementedToast(context: android.content.Context) {
+  Toast.makeText(context, "Functionality not yet implemented", Toast.LENGTH_SHORT).show()
 }
