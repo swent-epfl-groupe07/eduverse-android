@@ -34,7 +34,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   private val _error = MutableStateFlow<String?>(null)
   open val error: StateFlow<String?> = _error.asStateFlow()
 
-  fun loadProfile(userId: String) {
+  open fun loadProfile(userId: String) {
     viewModelScope.launch {
       _profileState.value = ProfileUiState.Loading
       try {
@@ -48,7 +48,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun loadLikedPublications(userId: String) {
+  open fun loadLikedPublications(userId: String) {
     viewModelScope.launch {
       try {
         val likedIds = repository.getUserLikedPublicationsIds(userId)
@@ -73,7 +73,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   }
 
   // ProfileViewModel.kt
-  fun toggleFollow(currentUserId: String, targetUserId: String) {
+  open fun toggleFollow(currentUserId: String, targetUserId: String) {
     viewModelScope.launch {
       try {
         _followActionState.value = FollowActionState.Loading
@@ -136,7 +136,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun likeAndAddToFavorites(userId: String, publicationId: String) {
+  open fun likeAndAddToFavorites(userId: String, publicationId: String) {
     viewModelScope.launch {
       try {
         repository.incrementLikes(publicationId, userId)
@@ -154,7 +154,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     repository.addToUserCollection(userId, "likedPublications", publicationId)
   }
 
-  fun removeLike(userId: String, publicationId: String) {
+  open fun removeLike(userId: String, publicationId: String) {
     viewModelScope.launch {
       try {
         repository.removeFromLikedPublications(userId, publicationId)
