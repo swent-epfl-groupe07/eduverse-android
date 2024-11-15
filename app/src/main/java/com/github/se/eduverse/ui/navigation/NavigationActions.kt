@@ -45,6 +45,8 @@ object Screen {
   const val POMODORO = "Pomodoro screen"
   const val PDF_CONVERTER = "PdfConverter screen"
   const val PROFILE = "Profile screen"
+  const val TODO_LIST = "TodoList screen"
+  const val TIME_TABLE = "TimeTable screen"
   const val SEARCH = "Search screen"
   const val ARCHIVE = "Archive screen"
 
