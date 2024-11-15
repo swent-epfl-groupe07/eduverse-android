@@ -48,6 +48,7 @@ object Screen {
   const val TIME_TABLE = "TimeTable screen"
   const val SEARCH = "Search screen"
   const val DETAILS_EVENT = "DetailsEvent screen"
+  const val DETAILS_TASKS = "DetailsTasks screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"

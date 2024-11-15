@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -198,4 +200,13 @@ fun EditFileMenu(modifier: Modifier, onRename: () -> Unit, onDelete: () -> Unit)
               })
         }
   }
+}
+
+@Composable
+fun SaveIcon(onClick: () -> Unit, isEnabled: () -> Boolean) {
+  Icon(
+      imageVector = Icons.Default.Save,
+      contentDescription = "Delete",
+      modifier = Modifier.clickable(enabled = isEnabled()) { onClick() }.testTag("saveIcon"),
+      tint = if (isEnabled()) MaterialTheme.colors.primary else Color.Gray)
 }

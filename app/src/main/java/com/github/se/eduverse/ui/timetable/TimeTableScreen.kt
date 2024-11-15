@@ -191,7 +191,11 @@ fun TimeTableScreen(
                 for (c in 0..6) {
                   TableColumn((1.0 / (7 - c)).toFloat(), weeklyTable[c]) {
                     timeTableViewModel.opened = it
-                    navigationActions.navigateTo(Screen.DETAILS_EVENT)
+                    if (it.type == ScheduledType.EVENT) {
+                      navigationActions.navigateTo(Screen.DETAILS_EVENT)
+                    } else {
+                      navigationActions.navigateTo(Screen.DETAILS_TASKS)
+                    }
                   }
                 }
               }
