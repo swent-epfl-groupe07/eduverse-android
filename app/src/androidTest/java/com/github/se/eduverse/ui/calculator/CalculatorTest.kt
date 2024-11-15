@@ -55,7 +55,7 @@ class CalculatorScreenTest {
     composeTestRule.onNodeWithTag("button_=").performClick()
     composeTestRule.onNodeWithTag("resultText").assertTextEquals("3")
 
-    composeTestRule.onNodeWithTag("clearButton").performClick() // Clear icon button
+    composeTestRule.onNodeWithTag("clearButton").performClick()
     composeTestRule.onNodeWithTag("displayText").assertTextEquals("")
 
     composeTestRule.onNodeWithTag("button_5").performClick()
