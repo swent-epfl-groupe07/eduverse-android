@@ -280,7 +280,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
     ) {
-      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.POMODORO) {
+        PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
+      }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
     // Add a dynamic route for PicTakenScreen with optional arguments for photo and

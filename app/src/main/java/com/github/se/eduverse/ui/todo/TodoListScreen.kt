@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -69,7 +72,9 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
               TodoItem(
                   todo,
                   { todoListViewModel.setTodoActual(todo) },
-                  { todoListViewModel.setTodoDone(todo) }) {
+                  { todoListViewModel.setTodoDone(todo) },
+                  { DefaultTodoTimeIcon(todo) },
+                  {
                     Box {
                       var expanded by remember { mutableStateOf(false) }
                       IconButton(
@@ -85,7 +90,8 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
                           { todoListViewModel.deleteTodo(todo.uid) },
                           { showRenameDialog = true })
                     }
-                  }
+                  },
+                  "${todo.timeSpent/3600}h${todo.timeSpent/60}")
               if (showRenameDialog) {
                 RenameTodoDialog(
                     todo.name,
@@ -112,7 +118,9 @@ fun TodoItem(
     todo: Todo,
     onUndo: () -> Unit,
     onDone: () -> Unit,
-    rightMostButton: @Composable () -> Unit
+    timeSpentIcon: @Composable () -> Unit,
+    rightMostButton: @Composable () -> Unit,
+    timeSpent: String = "0h0"
 ) {
   val completed = todo.status == TodoStatus.DONE
 
@@ -152,6 +160,19 @@ fun TodoItem(
                       .testTag("todoName_${todo.uid}"),
               textDecoration = if (completed) TextDecoration.LineThrough else TextDecoration.None,
               color = if (completed) Color.Gray else Color.Unspecified)
+
+          Row(modifier = Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+            timeSpentIcon()
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = timeSpent,
+                modifier = Modifier.testTag("todoTimeSpent_${todo.uid}"),
+                color =
+                    if (todo.status == TodoStatus.ACTUAL) Color(0xFF217384) else Color.LightGray,
+                fontSize = 16.sp,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Medium)
+          }
 
           rightMostButton()
         }
@@ -285,4 +306,13 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
               Text("Cancel")
             }
       })
+}
+
+@Composable
+fun DefaultTodoTimeIcon(todo: Todo) {
+  Icon(
+      Icons.Default.Timer,
+      contentDescription = "Time Spent",
+      modifier = Modifier.size(22.dp).testTag("todoTimeIcon_${todo.uid}"),
+      tint = if (todo.status == TodoStatus.ACTUAL) Color(0xFF217384) else Color.LightGray)
 }
