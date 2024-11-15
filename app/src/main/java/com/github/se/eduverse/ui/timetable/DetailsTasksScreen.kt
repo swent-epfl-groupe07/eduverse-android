@@ -60,13 +60,7 @@ fun DetailsTasksScreen(
   val context = LocalContext.current
   val task: Scheduled =
       timeTableViewModel.opened
-          ?: run {
-            navigationActions.goBack()
-
-            /* The value there doesn't mather as we will leave the screen anyway, but it is important
-            to make task non-null*/
-            Scheduled("", ScheduledType.TASK, Calendar.getInstance(), 0, "", "", "")
-          }
+          ?: Scheduled("", ScheduledType.TASK, Calendar.getInstance(), 0, "", "", "")
   var todo by remember { mutableStateOf(todoListViewModel.getTodoById(task.content)) }
   if (todo == null) navigationActions.goBack()
 
@@ -192,7 +186,7 @@ fun DetailsTasksScreen(
                   // Status of the task
                   Title("Status")
                   OutlinedCard(
-                      modifier = Modifier.fillMaxWidth(0.9f),
+                      modifier = Modifier.fillMaxWidth(0.9f).testTag("status"),
                       shape = OutlinedTextFieldDefaults.shape) {
                         Text(
                             text = if (todo?.status == TodoStatus.DONE) "Completed" else "Current",
@@ -205,8 +199,7 @@ fun DetailsTasksScreen(
                       horizontalArrangement = Arrangement.SpaceBetween) {
                         OutlinedButton(
                             onClick = { navigationActions.navigateTo(Screen.TODO_LIST) },
-                            modifier = Modifier.fillMaxWidth(2f / 5) // Both buttons take 40%
-                            ) {
+                            modifier = Modifier.fillMaxWidth(2f / 5).testTag("seeTodo")) {
                               Text("See todo")
                             }
                         if (todo?.status == TodoStatus.ACTUAL) {
@@ -214,7 +207,8 @@ fun DetailsTasksScreen(
                               onClick = {
                                 todoListViewModel.setTodoDone(todo!!)
                                 todo = todoListViewModel.getTodoById(todo!!.uid)
-                              }) {
+                              },
+                              modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsDone")) {
                                 Text("Mark as done")
                               }
                         } else {
@@ -223,8 +217,7 @@ fun DetailsTasksScreen(
                                 todoListViewModel.setTodoActual(todo!!)
                                 todo = todoListViewModel.getTodoById(todo!!.uid)
                               },
-                              modifier = Modifier.fillMaxWidth(2f / 3) // Both buttons take 40%
-                              ) {
+                              modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsCurrent")) {
                                 Text("Mark as current")
                               }
                         }
