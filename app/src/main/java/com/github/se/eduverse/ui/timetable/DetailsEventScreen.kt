@@ -73,12 +73,7 @@ fun DetailsEventScreen(
   Scaffold(
       topBar = {
         CenterAlignedTopAppBar(
-            title = {
-              Text(
-                  "event.name",
-                  fontWeight = FontWeight.Bold,
-                  modifier = Modifier.testTag("topBarTitle"))
-            },
+            title = { Text("event.name", fontWeight = FontWeight.Bold) },
             modifier = Modifier.testTag("topBar"),
             navigationIcon = {
               IconButton(
@@ -129,7 +124,7 @@ fun DetailsEventScreen(
                   Title("Description")
                   OutlinedTextField(
                       value = description,
-                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
+                      modifier = Modifier.fillMaxWidth(0.9f).testTag("descTextField"),
                       onValueChange = { description = it },
                       placeholder = { Text("No description provided") },
                       suffix = {

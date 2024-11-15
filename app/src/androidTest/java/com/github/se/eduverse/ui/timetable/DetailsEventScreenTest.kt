@@ -1,0 +1,173 @@
+package com.github.se.eduverse.ui.timetable
+
+import androidx.compose.ui.test.assertAll
+import androidx.compose.ui.test.assertAny
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isEnabled
+import androidx.compose.ui.test.isNotEnabled
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
+import com.github.se.eduverse.model.Scheduled
+import com.github.se.eduverse.model.ScheduledType
+import com.github.se.eduverse.model.millisecInHour
+import com.github.se.eduverse.repository.TimeTableRepository
+import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.viewmodel.TimeTableViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import java.util.Calendar
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
+
+class DetailsEventScreenTest {
+  private lateinit var timeTableRepository: TimeTableRepository
+  private lateinit var timeTableViewModel: TimeTableViewModel
+  private lateinit var navigationActions: NavigationActions
+  private lateinit var auth: FirebaseAuth
+
+  private val before =
+      Calendar.getInstance().apply {
+        add(Calendar.DAY_OF_MONTH, -1)
+        add(Calendar.HOUR_OF_DAY, -1)
+        set(Calendar.MINUTE, -30)
+      }
+  private val event =
+      Scheduled(
+          "id",
+          ScheduledType.EVENT,
+          before,
+          2 * millisecInHour.toLong(),
+          "description",
+          "ownerId",
+          "name")
+
+  @get:Rule val composeTestRule = createComposeRule()
+
+  @Before
+  fun setUp() {
+    timeTableRepository = mock(TimeTableRepository::class.java)
+    auth = mock(FirebaseAuth::class.java)
+    val user = mock(FirebaseUser::class.java)
+    navigationActions = mock(NavigationActions::class.java)
+
+    `when`(auth.currentUser).thenReturn(user)
+    `when`(user.uid).thenReturn("userId")
+    `when`(timeTableRepository.updateScheduled(any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(1)
+      callback()
+    }
+    `when`(timeTableRepository.deleteScheduled(any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(1)
+      callback()
+    }
+
+    timeTableViewModel = TimeTableViewModel(timeTableRepository, auth)
+  }
+
+  @Test
+  fun goesBackOnNullOpenedEvent() {
+    timeTableViewModel.opened = null
+    composeTestRule.setContent { DetailsEventScreen(timeTableViewModel, navigationActions) }
+
+    verify(navigationActions).goBack()
+  }
+
+  @Test
+  fun displaysElements() {
+    launch()
+
+    composeTestRule.onNodeWithTag("topBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("nameTextField").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("descTextField").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("datePicker").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("timePicker").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("lengthPicker").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("saveIcon").assertCountEquals(5)
+  }
+
+  @Test
+  fun goBackTest() {
+    launch()
+
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    verify(navigationActions).goBack()
+  }
+
+  @Test
+  fun deleteTest() {
+    launch()
+
+    composeTestRule.onNodeWithTag("deleteButton").performClick()
+    verify(timeTableRepository).deleteScheduled(eq(event), any(), any())
+    verify(navigationActions).goBack()
+  }
+
+  private val device: UiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+  @Test
+  fun fieldsAndSaveTest() {
+    val now = Calendar.getInstance()
+    launch()
+
+    composeTestRule.onAllNodesWithTag("saveIcon").assertAll(isNotEnabled())
+
+    composeTestRule.onNodeWithTag("nameTextField").performTextInput("++ ")
+    composeTestRule.onAllNodesWithTag("saveIcon").assertAny(isEnabled())
+    clickAllSaveIcons()
+    assertEquals("++ name", event.name)
+
+    composeTestRule.onNodeWithTag("nameTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("nameTextField").performTextInput("new name")
+
+    composeTestRule.onNodeWithTag("descTextField").performTextClearance()
+    composeTestRule.onNodeWithTag("descTextField").performTextInput("new description")
+
+    composeTestRule.onNodeWithTag("datePicker").performClick()
+    composeTestRule.waitForIdle()
+    onView(withText("OK")).perform(click())
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("timePicker").performClick()
+    composeTestRule.waitForIdle()
+    onView(withText("OK")).perform(click())
+    composeTestRule.waitForIdle()
+
+    clickAllSaveIcons()
+
+    assertEquals("new name", event.name)
+    assertEquals("new description", event.content)
+    assertEquals(now.get(Calendar.DAY_OF_MONTH), event.start.get(Calendar.DAY_OF_MONTH))
+    assertEquals(now.get(Calendar.HOUR_OF_DAY), event.start.get(Calendar.HOUR_OF_DAY))
+    assertEquals(now.get(Calendar.MINUTE), event.start.get(Calendar.MINUTE))
+  }
+
+  private fun launch() {
+    timeTableViewModel.opened = event
+    composeTestRule.setContent { DetailsEventScreen(timeTableViewModel, navigationActions) }
+  }
+
+  private fun clickAllSaveIcons() {
+    for (i in 0..4) {
+      composeTestRule.onAllNodesWithTag("saveIcon")[i].performClick()
+    }
+  }
+}
