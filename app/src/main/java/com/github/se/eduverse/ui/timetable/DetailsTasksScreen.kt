@@ -104,9 +104,7 @@ fun DetailsTasksScreen(
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
+            modifier = Modifier.padding(padding).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
               item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -114,9 +112,7 @@ fun DetailsTasksScreen(
                   Title("Name")
                   OutlinedTextField(
                       value = newName,
-                      modifier = Modifier
-                          .fillMaxWidth(0.9f)
-                          .testTag("nameTextField"),
+                      modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
                       onValueChange = { newName = it },
                       placeholder = { Text("Name the task") },
                       suffix = {
@@ -191,47 +187,41 @@ fun DetailsTasksScreen(
                             })
                       }
 
-                    // Status of the task
-                    Title("Status")
-                    OutlinedTextField(
-                        value = if (todo?.status == TodoStatus.DONE) "Completed" else "Current",
-                        onValueChange = {},
-                        enabled = false
-                    )
+                  // Status of the task
+                  Title("Status")
+                  OutlinedTextField(
+                      value = if (todo?.status == TodoStatus.DONE) "Completed" else "Current",
+                      onValueChange = {},
+                      enabled = false)
 
-                    // Buttons related to todo
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                navigationActions.navigateTo(Screen.TODO_LIST)
-                            },
-                            modifier = Modifier.fillMaxWidth(2f/5) // Both buttons take 40%
+                  // Buttons related to todo
+                  Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                    OutlinedButton(
+                        onClick = { navigationActions.navigateTo(Screen.TODO_LIST) },
+                        modifier = Modifier.fillMaxWidth(2f / 5) // Both buttons take 40%
                         ) {
-                            Text("See todo")
+                          Text("See todo")
                         }
-                        if (todo?.status == TodoStatus.ACTUAL) {
-                            OutlinedButton(
-                                onClick = {
-                                    todoListViewModel.setTodoDone(todo!!)
-                                    todo = todoListViewModel.getTodoById(todo!!.uid)
-                                }
-                            ) {
-                                Text("Mark as done")
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = {
-                                    todoListViewModel.setTodoActual(todo!!)
-                                    todo = todoListViewModel.getTodoById(todo!!.uid)
-                                },
-                                modifier = Modifier.fillMaxWidth(2f/3) // Both buttons take 40%
-                            ) {
-                                Text("Mark as current")
-                            }
-                        }
+                    if (todo?.status == TodoStatus.ACTUAL) {
+                      OutlinedButton(
+                          onClick = {
+                            todoListViewModel.setTodoDone(todo!!)
+                            todo = todoListViewModel.getTodoById(todo!!.uid)
+                          }) {
+                            Text("Mark as done")
+                          }
+                    } else {
+                      OutlinedButton(
+                          onClick = {
+                            todoListViewModel.setTodoActual(todo!!)
+                            todo = todoListViewModel.getTodoById(todo!!.uid)
+                          },
+                          modifier = Modifier.fillMaxWidth(2f / 3) // Both buttons take 40%
+                          ) {
+                            Text("Mark as current")
+                          }
                     }
+                  }
                 }
               }
             }

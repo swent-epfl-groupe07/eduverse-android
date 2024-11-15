@@ -118,6 +118,6 @@ class TodoListViewModel(private val todoRepository: TodoRepository) : ViewModel(
   }
 
   fun getTodoById(id: String): Todo? {
-      return _actualTodos.value.find { it.uid == id } ?: _doneTodos.value.find { it.uid == id }
+    return _actualTodos.value.find { it.uid == id } ?: _doneTodos.value.find { it.uid == id }
   }
 }
