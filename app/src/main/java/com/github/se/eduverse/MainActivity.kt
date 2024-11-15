@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +37,7 @@ import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.camera.CameraScreen
 import com.github.se.eduverse.ui.camera.NextScreen
+import com.github.se.eduverse.ui.camera.PermissionDeniedScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
 import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
@@ -240,7 +240,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         if (cameraPermissionGranted) {
           CameraScreen(navigationActions)
         } else {
-          PermissionDeniedScreen()
+          PermissionDeniedScreen(navigationActions)
         }
       }
     }
@@ -336,9 +336,4 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
               videoViewModel)
         }
   }
-}
-
-@Composable
-fun PermissionDeniedScreen() {
-  Text("Permission Denied")
 }
