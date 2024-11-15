@@ -217,4 +217,39 @@ class TimerViewModelTest {
         assertEquals(1200L, updatedState.longBreakTime)
         assertEquals(3, updatedState.cycles)
       }
+
+  @Test
+  fun `unbindTodoFromTimer sets currentTodoElapsedTime to null`() =
+      testScope.runTest {
+        viewModel.bindTodoToTimer(100L)
+        viewModel.unbindTodoFromTimer()
+        val elapsedTime = viewModel.currentTodoElapsedTime.first()
+        assertEquals(null, elapsedTime)
+      }
+
+  @Test
+  fun `bindTodoToTimer sets currentTodoElapsedTime correctly`() =
+      testScope.runTest {
+        viewModel.bindTodoToTimer(100L)
+        val elapsedTime = viewModel.currentTodoElapsedTime.first()
+        assertEquals(100L, elapsedTime)
+      }
+
+  @Test
+  fun `updateCurrentTodoElapsedTime increments elapsed time correctly`() =
+      testScope.runTest {
+        viewModel.bindTodoToTimer(100L)
+        viewModel.startTimer()
+        advanceTimeBy(1001)
+        val elapsedTime = viewModel.currentTodoElapsedTime.first()
+        assertEquals(101L, elapsedTime)
+      }
+
+  @Test
+  fun `pomodoroSessionActive returns true when pomodoro is active`() =
+      testScope.runTest {
+        viewModel.startTimer()
+        val isActive = viewModel.pomodoroSessionActive()
+        assertEquals(true, isActive)
+      }
 }
