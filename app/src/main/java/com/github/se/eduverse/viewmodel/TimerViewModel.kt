@@ -30,6 +30,9 @@ open class TimerViewModel(
               currentCycle = 1))
   open val timerState = _timerState.asStateFlow()
 
+  private val _currentTodoElapsedTime = MutableStateFlow<Long?>(0L)
+  val currentTodoElapsedTime = _currentTodoElapsedTime.asStateFlow()
+
   private var timerJob: Job? = null
 
   open fun startTimer() {
@@ -44,6 +47,7 @@ open class TimerViewModel(
               currentState.copy(
                   remainingSeconds = (currentState.remainingSeconds - 1).coerceAtLeast(0))
             }
+            updateCurrentTodoElapsedTime()
           }
           delay(100)
           // Only proceed with transition if we actually reached zero
@@ -125,6 +129,24 @@ open class TimerViewModel(
           cycles = cycles)
     }
     resetTimer()
+  }
+
+  open fun bindTodoToTimer(todoSpentTime: Long) {
+    _currentTodoElapsedTime.value = todoSpentTime
+  }
+
+  open fun unbindTodoFromTimer() {
+    _currentTodoElapsedTime.value = null
+  }
+
+  open fun updateCurrentTodoElapsedTime() {
+    _currentTodoElapsedTime.value?.let { elapsedTime ->
+      if (pomodoroSessionActive()) _currentTodoElapsedTime.value = elapsedTime + 1
+    }
+  }
+
+  open fun pomodoroSessionActive(): Boolean {
+    return _timerState.value.currentTimerType == TimerType.POMODORO && !_timerState.value.isPaused
   }
 }
 

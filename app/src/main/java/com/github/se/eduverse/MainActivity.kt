@@ -55,6 +55,7 @@ import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.timetable.DetailsEventScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
@@ -202,6 +203,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.TIME_TABLE) {
         TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
       }
+      composable(Screen.DETAILS_EVENT) { DetailsEventScreen(timeTableViewModel, navigationActions) }
     }
 
     composable(
@@ -283,7 +285,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
     ) {
-      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.POMODORO) {
+        PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
+      }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
     // Add a dynamic route for PicTakenScreen with optional arguments for photo and
