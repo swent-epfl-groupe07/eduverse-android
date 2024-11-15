@@ -73,7 +73,7 @@ fun DetailsEventScreen(
   Scaffold(
       topBar = {
         CenterAlignedTopAppBar(
-            title = { Text("event.name", fontWeight = FontWeight.Bold) },
+            title = { Text(event.name, fontWeight = FontWeight.Bold) },
             modifier = Modifier.testTag("topBar"),
             navigationIcon = {
               IconButton(
