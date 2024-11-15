@@ -203,6 +203,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
       }
       composable(Screen.DETAILS_EVENT) { DetailsEventScreen(timeTableViewModel, navigationActions) }
+      composable(Screen.DETAILS_EVENT) { DetailsEventScreen(timeTableViewModel, navigationActions) }
     }
 
     composable(
