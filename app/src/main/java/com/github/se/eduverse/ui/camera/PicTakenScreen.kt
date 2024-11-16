@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -193,15 +194,11 @@ fun PicTakenScreen(
                     }
                   },
                   modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC6D3E1)),
+                  colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
                   shape = RoundedCornerShape(8.dp)) {
                     Text(
                         text = "Save",
-                        style =
-                            TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight(500),
-                                color = Color(0xFF4A4459)),
+                        style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight(500)),
                         modifier = Modifier.padding(horizontal = 8.dp))
                   }
 
@@ -214,15 +211,13 @@ fun PicTakenScreen(
                     navigationActions.navigateTo("nextScreen/$encodedPhotoPath/$encodedVideoPath")
                   },
                   modifier = Modifier.weight(1f).height(56.dp).testTag("nextButton"),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = MaterialTheme.colorScheme.tertiary),
                   shape = RoundedCornerShape(8.dp)) {
                     Text(
                         text = "Next",
-                        style =
-                            TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight(500),
-                                color = Color(0xFF4A4459)),
+                        style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight(500)),
                         modifier = Modifier.padding(horizontal = 8.dp))
                   }
             }
