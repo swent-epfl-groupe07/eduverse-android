@@ -599,7 +599,7 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("focusIcon").assertExists()
 
       // 7. Return to dashboard
-      onNodeWithTag("backButton").performClick()
+      onNodeWithTag("goBackButton").performClick()
       navigationActions.goBack()
       waitForIdle()
 
