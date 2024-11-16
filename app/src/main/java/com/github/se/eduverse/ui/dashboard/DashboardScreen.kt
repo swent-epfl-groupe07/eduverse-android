@@ -85,7 +85,8 @@ fun DashboardScreen(
         FloatingActionButton(
             onClick = { showAddWidgetDialog = true },
             modifier = Modifier.testTag("add_widget_button"),
-            backgroundColor = MaterialTheme.colors.primary) {
+            backgroundColor = MaterialTheme.colors.primary,
+            contentColor = MaterialTheme.colors.onPrimary) {
               Icon(Icons.Default.Add, "Add Widget")
             }
       },
@@ -275,7 +276,7 @@ private fun ReorderableWidgetList(
                       .testTag("widget_card")
                       .clickable {
                         val route =
-                            CommonWidgetType.values().find { it.name == item.widgetType }?.route
+                            CommonWidgetType.entries.find { it.name == item.widgetType }?.route
 
                         // Navigate if route exists
                         route?.let { navigationActions.navigateTo(it) }
@@ -292,7 +293,9 @@ private fun ReorderableWidgetList(
                                   "TIMER" -> Icons.Default.Timer
                                   "CALCULATOR" -> Icons.Default.Calculate
                                   "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
-                                  "WEEKLY_PLANNER" -> Icons.Default.DateRange
+                                  "FOLDERS" -> Icons.Default.FolderOpen
+                                  "TODO_LIST" -> Icons.Default.Checklist
+                                  "TIME_TABLE" -> Icons.Default.DateRange
                                   else -> Icons.Default.Widgets
                                 },
                             contentDescription = null,
@@ -349,7 +352,9 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                                 "TIMER" -> Icons.Default.Timer
                                 "CALCULATOR" -> Icons.Default.Calculate
                                 "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
-                                "WEEKLY_PLANNER" -> Icons.Default.DateRange
+                                "FOLDERS" -> Icons.Default.FolderOpen
+                                "TODO_LIST" -> Icons.Default.Checklist
+                                "TIME_TABLE" -> Icons.Default.DateRange
                                 else -> Icons.Default.Widgets
                               },
                           contentDescription = null,

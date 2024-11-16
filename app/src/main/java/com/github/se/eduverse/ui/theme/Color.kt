@@ -65,5 +65,8 @@ val md_theme_dark_scrim = Color(0xFF000000)
 
 val seed = Color(0xFF008BBB)
 
-val blackTransparentButton =
-    ButtonColors(Color.Transparent, Color.Black, Color.Transparent, Color.Transparent)
+fun transparentButtonColor(textColor: Color): ButtonColors {
+  return ButtonColors(Color.Transparent, textColor, Color.Transparent, Color.Transparent)
+}
+
+val blackTransparentButton = transparentButtonColor(Color.Black)
