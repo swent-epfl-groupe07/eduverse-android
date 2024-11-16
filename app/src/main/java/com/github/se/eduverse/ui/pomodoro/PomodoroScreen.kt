@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.Pomodoro
+package com.github.se.eduverse.ui.pomodoro
 
 //noinspection UsingMaterialAndMaterial3Libraries
 import android.graphics.DashPathEffect
@@ -26,7 +26,6 @@ import androidx.compose.material.AlertDialog
 import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Pause
@@ -36,12 +35,8 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material.icons.outlined.Timer
-import androidx.compose.material.icons.twotone.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +44,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -74,13 +68,13 @@ import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.todo.DefaultTodoTimeIcon
 import com.github.se.eduverse.ui.todo.TodoItem
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PomodoroScreen(
     navigationActions: NavigationActions,
@@ -94,191 +88,172 @@ fun PomodoroScreen(
   val currentTodoElapsedTime by timerViewModel.currentTodoElapsedTime.collectAsState()
   var lastTimerPausedState by remember { mutableStateOf(false) }
 
-  Scaffold(
-      topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-              Text(
-                  "Pomodoro Timer",
-                  fontWeight = FontWeight.Bold,
-                  modifier = Modifier.testTag("topBarTitle"))
-            },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent))
-      }) { paddingValues ->
-        Column(
-            modifier =
-                Modifier.padding(paddingValues).fillMaxSize().testTag("pomodoroScreenContent"),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
+  Scaffold(topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) }) { paddingValues ->
+    Column(
+        modifier = Modifier.padding(paddingValues).fillMaxSize().testTag("pomodoroScreenContent"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
 
-              // If a todo is selected the todoItem is displayed, otherwise the button to select a
-              // todo is displayed
-              selectedTodo.value?.let { selectedTodo ->
-                TodoItem(
-                    selectedTodo,
-                    {
-                      /** Nothing to do on undo on this screen */
-                    },
-                    {
-                      todoListViewModel.setTodoDoneFromPomodoro(
-                          selectedTodo.copy(timeSpent = currentTodoElapsedTime!!))
-                      todoListViewModel.unselectTodo()
-                      timerViewModel.unbindTodoFromTimer()
-                    },
-                    {
-                      if (timerViewModel.pomodoroSessionActive()) AnimatedTodoTimeIcon()
-                      else DefaultTodoTimeIcon(selectedTodo)
-                    },
-                    {
-                      IconButton(
-                          onClick = {
-                            todoListViewModel.updateTodoTimeSpent(
-                                selectedTodo, currentTodoElapsedTime!!)
-                            todoListViewModel.unselectTodo()
-                            timerViewModel.unbindTodoFromTimer()
-                          },
-                          modifier = Modifier.testTag("unselectTodoButton")) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Unselect Todo",
-                                tint = Color.Red)
+          // If a todo is selected the todoItem is displayed, otherwise the button to select a
+          // todo is displayed
+          selectedTodo.value?.let { selectedTodo ->
+            TodoItem(
+                selectedTodo,
+                {
+                  /** Nothing to do on undo on this screen */
+                },
+                {
+                  todoListViewModel.setTodoDoneFromPomodoro(
+                      selectedTodo.copy(timeSpent = currentTodoElapsedTime!!))
+                  todoListViewModel.unselectTodo()
+                  timerViewModel.unbindTodoFromTimer()
+                },
+                {
+                  if (timerViewModel.pomodoroSessionActive()) AnimatedTodoTimeIcon()
+                  else DefaultTodoTimeIcon(selectedTodo)
+                },
+                {
+                  IconButton(
+                      onClick = {
+                        todoListViewModel.updateTodoTimeSpent(
+                            selectedTodo, currentTodoElapsedTime!!)
+                        todoListViewModel.unselectTodo()
+                        timerViewModel.unbindTodoFromTimer()
+                      },
+                      modifier = Modifier.testTag("unselectTodoButton")) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Unselect Todo",
+                            tint = MaterialTheme.colorScheme.error)
+                      }
+                },
+                currentTodoElapsedTime?.let { "${it/3600}h${it/60}" } ?: "")
+          }
+              ?: SelectTodoButton(
+                  enabled = todos.value.isNotEmpty(),
+                  onClick = {
+                    lastTimerPausedState = timerState.isPaused
+                    timerViewModel.stopTimer()
+                    showTodoDialog = true
+                  },
+                  text = "Choose a Todo to work on")
+
+          Spacer(modifier = Modifier.height(48.dp))
+
+          // Timer display
+          Box(
+              modifier = Modifier.padding(16.dp).testTag("timerDisplay"),
+              contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(250.dp).testTag("timerProgressIndicator"),
+                    color = MaterialTheme.colorScheme.primary,
+                    progress = {
+                      timerState.remainingSeconds.toFloat() /
+                          when (timerState.currentTimerType) {
+                            TimerType.POMODORO -> timerState.focusTime
+                            TimerType.SHORT_BREAK -> timerState.shortBreakTime
+                            TimerType.LONG_BREAK -> timerState.longBreakTime
                           }
                     },
-                    currentTodoElapsedTime?.let { "${it/3600}h${it/60}" } ?: "")
-              }
-                  ?: SelectTodoButton(
-                      enabled = todos.value.isNotEmpty(),
-                      onClick = {
-                        lastTimerPausedState = timerState.isPaused
-                        timerViewModel.stopTimer()
-                        showTodoDialog = true
-                      },
-                      text = "Choose a Todo to work on")
-
-              Spacer(modifier = Modifier.height(48.dp))
-
-              // Timer display
-              Box(
-                  modifier = Modifier.padding(16.dp).testTag("timerDisplay"),
-                  contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(250.dp).testTag("timerProgressIndicator"),
-                        progress =
-                            timerState.remainingSeconds.toFloat() /
-                                when (timerState.currentTimerType) {
-                                  TimerType.POMODORO -> timerState.focusTime
-                                  TimerType.SHORT_BREAK -> timerState.shortBreakTime
-                                  TimerType.LONG_BREAK -> timerState.longBreakTime
-                                },
-                        strokeWidth = 12.dp)
-                    Text(
-                        text =
-                            "${timerState.remainingSeconds / 60}:${String.format("%02d", timerState.remainingSeconds % 60)}",
-                        style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.testTag("timerText"))
-                  }
-
-              // Timer type icons
-              Row(
-                  modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("timerTypeIcons"),
-                  horizontalArrangement = Arrangement.SpaceEvenly) {
-                    TimerTypeIcon(
-                        icon = Icons.Default.Work,
-                        label = "Focus",
-                        isActive = timerState.currentTimerType == TimerType.POMODORO,
-                        modifier = Modifier.testTag("focusIcon"))
-                    TimerTypeIcon(
-                        icon = Icons.Default.Coffee,
-                        label = "Short Break",
-                        isActive = timerState.currentTimerType == TimerType.SHORT_BREAK,
-                        modifier = Modifier.testTag("shortBreakIcon"))
-                    TimerTypeIcon(
-                        icon = Icons.Default.Weekend,
-                        label = "Long Break",
-                        isActive = timerState.currentTimerType == TimerType.LONG_BREAK,
-                        modifier = Modifier.testTag("longBreakIcon"))
-                  }
-
-              Text(
-                  text = "Cycle: ${timerState.currentCycle}/${timerState.cycles}",
-                  style = MaterialTheme.typography.bodyLarge,
-                  modifier = Modifier.padding(bottom = 16.dp).testTag("cycleText"))
-
-              // Control buttons
-              Row(
-                  modifier = Modifier.padding(16.dp).testTag("controlButtons"),
-                  horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    IconButton(
-                        onClick = {
-                          if (timerState.isPaused) timerViewModel.startTimer()
-                          else timerViewModel.stopTimer()
-                        },
-                        modifier = Modifier.size(48.dp).testTag("playPauseButton")) {
-                          Icon(
-                              imageVector =
-                                  if (timerState.isPaused) Icons.Default.PlayArrow
-                                  else Icons.Default.Pause,
-                              contentDescription = if (timerState.isPaused) "Start" else "Pause",
-                              modifier = Modifier.size(32.dp))
-                        }
-                    IconButton(
-                        onClick = { timerViewModel.resetTimer() },
-                        modifier = Modifier.size(48.dp).testTag("resetButton")) {
-                          Icon(
-                              Icons.Default.Refresh,
-                              contentDescription = "Reset",
-                              modifier = Modifier.size(32.dp))
-                        }
-                    IconButton(
-                        onClick = { timerViewModel.skipToNextTimer() },
-                        modifier = Modifier.size(48.dp).testTag("skipButton")) {
-                          Icon(
-                              Icons.Default.SkipNext,
-                              contentDescription = "Skip",
-                              modifier = Modifier.size(32.dp))
-                        }
-                  }
-
-              // Settings
-              var showSettings by remember { mutableStateOf(false) }
-              Button(
-                  onClick = { showSettings = true },
-                  modifier = Modifier.testTag("settingsButton")) {
-                    Text("Settings")
-                  }
-              if (showSettings) {
-                SettingsDialog(
-                    timerState = timerState,
-                    onDismiss = { showSettings = false },
-                    onSave = { focus, short, long, cycles ->
-                      timerViewModel.updateSettings(focus * 60, short * 60, long * 60, cycles)
-                      showSettings = false
-                    })
+                    strokeWidth = 12.dp)
+                Text(
+                    text =
+                        "${timerState.remainingSeconds / 60}:${String.format("%02d", timerState.remainingSeconds % 60)}",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.testTag("timerText"))
               }
 
-              // Select todo dialog
-              if (showTodoDialog) {
-                SelectTodoDialog(
-                    todos = todos.value,
-                    onDismiss = {
-                      if (!lastTimerPausedState) timerViewModel.startTimer()
-                      showTodoDialog = false
+          // Timer type icons
+          Row(
+              modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("timerTypeIcons"),
+              horizontalArrangement = Arrangement.SpaceEvenly) {
+                TimerTypeIcon(
+                    icon = Icons.Default.Work,
+                    label = "Focus",
+                    isActive = timerState.currentTimerType == TimerType.POMODORO,
+                    modifier = Modifier.testTag("focusIcon"))
+                TimerTypeIcon(
+                    icon = Icons.Default.Coffee,
+                    label = "Short Break",
+                    isActive = timerState.currentTimerType == TimerType.SHORT_BREAK,
+                    modifier = Modifier.testTag("shortBreakIcon"))
+                TimerTypeIcon(
+                    icon = Icons.Default.Weekend,
+                    label = "Long Break",
+                    isActive = timerState.currentTimerType == TimerType.LONG_BREAK,
+                    modifier = Modifier.testTag("longBreakIcon"))
+              }
+
+          Text(
+              text = "Cycle: ${timerState.currentCycle}/${timerState.cycles}",
+              style = MaterialTheme.typography.bodyLarge,
+              modifier = Modifier.padding(bottom = 16.dp).testTag("cycleText"))
+
+          // Control buttons
+          Row(
+              modifier = Modifier.padding(16.dp).testTag("controlButtons"),
+              horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                IconButton(
+                    onClick = {
+                      if (timerState.isPaused) timerViewModel.startTimer()
+                      else timerViewModel.stopTimer()
                     },
-                    onSelect = {
-                      todoListViewModel.selectTodo(it)
-                      timerViewModel.bindTodoToTimer(it.timeSpent)
-                    })
+                    modifier = Modifier.size(48.dp).testTag("playPauseButton")) {
+                      Icon(
+                          imageVector =
+                              if (timerState.isPaused) Icons.Default.PlayArrow
+                              else Icons.Default.Pause,
+                          contentDescription = if (timerState.isPaused) "Start" else "Pause",
+                          modifier = Modifier.size(32.dp))
+                    }
+                IconButton(
+                    onClick = { timerViewModel.resetTimer() },
+                    modifier = Modifier.size(48.dp).testTag("resetButton")) {
+                      Icon(
+                          Icons.Default.Refresh,
+                          contentDescription = "Reset",
+                          modifier = Modifier.size(32.dp))
+                    }
+                IconButton(
+                    onClick = { timerViewModel.skipToNextTimer() },
+                    modifier = Modifier.size(48.dp).testTag("skipButton")) {
+                      Icon(
+                          Icons.Default.SkipNext,
+                          contentDescription = "Skip",
+                          modifier = Modifier.size(32.dp))
+                    }
               }
-            }
-      }
+
+          // Settings
+          var showSettings by remember { mutableStateOf(false) }
+          Button(onClick = { showSettings = true }, modifier = Modifier.testTag("settingsButton")) {
+            Text("Settings")
+          }
+          if (showSettings) {
+            SettingsDialog(
+                timerState = timerState,
+                onDismiss = { showSettings = false },
+                onSave = { focus, short, long, cycles ->
+                  timerViewModel.updateSettings(focus * 60, short * 60, long * 60, cycles)
+                  showSettings = false
+                })
+          }
+
+          // Select todo dialog
+          if (showTodoDialog) {
+            SelectTodoDialog(
+                todos = todos.value,
+                onDismiss = {
+                  if (!lastTimerPausedState) timerViewModel.startTimer()
+                  showTodoDialog = false
+                },
+                onSelect = {
+                  todoListViewModel.selectTodo(it)
+                  timerViewModel.bindTodoToTimer(it.timeSpent)
+                })
+          }
+        }
+  }
 }
 
 @Composable
@@ -481,5 +456,5 @@ fun AnimatedTodoTimeIcon() {
       imageVector = Icons.Filled.Timer,
       contentDescription = "Animated Timer Icon",
       modifier = Modifier.size(22.dp).alpha(alpha),
-      tint = Color(0xFF217384))
+      tint = MaterialTheme.colorScheme.primary)
 }
