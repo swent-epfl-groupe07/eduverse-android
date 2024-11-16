@@ -40,6 +40,7 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
@@ -100,7 +101,7 @@ fun ProfileScreen(
         BottomNavigationMenu(
             onTabSelect = { route -> navigationActions.navigateTo(route) },
             tabList = LIST_TOP_LEVEL_DESTINATION,
-            selectedItem = navigationActions.currentRoute())
+            selectedItem = Route.PROFILE)
       }) { paddingValues ->
         Column(
             modifier =
@@ -140,13 +141,15 @@ fun ProfileScreen(
                     onClick = { selectedTab = 0 },
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
-                    icon = { Icon(Icons.Default.Article, contentDescription = null) })
+                    icon = { Icon(Icons.Default.Article, contentDescription = null) },
+                    selectedContentColor = MaterialTheme.colorScheme.primary)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) })
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                    selectedContentColor = MaterialTheme.colorScheme.primary)
               }
 
               when (uiState) {
