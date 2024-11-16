@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.TodoListViewModel
@@ -40,6 +42,9 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
 
   Scaffold(
       topBar = { TopNavigationBar("Todo List", navigationActions = navigationActions) },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
+      },
       content = { pd ->
         Column(modifier = Modifier.fillMaxSize().padding(pd).testTag("todoListScreen")) {
           AddTodoEntry { name -> todoListViewModel.addNewTodo(name) }
@@ -51,7 +56,11 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
                 onClick = { showCompleted = false },
                 enabled = showCompleted,
                 colors =
-                    ButtonColors(Color.White, Color(0xFF217384), Color(0xFF217384), Color.White),
+                    ButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.secondary,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondary,
+                        disabledContentColor = MaterialTheme.colorScheme.onSecondary),
                 modifier = Modifier.testTag("currentTasksButton")) {
                   Text("Current Tasks", modifier = Modifier.padding(8.dp), fontSize = 20.sp)
                 }
@@ -59,7 +68,11 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
                 onClick = { showCompleted = true },
                 enabled = !showCompleted,
                 colors =
-                    ButtonColors(Color.White, Color(0xFF217384), Color(0xFF217384), Color.White),
+                    ButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.secondary,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondary,
+                        disabledContentColor = MaterialTheme.colorScheme.onSecondary),
                 modifier = Modifier.testTag("completedTasksButton")) {
                   Text("Completed Tasks", modifier = Modifier.padding(8.dp), fontSize = 20.sp)
                 }
@@ -168,7 +181,8 @@ fun TodoItem(
                 text = timeSpent,
                 modifier = Modifier.testTag("todoTimeSpent_${todo.uid}"),
                 color =
-                    if (todo.status == TodoStatus.ACTUAL) Color(0xFF217384) else Color.LightGray,
+                    if (todo.status == TodoStatus.ACTUAL) MaterialTheme.colorScheme.secondary
+                    else Color.LightGray,
                 fontSize = 16.sp,
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Medium)
@@ -200,7 +214,10 @@ fun AddTodoEntry(onAdd: (String) -> Unit) {
               enabled = name.isNotEmpty(),
               colors =
                   IconButtonColors(
-                      Color(0xFF217384), Color.White, Color.Transparent, Color.LightGray)) {
+                      containerColor = MaterialTheme.colorScheme.secondary,
+                      contentColor = MaterialTheme.colorScheme.onSecondary,
+                      disabledContainerColor = Color.Transparent,
+                      disabledContentColor = Color.LightGray)) {
                 Icon(Icons.Default.Add, contentDescription = "Add Todo")
               }
           BasicTextField(
@@ -292,7 +309,10 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
             enabled = newName.text.isNotEmpty(),
             colors =
                 ButtonColors(
-                    Color.Transparent, Color(0xFF217384), Color.Transparent, Color.LightGray)) {
+                    Color.Transparent,
+                    MaterialTheme.colorScheme.primary,
+                    Color.Transparent,
+                    Color.LightGray)) {
               Text("Rename")
             }
       },
@@ -302,7 +322,10 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
             onClick = { onDismiss() },
             colors =
                 ButtonColors(
-                    Color.Transparent, Color(0xFF217384), Color.Transparent, Color.LightGray)) {
+                    Color.Transparent,
+                    MaterialTheme.colorScheme.primary,
+                    Color.Transparent,
+                    Color.LightGray)) {
               Text("Cancel")
             }
       })
@@ -314,5 +337,7 @@ fun DefaultTodoTimeIcon(todo: Todo) {
       Icons.Default.Timer,
       contentDescription = "Time Spent",
       modifier = Modifier.size(22.dp).testTag("todoTimeIcon_${todo.uid}"),
-      tint = if (todo.status == TodoStatus.ACTUAL) Color(0xFF217384) else Color.LightGray)
+      tint =
+          if (todo.status == TodoStatus.ACTUAL) MaterialTheme.colorScheme.secondary
+          else Color.LightGray)
 }
