@@ -58,8 +58,7 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FOLDER) },
             modifier = Modifier.testTag("createFolder"),
-            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer) {
+            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer) {
               Icon(Icons.Default.Add, contentDescription = "Create Folder")
             }
       }) { padding ->

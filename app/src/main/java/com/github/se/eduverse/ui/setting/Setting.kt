@@ -60,7 +60,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                       onCheckedChange = { privacySettings = it },
                       colors =
                           SwitchDefaults.colors(
-                              checkedThumbColor = MaterialTheme.colorScheme.primary,
+                              checkedThumbColor = MaterialTheme.colorScheme.tertiary,
                               checkedTrackColor = MaterialTheme.colorScheme.secondary))
                 }
             Text(
