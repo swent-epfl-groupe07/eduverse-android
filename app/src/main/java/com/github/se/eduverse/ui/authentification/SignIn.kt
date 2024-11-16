@@ -96,7 +96,6 @@ fun SignInScreen(navigationActions: NavigationActions) {
                   style =
                       MaterialTheme.typography.bodyLarge.copy(
                           fontWeight = FontWeight.Light, fontSize = 14.sp),
-                  color = Color.Black,
                   textAlign = TextAlign.Center,
                   modifier = Modifier.padding(horizontal = 24.dp).testTag("loginText"))
             }
