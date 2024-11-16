@@ -78,9 +78,9 @@ class ArchiveScreenTest {
 
   @Test
   fun displayComponents() {
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("folderCard1").assertIsDisplayed()
     composeTestRule.onNodeWithTag("folderCard2").assertIsDisplayed()
   }
@@ -93,8 +93,8 @@ class ArchiveScreenTest {
       null
     }
 
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("goBack").performClick()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
     assert(test)
   }
 
