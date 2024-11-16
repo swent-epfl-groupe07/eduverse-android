@@ -155,7 +155,11 @@ fun CreateFolderScreen(
               files.forEach {
                 Button(
                     onClick = { fileViewModel.openFile(it.fileId, context) },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).testTag("file")) {
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).testTag("file"),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            contentColor = MaterialTheme.colorScheme.onTertiary)) {
                       Box(
                           modifier = Modifier.fillMaxWidth(),
                           contentAlignment = Alignment.CenterStart) {

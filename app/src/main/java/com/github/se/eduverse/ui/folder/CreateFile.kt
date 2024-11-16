@@ -17,7 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.theme.transparentButtonColor
 import com.github.se.eduverse.viewmodel.FileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,8 +69,8 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
             modifier = Modifier.testTag("topAppBar"),
             colors =
                 TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 ),
             title = { Text(text = "Add file", modifier = Modifier.testTag("topBarText")) },
             navigationIcon = {
@@ -125,10 +126,8 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
                 Button(
                     onClick = { filePickerLauncher.launch("application/pdf") },
                     modifier = Modifier.testTag("browseFile"),
-                    colors =
-                        ButtonColors(
-                            Color.Transparent, Color.Black, Color.Transparent, Color.Transparent),
-                    border = BorderStroke(1.dp, Color.Black)) {
+                    colors = transparentButtonColor(MaterialTheme.colorScheme.onSurface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface)) {
                       Icon(Icons.AutoMirrored.Filled.InsertDriveFile, "Browse file")
                     }
               }
@@ -143,7 +142,11 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
                   Modifier.fillMaxWidth()
                       .padding(vertical = 2.dp)
                       .align(Alignment.End)
-                      .testTag("fileSave")) {
+                      .testTag("fileSave"),
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = MaterialTheme.colorScheme.tertiary,
+                      contentColor = MaterialTheme.colorScheme.onTertiary)) {
                 Text("Save")
               }
           Button(
@@ -155,7 +158,11 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
                   Modifier.fillMaxWidth()
                       .padding(vertical = 2.dp)
                       .align(Alignment.End)
-                      .testTag("fileCancel")) {
+                      .testTag("fileCancel"),
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = MaterialTheme.colorScheme.tertiary,
+                      contentColor = MaterialTheme.colorScheme.onTertiary)) {
                 Text("Cancel")
               }
         }
