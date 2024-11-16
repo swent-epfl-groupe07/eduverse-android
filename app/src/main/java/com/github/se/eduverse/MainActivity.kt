@@ -30,7 +30,6 @@ import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
-import com.github.se.eduverse.ui.videos.VideoScreen
 import com.github.se.eduverse.ui.archive.ArchiveScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
@@ -59,6 +58,7 @@ import com.github.se.eduverse.ui.timetable.DetailsEventScreen
 import com.github.se.eduverse.ui.timetable.DetailsTasksScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
+import com.github.se.eduverse.ui.videos.VideoScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel

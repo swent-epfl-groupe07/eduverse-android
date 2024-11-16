@@ -70,3 +70,6 @@ fun transparentButtonColor(textColor: Color): ButtonColors {
 }
 
 val blackTransparentButton = transparentButtonColor(Color.Black)
+
+val blue = ButtonColors(Color(0xFF00A5FF), Color.Black, Color.LightGray, Color.Black)
+val orange = ButtonColors(Color(0xFFFFA500), Color.Black, Color.LightGray, Color.Black)
