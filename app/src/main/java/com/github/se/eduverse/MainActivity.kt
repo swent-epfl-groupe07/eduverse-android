@@ -30,7 +30,7 @@ import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
-import com.github.se.eduverse.ui.VideoScreen
+import com.github.se.eduverse.ui.videos.VideoScreen
 import com.github.se.eduverse.ui.archive.ArchiveScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen

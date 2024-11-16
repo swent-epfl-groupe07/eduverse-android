@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import coil.ImageLoader
 import coil.compose.LocalImageLoader
+import com.github.se.eduverse.ui.videos.PhotoItem
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
