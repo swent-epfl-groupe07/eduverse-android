@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
@@ -30,7 +31,6 @@ fun BottomNavigationMenu(
     tabList: List<TopLevelDestination>,
     selectedItem: String
 ) {
-  val context = LocalContext.current
   NavigationBar(
       modifier = Modifier.fillMaxWidth().height(60.dp).testTag("bottomNavigationMenu"),
       containerColor = Color(0xFFD4DEE8) // Background color for the NavigationBar
@@ -43,7 +43,7 @@ fun BottomNavigationMenu(
                   NavigationBarItemColors(
                       Color.Black,
                       Color.Black,
-                      Color(0xFF37CED5),
+                      MaterialTheme.colorScheme.tertiary,
                       Color.Black,
                       Color.Black,
                       Color.Gray,
