@@ -252,8 +252,8 @@ fun OptionCard(
       elevation = CardDefaults.cardElevation(8.dp),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.tertiary,
-              contentColor = MaterialTheme.colorScheme.onTertiary)) {
+              containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+              contentColor = MaterialTheme.colorScheme.onTertiaryContainer)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
