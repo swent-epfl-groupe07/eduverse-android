@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
@@ -26,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -56,6 +54,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.theme.blackTransparentButton
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
@@ -86,39 +85,16 @@ fun FolderScreen(
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
       topBar = {
-        MediumTopAppBar(
-            modifier = Modifier.testTag("topAppBar"),
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-            title = {
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "The Software Enterprise", modifier = Modifier.testTag("topBarText"))
-                    IconButton(
-                        onClick = {
-                          folderViewModel.archiveFolder(activeFolder!!)
-                          navigationActions.goBack()
-                        },
-                        modifier = Modifier.testTag("archive")) {
-                          Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-                        }
-                  }
-            },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back Arrow")
-                  }
-            },
-            scrollBehavior = scrollBehavior)
+        TopNavigationBar(activeFolder!!.name, navigationActions) {
+          IconButton(
+              onClick = {
+                folderViewModel.archiveFolder(activeFolder!!)
+                navigationActions.goBack()
+              },
+              modifier = Modifier.testTag("archive")) {
+                Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+              }
+        }
       },
       bottomBar = {
         BottomNavigationMenu(

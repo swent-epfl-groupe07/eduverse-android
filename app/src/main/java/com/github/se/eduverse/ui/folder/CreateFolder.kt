@@ -6,15 +6,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.model.Folder
@@ -44,6 +38,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
@@ -74,31 +69,7 @@ fun CreateFolderScreen(
           archived = false)
 
   Scaffold(
-      topBar = {
-        MediumTopAppBar(
-            modifier = Modifier.testTag("topAppBar"),
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-            title = {
-              Text(
-                  text = "Create Course",
-                  maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
-                  modifier = Modifier.testTag("topBarText"))
-            },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("goBack")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back Arrow")
-                  }
-            },
-            scrollBehavior = scrollBehavior)
-      },
+      topBar = { TopNavigationBar("Create Course", navigationActions) },
       bottomBar = {
         BottomNavigationMenu(
             { navigationActions.navigateTo(it) },

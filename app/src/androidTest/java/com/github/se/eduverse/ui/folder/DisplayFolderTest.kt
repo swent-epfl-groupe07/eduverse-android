@@ -92,8 +92,8 @@ class DisplayFolderTest {
 
   @Test
   fun displayComponents() {
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("createFile").assertIsDisplayed()
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()
     composeTestRule.onNodeWithTag("sortingButton").assertIsDisplayed()
@@ -115,8 +115,8 @@ class DisplayFolderTest {
       null
     }
 
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("goBack").performClick()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
     assert(test)
   }
 
