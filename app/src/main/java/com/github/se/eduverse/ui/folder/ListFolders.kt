@@ -1,7 +1,5 @@
 package com.github.se.eduverse.ui.folder
 
-//noinspection UsingMaterialAndMaterial3Libraries
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Card
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
@@ -22,7 +21,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -58,7 +59,8 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FOLDER) },
             modifier = Modifier.testTag("createFolder"),
-            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer) {
+            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, contentDescription = "Create Folder")
             }
       }) { padding ->

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -129,7 +130,8 @@ fun FolderScreen(
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
             modifier = Modifier.testTag("createFile"),
-            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer) {
+            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, contentDescription = "Create File")
             }
       }) { padding ->
