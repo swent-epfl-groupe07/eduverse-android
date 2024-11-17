@@ -249,11 +249,10 @@ fun OptionCard(
               .size(150.dp)
               .clickable(onClick = onClick, enabled = optionEnabled)
               .testTag(testTag),
-      elevation = CardDefaults.cardElevation(8.dp),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-              contentColor = MaterialTheme.colorScheme.onTertiaryContainer)) {
+              containerColor = MaterialTheme.colorScheme.primaryContainer,
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
