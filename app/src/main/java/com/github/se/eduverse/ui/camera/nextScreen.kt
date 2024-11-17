@@ -341,7 +341,7 @@ fun NextScreen(
               },
               modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
               colors =
-                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
               shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Post",
@@ -350,7 +350,7 @@ fun NextScreen(
                             fontSize = 24.sp,
                             fontWeight = FontWeight(500),
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onTertiary,
+                            color = MaterialTheme.colorScheme.onPrimary,
                         ),
                     modifier = Modifier.width(50.dp).height(24.dp))
               }

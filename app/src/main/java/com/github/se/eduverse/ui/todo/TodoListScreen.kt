@@ -310,7 +310,7 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
             colors =
                 ButtonColors(
                     Color.Transparent,
-                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary,
                     Color.Transparent,
                     Color.LightGray)) {
               Text("Rename")
@@ -323,7 +323,7 @@ fun RenameTodoDialog(todoName: String, onRename: (String) -> Unit, onDismiss: ()
             colors =
                 ButtonColors(
                     Color.Transparent,
-                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary,
                     Color.Transparent,
                     Color.LightGray)) {
               Text("Cancel")

@@ -79,8 +79,8 @@ fun CreateFolderScreen(
             modifier = Modifier.testTag("topAppBar"),
             colors =
                 TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
             title = {
               Text(
@@ -158,8 +158,8 @@ fun CreateFolderScreen(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).testTag("file"),
                     colors =
                         ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary,
-                            contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary)) {
                       Box(
                           modifier = Modifier.fillMaxWidth(),
                           contentAlignment = Alignment.CenterStart) {
@@ -184,8 +184,8 @@ fun CreateFolderScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("addFile"),
                 colors =
                     ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary)) {
                   Text("Add file")
                 }
 
@@ -200,8 +200,8 @@ fun CreateFolderScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("folderSave"),
                 colors =
                     ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary)) {
                   Text("Save")
                 }
 
@@ -220,8 +220,8 @@ fun CreateFolderScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("folderCancel"),
                 colors =
                     ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary)) {
                   Text("Cancel")
                 }
           }

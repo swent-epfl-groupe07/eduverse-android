@@ -146,7 +146,7 @@ fun UserProfileScreen(
                             FollowActionState.Loading -> {
                               CircularProgressIndicator(
                                   modifier = Modifier.size(24.dp),
-                                  color = MaterialTheme.colorScheme.onPrimary)
+                                  color = MaterialTheme.colorScheme.onTertiary)
                             }
                             else -> {
                               when (uiState) {
@@ -182,14 +182,14 @@ fun UserProfileScreen(
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
                     icon = { Icon(Icons.Default.Article, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.primary)
+                    selectedContentColor = MaterialTheme.colorScheme.tertiary)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.primary)
+                    selectedContentColor = MaterialTheme.colorScheme.tertiary)
               }
 
               // Content based on state

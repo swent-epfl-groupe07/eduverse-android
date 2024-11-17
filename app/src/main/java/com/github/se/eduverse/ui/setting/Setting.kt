@@ -60,7 +60,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                       onCheckedChange = { privacySettings = it },
                       colors =
                           SwitchDefaults.colors(
-                              checkedThumbColor = MaterialTheme.colorScheme.tertiary,
+                              checkedThumbColor = MaterialTheme.colorScheme.primary,
                               checkedTrackColor = MaterialTheme.colorScheme.secondary))
                 }
             Text(
@@ -172,7 +172,7 @@ fun SettingsOption(
         Icon(
             imageVector = Icons.Default.ArrowForward,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary)
+            tint = MaterialTheme.colorScheme.tertiary)
       }
 }
 
@@ -198,7 +198,7 @@ fun SettingsDropdown(
           Icon(
               imageVector = Icons.Filled.ArrowDropDown,
               contentDescription = null,
-              tint = MaterialTheme.colorScheme.primary)
+              tint = MaterialTheme.colorScheme.tertiary)
         }
     DropdownMenu(
         expanded = isExpanded,

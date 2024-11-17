@@ -90,8 +90,8 @@ fun FolderScreen(
             modifier = Modifier.testTag("topAppBar"),
             colors =
                 TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
             title = {
               Row(
@@ -130,7 +130,7 @@ fun FolderScreen(
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
             modifier = Modifier.testTag("createFile"),
-            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, contentDescription = "Create File")
             }
@@ -261,8 +261,8 @@ fun FolderScreen(
                   modifier = Modifier.fillMaxWidth().padding(20.dp, 3.dp).testTag(it.name),
                   colors =
                       ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.tertiary,
-                          contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                          containerColor = MaterialTheme.colorScheme.primary,
+                          contentColor = MaterialTheme.colorScheme.onPrimary)) {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.CenterStart) {

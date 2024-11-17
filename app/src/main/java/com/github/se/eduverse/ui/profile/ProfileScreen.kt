@@ -142,14 +142,14 @@ fun ProfileScreen(
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
                     icon = { Icon(Icons.Default.Article, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.primary)
+                    selectedContentColor = MaterialTheme.colorScheme.tertiary)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.primary)
+                    selectedContentColor = MaterialTheme.colorScheme.tertiary)
               }
 
               when (uiState) {

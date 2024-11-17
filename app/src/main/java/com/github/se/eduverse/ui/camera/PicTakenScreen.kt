@@ -213,7 +213,7 @@ fun PicTakenScreen(
                   modifier = Modifier.weight(1f).height(56.dp).testTag("nextButton"),
                   colors =
                       ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.tertiary),
+                          containerColor = MaterialTheme.colorScheme.primary),
                   shape = RoundedCornerShape(8.dp)) {
                     Text(
                         text = "Next",

@@ -69,8 +69,8 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
             modifier = Modifier.testTag("topAppBar"),
             colors =
                 TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
             title = { Text(text = "Add file", modifier = Modifier.testTag("topBarText")) },
             navigationIcon = {
@@ -145,8 +145,8 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
                       .testTag("fileSave"),
               colors =
                   ButtonDefaults.buttonColors(
-                      containerColor = MaterialTheme.colorScheme.tertiary,
-                      contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                      containerColor = MaterialTheme.colorScheme.primary,
+                      contentColor = MaterialTheme.colorScheme.onPrimary)) {
                 Text("Save")
               }
           Button(
@@ -161,8 +161,8 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
                       .testTag("fileCancel"),
               colors =
                   ButtonDefaults.buttonColors(
-                      containerColor = MaterialTheme.colorScheme.tertiary,
-                      contentColor = MaterialTheme.colorScheme.onTertiary)) {
+                      containerColor = MaterialTheme.colorScheme.primary,
+                      contentColor = MaterialTheme.colorScheme.onPrimary)) {
                 Text("Cancel")
               }
         }

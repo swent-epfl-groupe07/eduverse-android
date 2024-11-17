@@ -195,7 +195,7 @@ fun DetailsTasksScreen(
                                 todo = todoListViewModel.getTodoById(todo!!.uid)
                               },
                               modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsDone"),
-                              colors = transparentButtonColor(MaterialTheme.colorScheme.primary)) {
+                              colors = transparentButtonColor(MaterialTheme.colorScheme.tertiary)) {
                                 Text("Mark as done")
                               }
                         } else {
@@ -205,7 +205,7 @@ fun DetailsTasksScreen(
                                 todo = todoListViewModel.getTodoById(todo!!.uid)
                               },
                               modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsCurrent"),
-                              colors = transparentButtonColor(MaterialTheme.colorScheme.primary)) {
+                              colors = transparentButtonColor(MaterialTheme.colorScheme.tertiary)) {
                                 Text("Mark as current")
                               }
                         }

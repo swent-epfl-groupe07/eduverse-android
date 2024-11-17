@@ -146,7 +146,7 @@ fun PomodoroScreen(
               contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(250.dp).testTag("timerProgressIndicator"),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.tertiary,
                     progress = {
                       timerState.remainingSeconds.toFloat() /
                           when (timerState.currentTimerType) {
@@ -269,7 +269,7 @@ fun TimerTypeIcon(
             Modifier.size(56.dp)
                 .background(
                     color =
-                        if (isActive) MaterialTheme.colorScheme.primaryContainer
+                        if (isActive) MaterialTheme.colorScheme.tertiaryContainer
                         else Color.Transparent,
                     shape = CircleShape)
                 .padding(8.dp),
@@ -278,7 +278,7 @@ fun TimerTypeIcon(
               imageVector = icon,
               contentDescription = label,
               tint =
-                  if (isActive) MaterialTheme.colorScheme.onPrimaryContainer
+                  if (isActive) MaterialTheme.colorScheme.onTertiaryContainer
                   else MaterialTheme.colorScheme.onSurface)
         }
     Text(
@@ -456,5 +456,5 @@ fun AnimatedTodoTimeIcon() {
       imageVector = Icons.Filled.Timer,
       contentDescription = "Animated Timer Icon",
       modifier = Modifier.size(22.dp).alpha(alpha),
-      tint = MaterialTheme.colorScheme.primary)
+      tint = MaterialTheme.colorScheme.tertiary)
 }
