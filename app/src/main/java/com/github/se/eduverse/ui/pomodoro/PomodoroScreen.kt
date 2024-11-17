@@ -67,6 +67,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
 import com.github.se.eduverse.model.Todo
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.todo.DefaultTodoTimeIcon
@@ -88,7 +90,12 @@ fun PomodoroScreen(
   val currentTodoElapsedTime by timerViewModel.currentTodoElapsedTime.collectAsState()
   var lastTimerPausedState by remember { mutableStateOf(false) }
 
-  Scaffold(topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) }) { paddingValues ->
+  Scaffold(
+      topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) },
+      bottomBar = { BottomNavigationMenu(
+          { navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, ""
+      ) }
+  ) { paddingValues ->
     Column(
         modifier = Modifier.padding(paddingValues).fillMaxSize().testTag("pomodoroScreenContent"),
         horizontalAlignment = Alignment.CenterHorizontally,
