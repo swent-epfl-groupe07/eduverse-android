@@ -42,7 +42,7 @@ fun BottomNavigationMenu(
                   NavigationBarItemColors(
                       Color.Black,
                       Color.Black,
-                      MaterialTheme.colorScheme.tertiary,
+                      MaterialTheme.colorScheme.primary,
                       Color.Black,
                       Color.Black,
                       Color.Gray,
