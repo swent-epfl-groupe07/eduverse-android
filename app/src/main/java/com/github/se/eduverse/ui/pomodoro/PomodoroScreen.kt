@@ -153,7 +153,7 @@ fun PomodoroScreen(
                   contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(250.dp).testTag("timerProgressIndicator"),
-                        color = MaterialTheme.colorScheme.tertiary,
+                        color = MaterialTheme.colorScheme.primary,
                         progress = {
                           timerState.remainingSeconds.toFloat() /
                               when (timerState.currentTimerType) {
