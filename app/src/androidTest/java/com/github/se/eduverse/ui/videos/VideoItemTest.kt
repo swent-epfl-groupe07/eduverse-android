@@ -10,7 +10,6 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.se.eduverse.ui.VideoItem
 import io.mockk.clearMocks
 import io.mockk.spyk
 import io.mockk.verify

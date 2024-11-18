@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.others.setting
+package com.github.se.eduverse.others.setting
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -24,7 +24,7 @@ class SettingsScreenTest {
     composeTestRule.setContent { SettingsScreen(navigationActions = mockNavigationActions) }
 
     // Test clicking the back button
-    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
 
     // Verify that navigation action 'goBack' was triggered
   }

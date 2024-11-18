@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,7 +45,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.github.se.eduverse.R
-import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.model.Publication
@@ -75,7 +75,6 @@ fun NextScreen(
   val context = LocalContext.current
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
-  var folder: Folder? = null
 
   // Path to save the image or video
   val mediaType = if (photoFile != null) "photos" else "videos"
@@ -153,7 +152,6 @@ fun NextScreen(
                 fontSize = 24.sp,
                 lineHeight = 20.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color(0x424A4459),
                 letterSpacing = 0.24.sp,
             ))
 
@@ -220,7 +218,7 @@ fun NextScreen(
                 }
               },
               modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC6D3E1)),
+              colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
               shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Save",
@@ -228,7 +226,6 @@ fun NextScreen(
                         TextStyle(
                             fontSize = 24.sp,
                             fontWeight = FontWeight(500),
-                            color = Color(0xFF4A4459),
                             textAlign = TextAlign.Center),
                     modifier = Modifier.padding(horizontal = 8.dp))
               }
@@ -343,7 +340,8 @@ fun NextScreen(
                 }
               },
               modifier = Modifier.weight(1f).height(56.dp).testTag("postButton"),
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
+              colors =
+                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
               shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Post",
@@ -352,7 +350,7 @@ fun NextScreen(
                             fontSize = 24.sp,
                             fontWeight = FontWeight(500),
                             textAlign = TextAlign.Center,
-                            color = Color(0xFF4A4459),
+                            color = MaterialTheme.colorScheme.onPrimary,
                         ),
                     modifier = Modifier.width(50.dp).height(24.dp))
               }

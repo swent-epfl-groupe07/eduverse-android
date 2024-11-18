@@ -10,19 +10,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -31,10 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
@@ -46,6 +42,8 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.theme.transparentButtonColor
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.util.Calendar
@@ -73,28 +71,16 @@ fun DetailsTasksScreen(
 
   Scaffold(
       topBar = {
-        CenterAlignedTopAppBar(
-            title = { Text(task.name, fontWeight = FontWeight.Bold) },
-            modifier = Modifier.testTag("topBar"),
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
-                  }
-            },
-            actions = {
-              IconButton(
-                  onClick = {
-                    timeTableViewModel.deleteScheduled(task)
-                    navigationActions.goBack()
-                  },
-                  modifier = Modifier.testTag("deleteButton")) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent))
+        TopNavigationBar(task.name, navigationActions) {
+          IconButton(
+              onClick = {
+                timeTableViewModel.deleteScheduled(task)
+                navigationActions.goBack()
+              },
+              modifier = Modifier.testTag("deleteButton")) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
+              }
+        }
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
@@ -208,7 +194,8 @@ fun DetailsTasksScreen(
                                 todoListViewModel.setTodoDone(todo!!)
                                 todo = todoListViewModel.getTodoById(todo!!.uid)
                               },
-                              modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsDone")) {
+                              modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsDone"),
+                              colors = transparentButtonColor(MaterialTheme.colorScheme.tertiary)) {
                                 Text("Mark as done")
                               }
                         } else {
@@ -217,7 +204,8 @@ fun DetailsTasksScreen(
                                 todoListViewModel.setTodoActual(todo!!)
                                 todo = todoListViewModel.getTodoById(todo!!.uid)
                               },
-                              modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsCurrent")) {
+                              modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsCurrent"),
+                              colors = transparentButtonColor(MaterialTheme.colorScheme.tertiary)) {
                                 Text("Mark as current")
                               }
                         }

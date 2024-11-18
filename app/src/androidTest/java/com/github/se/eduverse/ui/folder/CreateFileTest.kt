@@ -43,9 +43,9 @@ class CreateFileTest {
 
   @Test
   fun displayComponents() {
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("fileNameTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("fileNameField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("uploadFileText").assertIsDisplayed()
@@ -63,8 +63,8 @@ class CreateFileTest {
       null
     }
 
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("goBack").performClick()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
     assert(test)
   }
 
