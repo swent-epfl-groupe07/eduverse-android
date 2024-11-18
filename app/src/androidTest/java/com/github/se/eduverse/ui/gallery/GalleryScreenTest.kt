@@ -283,10 +283,10 @@ class GalleryScreenTest {
     }
 
     // Verifies that the GoBackButton is displayed
-    composeTestRule.onNodeWithTag("GoBackButton").assertExists().assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertExists().assertIsDisplayed()
 
     // Simulates a click on the GoBackButton
-    composeTestRule.onNodeWithTag("GoBackButton").performClick()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
 
     // Verifies that the `goBack()` navigation action was called
     assert(mockNavigationActions.backCalled)

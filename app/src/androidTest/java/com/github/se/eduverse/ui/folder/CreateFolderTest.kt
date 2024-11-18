@@ -69,9 +69,9 @@ class CreateFolderTest {
 
   @Test
   fun displayComponents() {
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topAppBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topBarText").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("courseNameTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("courseNameField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()
@@ -90,8 +90,8 @@ class CreateFolderTest {
       null
     }
 
-    composeTestRule.onNodeWithTag("goBack").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("goBack").performClick()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
     assert(test)
   }
 

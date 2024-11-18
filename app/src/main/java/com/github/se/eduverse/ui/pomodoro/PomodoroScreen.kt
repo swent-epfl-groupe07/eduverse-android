@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.Pomodoro
+package com.github.se.eduverse.ui.pomodoro
 
 //noinspection UsingMaterialAndMaterial3Libraries
 import android.graphics.DashPathEffect
@@ -26,7 +26,6 @@ import androidx.compose.material.AlertDialog
 import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material.icons.filled.Pause
@@ -36,12 +35,8 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material.icons.outlined.Timer
-import androidx.compose.material.icons.twotone.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +44,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -73,14 +67,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
 import com.github.se.eduverse.model.Todo
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.todo.DefaultTodoTimeIcon
 import com.github.se.eduverse.ui.todo.TodoItem
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PomodoroScreen(
     navigationActions: NavigationActions,
@@ -95,23 +91,9 @@ fun PomodoroScreen(
   var lastTimerPausedState by remember { mutableStateOf(false) }
 
   Scaffold(
-      topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-              Text(
-                  "Pomodoro Timer",
-                  fontWeight = FontWeight.Bold,
-                  modifier = Modifier.testTag("topBarTitle"))
-            },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent))
+      topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { paddingValues ->
         Column(
             modifier =
@@ -149,7 +131,7 @@ fun PomodoroScreen(
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "Unselect Todo",
-                                tint = Color.Red)
+                                tint = MaterialTheme.colorScheme.error)
                           }
                     },
                     currentTodoElapsedTime?.let { "${it/3600}h${it/60}" } ?: "")
@@ -171,13 +153,15 @@ fun PomodoroScreen(
                   contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(250.dp).testTag("timerProgressIndicator"),
-                        progress =
-                            timerState.remainingSeconds.toFloat() /
-                                when (timerState.currentTimerType) {
-                                  TimerType.POMODORO -> timerState.focusTime
-                                  TimerType.SHORT_BREAK -> timerState.shortBreakTime
-                                  TimerType.LONG_BREAK -> timerState.longBreakTime
-                                },
+                        color = MaterialTheme.colorScheme.primary,
+                        progress = {
+                          timerState.remainingSeconds.toFloat() /
+                              when (timerState.currentTimerType) {
+                                TimerType.POMODORO -> timerState.focusTime
+                                TimerType.SHORT_BREAK -> timerState.shortBreakTime
+                                TimerType.LONG_BREAK -> timerState.longBreakTime
+                              }
+                        },
                         strokeWidth = 12.dp)
                     Text(
                         text =
@@ -294,7 +278,7 @@ fun TimerTypeIcon(
             Modifier.size(56.dp)
                 .background(
                     color =
-                        if (isActive) MaterialTheme.colorScheme.primaryContainer
+                        if (isActive) MaterialTheme.colorScheme.tertiaryContainer
                         else Color.Transparent,
                     shape = CircleShape)
                 .padding(8.dp),
@@ -303,7 +287,7 @@ fun TimerTypeIcon(
               imageVector = icon,
               contentDescription = label,
               tint =
-                  if (isActive) MaterialTheme.colorScheme.onPrimaryContainer
+                  if (isActive) MaterialTheme.colorScheme.onTertiaryContainer
                   else MaterialTheme.colorScheme.onSurface)
         }
     Text(
@@ -481,5 +465,5 @@ fun AnimatedTodoTimeIcon() {
       imageVector = Icons.Filled.Timer,
       contentDescription = "Animated Timer Icon",
       modifier = Modifier.size(22.dp).alpha(alpha),
-      tint = Color(0xFF217384))
+      tint = MaterialTheme.colorScheme.tertiary)
 }

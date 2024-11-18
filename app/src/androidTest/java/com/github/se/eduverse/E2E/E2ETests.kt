@@ -15,11 +15,11 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.model.TimerState
 import com.github.se.eduverse.model.TimerType
 import com.github.se.eduverse.model.Widget
-import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
+import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.TAG_PROFILE_ITEM
 import com.github.se.eduverse.ui.search.TAG_PROFILE_LIST
@@ -599,7 +599,7 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("focusIcon").assertExists()
 
       // 7. Return to dashboard
-      onNodeWithTag("backButton").performClick()
+      onNodeWithTag("goBackButton").performClick()
       navigationActions.goBack()
       waitForIdle()
 

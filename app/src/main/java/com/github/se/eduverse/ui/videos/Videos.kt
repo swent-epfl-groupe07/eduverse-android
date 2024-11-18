@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui
+package com.github.se.eduverse.ui.videos
 
 // Android Imports
 // Accompanist Pager Imports

@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowLeft
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -31,17 +30,15 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,14 +64,15 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.theme.blue
+import com.github.se.eduverse.ui.theme.orange
+import com.github.se.eduverse.ui.theme.transparentButtonColor
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-
-private val blue = ButtonColors(Color(0xFF00A5FF), Color.Black, Color.LightGray, Color.Black)
-private val orange = ButtonColors(Color(0xFFFFA500), Color.Black, Color.LightGray, Color.Black)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,25 +95,7 @@ fun TimeTableScreen(
   }
 
   Scaffold(
-      topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-              Text(
-                  "Time Table",
-                  fontWeight = FontWeight.Bold,
-                  modifier = Modifier.testTag("topBarTitle"))
-            },
-            modifier = Modifier.testTag("topBar"),
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent))
-      },
+      topBar = { TopNavigationBar("Time Table", navigationActions) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
@@ -151,14 +131,16 @@ fun TimeTableScreen(
               horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(
                     onClick = { timeTableViewModel.getPreviousWeek() },
-                    modifier = Modifier.testTag("lastWeekButton")) {
+                    modifier = Modifier.testTag("lastWeekButton"),
+                    colors = transparentButtonColor(MaterialTheme.colorScheme.primary)) {
                       Icon(Icons.Default.KeyboardDoubleArrowLeft, "left arrow")
                       Text("last week")
                     }
 
                 TextButton(
                     onClick = { timeTableViewModel.getNextWeek() },
-                    modifier = Modifier.testTag("nextWeekButton")) {
+                    modifier = Modifier.testTag("nextWeekButton"),
+                    colors = transparentButtonColor(MaterialTheme.colorScheme.primary)) {
                       Text("next week")
                       Icon(Icons.Default.KeyboardDoubleArrowRight, "right arrow")
                     }
@@ -381,14 +363,23 @@ fun DialogCreate(
               addedTodo = null
             },
             modifier = Modifier.testTag("confirm"),
-            enabled = newElementType == ScheduledType.EVENT || addedTodo != null) {
+            enabled = newElementType == ScheduledType.EVENT || addedTodo != null,
+            colors =
+                ButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = Color.LightGray)) {
               Text("Confirm")
             }
       },
       dismissButton = {
-        TextButton(onClick = { onDismiss() }, modifier = Modifier.testTag("cancel")) {
-          Text("Cancel")
-        }
+        TextButton(
+            onClick = { onDismiss() },
+            modifier = Modifier.testTag("cancel"),
+            colors = transparentButtonColor(MaterialTheme.colorScheme.primary)) {
+              Text("Cancel")
+            }
       })
 }
 
@@ -429,7 +420,8 @@ fun DateAndTimePickers(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
           Text(
               text = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(selectedDate.time),
-              textAlign = TextAlign.Start)
+              textAlign = TextAlign.Start,
+              color = MaterialTheme.colorScheme.primary)
           icon("date")
         }
       }
@@ -467,7 +459,8 @@ fun DateAndTimePickers(
               text =
                   hourToString(
                       selectedDate.get(Calendar.HOUR_OF_DAY), selectedDate.get(Calendar.MINUTE)),
-              textAlign = TextAlign.Start)
+              textAlign = TextAlign.Start,
+              color = MaterialTheme.colorScheme.primary)
           icon("time")
         }
       }
@@ -487,7 +480,10 @@ fun DateAndTimePickers(
       modifier = Modifier.fillMaxWidth(0.9f).testTag("lengthPicker"),
       shape = OutlinedTextFieldDefaults.shape) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text(text = hourToString(lengthHour, lengthMin), textAlign = TextAlign.Start)
+          Text(
+              text = hourToString(lengthHour, lengthMin),
+              textAlign = TextAlign.Start,
+              color = MaterialTheme.colorScheme.primary)
           icon("length")
         }
       }

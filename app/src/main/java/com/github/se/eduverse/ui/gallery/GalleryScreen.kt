@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.*
@@ -33,6 +32,7 @@ import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Photo
 import com.github.se.eduverse.model.Video
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.profile.ExoVideoPlayer
 import com.github.se.eduverse.ui.showBottomMenu
 import com.github.se.eduverse.viewmodel.FolderViewModel
@@ -94,66 +94,55 @@ fun GalleryScreen(
 
   val mediaItems = photos.map { it as Any } + videos.map { it as Any }
 
-  Scaffold(
-      topBar = {
-        TopAppBar(
-            title = { Text("Gallery") },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("GoBackButton")) {
-                    Icon(Icons.Default.Close, contentDescription = "Go back")
-                  }
-            })
-      }) { contentPadding ->
-        if (mediaItems.isEmpty()) {
-          Box(
-              modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("NoPhotosBox"),
-              contentAlignment = Alignment.Center) {
-                Text(
-                    "No media available",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.testTag("NoPhotosText"))
-              }
-        } else {
-          LazyVerticalGrid(
-              columns = GridCells.Fixed(3),
-              modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("MediaGrid"),
-              contentPadding = PaddingValues(1.dp),
-              horizontalArrangement = Arrangement.spacedBy(1.dp),
-              verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                items(mediaItems) { media ->
-                  when (media) {
-                    is Photo -> {
-                      val tag = "PhotoItem_${media.path ?: "unknown"}"
-                      PublicationItem(
-                          mediaType = MediaType.PHOTO,
-                          thumbnailUrl = media.path,
-                          onClick = { selectedMedia = media },
-                          modifier = Modifier.testTag(tag))
-                    }
-                    is Video -> {
-                      var thumbnailPath by remember { mutableStateOf<String?>(null) }
+  Scaffold(topBar = { TopNavigationBar("Gallery", navigationActions) }) { contentPadding ->
+    if (mediaItems.isEmpty()) {
+      Box(
+          modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("NoPhotosBox"),
+          contentAlignment = Alignment.Center) {
+            Text(
+                "No media available",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.testTag("NoPhotosText"))
+          }
+    } else {
+      LazyVerticalGrid(
+          columns = GridCells.Fixed(3),
+          modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("MediaGrid"),
+          contentPadding = PaddingValues(1.dp),
+          horizontalArrangement = Arrangement.spacedBy(1.dp),
+          verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            items(mediaItems) { media ->
+              when (media) {
+                is Photo -> {
+                  val tag = "PhotoItem_${media.path ?: "unknown"}"
+                  PublicationItem(
+                      mediaType = MediaType.PHOTO,
+                      thumbnailUrl = media.path,
+                      onClick = { selectedMedia = media },
+                      modifier = Modifier.testTag(tag))
+                }
+                is Video -> {
+                  var thumbnailPath by remember { mutableStateOf<String?>(null) }
 
-                      LaunchedEffect(media.path) {
-                        thumbnailPath =
-                            withContext(Dispatchers.IO) {
-                              media.path?.let { VideoThumbnailUtil.generateThumbnail(context, it) }
-                            }
-                      }
-
-                      val tag = "VideoItem_${media.path ?: "unknown"}"
-                      PublicationItem(
-                          mediaType = MediaType.VIDEO,
-                          thumbnailUrl = thumbnailPath ?: media.path,
-                          onClick = { selectedMedia = media },
-                          modifier = Modifier.testTag(tag))
-                    }
+                  LaunchedEffect(media.path) {
+                    thumbnailPath =
+                        withContext(Dispatchers.IO) {
+                          media.path?.let { VideoThumbnailUtil.generateThumbnail(context, it) }
+                        }
                   }
+
+                  val tag = "VideoItem_${media.path ?: "unknown"}"
+                  PublicationItem(
+                      mediaType = MediaType.VIDEO,
+                      thumbnailUrl = thumbnailPath ?: media.path,
+                      onClick = { selectedMedia = media },
+                      modifier = Modifier.testTag(tag))
                 }
               }
-        }
-      }
+            }
+          }
+    }
+  }
 
   selectedMedia?.let { media ->
     when (media) {
