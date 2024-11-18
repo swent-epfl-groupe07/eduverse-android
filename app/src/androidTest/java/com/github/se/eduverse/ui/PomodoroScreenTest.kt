@@ -7,8 +7,8 @@ import com.github.se.eduverse.model.TimerType
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.repository.TodoRepository
-import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -71,8 +71,8 @@ class PomodoroScreenTest {
   fun testPomodoroScreenInitialState() {
     setupPomodoroScreen()
 
-    composeTestRule.onNodeWithTag("topBarTitle").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("timerDisplay").assertIsDisplayed()
     composeTestRule.onNodeWithTag("timerText").assertTextEquals("25:00")
     composeTestRule.onNodeWithTag("cycleText").assertTextEquals("Cycle: 1/4")

@@ -5,9 +5,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
-import com.github.se.eduverse.ui.VideoScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.profile.ProfileScreenTest.FakeProfileViewModel
+import com.github.se.eduverse.ui.videos.VideoScreen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel

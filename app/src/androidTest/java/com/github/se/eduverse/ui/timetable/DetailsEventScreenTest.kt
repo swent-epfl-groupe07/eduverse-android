@@ -89,8 +89,8 @@ class DetailsEventScreenTest {
   fun displaysElements() {
     launch()
 
-    composeTestRule.onNodeWithTag("topBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("nameTextField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("descTextField").assertIsDisplayed()
@@ -104,7 +104,7 @@ class DetailsEventScreenTest {
   fun goBackTest() {
     launch()
 
-    composeTestRule.onNodeWithTag("backButton").performClick()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
     verify(navigationActions).goBack()
   }
 

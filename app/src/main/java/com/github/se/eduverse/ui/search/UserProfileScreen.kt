@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Publication
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.profile.PublicationDetailDialog
 import com.github.se.eduverse.ui.profile.PublicationItem
@@ -93,6 +95,9 @@ fun UserProfileScreen(
                     Icon(Icons.Default.ArrowBack, "Back")
                   }
             })
+      },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { paddingValues ->
         Column(
             modifier =
@@ -141,7 +146,7 @@ fun UserProfileScreen(
                             FollowActionState.Loading -> {
                               CircularProgressIndicator(
                                   modifier = Modifier.size(24.dp),
-                                  color = MaterialTheme.colorScheme.onPrimary)
+                                  color = MaterialTheme.colorScheme.onTertiary)
                             }
                             else -> {
                               when (uiState) {
@@ -176,13 +181,15 @@ fun UserProfileScreen(
                     onClick = { selectedTab = 0 },
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
-                    icon = { Icon(Icons.Default.Article, contentDescription = null) })
+                    icon = { Icon(Icons.Default.Article, contentDescription = null) },
+                    selectedContentColor = MaterialTheme.colorScheme.secondary)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) })
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                    selectedContentColor = MaterialTheme.colorScheme.secondary)
               }
 
               // Content based on state
