@@ -66,7 +66,7 @@ class OpenAiRepository(private val client: OkHttpClient) {
               override fun onResponse(call: Call, response: Response) {
                 response.use {
                   if (!response.isSuccessful) {
-                    throw IOException("Unexpected code $response")
+                    onFailure(IOException("Unexpected code $response"))
                   } else {
                     response.body?.let { body ->
                       val openAiResponse = responseAdapter.fromJson(body.string())

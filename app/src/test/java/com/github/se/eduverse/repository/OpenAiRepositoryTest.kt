@@ -21,12 +21,14 @@ class OpenAiRepositoryTest {
   private lateinit var mockClient: OkHttpClient
   private lateinit var openAiRepository: OpenAiRepository
   private lateinit var mockCall: Call
+  private lateinit var mockResponse: Response
 
   @Before
   fun setUp() {
     mockClient = mockk()
     openAiRepository = OpenAiRepository(mockClient)
     mockCall = mockk()
+    mockResponse = mockk()
   }
 
   @Test
@@ -71,10 +73,13 @@ class OpenAiRepositoryTest {
   @Test
   fun `summarizeText should call onFailure when response is unsuccessful`() {
     every { mockClient.newCall(any()) } returns mockCall
+    every { mockResponse.isSuccessful } returns false
+    every { mockResponse.close() } answers {}
     every { mockCall.enqueue(any()) } answers
         {
           val callback = it.invocation.args[0] as Callback
-          callback.onFailure(mockCall, IOException("Network error"))
+
+          callback.onResponse(mockCall, mockResponse)
         }
 
     val onSuccess: (String?) -> Unit = mockk(relaxed = true)
