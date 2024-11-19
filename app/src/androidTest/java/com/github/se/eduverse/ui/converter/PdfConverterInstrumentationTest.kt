@@ -11,8 +11,6 @@ import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.viewmodel.PdfConverterViewModel
-import com.lowagie.text.pdf.PdfReader
-import com.lowagie.text.pdf.parser.PdfTextExtractor
 import java.io.File
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
@@ -52,9 +50,7 @@ class PdfConverterInstrumentationTest {
 
     assertTrue(pdfFile.exists())
 
-    val pdfReader = PdfReader(pdfFile.inputStream())
-    val pdfTextExtractor = PdfTextExtractor(pdfReader)
-    val extractedText = pdfTextExtractor.getTextFromPage(1)
+    val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
     assertEquals(testText.replace(" ", ""), extractedText.replace(" ", ""))
 
@@ -74,9 +70,7 @@ class PdfConverterInstrumentationTest {
 
     assertTrue(pdfFile.exists())
 
-    val pdfReader = PdfReader(pdfFile.inputStream())
-    val pdfTextExtractor = PdfTextExtractor(pdfReader)
-    val extractedText = pdfTextExtractor.getTextFromPage(1)
+    val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
     assertEquals(testText.replace(" ", ""), extractedText.replace(" ", ""))
 
@@ -98,9 +92,7 @@ class PdfConverterInstrumentationTest {
 
     assertTrue(pdfFile.exists())
 
-    val pdfReader = PdfReader(pdfFile.inputStream())
-    val pdfTextExtractor = PdfTextExtractor(pdfReader)
-    val extractedText = pdfTextExtractor.getTextFromPage(1)
+    val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
     val averageCharWidth = 0.6 * 12f
     val maxCharsPerLine = (pdfDocument.pages[0].pageWidth - 40 / averageCharWidth).toInt()
@@ -127,12 +119,7 @@ class PdfConverterInstrumentationTest {
 
     assertTrue(pdfFile.exists())
 
-    val pdfReader = PdfReader(pdfFile.inputStream())
-    val pdfTextExtractor = PdfTextExtractor(pdfReader)
-    var extractedText = ""
-    for (i in 1..pdfDocument.pages.size) {
-      extractedText += pdfTextExtractor.getTextFromPage(i)
-    }
+    val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
     assert(pdfDocument.pages.size > 1)
 
@@ -165,5 +152,16 @@ class PdfConverterInstrumentationTest {
       imageFile.delete()
       pdfFile.delete()
     }
+  }
+
+  @Test
+  fun testWriteTextToPdf() {
+    val text = "This is a test text."
+    val pdfDocument: PdfDocument = pdfRepository.writeTextToPdf(text)
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    assertTrue(pdfFile.exists())
+    val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
+    assertEquals(text.replace(" ", ""), extractedText.replace(" ", ""))
+    pdfFile.delete()
   }
 }
