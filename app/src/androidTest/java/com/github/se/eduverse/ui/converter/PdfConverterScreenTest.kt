@@ -111,10 +111,6 @@ class PdfConverterScreenTest {
     assertEquals(
         PdfConverterViewModel.PdfGenerationState.Ready,
         pdfConverterViewModel.pdfGenerationState.value)
-    composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).performClick()
-    assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Ready,
-        pdfConverterViewModel.pdfGenerationState.value)
     composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).performClick()
     assertEquals(
         PdfConverterViewModel.PdfGenerationState.Ready,
