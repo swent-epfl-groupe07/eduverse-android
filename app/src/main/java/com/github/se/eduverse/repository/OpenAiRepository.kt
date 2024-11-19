@@ -11,7 +11,6 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
-
 open class OpenAiRepository(private val client: OkHttpClient) {
   private val apiKey = BuildConfig.OPENAI_API_KEY
   private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -27,7 +26,11 @@ open class OpenAiRepository(private val client: OkHttpClient) {
    * @param onSuccess The callback to be called when the summary is successfully generated
    * @param onFailure The callback to be called when an error occurs
    */
-  open fun summarizeText(text: String, onSuccess: (String?) -> Unit, onFailure: (Exception) -> Unit) {
+  open fun summarizeText(
+      text: String,
+      onSuccess: (String?) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
     val messages =
         listOf(Message(role = "user", content = "Provide a summary of the following: $text"))
 
