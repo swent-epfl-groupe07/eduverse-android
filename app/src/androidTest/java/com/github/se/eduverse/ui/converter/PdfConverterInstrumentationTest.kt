@@ -7,12 +7,14 @@ import android.net.Uri
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.lowagie.text.pdf.PdfReader
 import com.lowagie.text.pdf.parser.PdfTextExtractor
 import java.io.File
+import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -26,6 +28,7 @@ class PdfConverterInstrumentationTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var pdfRepository: PdfRepository
+  private lateinit var openAiRepository: OpenAiRepository
   private lateinit var context: Context
   private lateinit var pdfConverterViewModel: PdfConverterViewModel
 
@@ -33,7 +36,8 @@ class PdfConverterInstrumentationTest {
   fun setUp() {
     context = ApplicationProvider.getApplicationContext()
     pdfRepository = PdfRepositoryImpl()
-    pdfConverterViewModel = PdfConverterViewModel(pdfRepository)
+    openAiRepository = OpenAiRepository(OkHttpClient())
+    pdfConverterViewModel = PdfConverterViewModel(pdfRepository, openAiRepository)
   }
 
   @Test
