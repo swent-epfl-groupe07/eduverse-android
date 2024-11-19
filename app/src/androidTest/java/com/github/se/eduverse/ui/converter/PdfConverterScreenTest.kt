@@ -17,6 +17,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.ui.converter.PdfConverterOption
 import com.github.se.eduverse.ui.converter.PdfConverterScreen
@@ -42,6 +43,7 @@ class PdfConverterScreenTest {
   private lateinit var mockNavigationActions: NavigationActions
   private lateinit var pdfConverterViewModel: PdfConverterViewModel
   private lateinit var mockPdfRepository: PdfRepository
+  private lateinit var mockOpenAiRepository: OpenAiRepository
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -51,7 +53,8 @@ class PdfConverterScreenTest {
 
     mockNavigationActions = mock(NavigationActions::class.java)
     mockPdfRepository = mock(PdfRepository::class.java)
-    pdfConverterViewModel = PdfConverterViewModel(mockPdfRepository)
+    mockOpenAiRepository = mock(OpenAiRepository::class.java)
+    pdfConverterViewModel = PdfConverterViewModel(mockPdfRepository, mockOpenAiRepository)
 
     `when`(mockNavigationActions.currentRoute()).thenReturn(Screen.PDF_CONVERTER)
   }
@@ -207,6 +210,22 @@ class PdfConverterScreenTest {
     assertEquals(
         PdfConverterViewModel.PdfGenerationState.Aborted,
         pdfConverterViewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun clickingSummarizeFileOption_launchesFilePicker() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
+    // Set up the activity result for the intent
+    // Simulate the file picker intent
+    val expectedUri = Uri.parse("content://test-pdf-uri")
+    val resultIntent = Intent().apply { data = expectedUri }
+    Intent().apply { data = expectedUri }
+    Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
+    composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).performClick()
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
+    composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()
   }
 
   @Test
