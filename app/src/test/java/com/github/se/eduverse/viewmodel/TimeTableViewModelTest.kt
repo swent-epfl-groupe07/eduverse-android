@@ -141,8 +141,8 @@ class TimeTableViewModelTest {
 
     timeTableViewModel.getWeek()
     timeTableViewModel.addScheduled(scheduled2)
-    val t = timeTableViewModel.table.value
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
+    verify(1) { notificationRepository.scheduleNotification(any()) }
   }
 
   @Test
@@ -155,6 +155,7 @@ class TimeTableViewModelTest {
     timeTableViewModel.updateScheduled(scheduled2.apply { name = "newName" })
     assertEquals("newName", scheduled2.name)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
+    verify(1) { notificationRepository.scheduleNotification(any()) }
   }
 
   @Test
@@ -170,6 +171,7 @@ class TimeTableViewModelTest {
 
     timeTableViewModel.deleteScheduled(scheduled3)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
+    verify(1) { notificationRepository.cancelNotification(any()) }
   }
 
   @Test

@@ -15,7 +15,6 @@ import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.concurrent.TimeUnit
 
-
 // Parameter authorizations is not used for now, it is here to make the class easier to upgrade
 open class NotificationRepository(context: Context, val autorizations: NotifAutorizations) {
   private val applicationContext: Context = context.applicationContext
