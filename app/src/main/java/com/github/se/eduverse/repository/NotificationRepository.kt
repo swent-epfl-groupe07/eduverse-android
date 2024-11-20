@@ -15,80 +15,72 @@ import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.concurrent.TimeUnit
 
-
 open class NotificationRepository(context: Context, val autorisations: NotifAutorisations) {
-    private val applicationContext: Context = context.applicationContext
+  private val applicationContext: Context = context.applicationContext
 
-    open fun scheduleNotification(scheduled: Scheduled) {
-        cancelNotification(scheduled)
+  open fun scheduleNotification(scheduled: Scheduled) {
+    cancelNotification(scheduled)
 
-        val delay = scheduled.start.timeInMillis - System.currentTimeMillis()
+    val delay = scheduled.start.timeInMillis - System.currentTimeMillis()
 
-        if (delay > 0) {
-            val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
-                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                .addTag(scheduled.id)
-                .setInputData(
-                    workDataOf(
-                        "title" to createTitle(scheduled),
-                        "description" to scheduled.name
-                    )
-                )
-                .build()
+    if (delay > 0) {
+      val workRequest =
+          OneTimeWorkRequestBuilder<NotificationWorker>()
+              .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+              .addTag(scheduled.id)
+              .setInputData(
+                  workDataOf("title" to createTitle(scheduled), "description" to scheduled.name))
+              .build()
 
-            WorkManager.getInstance(applicationContext).enqueue(workRequest)
-        } else {
-            Log.w(
-                "NotificationScheduler",
-                "Scheduled time is in the past for task: ${scheduled.name}"
-            )
-        }
+      WorkManager.getInstance(applicationContext).enqueue(workRequest)
+    } else {
+      Log.w("NotificationScheduler", "Scheduled time is in the past for task: ${scheduled.name}")
     }
+  }
 
-    open fun cancelNotification(scheduled: Scheduled) {
-        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(scheduled.id)
-    }
+  open fun cancelNotification(scheduled: Scheduled) {
+    WorkManager.getInstance(applicationContext).cancelAllWorkByTag(scheduled.id)
+  }
 
-    fun createTitle(scheduled: Scheduled): String {
-        if (scheduled.type == ScheduledType.TASK) {
-            return "You should start working on task."
-        } else {
-            return "An event is about to begin !"
-        }
+  fun createTitle(scheduled: Scheduled): String {
+    if (scheduled.type == ScheduledType.TASK) {
+      return "You should start working on task."
+    } else {
+      return "An event is about to begin !"
     }
+  }
 }
 
 class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     Worker(context, workerParameters) {
 
-    override fun doWork(): Result {
-        val title = inputData.getString("title") ?: "Reminder"
-        val description = inputData.getString("description") ?: "No details"
+  override fun doWork(): Result {
+    val title = inputData.getString("title") ?: "Reminder"
+    val description = inputData.getString("description") ?: "No details"
 
-        showNotification(title, description)
-        return Result.success()
-    }
+    showNotification(title, description)
+    return Result.success()
+  }
 
-    private fun showNotification(title: String, text: String) {
-        val channelId = "task_channel"
-        val notificationManager =
-            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+  private fun showNotification(title: String, text: String) {
+    val channelId = "task_channel"
+    val notificationManager =
+        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create Notification Channel (Android 8.0+)
-        val channel = NotificationChannel(
-            channelId,
-            "Task Notifications",
-            NotificationManager.IMPORTANCE_DEFAULT
-        ).apply { description = "Notifications for scheduled tasks" }
-        notificationManager.createNotificationChannel(channel)
+    // Create Notification Channel (Android 8.0+)
+    val channel =
+        NotificationChannel(channelId, "Task Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            .apply { description = "Notifications for scheduled tasks" }
+    notificationManager.createNotificationChannel(channel)
 
-        val notification = NotificationCompat.Builder(applicationContext, channelId)
+    val notification =
+        NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
-    }
+    notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+  }
 }

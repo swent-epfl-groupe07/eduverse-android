@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -23,8 +24,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.github.se.eduverse.model.NotifAutorisations
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
@@ -167,7 +170,9 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val timeTableViewModel = TimeTableViewModel(timeTableRepo, FirebaseAuth.getInstance())
+  val notifAutorisations = NotifAutorisations(true, true)
+  val notifRepo = NotificationRepository(LocalContext.current, notifAutorisations)
+  val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
 
