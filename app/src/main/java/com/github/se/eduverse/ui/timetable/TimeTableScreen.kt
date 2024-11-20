@@ -331,7 +331,7 @@ fun DialogCreate(
                     value = name,
                     modifier = Modifier.fillMaxWidth(0.9f).testTag("nameTextField"),
                     onValueChange = { name = it },
-                    placeholder = { Text("Name the task") })
+                    placeholder = { Text("Name the event") })
                 DateAndTimePickers(
                     context,
                     selectedDate,
