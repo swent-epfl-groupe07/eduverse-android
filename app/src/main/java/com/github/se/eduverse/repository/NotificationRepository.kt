@@ -10,12 +10,14 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.github.se.eduverse.model.NotifAutorisations
+import com.github.se.eduverse.model.NotifAutorizations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.concurrent.TimeUnit
 
-open class NotificationRepository(context: Context, val autorisations: NotifAutorisations) {
+
+// Parameter authorizations is not used for now, it is here to make the class easier to upgrade
+open class NotificationRepository(context: Context, val autorizations: NotifAutorizations) {
   private val applicationContext: Context = context.applicationContext
 
   open fun scheduleNotification(scheduled: Scheduled) {
@@ -69,7 +71,7 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
 
     // Create Notification Channel (Android 8.0+)
     val channel =
-        NotificationChannel(channelId, "Task Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+        NotificationChannel(channelId, "Task Notifications", NotificationManager.IMPORTANCE_HIGH)
             .apply { description = "Notifications for scheduled tasks" }
     notificationManager.createNotificationChannel(channel)
 
@@ -78,7 +80,7 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(text)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
     notificationManager.notify(System.currentTimeMillis().toInt(), notification)
