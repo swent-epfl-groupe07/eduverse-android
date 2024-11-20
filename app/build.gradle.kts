@@ -233,6 +233,9 @@ dependencies {
     // Networking with OkHttp
     implementation(libs.okhttp)
 
+    // Notifications with WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
+
     // Testing Unit
     testImplementation(libs.junit)
     androidTestImplementation(libs.mockk)
