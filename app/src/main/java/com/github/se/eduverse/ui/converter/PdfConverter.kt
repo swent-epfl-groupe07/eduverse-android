@@ -131,7 +131,7 @@ fun PdfConverterScreen(
                         icon = Icons.Default.Summarize,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.SUMMARIZE_FILE
-                          Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
+                          filePickerLauncher.launch(arrayOf("application/pdf"))
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -270,7 +270,7 @@ fun LoadingIndicator(onAbort: () -> Unit) {
       verticalArrangement = Arrangement.Center,
       horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(
-            color = Color.Gray,
+            color = Color.LightGray,
             trackColor = Color.Cyan,
             strokeWidth = 10.dp,
             strokeCap = StrokeCap.Round)
