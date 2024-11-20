@@ -10,12 +10,13 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.github.se.eduverse.model.NotifAutorisations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.concurrent.TimeUnit
 
 
-open class NotificationRepository(context: Context) {
+open class NotificationRepository(context: Context, val autorisations: NotifAutorisations) {
     private val applicationContext: Context = context.applicationContext
 
     open fun scheduleNotification(scheduled: Scheduled) {
