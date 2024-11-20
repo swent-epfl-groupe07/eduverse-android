@@ -21,6 +21,11 @@ open class NotificationRepository(
     val autorizations: NotifAutorizations,
     val workManager: WorkManager = WorkManager.getInstance(context)
 ) {
+    /**
+     * Prepare a notification for an event or a task
+     *
+     * @param scheduled the event/task scheduled
+     */
   open fun scheduleNotification(scheduled: Scheduled) {
     cancelNotification(scheduled)
 
@@ -40,10 +45,20 @@ open class NotificationRepository(
     }
   }
 
+    /**
+     * Cancel the eventual planned notification for a scheduled
+     *
+     * @param scheduled the scheduled to cancel
+     */
   open fun cancelNotification(scheduled: Scheduled) {
       workManager.cancelAllWorkByTag(scheduled.id)
   }
 
+    /**
+     * Create a title depending on the type of the scheduled
+     *
+     * @param scheduled the scheduled
+     */
   fun createTitle(scheduled: Scheduled): String {
     if (scheduled.type == ScheduledType.TASK) {
       return "You should start working on a task."
@@ -56,7 +71,10 @@ open class NotificationRepository(
 class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     Worker(context, workerParameters) {
 
-  override fun doWork(): Result {
+    /**
+     * Called at the time the work was planned
+     */
+    override fun doWork(): Result {
     val title = inputData.getString("title") ?: "Reminder"
     val description = inputData.getString("description") ?: "No details"
 
@@ -64,6 +82,13 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     return Result.success()
   }
 
+    /**
+     * Create a notification
+     *
+     * @param title the title of the notification
+     * @param text the text of the notification
+     * @param notificationManager dependency injection for testing purpose
+     */
   fun showNotification(
       title: String,
       text: String,
