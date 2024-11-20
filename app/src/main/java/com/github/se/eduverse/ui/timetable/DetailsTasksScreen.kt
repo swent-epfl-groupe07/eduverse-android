@@ -102,7 +102,7 @@ fun DetailsTasksScreen(
                             onClick = {
                               timeTableViewModel.updateScheduled(task.apply { name = newName })
                               newName += " " // Change the value to trigger calculation of isEnabled
-                              newName.dropLast(1)
+                              newName = newName.dropLast(1)
                             },
                             isEnabled = { task.name != newName })
                       })
@@ -128,6 +128,10 @@ fun DetailsTasksScreen(
                                   task.start.set(
                                       Calendar.DAY_OF_MONTH, date.get(Calendar.DAY_OF_MONTH))
                                   timeTableViewModel.updateScheduled(task)
+                                  date =
+                                      Calendar.getInstance().apply {
+                                        timeInMillis = date.timeInMillis
+                                      } // Trigger recomposition
                                 }
                                 "time" -> {
                                   // Get the time of the new event but not the date
@@ -138,6 +142,10 @@ fun DetailsTasksScreen(
                                   task.start.set(
                                       Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
                                   timeTableViewModel.updateScheduled(task)
+                                  date =
+                                      Calendar.getInstance().apply {
+                                        timeInMillis = date.timeInMillis
+                                      } // Trigger recomposition
                                 }
                                 "length" -> {
                                   timeTableViewModel.updateScheduled(
@@ -155,8 +163,14 @@ fun DetailsTasksScreen(
                             },
                             isEnabled = {
                               when (type) {
-                                "date" -> date.timeInMillis != task.start.timeInMillis
-                                "time" -> date.timeInMillis != task.start.timeInMillis
+                                "date" ->
+                                    date.get(Calendar.YEAR) != task.start.get(Calendar.YEAR) ||
+                                        date.get(Calendar.DAY_OF_YEAR) !=
+                                            task.start.get(Calendar.DAY_OF_YEAR)
+                                "time" ->
+                                    date.get(Calendar.HOUR_OF_DAY) !=
+                                        task.start.get(Calendar.HOUR_OF_DAY) ||
+                                        date.get(Calendar.MINUTE) != task.start.get(Calendar.MINUTE)
                                 "length" ->
                                     task.length !=
                                         ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
@@ -202,7 +216,10 @@ fun DetailsTasksScreen(
                           OutlinedButton(
                               onClick = {
                                 todoListViewModel.setTodoActual(todo!!)
-                                todo = todoListViewModel.getTodoById(todo!!.uid)
+                                val uid = todo!!.uid
+
+                                todo = null // Trigger recomposition of the button
+                                todo = todoListViewModel.getTodoById(uid)
                               },
                               modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsCurrent"),
                               colors = transparentButtonColor(MaterialTheme.colorScheme.tertiary)) {
