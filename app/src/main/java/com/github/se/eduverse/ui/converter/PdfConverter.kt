@@ -26,6 +26,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.showToast
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.PdfConverterViewModel
@@ -74,6 +76,9 @@ fun PdfConverterScreen(
   Scaffold(
       topBar = {
         TopNavigationBar(screenTitle = "PDF Converter", navigationActions = navigationActions)
+      },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { pd ->
         Column(
             modifier = Modifier.fillMaxSize().padding(pd),
@@ -244,8 +249,10 @@ fun OptionCard(
               .size(150.dp)
               .clickable(onClick = onClick, enabled = optionEnabled)
               .testTag(testTag),
-      elevation = CardDefaults.cardElevation(8.dp),
-      colors = CardDefaults.cardColors(containerColor = Color(0xFFC2F5F0))) {
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.primaryContainer,
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
