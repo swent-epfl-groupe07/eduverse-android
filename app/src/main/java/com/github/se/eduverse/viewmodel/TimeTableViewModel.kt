@@ -120,6 +120,8 @@ class TimeTableViewModel(
                     .map { if (it.id == scheduled.id) scheduled else it }
                     .sortedBy { it.start.timeInMillis }
               }
+
+            notificationRepository.scheduleNotification(scheduled)
         },
         { Log.e("TimeTableViewModel", "Exception $it while trying to modify a scheduled event") })
   }
@@ -132,7 +134,10 @@ class TimeTableViewModel(
   fun deleteScheduled(scheduled: Scheduled) {
     timeTableRepository.deleteScheduled(
         scheduled,
-        { _table.value = _table.value.map { innerList -> innerList - scheduled } },
+        {
+            _table.value = _table.value.map { innerList -> innerList - scheduled }
+            notificationRepository.cancelNotification(scheduled)
+        },
         { Log.e("TimeTableViewModel", "Exception $it while trying to delete a scheduled event") })
   }
 

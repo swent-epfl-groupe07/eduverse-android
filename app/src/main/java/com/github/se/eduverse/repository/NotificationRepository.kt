@@ -20,7 +20,7 @@ open class NotificationRepository(context: Context, val autorisations: NotifAuto
     private val applicationContext: Context = context.applicationContext
 
     open fun scheduleNotification(scheduled: Scheduled) {
-        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(scheduled.id)
+        cancelNotification(scheduled)
 
         val delay = scheduled.start.timeInMillis - System.currentTimeMillis()
 
@@ -43,6 +43,10 @@ open class NotificationRepository(context: Context, val autorisations: NotifAuto
                 "Scheduled time is in the past for task: ${scheduled.name}"
             )
         }
+    }
+
+    open fun cancelNotification(scheduled: Scheduled) {
+        WorkManager.getInstance(applicationContext).cancelAllWorkByTag(scheduled.id)
     }
 
     fun createTitle(scheduled: Scheduled): String {
