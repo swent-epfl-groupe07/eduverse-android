@@ -30,7 +30,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -74,7 +73,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeTableScreen(
     timeTableViewModel: TimeTableViewModel,
@@ -136,6 +134,11 @@ fun TimeTableScreen(
                       Icon(Icons.Default.KeyboardDoubleArrowLeft, "left arrow")
                       Text("last week")
                     }
+
+                Text(
+                    text = timeTableViewModel.getMonthAndYear(currentWeek),
+                    modifier = Modifier.testTag("monthAndYear"),
+                    textAlign = TextAlign.Center)
 
                 TextButton(
                     onClick = { timeTableViewModel.getNextWeek() },

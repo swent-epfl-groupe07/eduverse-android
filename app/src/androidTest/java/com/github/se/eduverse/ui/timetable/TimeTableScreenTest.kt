@@ -136,6 +136,7 @@ class TimeTableScreenTest {
     composeTestRule.onNodeWithTag("addEventButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("lastWeekButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("nextWeekButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("monthAndYear").assertIsDisplayed()
     composeTestRule.onNodeWithTag("days").assertIsDisplayed()
     composeTestRule.onNodeWithTag("hours").assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("tableColumn").assertCountEquals(7)

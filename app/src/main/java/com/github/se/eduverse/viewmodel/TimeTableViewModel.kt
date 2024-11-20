@@ -130,6 +130,19 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
   }
 
   /**
+   * Get a meaningful string representing the month and year
+   *
+   * @param calendar the calendar of the moment we consider, typically the beginning of the week
+   * @return a 2-lines string with the month (Sep, Oct, ...) on the first one and the year (2024,
+   *   2027, ...) on the second
+   */
+  fun getMonthAndYear(calendar: Calendar): String {
+    val month = calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.ENGLISH)
+    val year = calendar.get(Calendar.YEAR)
+    return "$month\n$year"
+  }
+
+  /**
    * Get a meaningful string representing a date
    *
    * @param day the day of the week, starting at the current one (0 = today, 1 = tomorrow, ...)
@@ -143,7 +156,7 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
           timeInMillis = calendar.timeInMillis
           add(Calendar.DAY_OF_MONTH, day)
         }
-    val dayLetter = SimpleDateFormat("E", Locale.getDefault()).format(week.time)
+    val dayLetter = SimpleDateFormat("E", Locale.ENGLISH).format(week.time)
     return "$dayLetter\n${week.get(Calendar.DAY_OF_MONTH)}"
   }
 
