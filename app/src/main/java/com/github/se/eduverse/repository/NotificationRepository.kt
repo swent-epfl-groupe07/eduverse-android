@@ -16,36 +16,37 @@ import com.github.se.eduverse.model.ScheduledType
 import java.util.concurrent.TimeUnit
 
 // Parameter authorizations is not used for now, it is here to make the class easier to upgrade
-open class NotificationRepository(context: Context, val autorizations: NotifAutorizations) {
-  private val applicationContext: Context = context.applicationContext
-
+open class NotificationRepository(
+    context: Context,
+    val autorizations: NotifAutorizations,
+    val workManager: WorkManager = WorkManager.getInstance(context)
+) {
   open fun scheduleNotification(scheduled: Scheduled) {
     cancelNotification(scheduled)
 
     val delay = scheduled.start.timeInMillis - System.currentTimeMillis()
 
     if (delay > 0) {
-      val workRequest =
-          OneTimeWorkRequestBuilder<NotificationWorker>()
+      val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
               .setInitialDelay(delay, TimeUnit.MILLISECONDS)
               .addTag(scheduled.id)
               .setInputData(
                   workDataOf("title" to createTitle(scheduled), "description" to scheduled.name))
               .build()
 
-      WorkManager.getInstance(applicationContext).enqueue(workRequest)
+      workManager.enqueue(workRequest)
     } else {
       Log.w("NotificationScheduler", "Scheduled time is in the past for task: ${scheduled.name}")
     }
   }
 
   open fun cancelNotification(scheduled: Scheduled) {
-    WorkManager.getInstance(applicationContext).cancelAllWorkByTag(scheduled.id)
+      workManager.cancelAllWorkByTag(scheduled.id)
   }
 
   fun createTitle(scheduled: Scheduled): String {
     if (scheduled.type == ScheduledType.TASK) {
-      return "You should start working on task."
+      return "You should start working on a task."
     } else {
       return "An event is about to begin !"
     }
@@ -63,10 +64,13 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     return Result.success()
   }
 
-  private fun showNotification(title: String, text: String) {
+  fun showNotification(
+      title: String,
+      text: String,
+      notificationManager: NotificationManager =
+          applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+  ) {
     val channelId = "task_channel"
-    val notificationManager =
-        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     // Create Notification Channel (Android 8.0+)
     val channel =
@@ -74,8 +78,7 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
             .apply { description = "Notifications for scheduled tasks" }
     notificationManager.createNotificationChannel(channel)
 
-    val notification =
-        NotificationCompat.Builder(applicationContext, channelId)
+    val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(text)
