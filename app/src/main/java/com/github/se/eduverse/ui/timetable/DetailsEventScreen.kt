@@ -151,9 +151,6 @@ fun DetailsEventScreen(
                                   event.start.set(
                                       Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
                                   event.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
-                                  event.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
-                                  event.start.set(
-                                      Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
                                   timeTableViewModel.updateScheduled(event)
                                   date =
                                       Calendar.getInstance().apply {

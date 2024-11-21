@@ -316,7 +316,7 @@ fun DialogCreate(
                     selectedDate,
                     lengthHour,
                     lengthMin,
-                    selectDate = { selectedDate = it },
+                    selectDate = { selectedDate = it.apply { set(Calendar.SECOND, 0) } },
                     selectTime = { hour, min ->
                       lengthHour = hour
                       lengthMin = min
@@ -337,7 +337,7 @@ fun DialogCreate(
                     selectedDate,
                     lengthHour,
                     lengthMin,
-                    selectDate = { selectedDate = it },
+                    selectDate = { selectedDate = it.apply { set(Calendar.SECOND, 0) } },
                     selectTime = { hour, min ->
                       lengthHour = hour
                       lengthMin = min

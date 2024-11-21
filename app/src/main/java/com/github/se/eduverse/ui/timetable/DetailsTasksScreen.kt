@@ -136,9 +136,6 @@ fun DetailsTasksScreen(
                                   task.start.set(
                                       Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
                                   task.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
-                                  task.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
-                                  task.start.set(
-                                      Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
                                   timeTableViewModel.updateScheduled(task)
                                   date =
                                       Calendar.getInstance().apply {
