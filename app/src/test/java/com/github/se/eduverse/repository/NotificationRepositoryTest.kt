@@ -130,9 +130,10 @@ class NotificationRepositoryTest {
   fun showNotificationCreatesNotification() {
     val title = "Test Title"
     val text = "Test Description"
+    val id = "Scheduled Id"
 
     // Call showNotification directly
-    notificationWorker.showNotification(title, text, notificationManager)
+    notificationWorker.showNotification(title, text, id, notificationManager)
 
     // Verify that the notification was created
     verify(notificationManager).createNotificationChannel(any())
