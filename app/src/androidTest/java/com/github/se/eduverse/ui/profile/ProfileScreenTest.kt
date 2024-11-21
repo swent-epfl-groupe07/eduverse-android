@@ -137,8 +137,12 @@ class ProfileScreenTest {
 
     composeTestRule.onNodeWithTag("profile_image_container", useUnmergedTree = true).assertExists()
     composeTestRule.onNodeWithTag("stats_row", useUnmergedTree = true).assertExists()
-    composeTestRule.onNodeWithTag("stat_count_Followers", useUnmergedTree = true).assertTextContains("100")
-    composeTestRule.onNodeWithTag("stat_count_Following", useUnmergedTree = true).assertTextContains("200")
+    composeTestRule
+        .onNodeWithTag("stat_count_Followers", useUnmergedTree = true)
+        .assertTextContains("100")
+    composeTestRule
+        .onNodeWithTag("stat_count_Following", useUnmergedTree = true)
+        .assertTextContains("200")
   }
 
   @Test
