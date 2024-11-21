@@ -58,6 +58,18 @@ object Screen {
     // Helper function to create route with actual userId
     fun createRoute(userId: String) = "user_profile/$userId"
   }
+
+  object FOLLOWERS {
+    const val route = "followers/{userId}"
+
+    fun createRoute(userId: String) = "followers/$userId"
+  }
+
+  object FOLLOWING {
+    const val route = "following/{userId}"
+
+    fun createRoute(userId: String) = "following/$userId"
+  }
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -115,14 +127,6 @@ open class NavigationActions(
     }
   }
 
-  fun navigateToSetting() {
-    navController.navigate(Screen.SETTING)
-  }
-
-  /** Navigate to the Profile screen. */
-  fun navigateToProfile() {
-    navController.navigate(Screen.EDIT_PROFILE)
-  }
   /**
    * Navigate to the specified screen.
    *
@@ -135,6 +139,14 @@ open class NavigationActions(
   /** Navigate back to the previous screen. */
   open fun goBack() {
     navController.popBackStack()
+  }
+
+  fun navigateToFollowersList(userId: String) {
+    navController.navigate(Screen.FOLLOWERS.createRoute(userId))
+  }
+
+  fun navigateToFollowingList(userId: String) {
+    navController.navigate(Screen.FOLLOWING.createRoute(userId))
   }
 
   /**
