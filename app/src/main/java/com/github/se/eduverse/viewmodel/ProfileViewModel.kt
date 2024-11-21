@@ -241,6 +241,24 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       }
     }
   }
+
+  suspend fun getFollowers(userId: String): List<Profile> {
+    return try {
+      repository.getFollowers(userId)
+    } catch (e: Exception) {
+      _error.value = "Failed to load followers: ${e.message}"
+      emptyList()
+    }
+  }
+
+  suspend fun getFollowing(userId: String): List<Profile> {
+    return try {
+      repository.getFollowing(userId)
+    } catch (e: Exception) {
+      _error.value = "Failed to load following: ${e.message}"
+      emptyList()
+    }
+  }
 }
 
 sealed class ProfileUiState {

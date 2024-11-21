@@ -53,6 +53,9 @@ interface ProfileRepository {
   suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean
 
   suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
+
+    suspend fun getFollowers(userId: String): List<Profile>
+    suspend fun getFollowing(userId: String): List<Profile>
 }
 
 open class ProfileRepositoryImpl(
@@ -411,4 +414,60 @@ open class ProfileRepositoryImpl(
         }
         .await()
   }
+
+    override suspend fun getFollowers(userId: String): List<Profile> {
+        return try {
+            // Get all followers IDs
+            val followerDocs = followersCollection
+                .whereEqualTo("followedId", userId)
+                .get()
+                .await()
+
+            // Get profile details for each follower
+            val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+            followerDocs.documents.mapNotNull { doc ->
+                val followerId = doc.getString("followerId") ?: return@mapNotNull null
+                val profileDoc = profilesCollection.document(followerId).get().await()
+                val profile = profileDoc.toObject(Profile::class.java) ?: return@mapNotNull null
+
+                // Check if the current user is following this profile
+                val isFollowed = currentUserId?.let {
+                    isFollowing(it, followerId)
+                } ?: false
+
+                profile.copy(isFollowedByCurrentUser = isFollowed)
+            }
+        } catch (e: Exception) {
+            Log.e("GET_FOLLOWERS", "Failed to get followers: ${e.message}")
+            emptyList()
+        }
+    }
+
+    override suspend fun getFollowing(userId: String): List<Profile> {
+        return try {
+            // Get all following IDs
+            val followingDocs = followersCollection
+                .whereEqualTo("followerId", userId)
+                .get()
+                .await()
+
+            // Get profile details for each following
+            val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+            followingDocs.documents.mapNotNull { doc ->
+                val followingId = doc.getString("followedId") ?: return@mapNotNull null
+                val profileDoc = profilesCollection.document(followingId).get().await()
+                val profile = profileDoc.toObject(Profile::class.java) ?: return@mapNotNull null
+
+                // Check if the current user is following this profile
+                val isFollowed = currentUserId?.let {
+                    isFollowing(it, followingId)
+                } ?: false
+
+                profile.copy(isFollowedByCurrentUser = isFollowed)
+            }
+        } catch (e: Exception) {
+            Log.e("GET_FOLLOWING", "Failed to get following: ${e.message}")
+            emptyList()
+        }
+    }
 }

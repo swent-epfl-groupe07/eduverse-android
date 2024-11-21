@@ -49,6 +49,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
@@ -249,6 +250,34 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         }
       }
     }
+
+      composable(
+          route = Screen.FOLLOWERS.route,
+          arguments = listOf(navArgument("userId") { type = NavType.StringType })
+      ) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId")
+              ?: return@composable
+          FollowListScreen(
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              userId = userId,
+              isFollowersList = true
+          )
+      }
+
+      composable(
+          route = Screen.FOLLOWING.route,
+          arguments = listOf(navArgument("userId") { type = NavType.StringType })
+      ) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId")
+              ?: return@composable
+          FollowListScreen(
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              userId = userId,
+              isFollowersList = false
+          )
+      }
 
     navigation(
         startDestination = Screen.PROFILE,

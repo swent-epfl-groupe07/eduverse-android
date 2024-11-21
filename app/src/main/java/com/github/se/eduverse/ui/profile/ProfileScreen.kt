@@ -126,12 +126,25 @@ fun ProfileScreen(
               when (uiState) {
                 is ProfileUiState.Success -> {
                   val profile = (uiState as ProfileUiState.Success).profile
-                  Row(
-                      modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
-                      horizontalArrangement = Arrangement.SpaceEvenly) {
-                        StatItem("Followers", profile.followers, Modifier.testTag("followers_stat"))
-                        StatItem("Following", profile.following, Modifier.testTag("following_stat"))
-                      }
+                    Row(
+                        modifier = Modifier.testTag("stats_row")
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        StatItem(
+                            "Followers",
+                            profile.followers,
+                            onClick = { navigationActions.navigateToFollowersList(profile.id) },
+                            Modifier.testTag("followers_stat")
+                        )
+                        StatItem(
+                            "Following",
+                            profile.following,
+                            onClick = { navigationActions.navigateToFollowingList(profile.id) },
+                            Modifier.testTag("following_stat")
+                        )
+                    }
                 }
                 else -> {}
               }
@@ -186,18 +199,30 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
-  Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-    Text(
-        text = count.toString(),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.testTag("stat_count_$label"))
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.testTag("stat_label_$label"))
-  }
+private fun StatItem(
+    label: String,
+    count: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .testTag("stat_${label.lowercase()}"),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.testTag("stat_count_$label")
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("stat_label_$label")
+        )
+    }
 }
 
 @Composable
