@@ -34,16 +34,26 @@ fun FollowListScreen(
     var profiles by remember { mutableStateOf<List<Profile>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Load profiles initially and after each successful follow/unfollow action
-    LaunchedEffect(userId, isFollowersList, followActionState) {
-        if (followActionState is FollowActionState.Success || isLoading) {
-            isLoading = true
-            profiles = if (isFollowersList) {
-                viewModel.getFollowers(userId)
-            } else {
-                viewModel.getFollowing(userId)
-            }
+    // Initial load
+    LaunchedEffect(userId, isFollowersList) {
+        loadProfiles(viewModel, userId, isFollowersList) { newProfiles ->
+            profiles = newProfiles
             isLoading = false
+        }
+    }
+
+    // React to follow action state changes
+    LaunchedEffect(followActionState) {
+        when (followActionState) {
+            is FollowActionState.Success -> {
+                // Reload the list after any successful follow/unfollow action
+                isLoading = true
+                loadProfiles(viewModel, userId, isFollowersList) { newProfiles ->
+                    profiles = newProfiles
+                    isLoading = false
+                }
+            }
+            else -> { /* Handle other states if needed */ }
         }
     }
 
@@ -86,20 +96,10 @@ fun FollowListScreen(
                         items = profiles,
                         key = { it.id }
                     ) { profile ->
-                        var isFollowed by remember { mutableStateOf(profile.isFollowedByCurrentUser) }
-
-                        LaunchedEffect(followActionState) {
-                            if (followActionState is FollowActionState.Success) {
-                                // Update local state based on follow action
-                                if (currentUserId != null && profile.id == (followActionState as? FollowActionState.Success)?.targetUserId) {
-                                    isFollowed = !isFollowed
-                                }
-                            }
-                        }
-
                         FollowListItem(
-                            profile = profile.copy(isFollowedByCurrentUser = isFollowed),
+                            profile = profile,
                             currentUserId = currentUserId,
+                            isFollowersList = isFollowersList,
                             onFollowClick = { profileId ->
                                 viewModel.toggleFollow(currentUserId ?: "", profileId)
                             },
@@ -112,11 +112,27 @@ fun FollowListScreen(
     }
 }
 
+// Extracted helper function for loading profiles
+private suspend fun loadProfiles(
+    viewModel: ProfileViewModel,
+    userId: String,
+    isFollowersList: Boolean,
+    onResult: (List<Profile>) -> Unit
+) {
+    val newProfiles = if (isFollowersList) {
+        viewModel.getFollowers(userId)
+    } else {
+        viewModel.getFollowing(userId).map { it.copy(isFollowedByCurrentUser = true) }
+    }
+    onResult(newProfiles)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FollowListItem(
     profile: Profile,
     currentUserId: String?,
+    isFollowersList: Boolean,
     onFollowClick: (String) -> Unit,
     onProfileClick: () -> Unit
 ) {
@@ -142,11 +158,20 @@ private fun FollowListItem(
         },
         trailingContent = {
             if (currentUserId != null && currentUserId != profile.id) {
-                Button(
-                    onClick = { onFollowClick(profile.id) },
-                    modifier = Modifier.testTag("follow_button_${profile.id}")
-                ) {
-                    Text(if (profile.isFollowedByCurrentUser) "Following" else "Follow")
+                if (isFollowersList && !profile.isFollowedByCurrentUser) {
+                    Button(
+                        onClick = { onFollowClick(profile.id) },
+                        modifier = Modifier.testTag("follow_button_${profile.id}")
+                    ) {
+                        Text("Follow")
+                    }
+                } else if (!isFollowersList) {
+                    Button(
+                        onClick = { onFollowClick(profile.id) },
+                        modifier = Modifier.testTag("follow_button_${profile.id}")
+                    ) {
+                        Text("Following")
+                    }
                 }
             }
         }

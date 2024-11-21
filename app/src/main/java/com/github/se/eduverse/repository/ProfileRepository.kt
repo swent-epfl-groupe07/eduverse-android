@@ -362,22 +362,24 @@ open class ProfileRepositoryImpl(
         .isNotEmpty()
   }
 
-  override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
-    val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
+    override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
+        return try {
+            val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
 
-    if (isCurrentlyFollowing) {
-      // Unfollow
-      unfollowUser(followerId, targetUserId)
-    } else {
-      // Follow
-      followUser(followerId, targetUserId)
+            if (isCurrentlyFollowing) {
+                unfollowUser(followerId, targetUserId)
+            } else {
+                followUser(followerId, targetUserId)
+            }
+
+            updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
+
+            !isCurrentlyFollowing
+        } catch (e: Exception) {
+            Log.e("TOGGLE_FOLLOW", "Failed to toggle follow: ${e.message}")
+            throw e
+        }
     }
-
-    // Update the follower counts for both users
-    updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
-
-    return !isCurrentlyFollowing
-  }
 
   override suspend fun updateFollowCounts(
       followerId: String,
@@ -452,18 +454,16 @@ open class ProfileRepositoryImpl(
                 .await()
 
             // Get profile details for each following
-            val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
             followingDocs.documents.mapNotNull { doc ->
                 val followingId = doc.getString("followedId") ?: return@mapNotNull null
                 val profileDoc = profilesCollection.document(followingId).get().await()
-                val profile = profileDoc.toObject(Profile::class.java) ?: return@mapNotNull null
-
-                // Check if the current user is following this profile
-                val isFollowed = currentUserId?.let {
-                    isFollowing(it, followingId)
-                } ?: false
-
-                profile.copy(isFollowedByCurrentUser = isFollowed)
+                profileDoc.toObject(Profile::class.java)?.let { profile ->
+                    // Since this is from following list, we know the current user is following them
+                    profile.copy(
+                        id = followingId,
+                        isFollowedByCurrentUser = true
+                    )
+                }
             }
         } catch (e: Exception) {
             Log.e("GET_FOLLOWING", "Failed to get following: ${e.message}")
