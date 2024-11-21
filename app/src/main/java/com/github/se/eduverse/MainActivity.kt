@@ -251,33 +251,27 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       }
     }
 
-      composable(
-          route = Screen.FOLLOWERS.route,
-          arguments = listOf(navArgument("userId") { type = NavType.StringType })
-      ) { backStackEntry ->
-          val userId = backStackEntry.arguments?.getString("userId")
-              ?: return@composable
+    composable(
+        route = Screen.FOLLOWERS.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
           FollowListScreen(
               navigationActions = navigationActions,
               viewModel = profileViewModel,
               userId = userId,
-              isFollowersList = true
-          )
-      }
+              isFollowersList = true)
+        }
 
-      composable(
-          route = Screen.FOLLOWING.route,
-          arguments = listOf(navArgument("userId") { type = NavType.StringType })
-      ) { backStackEntry ->
-          val userId = backStackEntry.arguments?.getString("userId")
-              ?: return@composable
+    composable(
+        route = Screen.FOLLOWING.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
           FollowListScreen(
               navigationActions = navigationActions,
               viewModel = profileViewModel,
               userId = userId,
-              isFollowersList = false
-          )
-      }
+              isFollowersList = false)
+        }
 
     navigation(
         startDestination = Screen.PROFILE,

@@ -61,11 +61,13 @@ object Screen {
 
   object FOLLOWERS {
     const val route = "followers/{userId}"
+
     fun createRoute(userId: String) = "followers/$userId"
   }
 
   object FOLLOWING {
     const val route = "following/{userId}"
+
     fun createRoute(userId: String) = "following/$userId"
   }
 }
