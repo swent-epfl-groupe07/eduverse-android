@@ -13,11 +13,7 @@ import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
-import io.mockk.unmockkStatic
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.fail
@@ -862,12 +858,8 @@ class ProfileRepositoryImplTest {
     val mockProfileDoc = mock(DocumentReference::class.java)
     val mockProfileSnapshot = mock(DocumentSnapshot::class.java)
 
-    val followerProfile = Profile(
-      id = "follower1",
-      username = "Follower1",
-      followers = 10,
-      following = 5
-    )
+    val followerProfile =
+        Profile(id = "follower1", username = "Follower1", followers = 10, following = 5)
 
     // Set up followers collection mocks
     whenever(mockFirestore.collection("followers")).thenReturn(mockCollectionRef)
@@ -944,12 +936,8 @@ class ProfileRepositoryImplTest {
 
     // Mock profile document for the followed user
     val mockFollowedProfileDoc = mock(DocumentSnapshot::class.java)
-    val followedProfile = Profile(
-      id = "followed1",
-      username = "Followed1",
-      followers = 20,
-      following = 15
-    )
+    val followedProfile =
+        Profile(id = "followed1", username = "Followed1", followers = 20, following = 15)
 
     // Set up mocks for following collection
     whenever(mockFirestore.collection("followers")).thenReturn(mockCollectionRef)

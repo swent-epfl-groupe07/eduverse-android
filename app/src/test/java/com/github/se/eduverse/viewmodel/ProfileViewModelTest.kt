@@ -122,12 +122,12 @@ class ProfileViewModelTest {
   fun `toggleFollow updates UI state optimistically on follow action`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = false
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
     // Set initial state and mock successful follow
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
@@ -156,12 +156,9 @@ class ProfileViewModelTest {
   fun `toggleFollow updates UI state optimistically on unfollow action`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = true
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId, username = "testUser", followers = 5, isFollowedByCurrentUser = true)
 
     // Set initial state and mock successful unfollow
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
@@ -219,17 +216,17 @@ class ProfileViewModelTest {
   fun `toggleFollow handles transaction error gracefully`() = runTest {
     val currentUserId = "user1"
     val targetUserId = "user2"
-    val initialProfile = Profile(
-      id = targetUserId,
-      username = "testUser",
-      followers = 5,
-      isFollowedByCurrentUser = false
-    )
+    val initialProfile =
+        Profile(
+            id = targetUserId,
+            username = "testUser",
+            followers = 5,
+            isFollowedByCurrentUser = false)
 
     // Set initial state and mock transaction error
     `when`(mockRepository.getProfile(targetUserId)).thenReturn(initialProfile)
     `when`(mockRepository.toggleFollow(currentUserId, targetUserId))
-      .thenThrow(RuntimeException("Firestore transactions require all reads"))
+        .thenThrow(RuntimeException("Firestore transactions require all reads"))
 
     profileViewModel.loadProfile(targetUserId)
     advanceUntilIdle()
@@ -241,7 +238,9 @@ class ProfileViewModelTest {
     // Verify error is handled properly
     val followState = profileViewModel.followActionState.first()
     assertTrue(followState is FollowActionState.Error)
-    assertEquals("Firestore transactions require all reads", (followState as FollowActionState.Error).message)
+    assertEquals(
+        "Firestore transactions require all reads",
+        (followState as FollowActionState.Error).message)
 
     // Verify total number of getProfile calls:
     // 2 calls from initial loadProfile (1 in loadProfile, 1 in createProfileIfNotExists)
@@ -479,10 +478,10 @@ class ProfileViewModelTest {
   @Test
   fun `getFollowers success returns list of followers`() = runTest {
     val userId = "testUser"
-    val followers = listOf(
-      Profile(id = "follower1", username = "Follower1", isFollowedByCurrentUser = true),
-      Profile(id = "follower2", username = "Follower2", isFollowedByCurrentUser = false)
-    )
+    val followers =
+        listOf(
+            Profile(id = "follower1", username = "Follower1", isFollowedByCurrentUser = true),
+            Profile(id = "follower2", username = "Follower2", isFollowedByCurrentUser = false))
 
     // Mock repository response
     `when`(mockRepository.getFollowers(userId)).thenReturn(followers)
@@ -502,8 +501,7 @@ class ProfileViewModelTest {
     val errorMessage = "Failed to fetch followers"
 
     // Mock repository to throw exception
-    `when`(mockRepository.getFollowers(userId))
-      .thenThrow(RuntimeException(errorMessage))
+    `when`(mockRepository.getFollowers(userId)).thenThrow(RuntimeException(errorMessage))
 
     // Call the method
     val result = profileViewModel.getFollowers(userId)
@@ -517,10 +515,10 @@ class ProfileViewModelTest {
   @Test
   fun `getFollowing success returns list of following`() = runTest {
     val userId = "testUser"
-    val following = listOf(
-      Profile(id = "following1", username = "Following1", isFollowedByCurrentUser = true),
-      Profile(id = "following2", username = "Following2", isFollowedByCurrentUser = true)
-    )
+    val following =
+        listOf(
+            Profile(id = "following1", username = "Following1", isFollowedByCurrentUser = true),
+            Profile(id = "following2", username = "Following2", isFollowedByCurrentUser = true))
 
     // Mock repository response
     `when`(mockRepository.getFollowing(userId)).thenReturn(following)
@@ -540,8 +538,7 @@ class ProfileViewModelTest {
     val errorMessage = "Failed to fetch following"
 
     // Mock repository to throw exception
-    `when`(mockRepository.getFollowing(userId))
-      .thenThrow(RuntimeException(errorMessage))
+    `when`(mockRepository.getFollowing(userId)).thenThrow(RuntimeException(errorMessage))
 
     // Call the method
     val result = profileViewModel.getFollowing(userId)
@@ -555,22 +552,20 @@ class ProfileViewModelTest {
   @Test
   fun `getFollowers returns followers with correct follow status`() = runTest {
     val userId = "testUser"
-    val followers = listOf(
-      Profile(
-        id = "follower1",
-        username = "Follower1",
-        isFollowedByCurrentUser = true,
-        followers = 10,
-        following = 20
-      ),
-      Profile(
-        id = "follower2",
-        username = "Follower2",
-        isFollowedByCurrentUser = false,
-        followers = 5,
-        following = 15
-      )
-    )
+    val followers =
+        listOf(
+            Profile(
+                id = "follower1",
+                username = "Follower1",
+                isFollowedByCurrentUser = true,
+                followers = 10,
+                following = 20),
+            Profile(
+                id = "follower2",
+                username = "Follower2",
+                isFollowedByCurrentUser = false,
+                followers = 5,
+                following = 15))
 
     `when`(mockRepository.getFollowers(userId)).thenReturn(followers)
 
@@ -587,22 +582,20 @@ class ProfileViewModelTest {
   @Test
   fun `getFollowing returns following with all followed status true`() = runTest {
     val userId = "testUser"
-    val following = listOf(
-      Profile(
-        id = "following1",
-        username = "Following1",
-        isFollowedByCurrentUser = true,
-        followers = 10,
-        following = 20
-      ),
-      Profile(
-        id = "following2",
-        username = "Following2",
-        isFollowedByCurrentUser = true,
-        followers = 5,
-        following = 15
-      )
-    )
+    val following =
+        listOf(
+            Profile(
+                id = "following1",
+                username = "Following1",
+                isFollowedByCurrentUser = true,
+                followers = 10,
+                following = 20),
+            Profile(
+                id = "following2",
+                username = "Following2",
+                isFollowedByCurrentUser = true,
+                followers = 5,
+                following = 15))
 
     `when`(mockRepository.getFollowing(userId)).thenReturn(following)
 

@@ -253,100 +253,80 @@ class UserProfileScreenTest {
     composeTestRule.onNodeWithTag("publication_item_fav1").assertExists()
   }
 
-    @Test
-    fun verifyFollowButtonStates() {
-        val testProfile = Profile(
-            id = "other_user_id",
-            username = "TestUser",
-            isFollowedByCurrentUser = false
-        )
+  @Test
+  fun verifyFollowButtonStates() {
+    val testProfile =
+        Profile(id = "other_user_id", username = "TestUser", isFollowedByCurrentUser = false)
 
-        fakeViewModel.setState(ProfileUiState.Success(testProfile))
-        fakeViewModel.setFollowActionState(FollowActionState.Idle)
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+    fakeViewModel.setFollowActionState(FollowActionState.Idle)
 
-        composeTestRule.setContent {
-            UserProfileScreen(
-                navigationActions = fakeNavigationActions,
-                viewModel = fakeViewModel,
-                userId = "other_user_id",
-                currentUserId = "current_user_id"
-            )
-        }
-
-        // Test initial Follow button state
-        composeTestRule.onNodeWithTag("follow_button")
-            .assertExists()
-            .assertTextContains("Follow")
-            .assertIsEnabled()
-
-        // Test loading state
-        fakeViewModel.setFollowActionState(FollowActionState.Loading)
-        composeTestRule.onNodeWithTag("follow_button")
-            .assertExists()
-            .assertIsNotEnabled()
-
-        // Test error state
-        fakeViewModel.setFollowActionState(FollowActionState.Error("Follow failed"))
-        composeTestRule.onNodeWithText("Follow failed").assertExists()
-
-        // Test success state with the new parameters
-        val updatedProfile = testProfile.copy(isFollowedByCurrentUser = true)
-        fakeViewModel.setState(ProfileUiState.Success(updatedProfile))
-        fakeViewModel.setFollowActionState(
-            FollowActionState.Success(
-                followerId = "current_user_id",
-                targetUserId = "other_user_id",
-                isNowFollowing = true
-            )
-        )
-        composeTestRule.onNodeWithTag("follow_button")
-            .assertExists()
-            .assertTextContains("Unfollow")
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = "other_user_id",
+          currentUserId = "current_user_id")
     }
 
-    @Test
-    fun whenFollowButtonClicked_showsLoadingAndUpdatesState() {
-        val testProfile = Profile(
-            id = "other_user_id",
-            username = "TestUser",
-            isFollowedByCurrentUser = false
-        )
+    // Test initial Follow button state
+    composeTestRule
+        .onNodeWithTag("follow_button")
+        .assertExists()
+        .assertTextContains("Follow")
+        .assertIsEnabled()
 
-        fakeViewModel.setState(ProfileUiState.Success(testProfile))
-        fakeViewModel.setFollowActionState(FollowActionState.Idle)
+    // Test loading state
+    fakeViewModel.setFollowActionState(FollowActionState.Loading)
+    composeTestRule.onNodeWithTag("follow_button").assertExists().assertIsNotEnabled()
 
-        composeTestRule.setContent {
-            UserProfileScreen(
-                navigationActions = fakeNavigationActions,
-                viewModel = fakeViewModel,
-                userId = "other_user_id",
-                currentUserId = "current_user_id"
-            )
-        }
+    // Test error state
+    fakeViewModel.setFollowActionState(FollowActionState.Error("Follow failed"))
+    composeTestRule.onNodeWithText("Follow failed").assertExists()
 
-        composeTestRule.onNodeWithTag("follow_button")
-            .assertExists()
-            .assertTextContains("Follow")
-            .performClick()
+    // Test success state with the new parameters
+    val updatedProfile = testProfile.copy(isFollowedByCurrentUser = true)
+    fakeViewModel.setState(ProfileUiState.Success(updatedProfile))
+    fakeViewModel.setFollowActionState(
+        FollowActionState.Success(
+            followerId = "current_user_id", targetUserId = "other_user_id", isNowFollowing = true))
+    composeTestRule.onNodeWithTag("follow_button").assertExists().assertTextContains("Unfollow")
+  }
 
-        fakeViewModel.setFollowActionState(FollowActionState.Loading)
-        composeTestRule.onNodeWithTag("follow_button")
-            .assertExists()
-            .assertIsNotEnabled()
+  @Test
+  fun whenFollowButtonClicked_showsLoadingAndUpdatesState() {
+    val testProfile =
+        Profile(id = "other_user_id", username = "TestUser", isFollowedByCurrentUser = false)
 
-        // Update with new Success state parameters
-        fakeViewModel.setFollowActionState(
-            FollowActionState.Success(
-                followerId = "current_user_id",
-                targetUserId = "other_user_id",
-                isNowFollowing = true
-            )
-        )
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+    fakeViewModel.setFollowActionState(FollowActionState.Idle)
 
-        // Test error state
-        fakeViewModel.setFollowActionState(FollowActionState.Error("Failed to follow"))
-        composeTestRule.onNodeWithText("Failed to follow").assertExists()
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = "other_user_id",
+          currentUserId = "current_user_id")
     }
+
+    composeTestRule
+        .onNodeWithTag("follow_button")
+        .assertExists()
+        .assertTextContains("Follow")
+        .performClick()
+
+    fakeViewModel.setFollowActionState(FollowActionState.Loading)
+    composeTestRule.onNodeWithTag("follow_button").assertExists().assertIsNotEnabled()
+
+    // Update with new Success state parameters
+    fakeViewModel.setFollowActionState(
+        FollowActionState.Success(
+            followerId = "current_user_id", targetUserId = "other_user_id", isNowFollowing = true))
+
+    // Test error state
+    fakeViewModel.setFollowActionState(FollowActionState.Error("Failed to follow"))
+    composeTestRule.onNodeWithText("Failed to follow").assertExists()
+  }
 
   @After
   fun tearDown() {
