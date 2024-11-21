@@ -19,6 +19,7 @@ import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.FollowActionState
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -29,17 +30,21 @@ fun FollowListScreen(
     isFollowersList: Boolean
 ) {
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    val followActionState by viewModel.followActionState.collectAsState()
     var profiles by remember { mutableStateOf<List<Profile>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(userId, isFollowersList) {
-        isLoading = true
-        profiles = if (isFollowersList) {
-            viewModel.getFollowers(userId)
-        } else {
-            viewModel.getFollowing(userId)
+    // Load profiles initially and after each successful follow/unfollow action
+    LaunchedEffect(userId, isFollowersList, followActionState) {
+        if (followActionState is FollowActionState.Success || isLoading) {
+            isLoading = true
+            profiles = if (isFollowersList) {
+                viewModel.getFollowers(userId)
+            } else {
+                viewModel.getFollowing(userId)
+            }
+            isLoading = false
         }
-        isLoading = false
     }
 
     Scaffold(
@@ -77,11 +82,27 @@ fun FollowListScreen(
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(profiles, key = { it.id }) { profile ->
+                    items(
+                        items = profiles,
+                        key = { it.id }
+                    ) { profile ->
+                        var isFollowed by remember { mutableStateOf(profile.isFollowedByCurrentUser) }
+
+                        LaunchedEffect(followActionState) {
+                            if (followActionState is FollowActionState.Success) {
+                                // Update local state based on follow action
+                                if (currentUserId != null && profile.id == (followActionState as? FollowActionState.Success)?.targetUserId) {
+                                    isFollowed = !isFollowed
+                                }
+                            }
+                        }
+
                         FollowListItem(
-                            profile = profile,
+                            profile = profile.copy(isFollowedByCurrentUser = isFollowed),
                             currentUserId = currentUserId,
-                            viewModel = viewModel,
+                            onFollowClick = { profileId ->
+                                viewModel.toggleFollow(currentUserId ?: "", profileId)
+                            },
                             onProfileClick = { navigationActions.navigateToUserProfile(profile.id) }
                         )
                     }
@@ -96,7 +117,7 @@ fun FollowListScreen(
 private fun FollowListItem(
     profile: Profile,
     currentUserId: String?,
-    viewModel: ProfileViewModel,
+    onFollowClick: (String) -> Unit,
     onProfileClick: () -> Unit
 ) {
     ListItem(
@@ -122,7 +143,7 @@ private fun FollowListItem(
         trailingContent = {
             if (currentUserId != null && currentUserId != profile.id) {
                 Button(
-                    onClick = { viewModel.toggleFollow(currentUserId, profile.id) },
+                    onClick = { onFollowClick(profile.id) },
                     modifier = Modifier.testTag("follow_button_${profile.id}")
                 ) {
                     Text(if (profile.isFollowedByCurrentUser) "Following" else "Follow")
