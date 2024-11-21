@@ -126,10 +126,9 @@ fun DetailsTasksScreen(
                                   task.start.set(
                                       Calendar.DAY_OF_MONTH, date.get(Calendar.DAY_OF_MONTH))
                                   timeTableViewModel.updateScheduled(task)
-                                  date =
-                                      Calendar.getInstance().apply {
-                                        timeInMillis = date.timeInMillis
-                                      } // Trigger recomposition
+
+                                  // Trigger recomposition
+                                  date = date.clone() as Calendar
                                 }
                                 "time" -> {
                                   // Get the time of the new event but not the date
@@ -137,10 +136,9 @@ fun DetailsTasksScreen(
                                       Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
                                   task.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
                                   timeTableViewModel.updateScheduled(task)
-                                  date =
-                                      Calendar.getInstance().apply {
-                                        timeInMillis = date.timeInMillis
-                                      } // Trigger recomposition
+
+                                  // Trigger recomposition
+                                  date = date.clone() as Calendar
                                 }
                                 "length" -> {
                                   timeTableViewModel.updateScheduled(
