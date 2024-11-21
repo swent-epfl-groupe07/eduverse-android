@@ -25,6 +25,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.model.NotifAutorizations
+import com.github.se.eduverse.model.NotificationData
+import com.github.se.eduverse.model.Scheduled
+import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.NotificationRepository
@@ -88,6 +91,13 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+    val notificationData =
+        if (intent.getBooleanExtra("isNotification", false)) {
+          NotificationData(true, intent.getStringExtra("scheduledId"))
+        } else {
+          NotificationData(false)
+        }
+
     // Handling camera and microphone permissions
     val requestPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -102,9 +112,7 @@ class MainActivity : ComponentActivity() {
           setContent {
             EduverseTheme {
               Surface(modifier = Modifier.fillMaxSize()) {
-                EduverseApp(
-                    cameraPermissionGranted = cameraPermissionGranted,
-                )
+                EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
               }
             }
           }
@@ -135,9 +143,7 @@ class MainActivity : ComponentActivity() {
       setContent {
         EduverseTheme {
           Surface(modifier = Modifier.fillMaxSize()) {
-            EduverseApp(
-                cameraPermissionGranted = cameraPermissionGranted,
-            )
+            EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
           }
         }
       }
@@ -150,7 +156,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean) {
+fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: NotificationData) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -179,12 +185,28 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
+  notificationData.onOpen = {
+    var scheduled: Scheduled? = null
+    if (notificationData.objectId != null) {
+      scheduled = timeTableViewModel.getScheduledById(notificationData.objectId)
+    }
+    timeTableViewModel.opened = scheduled
+
+    if (scheduled?.type == ScheduledType.TASK) {
+      navigationActions.navigateTo(Screen.DETAILS_TASKS)
+    } else if (scheduled?.type == ScheduledType.EVENT) {
+      navigationActions.navigateTo(Screen.DETAILS_EVENT)
+    } else { // scheduled is null
+      navigationActions.navigateTo(Route.DASHBOARD)
+    }
+  }
+
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
     ) {
-      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+      composable(Screen.LOADING) { LoadingScreen(navigationActions, notificationData) }
     }
 
     navigation(

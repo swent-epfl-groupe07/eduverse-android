@@ -13,6 +13,8 @@ interface TimeTableRepository {
       onFailure: (Exception) -> Unit
   )
 
+  suspend fun getScheduledById(id: String): Scheduled
+
   fun addScheduled(scheduled: Scheduled, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun updateScheduled(scheduled: Scheduled, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)

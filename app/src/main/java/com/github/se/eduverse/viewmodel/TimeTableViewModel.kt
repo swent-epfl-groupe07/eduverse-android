@@ -51,6 +51,15 @@ class TimeTableViewModel(
   }
 
   /**
+   * Return the scheduled with given id
+   *
+   * @param id the id of the scheduled
+   */
+  suspend fun getScheduledById(id: String): Scheduled {
+    return timeTableRepository.getScheduledById(id)
+  }
+
+  /**
    * Change the active week to the next one, and access the scheduled events and tasks in that week
    */
   fun getNextWeek() {
