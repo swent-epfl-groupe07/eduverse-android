@@ -31,6 +31,7 @@ android {
 
     val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
     val openAiApiKey = localProperties.getProperty("OPENAI_API_KEY") ?: ""
+    val convertApiKey = localProperties.getProperty("CONVERT_API_KEY") ?: ""
 
     defaultConfig {
         applicationId = "com.github.se.eduverse"
@@ -44,8 +45,9 @@ android {
             useSupportLibrary = true
         }
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
-        // Add the API key as a build config field so that it can be kept secret in the local.properties file and retrieved at runtime by the CI from the github secrets
+        // Add the API keys as a build config field so that it can be kept secret in the local.properties file and retrieved at runtime by the CI from the github secrets
         buildConfigField("String", "OPENAI_API_KEY", "\"${openAiApiKey}\"")
+        buildConfigField("String", "CONVERT_API_KEY", "\"${convertApiKey}\"")
     }
 
 
