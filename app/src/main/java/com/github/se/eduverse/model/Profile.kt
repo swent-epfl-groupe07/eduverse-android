@@ -8,5 +8,15 @@ data class Profile(
     val publications: List<Publication> = emptyList(),
     val favoritePublications: List<Publication> = emptyList(),
     val profileImageUrl: String = "",
-    val isFollowedByCurrentUser: Boolean = false // New field
+    val isFollowedByCurrentUser: Boolean = false,
+    val profileType: ProfileType = ProfileType.STUDENT,
+    val address: String? = null,
+    val phoneNumber: String? = null,
+    val subjects: List<String>? = null
 )
+
+enum class ProfileType {
+    STUDENT,
+    TEACHER,
+    SCHOOL
+}

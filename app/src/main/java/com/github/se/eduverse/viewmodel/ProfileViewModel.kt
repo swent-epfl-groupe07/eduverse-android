@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.Profile
+import com.github.se.eduverse.model.ProfileType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
 import com.google.firebase.auth.FirebaseAuth
