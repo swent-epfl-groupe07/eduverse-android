@@ -16,6 +16,7 @@ import com.github.se.eduverse.ui.converter.PdfConverterOption
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -120,6 +121,7 @@ class PdfConverterViewModel(
               PdfConverterOption.NONE ->
                   throw Exception("No converter option selected") // Should never happen
             }
+            delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
             // Simulate a delay to show the progress indicator(for testing purposes)
             currentFile?.let { file ->
               _pdfGenerationState.value = PdfGenerationState.Success(file)
