@@ -27,6 +27,10 @@ jobs:
         run: |
           echo $DATA | base64 -di > app/google-services.json
 
+      - name: Get local.properties from secrets
+        run:
+          echo "${{secrets.LOCAL_PROPERTIES }}" > $GITHUB_WORKSPACE/local.properties
+
       - name: Prepare Custom Keystore
         env:
           BASE64_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

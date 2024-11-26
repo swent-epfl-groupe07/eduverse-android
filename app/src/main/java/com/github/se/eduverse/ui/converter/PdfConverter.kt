@@ -120,7 +120,7 @@ fun PdfConverterScreen(
                         icon = Icons.Default.PictureAsPdf,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.DOCUMENT_TO_PDF
-                          Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
+                          filePickerLauncher.launch(arrayOf("*/*"))
                         },
                         optionEnabled =
                             pdfConversionState.value ==
