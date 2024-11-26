@@ -30,8 +30,17 @@ class NotificationRepositoryTest {
 
   private val notifAut = NotifAuthorizations(true, true)
 
-  private val scheduled =
+  private val task =
       Scheduled("id", ScheduledType.TASK, Calendar.getInstance(), 7, "taskId", "ownerId", "name")
+  private val event =
+      Scheduled(
+          id = "test_id",
+          type = ScheduledType.EVENT,
+          start = Calendar.getInstance(),
+          length = 0,
+          content = "",
+          ownerId = "",
+          name = "Test Event")
 
   @Before
   fun setup() {
@@ -58,12 +67,26 @@ class NotificationRepositoryTest {
   }
 
   @Test
-  fun scheduleNotificationEnqueuesWorkWhenDelayIsPositive() {
+  fun notificationDoesNotEnqueuesWhenNotEnabled() {
     // Arrange
-    scheduled.start.add(Calendar.MINUTE, 1)
+    notifAut.taskEnabled = false
+    notifAut.eventEnabled = false
 
     // Act
-    repository.scheduleNotification(scheduled)
+    repository.scheduleNotification(task)
+    repository.scheduleNotification(event)
+
+    // Assert
+    verifyNoInteractions(mockWorkManager)
+  }
+
+  @Test
+  fun scheduleNotificationEnqueuesWorkWhenDelayIsPositive() {
+    // Arrange
+    task.start.add(Calendar.MINUTE, 2)
+
+    // Act
+    repository.scheduleNotification(task)
 
     // Assert
     verify(mockWorkManager).enqueue(any<WorkRequest>())
@@ -72,10 +95,10 @@ class NotificationRepositoryTest {
   @Test
   fun scheduleNotificationLogsWarningWhenDelayIsNegative() {
     // Arrange
-    scheduled.start.add(Calendar.MINUTE, -1)
+    task.start.add(Calendar.MINUTE, -1)
 
     // Act
-    repository.scheduleNotification(scheduled)
+    repository.scheduleNotification(task)
 
     // Assert
     verify(mockWorkManager, never()).enqueue(any<WorkRequest>())
@@ -84,16 +107,16 @@ class NotificationRepositoryTest {
   @Test
   fun cancelNotificationCancelsWorkByTag() {
     // Act
-    repository.cancelNotification(scheduled)
+    repository.cancelNotification(task)
 
     // Assert
-    verify(mockWorkManager).cancelAllWorkByTag(eq(scheduled.id))
+    verify(mockWorkManager).cancelAllWorkByTag(eq(task.id))
   }
 
   @Test
   fun createTitleReturnsCorrectTitleForTASKType() {
     // Act
-    val title = repository.createTitle(scheduled)
+    val title = repository.createTitle(task)
 
     // Assert
     assertEquals("It's time to start working on task: name", title)
@@ -101,17 +124,6 @@ class NotificationRepositoryTest {
 
   @Test
   fun createTitleReturnsCorrectTitleForEVENTType() {
-    // Arrange
-    val event =
-        Scheduled(
-            id = "test_id",
-            type = ScheduledType.EVENT,
-            start = Calendar.getInstance(),
-            length = 0,
-            content = "",
-            ownerId = "",
-            name = "Test Event")
-
     // Act
     val title = repository.createTitle(event)
 
@@ -122,7 +134,7 @@ class NotificationRepositoryTest {
   @Test
   fun createContentReturnsCorrectTitleForTASKType() {
     // Act
-    val content = repository.createContent(scheduled)
+    val content = repository.createContent(task)
 
     // Assert
     assert(content.contains("Task name scheduled from "))
@@ -131,17 +143,6 @@ class NotificationRepositoryTest {
 
   @Test
   fun createContentReturnsCorrectTitleForEVENTType() {
-    // Arrange
-    val event =
-        Scheduled(
-            id = "test_id",
-            type = ScheduledType.EVENT,
-            start = Calendar.getInstance(),
-            length = 0,
-            content = "",
-            ownerId = "",
-            name = "Test Event")
-
     // Act
     val content = repository.createContent(event)
 

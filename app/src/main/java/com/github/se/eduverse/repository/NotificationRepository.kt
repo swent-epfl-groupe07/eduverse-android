@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 // Parameter authorizations is not used for now, it is here to make the class easier to upgrade
 open class NotificationRepository(
     context: Context,
-    val autorizations: NotifAuthorizations,
+    val authorizations: NotifAuthorizations,
     val workManager: WorkManager = WorkManager.getInstance(context)
 ) {
   /**
@@ -33,6 +33,11 @@ open class NotificationRepository(
    *   should appear
    */
   open fun scheduleNotification(scheduled: Scheduled, timeBefore: Int = 1) {
+    if (scheduled.type == ScheduledType.TASK && !authorizations.taskEnabled ||
+        scheduled.type == ScheduledType.EVENT && !authorizations.eventEnabled) {
+      return
+    }
+
     cancelNotification(scheduled)
 
     val delay =
