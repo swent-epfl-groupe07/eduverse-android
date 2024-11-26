@@ -35,6 +35,8 @@ interface PdfRepository {
   fun readTextFromPdfFile(pdfUri: Uri?, context: Context, limit: Int = 0): String
 
   fun writeTextToPdf(text: String): PdfDocument
+
+  fun getTempFileFromUri(uri: Uri?, context: Context): File
 }
 
 class PdfRepositoryImpl : PdfRepository {
@@ -126,7 +128,7 @@ class PdfRepositoryImpl : PdfRepository {
       onFailure: (e: Exception) -> Unit
   ) {
     try {
-      val file = createUniqueFile(destinationDirectory, pdfFileName + ".pdf")
+      val file = createUniqueFile(destinationDirectory, "$pdfFileName.pdf")
       pdfFile.copyTo(file)
       deleteTempPdfFile(pdfFile)
       onSuccess(file)
@@ -249,6 +251,27 @@ class PdfRepositoryImpl : PdfRepository {
       return pdfDocument
     } catch (e: Exception) {
       Log.e("writeTextToPdf", "Failed to write text to pdf", e)
+      throw e
+    }
+  }
+
+  /**
+   * Get a temporary file from the given URI
+   *
+   * @param uri The URI of the file to get
+   * @param context The context of the application
+   * @return The temporary file created from the URI
+   * @throws Exception If an error occurs during the process
+   */
+  override fun getTempFileFromUri(uri: Uri?, context: Context): File {
+    try {
+      val inputStream = context.contentResolver.openInputStream(uri!!)
+      val documentType = uri.path?.substringAfterLast(".") ?: ""
+      val tempFile = File.createTempFile("tempDocument", ".$documentType")
+      tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
+      return tempFile
+    } catch (e: Exception) {
+      Log.e("getTempFileFromUri", "Failed to get temp file from uri", e)
       throw e
     }
   }

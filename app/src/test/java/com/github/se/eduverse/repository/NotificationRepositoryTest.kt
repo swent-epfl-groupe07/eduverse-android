@@ -8,7 +8,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.testing.TestWorkerBuilder
-import com.github.se.eduverse.model.NotifAutorizations
+import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.Calendar
@@ -28,10 +28,19 @@ class NotificationRepositoryTest {
   private lateinit var notificationManager: NotificationManager
   private lateinit var notificationWorker: NotificationWorker
 
-  private val notifAut = NotifAutorizations(true, true)
+  private val notifAut = NotifAuthorizations(true, true)
 
-  private val scheduled =
+  private val task =
       Scheduled("id", ScheduledType.TASK, Calendar.getInstance(), 7, "taskId", "ownerId", "name")
+  private val event =
+      Scheduled(
+          id = "test_id",
+          type = ScheduledType.EVENT,
+          start = Calendar.getInstance(),
+          length = 0,
+          content = "",
+          ownerId = "",
+          name = "Test Event")
 
   @Before
   fun setup() {
@@ -58,12 +67,26 @@ class NotificationRepositoryTest {
   }
 
   @Test
-  fun scheduleNotificationEnqueuesWorkWhenDelayIsPositive() {
+  fun notificationDoesNotEnqueuesWhenNotEnabled() {
     // Arrange
-    scheduled.start.add(Calendar.MINUTE, 1)
+    notifAut.taskEnabled = false
+    notifAut.eventEnabled = false
 
     // Act
-    repository.scheduleNotification(scheduled)
+    repository.scheduleNotification(task)
+    repository.scheduleNotification(event)
+
+    // Assert
+    verifyNoInteractions(mockWorkManager)
+  }
+
+  @Test
+  fun scheduleNotificationEnqueuesWorkWhenDelayIsPositive() {
+    // Arrange
+    task.start.add(Calendar.MINUTE, 2)
+
+    // Act
+    repository.scheduleNotification(task)
 
     // Assert
     verify(mockWorkManager).enqueue(any<WorkRequest>())
@@ -72,10 +95,10 @@ class NotificationRepositoryTest {
   @Test
   fun scheduleNotificationLogsWarningWhenDelayIsNegative() {
     // Arrange
-    scheduled.start.add(Calendar.MINUTE, -1)
+    task.start.add(Calendar.MINUTE, -1)
 
     // Act
-    repository.scheduleNotification(scheduled)
+    repository.scheduleNotification(task)
 
     // Assert
     verify(mockWorkManager, never()).enqueue(any<WorkRequest>())
@@ -84,39 +107,48 @@ class NotificationRepositoryTest {
   @Test
   fun cancelNotificationCancelsWorkByTag() {
     // Act
-    repository.cancelNotification(scheduled)
+    repository.cancelNotification(task)
 
     // Assert
-    verify(mockWorkManager).cancelAllWorkByTag(any())
+    verify(mockWorkManager).cancelAllWorkByTag(eq(task.id))
   }
 
   @Test
   fun createTitleReturnsCorrectTitleForTASKType() {
     // Act
-    val title = repository.createTitle(scheduled)
+    val title = repository.createTitle(task)
 
     // Assert
-    assertEquals("You should start working on a task.", title)
+    assertEquals("It's time to start working on task: name", title)
   }
 
   @Test
   fun createTitleReturnsCorrectTitleForEVENTType() {
-    // Arrange
-    val event =
-        Scheduled(
-            id = "test_id",
-            type = ScheduledType.EVENT,
-            start = Calendar.getInstance(),
-            length = 0,
-            content = "",
-            ownerId = "",
-            name = "Test Event")
-
     // Act
     val title = repository.createTitle(event)
 
     // Assert
-    assertEquals("An event is about to begin !", title)
+    assertEquals("Event Test Event is about to begin !", title)
+  }
+
+  @Test
+  fun createContentReturnsCorrectTitleForTASKType() {
+    // Act
+    val content = repository.createContent(task)
+
+    // Assert
+    assert(content.contains("Task name scheduled from "))
+    assert(content.contains(" to"))
+  }
+
+  @Test
+  fun createContentReturnsCorrectTitleForEVENTType() {
+    // Act
+    val content = repository.createContent(event)
+
+    // Assert
+    assert(content.contains("Event Test Event scheduled from "))
+    assert(content.contains(" to"))
   }
 
   @Test
@@ -131,9 +163,10 @@ class NotificationRepositoryTest {
     val title = "Test Title"
     val text = "Test Description"
     val id = "Scheduled Id"
+    val channel = "task_channel"
 
     // Call showNotification directly
-    notificationWorker.showNotification(title, text, id, notificationManager)
+    notificationWorker.showNotification(title, text, id, channel, notificationManager)
 
     // Verify that the notification was created
     verify(notificationManager).createNotificationChannel(any())

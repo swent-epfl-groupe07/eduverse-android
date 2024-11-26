@@ -7,11 +7,13 @@ import android.net.Uri
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import java.io.File
+import junit.framework.TestCase
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,13 +31,16 @@ class PdfConverterInstrumentationTest {
   private lateinit var openAiRepository: OpenAiRepository
   private lateinit var context: Context
   private lateinit var pdfConverterViewModel: PdfConverterViewModel
+  private lateinit var convertApiRepository: ConvertApiRepository
 
   @Before
   fun setUp() {
     context = ApplicationProvider.getApplicationContext()
     pdfRepository = PdfRepositoryImpl()
     openAiRepository = OpenAiRepository(OkHttpClient())
-    pdfConverterViewModel = PdfConverterViewModel(pdfRepository, openAiRepository)
+    convertApiRepository = ConvertApiRepository(OkHttpClient())
+    pdfConverterViewModel =
+        PdfConverterViewModel(pdfRepository, openAiRepository, convertApiRepository)
   }
 
   @Test
@@ -163,5 +168,18 @@ class PdfConverterInstrumentationTest {
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
     assertEquals(text.replace(" ", ""), extractedText.replace(" ", ""))
     pdfFile.delete()
+  }
+
+  @Test
+  fun testGetTempFileFromUri() {
+    val tempFile = File.createTempFile("test", ".docx")
+    val uri = Uri.fromFile(tempFile)
+
+    val result = pdfRepository.getTempFileFromUri(uri, context)
+
+    TestCase.assertTrue(result.exists())
+    TestCase.assertTrue(result.name.endsWith(".docx"))
+    tempFile.delete()
+    result.delete()
   }
 }

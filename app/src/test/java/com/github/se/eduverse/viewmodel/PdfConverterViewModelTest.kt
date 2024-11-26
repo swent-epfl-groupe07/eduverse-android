@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.ui.converter.PdfConverterOption
@@ -35,6 +36,7 @@ class PdfConverterViewModelTest {
   private lateinit var file: File
   private lateinit var openAiRepository: OpenAiRepository
   private lateinit var pdfDocument: PdfDocument
+  private lateinit var convertApiRepository: ConvertApiRepository
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -46,7 +48,8 @@ class PdfConverterViewModelTest {
     uri = mock(Uri::class.java)
     file = mock(File::class.java)
     openAiRepository = mock(OpenAiRepository::class.java)
-    viewModel = PdfConverterViewModel(pdfRepository, openAiRepository)
+    convertApiRepository = mock(ConvertApiRepository::class.java)
+    viewModel = PdfConverterViewModel(pdfRepository, openAiRepository, convertApiRepository)
     pdfDocument = mock(PdfDocument::class.java)
     `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
     `when`(pdfRepository.readTextFromPdfFile(uri, context, viewModel.MAX_SUMMARY_INPUT_SIZE))
@@ -96,9 +99,13 @@ class PdfConverterViewModelTest {
 
   @Test
   fun `test generatePdf with DOCUMENT_TO_PDF option`() = runTest {
+    val document = mock(File::class.java)
+    `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(document)
+    `when`(convertApiRepository.convertToPdf(any(), any())).thenReturn(file)
+    viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.DOCUMENT_TO_PDF)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    verify(convertApiRepository).convertToPdf(eq(document), eq("test"))
   }
 
   @Test

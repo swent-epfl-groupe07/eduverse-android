@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
@@ -150,7 +151,7 @@ class TimeTableViewModelTest {
     timeTableViewModel.getWeek()
     timeTableViewModel.addScheduled(scheduled2)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
-    verify(1) { notificationRepository.scheduleNotification(any()) }
+    verify(1) { notificationRepository.scheduleNotification(any(), eq(1)) }
   }
 
   @Test
@@ -163,7 +164,7 @@ class TimeTableViewModelTest {
     timeTableViewModel.updateScheduled(scheduled2.apply { name = "newName" })
     assertEquals("newName", scheduled2.name)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
-    verify(1) { notificationRepository.scheduleNotification(any()) }
+    verify(1) { notificationRepository.scheduleNotification(any(), eq(1)) }
   }
 
   @Test

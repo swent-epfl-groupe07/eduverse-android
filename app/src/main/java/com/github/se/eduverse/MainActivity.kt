@@ -24,10 +24,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.github.se.eduverse.model.NotifAutorizations
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
+import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.NotificationRepository
@@ -55,6 +55,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
@@ -176,7 +177,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifAutorisations = NotifAutorizations(true, true)
+  val notifAutorisations = NotifAuthorizations(true, true)
   val notifRepo = NotificationRepository(LocalContext.current, notifAutorisations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
@@ -276,6 +277,28 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
         }
       }
     }
+
+    composable(
+        route = Screen.FOLLOWERS.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+          FollowListScreen(
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              userId = userId,
+              isFollowersList = true)
+        }
+
+    composable(
+        route = Screen.FOLLOWING.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+          FollowListScreen(
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              userId = userId,
+              isFollowersList = false)
+        }
 
     navigation(
         startDestination = Screen.PROFILE,
