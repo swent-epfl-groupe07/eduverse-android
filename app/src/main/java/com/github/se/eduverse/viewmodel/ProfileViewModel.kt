@@ -230,7 +230,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun resetUsernameState() {
+  open fun resetUsernameState() {
     _usernameState.value = UsernameUpdateState.Idle
   }
 
