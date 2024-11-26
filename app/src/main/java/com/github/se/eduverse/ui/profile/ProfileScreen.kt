@@ -57,8 +57,8 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     userId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
-    var showUsernameDialog by remember { mutableStateOf(false) }
-    val usernameState by viewModel.usernameState.collectAsState()
+  var showUsernameDialog by remember { mutableStateOf(false) }
+  val usernameState by viewModel.usernameState.collectAsState()
   var selectedTab by remember { mutableStateOf(0) }
   val uiState by viewModel.profileState.collectAsState()
   val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
@@ -78,65 +78,56 @@ fun ProfileScreen(
     viewModel.loadLikedPublications(userId)
   }
 
-    if (showUsernameDialog) {
-        UsernameEditDialog(
-            onDismiss = {
-                showUsernameDialog = false
-                // Reset username state when dialog is dismissed
-                viewModel.resetUsernameState()
-            },
-            onSubmit = { newUsername ->
-                viewModel.updateUsername(userId, newUsername)
-            },
-            currentUsername = (uiState as? ProfileUiState.Success)?.profile?.username ?: "",
-            usernameState = usernameState,
-            onSuccess = {
-                showUsernameDialog = false
-                // Reset username state after successful update
-                viewModel.resetUsernameState()
-            }
-        )
-    }
+  if (showUsernameDialog) {
+    UsernameEditDialog(
+        onDismiss = {
+          showUsernameDialog = false
+          // Reset username state when dialog is dismissed
+          viewModel.resetUsernameState()
+        },
+        onSubmit = { newUsername -> viewModel.updateUsername(userId, newUsername) },
+        currentUsername = (uiState as? ProfileUiState.Success)?.profile?.username ?: "",
+        usernameState = usernameState,
+        onSuccess = {
+          showUsernameDialog = false
+          // Reset username state after successful update
+          viewModel.resetUsernameState()
+        })
+  }
 
   Scaffold(
       modifier = Modifier.testTag("profile_screen_container"),
       topBar = {
-          TopAppBar(
-              title = {
-                  when (uiState) {
-                      is ProfileUiState.Success -> {
-                          Row(
-                              verticalAlignment = Alignment.CenterVertically,
-                              modifier = Modifier.clickable { showUsernameDialog = true }
-                          ) {
-                              Text(
-                                  text = (uiState as ProfileUiState.Success).profile.username,
-                                  modifier = Modifier.testTag("profile_username")
-                              )
-                              IconButton(
-                                  onClick = { showUsernameDialog = true },
-                                  modifier = Modifier.testTag("edit_username_button")
-                              ) {
-                                  Icon(
-                                      imageVector = Icons.Default.Edit,
-                                      contentDescription = "Edit username",
-                                      modifier = Modifier.size(16.dp)
-                                  )
-                              }
-                          }
+        TopAppBar(
+            title = {
+              when (uiState) {
+                is ProfileUiState.Success -> {
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier = Modifier.clickable { showUsernameDialog = true }) {
+                        Text(
+                            text = (uiState as ProfileUiState.Success).profile.username,
+                            modifier = Modifier.testTag("profile_username"))
+                        IconButton(
+                            onClick = { showUsernameDialog = true },
+                            modifier = Modifier.testTag("edit_username_button")) {
+                              Icon(
+                                  imageVector = Icons.Default.Edit,
+                                  contentDescription = "Edit username",
+                                  modifier = Modifier.size(16.dp))
+                            }
                       }
-                      else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
-                  }
-              },
-              actions = {
-                  IconButton(
-                      onClick = { navigationActions.navigateTo(Screen.SETTING) },
-                      modifier = Modifier.testTag("settings_button")
-                  ) {
-                      Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
-                  }
+                }
+                else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
               }
-          )
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.SETTING) },
+                  modifier = Modifier.testTag("settings_button")) {
+                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                  }
+            })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -489,7 +480,6 @@ private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
   }
 }
 
-
 @Composable
 private fun UsernameEditDialog(
     onDismiss: () -> Unit,
@@ -498,88 +488,77 @@ private fun UsernameEditDialog(
     usernameState: UsernameUpdateState,
     onSuccess: () -> Unit
 ) {
-    var username by remember { mutableStateOf(currentUsername) }
-    var isError by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
+  var username by remember { mutableStateOf(currentUsername) }
+  var isError by remember { mutableStateOf(false) }
+  var errorMessage by remember { mutableStateOf("") }
 
-    // Handle success state
-    LaunchedEffect(usernameState) {
-        if (usernameState is UsernameUpdateState.Success) {
-            onSuccess()
-        }
+  // Handle success state
+  LaunchedEffect(usernameState) {
+    if (usernameState is UsernameUpdateState.Success) {
+      onSuccess()
     }
+  }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .testTag("username_edit_dialog"),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Edit Username",
-                    style = MaterialTheme.typography.titleLarge
-                )
+  Dialog(onDismissRequest = onDismiss) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface) {
+          Column(
+              modifier = Modifier.padding(16.dp).testTag("username_edit_dialog"),
+              verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(text = "Edit Username", style = MaterialTheme.typography.titleLarge)
 
                 OutlinedTextField(
                     value = username,
                     onValueChange = {
-                        username = it
-                        isError = false
-                        errorMessage = ""
+                      username = it
+                      isError = false
+                      errorMessage = ""
                     },
                     label = { Text("Username") },
                     isError = isError || usernameState is UsernameUpdateState.Error,
-                    supportingText = when {
-                        isError -> { { Text(errorMessage, color = MaterialTheme.colorScheme.error) } }
-                        usernameState is UsernameUpdateState.Error -> {
+                    supportingText =
+                        when {
+                          isError -> {
+                            { Text(errorMessage, color = MaterialTheme.colorScheme.error) }
+                          }
+                          usernameState is UsernameUpdateState.Error -> {
                             { Text(usernameState.message, color = MaterialTheme.colorScheme.error) }
-                        }
-                        else -> null
-                    },
+                          }
+                          else -> null
+                        },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth())
 
                 when (usernameState) {
-                    is UsernameUpdateState.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                    }
-                    else -> {}
+                  is UsernameUpdateState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.CenterHorizontally))
+                  }
+                  else -> {}
                 }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.testTag("cancel_button")
-                    ) {
-                        Text("Cancel")
+                    verticalAlignment = Alignment.CenterVertically) {
+                      TextButton(
+                          onClick = onDismiss, modifier = Modifier.testTag("cancel_button")) {
+                            Text("Cancel")
+                          }
+                      Spacer(modifier = Modifier.width(8.dp))
+                      Button(
+                          onClick = { onSubmit(username) },
+                          modifier = Modifier.testTag("submit_button"),
+                          enabled =
+                              username != currentUsername &&
+                                  username.isNotBlank() &&
+                                  usernameState !is UsernameUpdateState.Loading) {
+                            Text("Save")
+                          }
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { onSubmit(username) },
-                        modifier = Modifier.testTag("submit_button"),
-                        enabled = username != currentUsername &&
-                                username.isNotBlank() &&
-                                usernameState !is UsernameUpdateState.Loading
-                    ) {
-                        Text("Save")
-                    }
-                }
-            }
+              }
         }
-    }
+  }
 }
