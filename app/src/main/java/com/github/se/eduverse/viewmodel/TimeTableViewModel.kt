@@ -20,7 +20,7 @@ class TimeTableViewModel(
     val timeTableRepository: TimeTableRepository,
     val notificationRepository: NotificationRepository,
     val auth: FirebaseAuth
-): ViewModel() {
+) : ViewModel() {
   private val _currentWeek =
       MutableStateFlow(
           Calendar.getInstance().apply {

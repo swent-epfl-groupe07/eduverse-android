@@ -27,8 +27,6 @@ import androidx.navigation.navigation
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.model.NotificationType
-import com.github.se.eduverse.model.Scheduled
-import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.NotificationRepository
@@ -95,17 +93,15 @@ class MainActivity : ComponentActivity() {
 
     val notificationData =
         if (intent.getBooleanExtra("isNotification", false)) {
-            try {
-                NotificationData(
-                    isNotification = true,
-                    notificationType = NotificationType.valueOf(
-                        intent.getStringExtra("type") ?: "DEFAULT"
-                    ),
-                    objectId = intent.getStringExtra("objectId")
-                )
-            } catch (e: Exception) {
-                NotificationData(false)
-            }
+          try {
+            NotificationData(
+                isNotification = true,
+                notificationType =
+                    NotificationType.valueOf(intent.getStringExtra("type") ?: "DEFAULT"),
+                objectId = intent.getStringExtra("objectId"))
+          } catch (e: Exception) {
+            NotificationData(false)
+          }
         } else {
           NotificationData(false)
         }
@@ -197,10 +193,12 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
-    notificationData.viewModel = when (notificationData.notificationType) {
+  notificationData.viewModel =
+      when (notificationData.notificationType) {
         NotificationType.SCHEDULED -> timeTableViewModel
-        NotificationType.DEFAULT, null -> null
-    }
+        NotificationType.DEFAULT,
+        null -> null
+      }
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(

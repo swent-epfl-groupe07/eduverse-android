@@ -35,10 +35,9 @@ class LoadingTest : TestCase() {
     navigationActions = NavigationActions(navController)
 
     composeTestRule.setContent {
-      LoadingScreen(navigationActions = navigationActions, NotificationData(
-          false,
-          NotificationType.SCHEDULED
-      ))
+      LoadingScreen(
+          navigationActions = navigationActions,
+          NotificationData(false, NotificationType.SCHEDULED))
     }
   }
 

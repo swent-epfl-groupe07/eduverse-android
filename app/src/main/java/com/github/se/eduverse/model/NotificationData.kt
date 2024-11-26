@@ -17,44 +17,44 @@ data class NotificationData(
     val objectId: String? = null,
     var viewModel: ViewModel? = null
 ) {
-    /**
-     * Navigate to the correct screen according to the data. If anything goes wrong, navigates
-     * to the dashboard screen.
-     */
-    suspend fun open(
-        navigationActions: NavigationActions
-    ) {
-        when (notificationType) {
-            NotificationType.SCHEDULED -> {
-                if (viewModel == null) navigationActions.navigateTo(Route.DASHBOARD)
-                val timeTableViewModel = viewModel as TimeTableViewModel
+  /**
+   * Navigate to the correct screen according to the data. If anything goes wrong, navigates to the
+   * dashboard screen.
+   */
+  suspend fun open(navigationActions: NavigationActions) {
+    when (notificationType) {
+      NotificationType.SCHEDULED -> {
+        if (viewModel == null) navigationActions.navigateTo(Route.DASHBOARD)
+        val timeTableViewModel = viewModel as TimeTableViewModel
 
-                var scheduled: Scheduled? = null
-                if (objectId != null) {
-                    scheduled = timeTableViewModel.getScheduledById(objectId)
-                }
-                timeTableViewModel.opened = scheduled
-
-                when (scheduled?.type) {
-                    ScheduledType.TASK -> {
-                        navigationActions.navigateTo(Screen.DETAILS_TASKS)
-                    }
-                    ScheduledType.EVENT -> {
-                        navigationActions.navigateTo(Screen.DETAILS_EVENT)
-                    }
-                    else -> { // scheduled is null
-                        navigationActions.navigateTo(Route.DASHBOARD)
-                    }
-                }
-            }
-            NotificationType.DEFAULT, null -> {
-                navigationActions.navigateTo(Route.DASHBOARD)
-            }
+        var scheduled: Scheduled? = null
+        if (objectId != null) {
+          scheduled = timeTableViewModel.getScheduledById(objectId)
         }
+        timeTableViewModel.opened = scheduled
+
+        when (scheduled?.type) {
+          ScheduledType.TASK -> {
+            navigationActions.navigateTo(Screen.DETAILS_TASKS)
+          }
+          ScheduledType.EVENT -> {
+            navigationActions.navigateTo(Screen.DETAILS_EVENT)
+          }
+          else -> { // scheduled is null
+            navigationActions.navigateTo(Route.DASHBOARD)
+          }
+        }
+      }
+      NotificationType.DEFAULT,
+      null -> {
+        navigationActions.navigateTo(Route.DASHBOARD)
+      }
     }
+  }
 }
 
 enum class NotificationType {
-    SCHEDULED, // Not TASK and EVENT because when creating the notification, we only have the object ID
-    DEFAULT // Will open the app on the dashboard menu
+  SCHEDULED, // Not TASK and EVENT because when creating the notification, we only have the object
+             // ID
+  DEFAULT // Will open the app on the dashboard menu
 }
