@@ -230,6 +230,10 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
+  fun resetUsernameState() {
+    _usernameState.value = UsernameUpdateState.Idle
+  }
+
   open suspend fun getFollowers(userId: String): List<Profile> {
     return try {
       repository.getFollowers(userId)
