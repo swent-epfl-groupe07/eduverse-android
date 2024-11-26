@@ -55,6 +55,6 @@ data class NotificationData(
 
 enum class NotificationType {
   SCHEDULED, // Not TASK and EVENT because when creating the notification, we only have the object
-             // ID
+  // ID
   DEFAULT // Will open the app on the dashboard menu
 }
