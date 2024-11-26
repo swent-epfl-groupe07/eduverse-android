@@ -26,6 +26,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.NotificationData
+import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
@@ -94,7 +95,17 @@ class MainActivity : ComponentActivity() {
 
     val notificationData =
         if (intent.getBooleanExtra("isNotification", false)) {
-          NotificationData(true, intent.getStringExtra("scheduledId"))
+            try {
+                NotificationData(
+                    isNotification = true,
+                    notificationType = NotificationType.valueOf(
+                        intent.getStringExtra("type") ?: "DEFAULT"
+                    ),
+                    objectId = intent.getStringExtra("objectId")
+                )
+            } catch (e: Exception) {
+                NotificationData(false)
+            }
         } else {
           NotificationData(false)
         }
@@ -177,8 +188,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifAutorisations = NotifAuthorizations(true, true)
-  val notifRepo = NotificationRepository(LocalContext.current, notifAutorisations)
+  val notifAuthorisations = NotifAuthorizations(true, true)
+  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorisations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
@@ -186,21 +197,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
-  notificationData.onOpen = {
-    var scheduled: Scheduled? = null
-    if (notificationData.objectId != null) {
-      scheduled = timeTableViewModel.getScheduledById(notificationData.objectId)
+    notificationData.viewModel = when (notificationData.notificationType) {
+        NotificationType.SCHEDULED -> timeTableViewModel
+        NotificationType.DEFAULT, null -> null
     }
-    timeTableViewModel.opened = scheduled
-
-    if (scheduled?.type == ScheduledType.TASK) {
-      navigationActions.navigateTo(Screen.DETAILS_TASKS)
-    } else if (scheduled?.type == ScheduledType.EVENT) {
-      navigationActions.navigateTo(Screen.DETAILS_EVENT)
-    } else { // scheduled is null
-      navigationActions.navigateTo(Route.DASHBOARD)
-    }
-  }
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(

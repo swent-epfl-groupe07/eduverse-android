@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.github.se.eduverse.MainActivity
 import com.github.se.eduverse.model.NotifAuthorizations
+import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInMin
@@ -55,8 +56,9 @@ open class NotificationRepository(
                   workDataOf(
                       "title" to createTitle(scheduled),
                       "description" to createContent(scheduled),
-                      "channelId" to "task_channel",
-                      "scheduledId" to scheduled.id))
+                      "type" to NotificationType.SCHEDULED.name,
+                      "objectId" to scheduled.id,
+                      "channelId" to "task_channel"))
               .build()
 
       workManager.enqueue(workRequest)
@@ -113,10 +115,11 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
   override fun doWork(): Result {
     val title = inputData.getString("title") ?: "Reminder"
     val description = inputData.getString("description") ?: "No details"
-    val scheduledId = inputData.getString("scheduledId")
+    val type = inputData.getString("type") ?: NotificationType.DEFAULT.name
+    val objectId = inputData.getString("objectId")
     val channelId = inputData.getString("channelId") ?: "default_channel"
 
-    showNotification(title, description, scheduledId, channelId)
+    showNotification(title, description, type, objectId, channelId)
     return Result.success()
   }
 
@@ -131,7 +134,8 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
   fun showNotification(
       title: String,
       text: String,
-      scheduledId: String?,
+      notificationType: String,
+      objectId: String?,
       channelId: String,
       notificationManager: NotificationManager =
           applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -156,7 +160,8 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
         Intent(applicationContext, MainActivity::class.java).apply {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
           putExtra("isNotification", true)
-          putExtra("scheduledId", scheduledId)
+          putExtra("notificationType", notificationType)
+          putExtra("objectId", objectId)
         }
 
     // Create the PendingIntent

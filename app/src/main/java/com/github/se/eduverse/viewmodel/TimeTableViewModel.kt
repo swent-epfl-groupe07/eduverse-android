@@ -1,6 +1,7 @@
 package com.github.se.eduverse.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.ViewModel
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.WeeklyTable
 import com.github.se.eduverse.model.daysInWeek
@@ -19,7 +20,7 @@ class TimeTableViewModel(
     val timeTableRepository: TimeTableRepository,
     val notificationRepository: NotificationRepository,
     val auth: FirebaseAuth
-) {
+): ViewModel() {
   private val _currentWeek =
       MutableStateFlow(
           Calendar.getInstance().apply {

@@ -43,7 +43,7 @@ fun LoadingScreen(navigationActions: NavigationActions, notificationData: Notifi
     if (auth.currentUser != null) {
       if (notificationData.isNotification) {
         notificationData.isNotification = false // To avoid being unable to go back
-        notificationData.onOpen()
+        notificationData.open(navigationActions)
       } else {
         navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
       }
