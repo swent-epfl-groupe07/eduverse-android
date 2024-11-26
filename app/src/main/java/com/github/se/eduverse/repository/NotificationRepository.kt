@@ -13,6 +13,8 @@ import androidx.work.workDataOf
 import com.github.se.eduverse.model.NotifAutorizations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 // Parameter authorizations is not used for now, it is here to make the class easier to upgrade
@@ -37,7 +39,8 @@ open class NotificationRepository(
               .setInitialDelay(delay, TimeUnit.MILLISECONDS)
               .addTag(scheduled.id)
               .setInputData(
-                  workDataOf("title" to createTitle(scheduled), "description" to scheduled.name))
+                  workDataOf(
+                      "title" to createTitle(scheduled), "description" to createContent(scheduled)))
               .build()
 
       workManager.enqueue(workRequest)
@@ -62,9 +65,27 @@ open class NotificationRepository(
    */
   fun createTitle(scheduled: Scheduled): String {
     if (scheduled.type == ScheduledType.TASK) {
-      return "You should start working on a task."
+      return "It's time to start working on task: ${scheduled.name}"
     } else {
-      return "An event is about to begin !"
+      return "Event ${scheduled.name} is about to begin !"
+    }
+  }
+
+  /**
+   * Create a description depending on the type of the scheduled
+   *
+   * @param scheduled the scheduled
+   */
+  open fun createContent(scheduled: Scheduled): String {
+    val start = scheduled.start
+    val end = (start.clone() as Calendar).apply { timeInMillis += scheduled.length }
+    val formatter = SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT)
+    if (scheduled.type == ScheduledType.TASK) {
+      return "Task ${scheduled.name} scheduled from ${formatter.format(start.time)}" +
+          " to ${formatter.format(end.time)}"
+    } else {
+      return "Event ${scheduled.name} scheduled from ${formatter.format(start.time)}" +
+          " to ${formatter.format(end.time)}"
     }
   }
 }

@@ -96,7 +96,7 @@ class NotificationRepositoryTest {
     val title = repository.createTitle(scheduled)
 
     // Assert
-    assertEquals("You should start working on a task.", title)
+    assertEquals("It's time to start working on task: name", title)
   }
 
   @Test
@@ -116,7 +116,38 @@ class NotificationRepositoryTest {
     val title = repository.createTitle(event)
 
     // Assert
-    assertEquals("An event is about to begin !", title)
+    assertEquals("Event Test Event is about to begin !", title)
+  }
+
+  @Test
+  fun createContentReturnsCorrectTitleForTASKType() {
+    // Act
+    val content = repository.createContent(scheduled)
+
+    // Assert
+    assert(content.contains("Task name scheduled from "))
+    assert(content.contains(" to"))
+  }
+
+  @Test
+  fun createContentReturnsCorrectTitleForEVENTType() {
+    // Arrange
+    val event =
+        Scheduled(
+            id = "test_id",
+            type = ScheduledType.EVENT,
+            start = Calendar.getInstance(),
+            length = 0,
+            content = "",
+            ownerId = "",
+            name = "Test Event")
+
+    // Act
+    val content = repository.createContent(event)
+
+    // Assert
+    assert(content.contains("Event Test Event scheduled from "))
+    assert(content.contains(" to"))
   }
 
   @Test
