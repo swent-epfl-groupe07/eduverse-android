@@ -13,6 +13,7 @@ import androidx.work.workDataOf
 import com.github.se.eduverse.model.NotifAutorizations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
+import com.github.se.eduverse.model.millisecInMin
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -24,14 +25,18 @@ open class NotificationRepository(
     val workManager: WorkManager = WorkManager.getInstance(context)
 ) {
   /**
-   * Prepare a notification for an event or a task
+   * Prepare a notification for an event or a task. Notification will appear a variable number of
+   * minutes before the starting time
    *
    * @param scheduled the event/task scheduled
+   * @param timeBefore the number of minute before the start of the task/event the notification
+   *   should appear
    */
-  open fun scheduleNotification(scheduled: Scheduled) {
+  open fun scheduleNotification(scheduled: Scheduled, timeBefore: Int = 1) {
     cancelNotification(scheduled)
 
-    val delay = scheduled.start.timeInMillis - System.currentTimeMillis()
+    val delay =
+        scheduled.start.timeInMillis - System.currentTimeMillis() - timeBefore * millisecInMin
 
     if (delay > 0) {
       val workRequest =
