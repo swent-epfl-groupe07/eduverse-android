@@ -8,7 +8,6 @@ import androidx.navigation.NavHostController
 import androidx.test.espresso.intent.Intents
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.model.NotificationData
-import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
@@ -35,9 +34,7 @@ class LoadingTest : TestCase() {
     navigationActions = NavigationActions(navController)
 
     composeTestRule.setContent {
-      LoadingScreen(
-          navigationActions = navigationActions,
-          NotificationData(false, NotificationType.SCHEDULED))
+      LoadingScreen(navigationActions = navigationActions, NotificationData(false))
     }
   }
 

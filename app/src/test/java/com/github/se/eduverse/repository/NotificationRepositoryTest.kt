@@ -9,6 +9,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.testing.TestWorkerBuilder
 import com.github.se.eduverse.model.NotifAuthorizations
+import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.Calendar
@@ -162,11 +163,12 @@ class NotificationRepositoryTest {
   fun showNotificationCreatesNotification() {
     val title = "Test Title"
     val text = "Test Description"
+    val type = NotificationType.SCHEDULED.name
     val id = "Scheduled Id"
     val channel = "task_channel"
 
     // Call showNotification directly
-    notificationWorker.showNotification(title, text, id, channel, notificationManager)
+    notificationWorker.showNotification(title, text, type, id, channel, notificationManager)
 
     // Verify that the notification was created
     verify(notificationManager).createNotificationChannel(any())
