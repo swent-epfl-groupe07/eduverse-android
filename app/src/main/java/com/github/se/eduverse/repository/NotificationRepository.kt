@@ -10,7 +10,7 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.github.se.eduverse.model.NotifAutorizations
+import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInMin
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 // Parameter authorizations is not used for now, it is here to make the class easier to upgrade
 open class NotificationRepository(
     context: Context,
-    val autorizations: NotifAutorizations,
+    val autorizations: NotifAuthorizations,
     val workManager: WorkManager = WorkManager.getInstance(context)
 ) {
   /**

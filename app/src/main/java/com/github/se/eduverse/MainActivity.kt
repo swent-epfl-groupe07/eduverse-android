@@ -24,7 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.github.se.eduverse.model.NotifAutorizations
+import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.NotificationRepository
@@ -171,7 +171,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifAutorisations = NotifAutorizations(true, true)
+  val notifAutorisations = NotifAuthorizations(true, true)
   val notifRepo = NotificationRepository(LocalContext.current, notifAutorisations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =

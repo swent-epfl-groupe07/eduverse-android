@@ -8,7 +8,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.testing.TestWorkerBuilder
-import com.github.se.eduverse.model.NotifAutorizations
+import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import java.util.Calendar
@@ -28,7 +28,7 @@ class NotificationRepositoryTest {
   private lateinit var notificationManager: NotificationManager
   private lateinit var notificationWorker: NotificationWorker
 
-  private val notifAut = NotifAutorizations(true, true)
+  private val notifAut = NotifAuthorizations(true, true)
 
   private val scheduled =
       Scheduled("id", ScheduledType.TASK, Calendar.getInstance(), 7, "taskId", "ownerId", "name")
