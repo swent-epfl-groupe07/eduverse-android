@@ -87,7 +87,7 @@ class NotificationRepositoryTest {
     repository.cancelNotification(scheduled)
 
     // Assert
-    verify(mockWorkManager).cancelAllWorkByTag(any())
+    verify(mockWorkManager).cancelAllWorkByTag(eq(scheduled.id))
   }
 
   @Test
@@ -161,9 +161,10 @@ class NotificationRepositoryTest {
   fun showNotificationCreatesNotification() {
     val title = "Test Title"
     val text = "Test Description"
+    val channel = "task_channel"
 
     // Call showNotification directly
-    notificationWorker.showNotification(title, text, notificationManager)
+    notificationWorker.showNotification(title, text, channel, notificationManager)
 
     // Verify that the notification was created
     verify(notificationManager).createNotificationChannel(any())

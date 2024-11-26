@@ -40,7 +40,9 @@ open class NotificationRepository(
               .addTag(scheduled.id)
               .setInputData(
                   workDataOf(
-                      "title" to createTitle(scheduled), "description" to createContent(scheduled)))
+                      "title" to createTitle(scheduled),
+                      "description" to createContent(scheduled),
+                      "channelId" to "task_channel"))
               .build()
 
       workManager.enqueue(workRequest)
@@ -97,8 +99,9 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
   override fun doWork(): Result {
     val title = inputData.getString("title") ?: "Reminder"
     val description = inputData.getString("description") ?: "No details"
+    val channelId = inputData.getString("channelId") ?: "default_channel"
 
-    showNotification(title, description)
+    showNotification(title, description, channelId)
     return Result.success()
   }
 
@@ -107,20 +110,29 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
    *
    * @param title the title of the notification
    * @param text the text of the notification
+   * @param channelId the channel in which the notification will be showed
    * @param notificationManager dependency injection for testing purpose
    */
   fun showNotification(
       title: String,
       text: String,
+      channelId: String,
       notificationManager: NotificationManager =
           applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
   ) {
-    val channelId = "task_channel"
-
     // Create Notification Channel (Android 8.0+)
     val channel =
-        NotificationChannel(channelId, "Task Notifications", NotificationManager.IMPORTANCE_HIGH)
-            .apply { description = "Notifications for scheduled tasks" }
+        when (channelId) {
+          "task_channel" ->
+              NotificationChannel(
+                      channelId, "Task Notifications", NotificationManager.IMPORTANCE_HIGH)
+                  .apply { description = "Notifications for scheduled tasks" }
+          else ->
+              NotificationChannel(
+                      channelId, "Eduverse Notifications", NotificationManager.IMPORTANCE_HIGH)
+                  .apply { description = "Notifications from unknown source" }
+        }
+
     notificationManager.createNotificationChannel(channel)
 
     val notification =
