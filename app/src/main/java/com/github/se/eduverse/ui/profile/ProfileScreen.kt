@@ -80,12 +80,21 @@ fun ProfileScreen(
 
     if (showUsernameDialog) {
         UsernameEditDialog(
-            onDismiss = { showUsernameDialog = false },
+            onDismiss = {
+                showUsernameDialog = false
+                // Reset username state when dialog is dismissed
+                viewModel.resetUsernameState()
+            },
             onSubmit = { newUsername ->
                 viewModel.updateUsername(userId, newUsername)
             },
             currentUsername = (uiState as? ProfileUiState.Success)?.profile?.username ?: "",
-            usernameState = usernameState
+            usernameState = usernameState,
+            onSuccess = {
+                showUsernameDialog = false
+                // Reset username state after successful update
+                viewModel.resetUsernameState()
+            }
         )
     }
 
@@ -486,11 +495,19 @@ private fun UsernameEditDialog(
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
     currentUsername: String,
-    usernameState: UsernameUpdateState
+    usernameState: UsernameUpdateState,
+    onSuccess: () -> Unit
 ) {
     var username by remember { mutableStateOf(currentUsername) }
     var isError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+
+    // Handle success state
+    LaunchedEffect(usernameState) {
+        if (usernameState is UsernameUpdateState.Success) {
+            onSuccess()
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -519,10 +536,14 @@ private fun UsernameEditDialog(
                         errorMessage = ""
                     },
                     label = { Text("Username") },
-                    isError = isError,
-                    supportingText = if (isError) {
-                        { Text(errorMessage, color = MaterialTheme.colorScheme.error) }
-                    } else null,
+                    isError = isError || usernameState is UsernameUpdateState.Error,
+                    supportingText = when {
+                        isError -> { { Text(errorMessage, color = MaterialTheme.colorScheme.error) } }
+                        usernameState is UsernameUpdateState.Error -> {
+                            { Text(usernameState.message, color = MaterialTheme.colorScheme.error) }
+                        }
+                        else -> null
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -532,18 +553,6 @@ private fun UsernameEditDialog(
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
-                    }
-                    is UsernameUpdateState.Error -> {
-                        Text(
-                            text = usernameState.message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    is UsernameUpdateState.Success -> {
-                        LaunchedEffect(Unit) {
-                            onDismiss()
-                        }
                     }
                     else -> {}
                 }
@@ -563,7 +572,9 @@ private fun UsernameEditDialog(
                     Button(
                         onClick = { onSubmit(username) },
                         modifier = Modifier.testTag("submit_button"),
-                        enabled = username != currentUsername && username.isNotBlank()
+                        enabled = username != currentUsername &&
+                                username.isNotBlank() &&
+                                usernameState !is UsernameUpdateState.Loading
                     ) {
                         Text("Save")
                     }
