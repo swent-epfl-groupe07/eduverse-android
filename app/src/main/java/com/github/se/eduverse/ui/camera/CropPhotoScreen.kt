@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
@@ -43,166 +44,185 @@ fun CropPhotoScreen(
     photoViewModel: PhotoViewModel,
     navigationActions: NavigationActions
 ) {
-
   val originalBitmap = adjustImageRotation(BitmapFactory.decodeFile(photoFile.path)).asImageBitmap()
   val auth = FirebaseAuth.getInstance()
   val ownerId = auth.currentUser?.uid ?: "anonymous"
-
   val path = "photos/$ownerId/${System.currentTimeMillis()}.jpg"
 
-  // Define corner points for crop area
-  var topLeft by remember { mutableStateOf(Offset(100f, 100f)) }
-  var topRight by remember { mutableStateOf(Offset(500f, 100f)) }
-  var bottomLeft by remember { mutableStateOf(Offset(100f, 500f)) }
-  var bottomRight by remember { mutableStateOf(Offset(500f, 500f)) }
-
-  // Calculate scale factor based on displayed image and original image dimensions
   val context = LocalContext.current
-  val displayMetrics = context.resources.displayMetrics
-  val displayWidth = displayMetrics.widthPixels
-  val displayHeight =
-      (displayWidth * (originalBitmap.height / originalBitmap.width.toFloat())).toInt()
 
-  val scaleFactorX = originalBitmap.width / displayWidth.toFloat()
-  val scaleFactorY = originalBitmap.height / displayHeight.toFloat()
+  // Variables to hold the actual size of the Image composable
+  var imageWidth by remember { mutableStateOf(0f) }
+  var imageHeight by remember { mutableStateOf(0f) }
 
-  // UI Layout for cropping screen
-  Box(
-      modifier =
-          Modifier.fillMaxSize()
-              .background(Color(0xFFEBF1F4)) // Set background color to #EBF1F4
-              .padding(8.dp)) {
-        // Display the original photo in the background
-        Image(
-            bitmap = originalBitmap,
-            contentDescription = "Photo to Crop",
-            contentScale = ContentScale.Crop, // Ensures the image fills the box, cropping as needed
-            modifier =
-                Modifier.fillMaxWidth()
-                    .fillMaxHeight(0.9f) // Makes the image take up full screen height and width
-                    .clip(RoundedCornerShape(12.dp)) // Rounded corners if desired
-                    .background(Color.LightGray)
-                    .testTag("cropImage"))
+  // Corner points for crop area
+  var topLeft by remember { mutableStateOf(Offset.Zero) }
+  var topRight by remember { mutableStateOf(Offset.Zero) }
+  var bottomLeft by remember { mutableStateOf(Offset.Zero) }
+  var bottomRight by remember { mutableStateOf(Offset.Zero) }
 
-        val topLimit = -100f // Example threshold in pixels from the top
+  Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEBF1F4)).padding(8.dp)) {
+    Image(
+        bitmap = originalBitmap,
+        contentDescription = "Photo to Crop",
+        contentScale = ContentScale.FillBounds,
+        modifier =
+            Modifier.fillMaxWidth()
+                .fillMaxHeight(0.9f)
+                .onSizeChanged {
+                  imageWidth = it.width.toFloat()
+                  imageHeight = it.height.toFloat()
+                }
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.LightGray)
+                .testTag("cropImage"))
 
-        Canvas(
-            modifier =
-                Modifier.fillMaxWidth().fillMaxHeight(0.9f).align(Alignment.Center).pointerInput(
-                    Unit) {
-                      detectDragGestures { change, dragAmount ->
-                        // Move the angle
-                        val position = change.position
-                        when {
-                          // For the top left corner, lock vertical movement above the topLimit
-                          position.isNear(topLeft) -> {
-                            val newTopLeftY = (topLeft + dragAmount).y.coerceAtLeast(topLimit)
-                            topLeft = Offset(topLeft.x + dragAmount.x, newTopLeftY)
-                            bottomLeft = Offset(topLeft.x, bottomRight.y)
-                            topRight = Offset(topRight.x, newTopLeftY) // Keep the top side level
-                          }
-                          // For the top right corner, lock vertical movement above the topLimit
-                          position.isNear(topRight) -> {
-                            val newTopRightY = (topRight + dragAmount).y.coerceAtLeast(topLimit)
-                            topRight = Offset(topRight.x + dragAmount.x, newTopRightY)
-                            bottomRight = Offset(topRight.x, bottomLeft.y)
-                            topLeft = Offset(topLeft.x, newTopRightY) // Keep the top side level
-                          }
-                          // For bottom left, allow unrestricted movement and keep left side level
-                          position.isNear(bottomLeft) -> {
-                            bottomLeft += dragAmount
-                            bottomRight = Offset(topRight.x, bottomLeft.y)
-                            topLeft = Offset(bottomLeft.x, topLeft.y)
-                          }
-                          // For bottom right, allow unrestricted movement and keep right side level
-                          position.isNear(bottomRight) -> {
-                            bottomRight += dragAmount
-                            topRight = Offset(bottomRight.x, topRight.y)
-                            bottomLeft = Offset(topLeft.x, bottomRight.y)
-                          }
-                        }
-                      }
-                    }) {
-              // Draw the crop area lines
-              drawLine(Color.White, topLeft, topRight, strokeWidth = 4.dp.toPx())
-              drawLine(Color.White, topRight, bottomRight, strokeWidth = 4.dp.toPx())
-              drawLine(Color.White, bottomRight, bottomLeft, strokeWidth = 4.dp.toPx())
-              drawLine(Color.White, bottomLeft, topLeft, strokeWidth = 4.dp.toPx())
+    // Initialize corner points after image dimensions are known
+    LaunchedEffect(imageWidth, imageHeight) {
+      if (imageWidth > 0f && imageHeight > 0f) {
+        topLeft = Offset(imageWidth * 0.2f, imageHeight * 0.2f)
+        topRight = Offset(imageWidth * 0.8f, imageHeight * 0.2f)
+        bottomLeft = Offset(imageWidth * 0.2f, imageHeight * 0.8f)
+        bottomRight = Offset(imageWidth * 0.8f, imageHeight * 0.8f)
+      }
+    }
 
-              // Draw corner "angle" handles
-              drawCornerHandle(topLeft, "topLeft")
-              drawCornerHandle(topRight, "topRight")
-              drawCornerHandle(bottomLeft, "bottomLeft")
-              drawCornerHandle(bottomRight, "bottomRight")
-            }
+    Canvas(
+        modifier =
+            Modifier.fillMaxWidth()
+                .fillMaxHeight(0.9f)
+                // .align(Alignment.Center)
+                .pointerInput(Unit) {
+                  detectDragGestures { change, dragAmount ->
+                    val position = change.position
 
-        // Save and Cancel buttons
-        Row(
-            modifier =
-                Modifier.align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 32.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-              Button(
-                  onClick = {
-                    // Set the amount of right shift (you can change this value to control the
-                    // shift)
-                    val xOffset =
-                        134f // Change this value to adjust how much you want to shift the crop area
-                    // to the right
-                    val yOffset = (displayHeight * 0.1f) / 2 // Y-axis offset remains unchanged
-
-                    // Adjust the top-left and bottom-right coordinates by adding the xOffset
-                    val mappedTopLeft =
-                        Offset(
-                            (topLeft.x + xOffset) * scaleFactorX, // Apply the right shift here
-                            (topLeft.y - yOffset) * scaleFactorY)
-                    val mappedBottomRight =
-                        Offset(
-                            (bottomRight.x + xOffset) * scaleFactorX, // Apply the right shift here
-                            (bottomRight.y - yOffset) * scaleFactorY)
-
-                    val cropRect =
-                        Rect(
-                            mappedTopLeft.x.toInt().coerceIn(0, originalBitmap.width),
-                            mappedTopLeft.y.toInt().coerceIn(0, originalBitmap.height),
-                            mappedBottomRight.x.toInt().coerceIn(0, originalBitmap.width),
-                            mappedBottomRight.y.toInt().coerceIn(0, originalBitmap.height))
-                    // Ensure the crop rectangle has a positive width and height
-                    if (cropRect.width() > 0 && cropRect.height() > 0) {
-                      val croppedBitmap = cropBitmap(originalBitmap, cropRect)
-                      saveCroppedImage(croppedBitmap, photoFile)
-                      val croppedImageBitmap = croppedBitmap.asImageBitmap()
-                      val byteArray = imageBitmapToByteArray(croppedImageBitmap)
-                      val photo = Photo(ownerId, byteArray, path)
-                      photoViewModel.savePhoto(photo)
-                      navigationActions.goBack()
-                      navigationActions.goBack()
-                    } else {
-                      // Show a toast message if the crop area is invalid
-                      Toast.makeText(context, "Cannot make this crop", Toast.LENGTH_SHORT).show()
+                    fun restrictOffset(
+                        offset: Offset,
+                        minX: Float,
+                        maxX: Float,
+                        minY: Float,
+                        maxY: Float
+                    ): Offset {
+                      return Offset(
+                          x = offset.x.coerceIn(minX, maxX), y = offset.y.coerceIn(minY, maxY))
                     }
-                  },
-                  modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
-                  shape = RoundedCornerShape(8.dp)) {
-                    Text(
-                        text = "Save",
-                        style =
-                            TextStyle(
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight(500),
-                                color = Color(0xFF4A4459)),
-                        modifier = Modifier.padding(horizontal = 8.dp))
-                  }
 
-              Button(
-                  onClick = { navigationActions.goBack() }, // Callback to go back without saving
-                  modifier = Modifier.weight(1f).height(56.dp).testTag("cancelButton"),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC6D3E1)),
-                  shape = RoundedCornerShape(8.dp),
-              ) {
+                    val minX = 0f
+                    val maxX = imageWidth
+                    val minY = 0f
+                    val maxY = imageHeight
+
+                    when {
+                      position.isNear(topLeft) -> {
+                        val newTopLeft = topLeft + dragAmount
+                        topLeft =
+                            restrictOffset(
+                                newTopLeft, minX, topRight.x - 50f, minY, bottomLeft.y - 50f)
+                        bottomLeft = bottomLeft.copy(x = topLeft.x)
+                        topRight = topRight.copy(y = topLeft.y)
+                      }
+                      position.isNear(topRight) -> {
+                        val newTopRight = topRight + dragAmount
+                        topRight =
+                            restrictOffset(
+                                newTopRight, topLeft.x + 50f, maxX, minY, bottomRight.y - 50f)
+                        bottomRight = bottomRight.copy(x = topRight.x)
+                        topLeft = topLeft.copy(y = topRight.y)
+                      }
+                      position.isNear(bottomLeft) -> {
+                        val newBottomLeft = bottomLeft + dragAmount
+                        bottomLeft =
+                            restrictOffset(
+                                newBottomLeft, minX, bottomRight.x - 50f, topLeft.y + 50f, maxY)
+                        topLeft = topLeft.copy(x = bottomLeft.x)
+                        bottomRight = bottomRight.copy(y = bottomLeft.y)
+                      }
+                      position.isNear(bottomRight) -> {
+                        val newBottomRight = bottomRight + dragAmount
+                        bottomRight =
+                            restrictOffset(
+                                newBottomRight, bottomLeft.x + 50f, maxX, topRight.y + 50f, maxY)
+                        topRight = topRight.copy(x = bottomRight.x)
+                        bottomLeft = bottomLeft.copy(y = bottomRight.y)
+                      }
+                    }
+                  }
+                }) {
+          drawLine(Color.White, topLeft, topRight, strokeWidth = 4.dp.toPx())
+          drawLine(Color.White, topRight, bottomRight, strokeWidth = 4.dp.toPx())
+          drawLine(Color.White, bottomRight, bottomLeft, strokeWidth = 4.dp.toPx())
+          drawLine(Color.White, bottomLeft, topLeft, strokeWidth = 4.dp.toPx())
+
+          drawCornerHandle(topLeft, "topLeft")
+          drawCornerHandle(topRight, "topRight")
+          drawCornerHandle(bottomLeft, "bottomLeft")
+          drawCornerHandle(bottomRight, "bottomRight")
+        }
+
+    Row(
+        modifier =
+            Modifier.align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+          Button(
+              onClick = {
+                val cropRect =
+                    Rect(
+                        topLeft.x.toInt(),
+                        topLeft.y.toInt(),
+                        bottomRight.x.toInt(),
+                        bottomRight.y.toInt())
+
+                if (cropRect.width() > 0 && cropRect.height() > 0) {
+                  // Calculate scaling factors using actual image dimensions
+                  val widthScale = originalBitmap.width.toFloat() / imageWidth
+                  val heightScale = originalBitmap.height.toFloat() / imageHeight
+
+                  // Calculate adjusted coordinates
+                  val adjustedLeft = (cropRect.left * widthScale).toInt()
+                  val adjustedTop = (cropRect.top * heightScale).toInt()
+                  val adjustedWidth = (cropRect.width() * widthScale).toInt()
+                  val adjustedHeight = (cropRect.height() * heightScale).toInt()
+
+                  // Create the cropped bitmap with bounds checking
+                  val croppedBitmap =
+                      Bitmap.createBitmap(
+                          originalBitmap.asAndroidBitmap(),
+                          adjustedLeft.coerceIn(0, originalBitmap.width - 1),
+                          adjustedTop.coerceIn(0, originalBitmap.height - 1),
+                          adjustedWidth.coerceAtMost(originalBitmap.width - adjustedLeft),
+                          adjustedHeight.coerceAtMost(originalBitmap.height - adjustedTop))
+
+                  saveCroppedImage(croppedBitmap, photoFile)
+                  val croppedImageBitmap = croppedBitmap.asImageBitmap()
+                  val byteArray = imageBitmapToByteArray(croppedImageBitmap)
+                  val photo = Photo(ownerId, byteArray, path)
+                  photoViewModel.savePhoto(photo)
+                  navigationActions.goBack()
+                  navigationActions.goBack()
+                } else {
+                  Toast.makeText(context, "Cannot make this crop", Toast.LENGTH_SHORT).show()
+                }
+              },
+              modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF37CED5)),
+              shape = RoundedCornerShape(8.dp)) {
+                Text(
+                    text = "Save",
+                    style =
+                        TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight(500),
+                            color = Color(0xFF4A4459)),
+                    modifier = Modifier.padding(horizontal = 8.dp))
+              }
+
+          Button(
+              onClick = { navigationActions.goBack() },
+              modifier = Modifier.weight(1f).height(56.dp).testTag("cancelButton"),
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC6D3E1)),
+              shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Cancel",
                     style =
@@ -212,8 +232,8 @@ fun CropPhotoScreen(
                             color = Color(0xFF4A4459)),
                     modifier = Modifier.padding(horizontal = 8.dp))
               }
-            }
-      }
+        }
+  }
 }
 
 private fun Offset.isNear(target: Offset, threshold: Float = 150f): Boolean {
