@@ -6,6 +6,7 @@ import com.github.se.eduverse.model.WeeklyTable
 import com.github.se.eduverse.model.daysInWeek
 import com.github.se.eduverse.model.emptyWeeklyTable
 import com.github.se.eduverse.model.millisecInDay
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
@@ -14,7 +15,11 @@ import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth: FirebaseAuth) {
+class TimeTableViewModel(
+    val timeTableRepository: TimeTableRepository,
+    val notificationRepository: NotificationRepository,
+    val auth: FirebaseAuth
+) {
   private val _currentWeek =
       MutableStateFlow(
           Calendar.getInstance().apply {
@@ -94,6 +99,8 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
               currentTime += millisecInDay
             }
           }
+
+          notificationRepository.scheduleNotification(scheduled)
         },
         { Log.e("TimeTableViewModel", "Exception $it while trying to schedule an event") })
   }
@@ -113,6 +120,8 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
                     .map { if (it.id == scheduled.id) scheduled else it }
                     .sortedBy { it.start.timeInMillis }
               }
+
+          notificationRepository.scheduleNotification(scheduled)
         },
         { Log.e("TimeTableViewModel", "Exception $it while trying to modify a scheduled event") })
   }
@@ -125,7 +134,10 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
   fun deleteScheduled(scheduled: Scheduled) {
     timeTableRepository.deleteScheduled(
         scheduled,
-        { _table.value = _table.value.map { innerList -> innerList - scheduled } },
+        {
+          _table.value = _table.value.map { innerList -> innerList - scheduled }
+          notificationRepository.cancelNotification(scheduled)
+        },
         { Log.e("TimeTableViewModel", "Exception $it while trying to delete a scheduled event") })
   }
 
