@@ -2,6 +2,7 @@ package com.github.se.eduverse
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -81,6 +82,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import kotlinx.serialization.json.Json
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -106,6 +108,17 @@ class MainActivity : ComponentActivity() {
           NotificationData(false)
         }
 
+    val sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+
+    // Retrieve the saved instance or use default
+    val json = sharedPreferences.getString("notifAuthKey", null)
+    val notifAuthorizations =
+        if (json != null) {
+          Json.decodeFromString<NotifAuthorizations>(json)
+        } else {
+          NotifAuthorizations(true, true) // Default value
+        }
+
     // Handling camera and microphone permissions
     val requestPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -120,7 +133,10 @@ class MainActivity : ComponentActivity() {
           setContent {
             EduverseTheme {
               Surface(modifier = Modifier.fillMaxSize()) {
-                EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
+                EduverseApp(
+                    cameraPermissionGranted = cameraPermissionGranted,
+                    notificationData,
+                    notifAuthorizations)
               }
             }
           }
@@ -151,7 +167,10 @@ class MainActivity : ComponentActivity() {
       setContent {
         EduverseTheme {
           Surface(modifier = Modifier.fillMaxSize()) {
-            EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
+            EduverseApp(
+                cameraPermissionGranted = cameraPermissionGranted,
+                notificationData,
+                notifAuthorizations)
           }
         }
       }
@@ -164,7 +183,11 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: NotificationData) {
+fun EduverseApp(
+    cameraPermissionGranted: Boolean,
+    notificationData: NotificationData,
+    notifAuthorizations: NotifAuthorizations
+) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -184,8 +207,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifAuthorisations = NotifAuthorizations(true, true)
-  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorisations)
+  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorizations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
