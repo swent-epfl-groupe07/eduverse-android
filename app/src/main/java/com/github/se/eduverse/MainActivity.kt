@@ -25,6 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.se.eduverse.model.NotifAuthorizations
+import com.github.se.eduverse.model.NotificationData
+import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.NotificationRepository
@@ -89,6 +91,21 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+    val notificationData =
+        if (intent.getBooleanExtra("isNotification", false)) {
+          try {
+            NotificationData(
+                isNotification = true,
+                notificationType =
+                    NotificationType.valueOf(intent.getStringExtra("type") ?: "DEFAULT"),
+                objectId = intent.getStringExtra("objectId"))
+          } catch (e: Exception) {
+            NotificationData(false)
+          }
+        } else {
+          NotificationData(false)
+        }
+
     // Handling camera and microphone permissions
     val requestPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -103,9 +120,7 @@ class MainActivity : ComponentActivity() {
           setContent {
             EduverseTheme {
               Surface(modifier = Modifier.fillMaxSize()) {
-                EduverseApp(
-                    cameraPermissionGranted = cameraPermissionGranted,
-                )
+                EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
               }
             }
           }
@@ -136,9 +151,7 @@ class MainActivity : ComponentActivity() {
       setContent {
         EduverseTheme {
           Surface(modifier = Modifier.fillMaxSize()) {
-            EduverseApp(
-                cameraPermissionGranted = cameraPermissionGranted,
-            )
+            EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
           }
         }
       }
@@ -151,7 +164,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean) {
+fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: NotificationData) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -171,8 +184,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifAutorisations = NotifAuthorizations(true, true)
-  val notifRepo = NotificationRepository(LocalContext.current, notifAutorisations)
+  val notifAuthorisations = NotifAuthorizations(true, true)
+  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorisations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
@@ -180,12 +193,19 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
+  notificationData.viewModel =
+      when (notificationData.notificationType) {
+        NotificationType.SCHEDULED -> timeTableViewModel
+        NotificationType.DEFAULT,
+        null -> null
+      }
+
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
     ) {
-      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+      composable(Screen.LOADING) { LoadingScreen(navigationActions, notificationData) }
     }
 
     navigation(

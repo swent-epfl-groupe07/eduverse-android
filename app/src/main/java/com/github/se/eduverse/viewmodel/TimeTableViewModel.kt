@@ -1,6 +1,7 @@
 package com.github.se.eduverse.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.ViewModel
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.WeeklyTable
 import com.github.se.eduverse.model.daysInWeek
@@ -19,7 +20,7 @@ class TimeTableViewModel(
     val timeTableRepository: TimeTableRepository,
     val notificationRepository: NotificationRepository,
     val auth: FirebaseAuth
-) {
+) : ViewModel() {
   private val _currentWeek =
       MutableStateFlow(
           Calendar.getInstance().apply {
@@ -48,6 +49,15 @@ class TimeTableViewModel(
         auth.currentUser!!.uid,
         { _table.value = buildWeekTable(it) },
         { Log.e("TimeTableViewModel", "Exception $it while trying to load data for the week") })
+  }
+
+  /**
+   * Return the scheduled with given id
+   *
+   * @param id the id of the scheduled
+   */
+  suspend fun getScheduledById(id: String): Scheduled {
+    return timeTableRepository.getScheduledById(id)
   }
 
   /**

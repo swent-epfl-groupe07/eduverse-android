@@ -2,7 +2,9 @@ package com.github.se.eduverse.repository
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.OneTimeWorkRequestBuilder
@@ -10,7 +12,9 @@ import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.github.se.eduverse.MainActivity
 import com.github.se.eduverse.model.NotifAuthorizations
+import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInMin
@@ -52,6 +56,8 @@ open class NotificationRepository(
                   workDataOf(
                       "title" to createTitle(scheduled),
                       "description" to createContent(scheduled),
+                      "type" to NotificationType.SCHEDULED.name,
+                      "objectId" to scheduled.id,
                       "channelId" to "task_channel"))
               .build()
 
@@ -109,9 +115,11 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
   override fun doWork(): Result {
     val title = inputData.getString("title") ?: "Reminder"
     val description = inputData.getString("description") ?: "No details"
+    val type = inputData.getString("type") ?: NotificationType.DEFAULT.name
+    val objectId = inputData.getString("objectId")
     val channelId = inputData.getString("channelId") ?: "default_channel"
 
-    showNotification(title, description, channelId)
+    showNotification(title, description, type, objectId, channelId)
     return Result.success()
   }
 
@@ -126,6 +134,8 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
   fun showNotification(
       title: String,
       text: String,
+      notificationType: String,
+      objectId: String?,
       channelId: String,
       notificationManager: NotificationManager =
           applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -145,12 +155,32 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
 
     notificationManager.createNotificationChannel(channel)
 
+    // Intent to open TaskDetailsActivity
+    val intent =
+        Intent(applicationContext, MainActivity::class.java).apply {
+          flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+          putExtra("isNotification", true)
+          putExtra("notificationType", notificationType)
+          putExtra("objectId", objectId)
+        }
+
+    // Create the PendingIntent
+    val pendingIntent =
+        PendingIntent.getActivity(
+            applicationContext,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
     val notification =
         NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
             .build()
 
     notificationManager.notify(System.currentTimeMillis().toInt(), notification)

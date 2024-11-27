@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.R
+import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
@@ -32,7 +33,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoadingScreen(navigationActions: NavigationActions) {
+fun LoadingScreen(navigationActions: NavigationActions, notificationData: NotificationData) {
 
   val auth = FirebaseAuth.getInstance()
 
@@ -40,7 +41,12 @@ fun LoadingScreen(navigationActions: NavigationActions) {
     delay(1300)
     // Wait for Firebase Auth to initialize
     if (auth.currentUser != null) {
-      navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
+      if (notificationData.isNotification) {
+        notificationData.isNotification = false // To avoid being unable to go back
+        notificationData.open(navigationActions)
+      } else {
+        navigationActions.navigateTo(TopLevelDestinations.DASHBOARD)
+      }
     } else {
       navigationActions.navigateTo(
           TopLevelDestination(route = Route.AUTH, icon = Icons.Outlined.AutoGraph, textId = "Auth"))

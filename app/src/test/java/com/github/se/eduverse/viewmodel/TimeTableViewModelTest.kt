@@ -9,13 +9,14 @@ import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 
 class TimeTableViewModelTest {
@@ -92,6 +93,12 @@ class TimeTableViewModelTest {
   fun getNewUidTest() {
     assertEquals("uid", timeTableViewModel.getNewUid())
     verify(timeTableRepository).getNewUid()
+  }
+
+  @Test
+  fun getScheduledByIdTest(): Unit = runBlocking {
+    timeTableViewModel.getScheduledById("")
+    verify(timeTableRepository).getScheduledById(eq(""))
   }
 
   @Test
