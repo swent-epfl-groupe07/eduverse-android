@@ -213,7 +213,7 @@ class PdfConverterInstrumentationTest {
           Uri.fromFile(imageFile),
           context,
           {},
-          { e -> assertEquals(Exception("No text found on image"), e) })
+          { e -> assertEquals("No text found on image", e.message) })
 
       imageFile.delete()
     }
