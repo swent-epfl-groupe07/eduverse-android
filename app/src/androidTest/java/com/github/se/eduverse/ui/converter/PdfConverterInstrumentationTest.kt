@@ -225,6 +225,6 @@ class PdfConverterInstrumentationTest {
         Uri.parse("invalid uri"),
         context,
         {},
-        { assertEquals(Exception("Failed to get image bitmap"), it) })
+        { assertEquals("Failed to get image bitmap", it.message) })
   }
 }
