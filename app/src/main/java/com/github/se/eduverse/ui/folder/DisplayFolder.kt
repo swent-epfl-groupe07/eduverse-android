@@ -58,6 +58,7 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.theme.blackTransparentButton
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +70,6 @@ fun FolderScreen(
   val activeFolder by folderViewModel.activeFolder.collectAsState()
 
   val context = LocalContext.current
-  val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var sorting by remember { mutableStateOf(false) }
   var deleteDialogOpen by remember { mutableStateOf(false) }
   var renameDialogOpen by remember { mutableStateOf(false) }
@@ -233,7 +233,12 @@ fun FolderScreen(
               trigger // Force recomposition by adding dependency on a state flow
 
               Button(
-                  onClick = { fileViewModel.openFile(it.fileId, context) },
+                  onClick = {
+                      it.lastAccess = Calendar.getInstance()
+                      it.numberAccess += 1
+                      folderViewModel.updateFolder(activeFolder!!)
+                      fileViewModel.openFile(it.fileId, context)
+                  },
                   modifier = Modifier.fillMaxWidth().padding(20.dp, 3.dp).testTag(it.name),
                   colors =
                       ButtonDefaults.buttonColors(

@@ -41,6 +41,7 @@ import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +51,6 @@ fun CreateFolderScreen(
     fileViewModel: FileViewModel
 ) {
   val context = LocalContext.current
-  val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
   var name by rememberSaveable { mutableStateOf("") }
   var files by rememberSaveable { mutableStateOf(emptyList<MyFile>()) }
   var deleteDialogOpen by remember { mutableStateOf(false) }
@@ -125,7 +125,12 @@ fun CreateFolderScreen(
             Column(modifier = Modifier.fillMaxHeight(0.65f)) {
               files.forEach {
                 Button(
-                    onClick = { fileViewModel.openFile(it.fileId, context) },
+                    onClick = {
+                        it.lastAccess = Calendar.getInstance()
+                        it.numberAccess += 1
+                        folderViewModel.updateFolder(folder)
+                        fileViewModel.openFile(it.fileId, context)
+                    },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).testTag("file"),
                     colors =
                         ButtonDefaults.buttonColors(
