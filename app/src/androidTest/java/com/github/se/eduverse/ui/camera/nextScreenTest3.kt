@@ -112,7 +112,7 @@ class NextScreenTest3 {
 
     var test = false
     val func = slot<(String, String, Folder) -> Unit>()
-    every { vViewModel.saveVideo(any(), folder1, capture(func)) } answers
+    every { vViewModel.saveVideo(any(), folder1, any(), capture(func)) } answers
         {
           test = true
           func.captured("id", "name", folder1)
