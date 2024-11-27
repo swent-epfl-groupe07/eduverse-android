@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -180,7 +181,12 @@ fun PicTakenScreen(
                     bitmap?.let {
                       val byteArray = imageBitmapToByteArray(it)
                       val photo = Photo(ownerId, byteArray, path)
-                      photoViewModel.savePhoto(photo)
+                      photoViewModel.savePhoto(
+                          photo,
+                          onSuccess = {
+                            Toast.makeText(context, "Video saved successfully", Toast.LENGTH_SHORT)
+                                .show()
+                          })
                       navigationActions.goBack()
                       navigationActions.goBack()
                     }
@@ -188,7 +194,12 @@ fun PicTakenScreen(
                     videoFile?.let {
                       val videoByteArray = it.readBytes() // Convert video file to byte array
                       val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                      videoViewModel.saveVideo(video)
+                      videoViewModel.saveVideo(
+                          video,
+                          onSuccess = {
+                            Toast.makeText(context, "Video saved successfully", Toast.LENGTH_SHORT)
+                                .show()
+                          })
                       navigationActions.goBack()
                       navigationActions.goBack()
                     }
