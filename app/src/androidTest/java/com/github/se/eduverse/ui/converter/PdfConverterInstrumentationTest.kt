@@ -5,8 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.core.graphics.drawable.toBitmap
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.R
 import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
@@ -181,5 +183,48 @@ class PdfConverterInstrumentationTest {
     TestCase.assertTrue(result.name.endsWith(".docx"))
     tempFile.delete()
     result.delete()
+  }
+
+  @Test
+  fun testExtractTextImage_onSuccess() {
+    val bitmap = context.resources.getDrawable(R.drawable.text_extraction).toBitmap()
+    val imageFile = File.createTempFile("test", ".png")
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, imageFile.outputStream())
+
+    pdfRepository.extractTextFromImage(
+        Uri.fromFile(imageFile),
+        context,
+        { assertEquals("This is a test image with text", it) },
+        {
+          assertTrue(false) // Fail the test if onFailure is called
+        })
+
+    imageFile.delete()
+  }
+
+  @Test
+  fun testExtractTextImage_onImageWithoutText() {
+    Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888).also {
+      it.eraseColor(0xFFFFFFFF.toInt())
+      val imageFile = File.createTempFile("test", ".png")
+      it.compress(Bitmap.CompressFormat.PNG, 100, imageFile.outputStream())
+
+      pdfRepository.extractTextFromImage(
+          Uri.fromFile(imageFile),
+          context,
+          {},
+          { e -> assertEquals(Exception("No text found on image"), e) })
+
+      imageFile.delete()
+    }
+  }
+
+  @Test
+  fun testExtractTextImage_onGetImageBitmapError() {
+    pdfRepository.extractTextFromImage(
+        Uri.parse("invalid uri"),
+        context,
+        {},
+        { assertEquals(Exception("Failed to get image bitmap"), it) })
   }
 }
