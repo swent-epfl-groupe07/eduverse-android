@@ -13,8 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -126,10 +124,10 @@ fun CreateFolderScreen(
               files.forEach {
                 Button(
                     onClick = {
-                        it.lastAccess = Calendar.getInstance()
-                        it.numberAccess += 1
-                        folderViewModel.updateFolder(folder)
-                        fileViewModel.openFile(it.fileId, context)
+                      it.lastAccess = Calendar.getInstance()
+                      it.numberAccess += 1
+                      folderViewModel.updateFolder(folder)
+                      fileViewModel.openFile(it.fileId, context)
                     },
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).testTag("file"),
                     colors =

@@ -27,8 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -234,10 +232,10 @@ fun FolderScreen(
 
               Button(
                   onClick = {
-                      it.lastAccess = Calendar.getInstance()
-                      it.numberAccess += 1
-                      folderViewModel.updateFolder(activeFolder!!)
-                      fileViewModel.openFile(it.fileId, context)
+                    it.lastAccess = Calendar.getInstance()
+                    it.numberAccess += 1
+                    folderViewModel.updateFolder(activeFolder!!)
+                    fileViewModel.openFile(it.fileId, context)
                   },
                   modifier = Modifier.fillMaxWidth().padding(20.dp, 3.dp).testTag(it.name),
                   colors =
