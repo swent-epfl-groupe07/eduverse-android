@@ -88,7 +88,7 @@ class NextScreenTest3 {
 
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    io.mockk.verify { vViewModel.saveVideo(any<Video>()) }
+    io.mockk.verify { vViewModel.saveVideo(any<Video>(), onSuccess = any()) }
 
     io.mockk.verify(exactly = 3) { navigationActions.goBack() }
   }

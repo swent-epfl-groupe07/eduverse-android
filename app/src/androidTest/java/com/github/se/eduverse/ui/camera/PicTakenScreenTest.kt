@@ -110,7 +110,7 @@ class PicTakenScreenTest {
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Verify if `viewModel.savePhoto()` is called with a `Photo` object
-    verify { pViewModel.savePhoto(any<Photo>()) }
+    verify { pViewModel.savePhoto(any<Photo>(), onSuccess = any()) }
 
     // Verify if `navigationActions.goBack()` is called twice
     verify(exactly = 2) { navigationActions.goBack() }
@@ -304,7 +304,7 @@ class PicTakenScreenTest {
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Verify that `videoViewModel.saveVideo` is called with a `Video` object
-    verify { vViewModel.saveVideo(any<Video>()) }
+    verify { vViewModel.saveVideo(any<Video>(), onSuccess = any()) }
 
     // Verify that `navigationActions.goBack()` is called twice after saving
     verify(exactly = 2) { navigationActions.goBack() }
