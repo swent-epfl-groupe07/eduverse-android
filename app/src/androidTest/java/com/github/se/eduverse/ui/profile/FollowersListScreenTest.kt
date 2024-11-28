@@ -195,8 +195,6 @@ class FollowListScreenTest {
     assert(fakeNavigationActions.lastNavigatedUserId == "1")
   }
 
-
-
   @Test
   fun verifyFollowButtonVisibility() {
     val followers =
@@ -229,11 +227,10 @@ class FollowListScreenTest {
     composeTestRule.onNodeWithTag("follow_button_1").assertExists()
   }
 
-
-
-    @Test
-    fun whenFollowActionSucceeds_updatesButtonStateWithoutRefresh() {
-        val initialFollowers = listOf(
+  @Test
+  fun whenFollowActionSucceeds_updatesButtonStateWithoutRefresh() {
+    val initialFollowers =
+        listOf(
             Profile(
                 id = "1",
                 username = "user1",
@@ -242,43 +239,36 @@ class FollowListScreenTest {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList()
-            )
-        )
-        fakeViewModel.setProfiles(initialFollowers)
+                favoritePublications = emptyList()))
+    fakeViewModel.setProfiles(initialFollowers)
 
-        composeTestRule.setContent {
-            FollowListScreen(
-                navigationActions = fakeNavigationActions,
-                viewModel = fakeViewModel,
-                userId = testUserId,
-                isFollowersList = true
-            )
-        }
-
-        // Verify initial "Follow Back" button state
-        composeTestRule.onNodeWithTag("follow_button_1")
-            .assertExists()
-            .assertTextContains("Follow Back")
-
-        // Simulate successful follow action
-        fakeViewModel.setFollowActionState(
-            FollowActionState.Success(
-                followerId = currentUserId,
-                targetUserId = "1",
-                isNowFollowing = true
-            )
-        )
-
-        // Verify button text changes to "Following"
-        composeTestRule.onNodeWithTag("follow_button_1")
-            .assertExists()
-            .assertTextContains("Following")
+    composeTestRule.setContent {
+      FollowListScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = testUserId,
+          isFollowersList = true)
     }
 
-    @Test
-    fun whenFollowActionLoading_showsLoadingIndicator() {
-        val followers = listOf(
+    // Verify initial "Follow Back" button state
+    composeTestRule
+        .onNodeWithTag("follow_button_1")
+        .assertExists()
+        .assertTextContains("Follow Back")
+
+    // Simulate successful follow action
+    fakeViewModel.setFollowActionState(
+        FollowActionState.Success(
+            followerId = currentUserId, targetUserId = "1", isNowFollowing = true))
+
+    // Verify button text changes to "Following"
+    composeTestRule.onNodeWithTag("follow_button_1").assertExists().assertTextContains("Following")
+  }
+
+  @Test
+  fun whenFollowActionLoading_showsLoadingIndicator() {
+    val followers =
+        listOf(
             Profile(
                 id = "1",
                 username = "user1",
@@ -287,34 +277,31 @@ class FollowListScreenTest {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList()
-            )
-        )
-        fakeViewModel.setProfiles(followers)
+                favoritePublications = emptyList()))
+    fakeViewModel.setProfiles(followers)
 
-        composeTestRule.setContent {
-            FollowListScreen(
-                navigationActions = fakeNavigationActions,
-                viewModel = fakeViewModel,
-                userId = testUserId,
-                isFollowersList = true
-            )
-        }
-
-        // Click follow button
-        composeTestRule.onNodeWithTag("follow_button_1").performClick()
-
-        // Set loading state
-        fakeViewModel.setFollowActionState(FollowActionState.Loading)
-
-        // Verify button is disabled during loading
-        composeTestRule.onNodeWithTag("follow_button_1")
-            .assertIsNotEnabled()
+    composeTestRule.setContent {
+      FollowListScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = testUserId,
+          isFollowersList = true)
     }
 
-    @Test
-    fun whenInFollowingList_showsAppropriateButtonStates() {
-        val following = listOf(
+    // Click follow button
+    composeTestRule.onNodeWithTag("follow_button_1").performClick()
+
+    // Set loading state
+    fakeViewModel.setFollowActionState(FollowActionState.Loading)
+
+    // Verify button is disabled during loading
+    composeTestRule.onNodeWithTag("follow_button_1").assertIsNotEnabled()
+  }
+
+  @Test
+  fun whenInFollowingList_showsAppropriateButtonStates() {
+    val following =
+        listOf(
             Profile(
                 id = "1",
                 username = "user1",
@@ -323,43 +310,33 @@ class FollowListScreenTest {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList()
-            )
-        )
-        fakeViewModel.setProfiles(following)
+                favoritePublications = emptyList()))
+    fakeViewModel.setProfiles(following)
 
-        composeTestRule.setContent {
-            FollowListScreen(
-                navigationActions = fakeNavigationActions,
-                viewModel = fakeViewModel,
-                userId = testUserId,
-                isFollowersList = false
-            )
-        }
-
-        // Verify initial "Following" button state
-        composeTestRule.onNodeWithTag("follow_button_1")
-            .assertExists()
-            .assertTextContains("Following")
-
-        // Simulate unfollow action
-        fakeViewModel.setFollowActionState(
-            FollowActionState.Success(
-                followerId = currentUserId,
-                targetUserId = "1",
-                isNowFollowing = false
-            )
-        )
-
-        // Verify button text changes to "Follow"
-        composeTestRule.onNodeWithTag("follow_button_1")
-            .assertExists()
-            .assertTextContains("Follow")
+    composeTestRule.setContent {
+      FollowListScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = testUserId,
+          isFollowersList = false)
     }
 
-    @Test
-    fun whenFollowActionFails_maintainsOriginalState() {
-        val followers = listOf(
+    // Verify initial "Following" button state
+    composeTestRule.onNodeWithTag("follow_button_1").assertExists().assertTextContains("Following")
+
+    // Simulate unfollow action
+    fakeViewModel.setFollowActionState(
+        FollowActionState.Success(
+            followerId = currentUserId, targetUserId = "1", isNowFollowing = false))
+
+    // Verify button text changes to "Follow"
+    composeTestRule.onNodeWithTag("follow_button_1").assertExists().assertTextContains("Follow")
+  }
+
+  @Test
+  fun whenFollowActionFails_maintainsOriginalState() {
+    val followers =
+        listOf(
             Profile(
                 id = "1",
                 username = "user1",
@@ -368,34 +345,30 @@ class FollowListScreenTest {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList()
-            )
-        )
-        fakeViewModel.setProfiles(followers)
+                favoritePublications = emptyList()))
+    fakeViewModel.setProfiles(followers)
 
-        composeTestRule.setContent {
-            FollowListScreen(
-                navigationActions = fakeNavigationActions,
-                viewModel = fakeViewModel,
-                userId = testUserId,
-                isFollowersList = true
-            )
-        }
-
-        // Click follow button
-        composeTestRule.onNodeWithTag("follow_button_1").performClick()
-
-        // Simulate failed follow action
-        fakeViewModel.setFollowActionState(
-            FollowActionState.Error("Failed to follow user")
-        )
-
-        // Verify button maintains original state
-        composeTestRule.onNodeWithTag("follow_button_1")
-            .assertExists()
-            .assertTextContains("Follow Back")
-            .assertIsEnabled()
+    composeTestRule.setContent {
+      FollowListScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          userId = testUserId,
+          isFollowersList = true)
     }
+
+    // Click follow button
+    composeTestRule.onNodeWithTag("follow_button_1").performClick()
+
+    // Simulate failed follow action
+    fakeViewModel.setFollowActionState(FollowActionState.Error("Failed to follow user"))
+
+    // Verify button maintains original state
+    composeTestRule
+        .onNodeWithTag("follow_button_1")
+        .assertExists()
+        .assertTextContains("Follow Back")
+        .assertIsEnabled()
+  }
 }
 
 class MockFirebaseAuth {
