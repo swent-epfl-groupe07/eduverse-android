@@ -54,6 +54,7 @@ import com.github.se.eduverse.ui.gallery.GalleryScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.notifications.NotificationsScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
@@ -340,6 +341,8 @@ fun EduverseApp(
             navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
+
+      composable(Screen.NOTIFICATIONS) { NotificationsScreen(notifAuthorizations, navigationActions) }
     }
 
     navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {

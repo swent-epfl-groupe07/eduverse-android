@@ -51,6 +51,7 @@ object Screen {
   const val ARCHIVE = "Archive screen"
   const val DETAILS_EVENT = "DetailsEvent screen"
   const val DETAILS_TASKS = "DetailsTasks screen"
+  const val NOTIFICATIONS = "Notifications screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
