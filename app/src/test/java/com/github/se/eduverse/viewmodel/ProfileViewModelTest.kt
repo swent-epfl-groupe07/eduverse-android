@@ -630,8 +630,7 @@ class ProfileViewModelTest {
     val userId = "user123"
     val publicationId = "pub123"
 
-    `when`(mockRepository.deletePublication(publicationId, userId))
-      .thenReturn(false)
+    `when`(mockRepository.deletePublication(publicationId, userId)).thenReturn(false)
 
     profileViewModel.deletePublication(publicationId, userId)
     advanceUntilIdle()
@@ -639,9 +638,7 @@ class ProfileViewModelTest {
     val deleteState = profileViewModel.deletePublicationState.first()
     assertTrue(deleteState is DeletePublicationState.Error)
     assertEquals(
-      "Failed to delete publication",
-      (deleteState as DeletePublicationState.Error).message
-    )
+        "Failed to delete publication", (deleteState as DeletePublicationState.Error).message)
   }
 
   @Test

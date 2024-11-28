@@ -59,7 +59,8 @@ interface ProfileRepository {
   suspend fun getFollowers(userId: String): List<Profile>
 
   suspend fun getFollowing(userId: String): List<Profile>
-    suspend fun deletePublication(publicationId: String, userId: String): Boolean
+
+  suspend fun deletePublication(publicationId: String, userId: String): Boolean
 }
 
 open class ProfileRepositoryImpl(
@@ -464,59 +465,61 @@ open class ProfileRepositoryImpl(
     }
   }
 
-    override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
-        return try {
-            coroutineScope {
-                val pubQuery = publicationsCollection
-                    .whereEqualTo("id", publicationId)
-                    .whereEqualTo("userId", userId)
-                    .get()
-                    .await()
+  override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
+    return try {
+      coroutineScope {
+        val pubQuery =
+            publicationsCollection
+                .whereEqualTo("id", publicationId)
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
 
-                if (pubQuery.isEmpty) {
-                    throw Exception("Publication not found or user not authorized")
-                }
-
-                val pubDoc = pubQuery.documents[0]
-                val mediaUrlToDelete = pubDoc.getString("mediaUrl")
-                val thumbnailUrlToDelete = pubDoc.getString("thumbnailUrl")
-                val likedByUsers = pubDoc.get("likedBy") as? List<String> ?: emptyList()
-
-                // Delete Firestore document first
-                pubDoc.reference.delete().await()
-
-                // Use async for parallel deletion of liked publications
-                val likedPubsDeletion = launch {
-                    likedByUsers.forEach { likedUserId ->
-                        val likedPubRef = usersCollection
-                            .document(likedUserId)
-                            .collection("likedPublications")
-                            .document(publicationId)
-                        likedPubRef.delete().await()
-                    }
-                }
-
-                // Delete media files in parallel
-                val mediaDeletion = launch {
-                    if (!mediaUrlToDelete.isNullOrEmpty()) {
-                        val mediaRef = storage.getReferenceFromUrl(mediaUrlToDelete)
-                        mediaRef.delete().await()
-                    }
-
-                    if (!thumbnailUrlToDelete.isNullOrEmpty() && thumbnailUrlToDelete != mediaUrlToDelete) {
-                        val thumbnailRef = storage.getReferenceFromUrl(thumbnailUrlToDelete)
-                        thumbnailRef.delete().await()
-                    }
-                }
-
-                // Wait for all deletions to complete
-                likedPubsDeletion.join()
-                mediaDeletion.join()
-                true
-            }
-        } catch (e: Exception) {
-            Log.e("DELETE_PUBLICATION", "Failed to delete publication: ${e.message}")
-            false
+        if (pubQuery.isEmpty) {
+          throw Exception("Publication not found or user not authorized")
         }
+
+        val pubDoc = pubQuery.documents[0]
+        val mediaUrlToDelete = pubDoc.getString("mediaUrl")
+        val thumbnailUrlToDelete = pubDoc.getString("thumbnailUrl")
+        val likedByUsers = pubDoc.get("likedBy") as? List<String> ?: emptyList()
+
+        // Delete Firestore document first
+        pubDoc.reference.delete().await()
+
+        // Use async for parallel deletion of liked publications
+        val likedPubsDeletion = launch {
+          likedByUsers.forEach { likedUserId ->
+            val likedPubRef =
+                usersCollection
+                    .document(likedUserId)
+                    .collection("likedPublications")
+                    .document(publicationId)
+            likedPubRef.delete().await()
+          }
+        }
+
+        // Delete media files in parallel
+        val mediaDeletion = launch {
+          if (!mediaUrlToDelete.isNullOrEmpty()) {
+            val mediaRef = storage.getReferenceFromUrl(mediaUrlToDelete)
+            mediaRef.delete().await()
+          }
+
+          if (!thumbnailUrlToDelete.isNullOrEmpty() && thumbnailUrlToDelete != mediaUrlToDelete) {
+            val thumbnailRef = storage.getReferenceFromUrl(thumbnailUrlToDelete)
+            thumbnailRef.delete().await()
+          }
+        }
+
+        // Wait for all deletions to complete
+        likedPubsDeletion.join()
+        mediaDeletion.join()
+        true
+      }
+    } catch (e: Exception) {
+      Log.e("DELETE_PUBLICATION", "Failed to delete publication: ${e.message}")
+      false
     }
+  }
 }
