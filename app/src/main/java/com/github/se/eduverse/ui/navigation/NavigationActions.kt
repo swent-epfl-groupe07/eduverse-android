@@ -55,7 +55,6 @@ object Screen {
   const val NOTIFICATIONS = "Notifications screen"
   const val QUIZZ = "Quizz screen"
 
-
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
 
