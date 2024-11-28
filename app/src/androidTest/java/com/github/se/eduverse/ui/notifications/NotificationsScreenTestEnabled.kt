@@ -21,7 +21,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
-class NotificationsScreenTest {
+class NotificationsScreenTestEnabled {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   private val notifAuthorizations = NotifAuthorizations(true, true)
@@ -42,7 +42,7 @@ class NotificationsScreenTest {
     `when`(editor.putString(any(), any())).thenReturn(editor)
 
     composeTestRule.setContent {
-      NotificationsScreen(notifAuthorizations, navigationActions, context)
+      NotificationsScreen(notifAuthorizations, navigationActions, context, true)
     }
   }
 

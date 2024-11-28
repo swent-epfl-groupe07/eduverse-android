@@ -1,12 +1,19 @@
 package com.github.se.eduverse.ui.notifications
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -22,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -38,7 +46,9 @@ private val eventText = "Do you want to receive notifications when an event is a
 fun NotificationsScreen(
     notifAuthorizations: NotifAuthorizations,
     navigationActions: NavigationActions,
-    context: Context = LocalContext.current // Dependency injection for tests
+    context: Context = LocalContext.current, // Dependency injection for tests
+    notificationsEnabled: Boolean =
+        NotificationManagerCompat.from(context).areNotificationsEnabled()
 ) {
   val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
 
@@ -53,19 +63,39 @@ fun NotificationsScreen(
             LIST_TOP_LEVEL_DESTINATION,
             "") // No item is selected, as it is not one of the screens on the bottom bar
       }) { padding ->
-        LazyColumn(modifier = Modifier.padding(padding).padding(16.dp)) {
-          item {
-            TextWithSwitch(taskText, taskNotifEnabled, "taskSwitch") {
-              taskNotifEnabled = !taskNotifEnabled
-              notifAuthorizations.taskEnabled = taskNotifEnabled
-              storeAuthorizations(notifAuthorizations, sharedPreferences)
-            }
-            TextWithSwitch(eventText, eventNotifEnabled, "eventSwitch") {
-              eventNotifEnabled = !eventNotifEnabled
-              notifAuthorizations.eventEnabled = eventNotifEnabled
-              storeAuthorizations(notifAuthorizations, sharedPreferences)
+        if (notificationsEnabled) { // Notifications enabled for the app (in phone settings)
+          LazyColumn(modifier = Modifier.padding(padding).padding(16.dp)) {
+            item {
+              TextWithSwitch(taskText, taskNotifEnabled, "taskSwitch") {
+                taskNotifEnabled = !taskNotifEnabled
+                notifAuthorizations.taskEnabled = taskNotifEnabled
+                storeAuthorizations(notifAuthorizations, sharedPreferences)
+              }
+              TextWithSwitch(eventText, eventNotifEnabled, "eventSwitch") {
+                eventNotifEnabled = !eventNotifEnabled
+                notifAuthorizations.eventEnabled = eventNotifEnabled
+                storeAuthorizations(notifAuthorizations, sharedPreferences)
+              }
             }
           }
+        } else {
+          Column(
+              modifier = Modifier.padding(padding).fillMaxSize(),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.Center) {
+                Text("Notifications are disabled.")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                      context.startActivity(
+                          Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                          })
+                    },
+                    modifier = Modifier.testTag("enableButton")) {
+                      Text("Enable")
+                    }
+              }
         }
       }
 }

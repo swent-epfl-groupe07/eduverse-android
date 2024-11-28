@@ -224,7 +224,7 @@ fun EduverseApp(
         null -> null
       }
 
-  NavHost(navController = navController, startDestination = Route.LOADING) {
+  NavHost(navController = navController, startDestination = Route.PROFILE) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
@@ -323,7 +323,7 @@ fun EduverseApp(
         }
 
     navigation(
-        startDestination = Screen.PROFILE,
+        startDestination = Screen.NOTIFICATIONS,
         route = Route.PROFILE,
     ) {
       composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
