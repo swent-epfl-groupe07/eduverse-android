@@ -1,4 +1,4 @@
-package com.github.se.eduverse.api
+package com.github.se.eduverse.model
 
 // Data class representing a single quiz question
 data class Question(

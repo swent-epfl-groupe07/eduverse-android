@@ -18,15 +18,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.github.se.eduverse.api.Question
+import com.github.se.eduverse.model.Question
 import com.github.se.eduverse.repository.QuizzRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.theme.COLOR_CORRECT
+import com.github.se.eduverse.ui.theme.COLOR_INCORRECT
+import com.github.se.eduverse.ui.theme.COLOR_TEXT_PLACEHOLDER
 import kotlinx.coroutines.launch
-
-// Define color constants
-private val COLOR_TEXT_PLACEHOLDER = Color(0xFF0D8899).copy(alpha = 0.6f)
-private val COLOR_CORRECT = Color(0xFF008E21)
-private val COLOR_INCORRECT = Color(0XFFCC0909)
 
 // Main composable for the quiz screen
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")

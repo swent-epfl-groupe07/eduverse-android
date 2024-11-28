@@ -3,7 +3,7 @@ package com.github.se.eduverse.ui.quizz
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
-import com.github.se.eduverse.api.Question
+import com.github.se.eduverse.model.Question
 import com.github.se.eduverse.repository.QuizzRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import kotlinx.coroutines.runBlocking

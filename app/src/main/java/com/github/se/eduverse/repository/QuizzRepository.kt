@@ -1,6 +1,6 @@
 package com.github.se.eduverse.repository
 
-import com.github.se.eduverse.api.Question
+import com.github.se.eduverse.model.Question
 import java.io.IOException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
