@@ -317,6 +317,9 @@ dependencies {
     //Itext
     implementation("com.github.librepdf:openpdf:1.3.30")
 
+    // Text recognition
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
 }
 
 tasks.withType<Test> {
