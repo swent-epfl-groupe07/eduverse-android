@@ -218,9 +218,8 @@ fun EduverseApp(
 
   notificationData.viewModel =
       when (notificationData.notificationType) {
-        NotificationType.SCHEDULED -> timeTableViewModel
-        NotificationType.DEFAULT,
-        null -> null
+        NotificationType.TASK, NotificationType.EVENT -> timeTableViewModel
+        NotificationType.DEFAULT, null -> null
       }
 
   NavHost(navController = navController, startDestination = Route.LOADING) {

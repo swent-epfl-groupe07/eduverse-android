@@ -163,7 +163,7 @@ class NotificationRepositoryTest {
   fun showNotificationCreatesNotification() {
     val title = "Test Title"
     val text = "Test Description"
-    val type = NotificationType.SCHEDULED.name
+    val type = NotificationType.TASK.name
     val id = "Scheduled Id"
     val channel = "task_channel"
 

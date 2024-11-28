@@ -56,7 +56,7 @@ open class NotificationRepository(
                   workDataOf(
                       "title" to createTitle(scheduled),
                       "description" to createContent(scheduled),
-                      "type" to NotificationType.SCHEDULED.name,
+                      "type" to NotificationType.valueOf(scheduled.type.name),
                       "objectId" to scheduled.id,
                       "channelId" to "task_channel"))
               .build()
