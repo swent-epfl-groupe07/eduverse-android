@@ -35,6 +35,7 @@ import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.QuizzRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.archive.ArchiveScreen
@@ -59,6 +60,7 @@ import com.github.se.eduverse.ui.notifications.NotificationsScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
+import com.github.se.eduverse.ui.quizz.QuizScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
@@ -85,6 +87,7 @@ import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -310,6 +313,15 @@ fun EduverseApp(
     }
 
     navigation(
+        startDestination = Screen.QUIZZ,
+        route = Route.QUIZZ,
+    ) {
+      composable(Screen.QUIZZ) {
+        QuizScreen(navigationActions, QuizzRepository(OkHttpClient(), BuildConfig.OPENAI_API_KEY))
+      }
+    }
+
+    navigation(
         startDestination = Screen.CAMERA,
         route = Route.CAMERA,
     ) {
@@ -382,7 +394,7 @@ fun EduverseApp(
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
-    // Screen to display the photo taken
+
     navigation(
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
@@ -392,7 +404,7 @@ fun EduverseApp(
       }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
-    // Add a dynamic route for PicTakenScreen with optional arguments for photo and
+
     // video
     composable(
         "picTaken/{photoPath}?videoPath={videoPath}",

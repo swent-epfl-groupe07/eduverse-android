@@ -147,10 +147,30 @@ class PdfConverterViewModelTest {
   }
 
   @Test
-  fun `test generatePdf with EXTRACT_TEXT option`() = runTest {
+  fun `test generatePdf with EXTRACT_TEXT option on extraction failure`() = runTest {
+    `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
+      it.getArgument<(Exception) -> Unit>(3)(Exception())
+    }
+
+    viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
     advanceUntilIdle()
     assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test generatePdf with EXTRACT_TEXT option on extraction success`() = runTest {
+    val extractedText = "Test extracted text."
+    `when`(pdfRepository.writeTextToPdf(extractedText)).thenReturn(pdfDocument)
+    `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
+      it.getArgument<(String) -> Unit>(2)(extractedText)
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    advanceUntilIdle()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
   }
 
   @Test
