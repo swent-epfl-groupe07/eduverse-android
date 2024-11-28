@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.navigation.NavHostController
 import androidx.test.espresso.intent.Intents
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
@@ -32,7 +33,9 @@ class LoadingTest : TestCase() {
     navController = Mockito.mock(NavHostController::class.java)
     navigationActions = NavigationActions(navController)
 
-    composeTestRule.setContent { LoadingScreen(navigationActions = navigationActions) }
+    composeTestRule.setContent {
+      LoadingScreen(navigationActions = navigationActions, NotificationData(false))
+    }
   }
 
   @After
