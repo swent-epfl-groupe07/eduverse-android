@@ -136,15 +136,21 @@ private fun FollowListItem(
         },
         trailingContent = {
             if (currentUserId != null && currentUserId != profile.id) {
+                val buttonEnabled = !isLoading && followActionState !is FollowActionState.Loading
+
                 Button(
                     onClick = { onFollowClick(profile.id) },
                     modifier = Modifier.testTag("follow_button_${profile.id}"),
-                    enabled = !isLoading,
+                    enabled = buttonEnabled,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (profile.isFollowedByCurrentUser)
                             MaterialTheme.colorScheme.secondary
                         else
-                            MaterialTheme.colorScheme.primary
+                            MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = if (profile.isFollowedByCurrentUser)
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                        else
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                     )
                 ) {
                     if (isLoading) {
