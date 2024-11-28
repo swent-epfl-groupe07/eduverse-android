@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -23,15 +24,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.github.se.eduverse.model.NotifAuthorizations
+import com.github.se.eduverse.model.NotificationData
+import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
+import com.github.se.eduverse.repository.QuizzRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
-import com.github.se.eduverse.ui.Pomodoro.PomodoroScreen
-import com.github.se.eduverse.ui.VideoScreen
+import com.github.se.eduverse.ui.archive.ArchiveScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
@@ -50,13 +55,19 @@ import com.github.se.eduverse.ui.gallery.GalleryScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
+import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
+import com.github.se.eduverse.ui.quizz.QuizScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
 import com.github.se.eduverse.ui.theme.EduverseTheme
+import com.github.se.eduverse.ui.timetable.DetailsEventScreen
+import com.github.se.eduverse.ui.timetable.DetailsTasksScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
+import com.github.se.eduverse.ui.videos.VideoScreen
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
@@ -73,6 +84,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import okhttp3.OkHttpClient
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -82,6 +94,21 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    val notificationData =
+        if (intent.getBooleanExtra("isNotification", false)) {
+          try {
+            NotificationData(
+                isNotification = true,
+                notificationType =
+                    NotificationType.valueOf(intent.getStringExtra("type") ?: "DEFAULT"),
+                objectId = intent.getStringExtra("objectId"))
+          } catch (e: Exception) {
+            NotificationData(false)
+          }
+        } else {
+          NotificationData(false)
+        }
 
     // Handling camera and microphone permissions
     val requestPermissionsLauncher =
@@ -97,9 +124,7 @@ class MainActivity : ComponentActivity() {
           setContent {
             EduverseTheme {
               Surface(modifier = Modifier.fillMaxSize()) {
-                EduverseApp(
-                    cameraPermissionGranted = cameraPermissionGranted,
-                )
+                EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
               }
             }
           }
@@ -130,9 +155,7 @@ class MainActivity : ComponentActivity() {
       setContent {
         EduverseTheme {
           Surface(modifier = Modifier.fillMaxSize()) {
-            EduverseApp(
-                cameraPermissionGranted = cameraPermissionGranted,
-            )
+            EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
           }
         }
       }
@@ -145,7 +168,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean) {
+fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: NotificationData) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -165,19 +188,28 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val timeTableViewModel = TimeTableViewModel(timeTableRepo, FirebaseAuth.getInstance())
+  val notifAuthorisations = NotifAuthorizations(true, true)
+  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorisations)
+  val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
+  notificationData.viewModel =
+      when (notificationData.notificationType) {
+        NotificationType.SCHEDULED -> timeTableViewModel
+        NotificationType.DEFAULT,
+        null -> null
+      }
+
   NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
     ) {
-      composable(Screen.LOADING) { LoadingScreen(navigationActions) }
+      composable(Screen.LOADING) { LoadingScreen(navigationActions, notificationData) }
     }
 
     navigation(
@@ -201,6 +233,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       }
       composable(Screen.TIME_TABLE) {
         TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
+      }
+      composable(Screen.DETAILS_EVENT) { DetailsEventScreen(timeTableViewModel, navigationActions) }
+      composable(Screen.DETAILS_TASKS) {
+        DetailsTasksScreen(timeTableViewModel, todoListViewModel, navigationActions)
       }
     }
 
@@ -232,6 +268,15 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
     }
 
     navigation(
+        startDestination = Screen.QUIZZ,
+        route = Route.QUIZZ,
+    ) {
+      composable(Screen.QUIZZ) {
+        QuizScreen(navigationActions, QuizzRepository(OkHttpClient(), BuildConfig.OPENAI_API_KEY))
+      }
+    }
+
+    navigation(
         startDestination = Screen.CAMERA,
         route = Route.CAMERA,
     ) {
@@ -243,6 +288,28 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
         }
       }
     }
+
+    composable(
+        route = Screen.FOLLOWERS.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+          FollowListScreen(
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              userId = userId,
+              isFollowersList = true)
+        }
+
+    composable(
+        route = Screen.FOLLOWING.route,
+        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
+          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+          FollowListScreen(
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              userId = userId,
+              isFollowersList = false)
+        }
 
     navigation(
         startDestination = Screen.PROFILE,
@@ -266,6 +333,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       }
     }
 
+    navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {
+      composable(Screen.ARCHIVE) { ArchiveScreen(navigationActions, folderViewModel) }
+    }
+
     navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
       composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
       composable(Screen.CREATE_FOLDER) {
@@ -274,15 +345,17 @@ fun EduverseApp(cameraPermissionGranted: Boolean) {
       composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
       composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
     }
-    // Screen to display the photo taken
+
     navigation(
         startDestination = Screen.POMODORO,
         route = Route.POMODORO,
     ) {
-      composable(Screen.POMODORO) { PomodoroScreen(navigationActions, pomodoroViewModel) }
+      composable(Screen.POMODORO) {
+        PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
+      }
       composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
-    // Add a dynamic route for PicTakenScreen with optional arguments for photo and
+
     // video
     composable(
         "picTaken/{photoPath}?videoPath={videoPath}",

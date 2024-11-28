@@ -1,11 +1,13 @@
 package com.github.se.eduverse.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.ViewModel
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.WeeklyTable
 import com.github.se.eduverse.model.daysInWeek
 import com.github.se.eduverse.model.emptyWeeklyTable
 import com.github.se.eduverse.model.millisecInDay
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
@@ -14,7 +16,11 @@ import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth: FirebaseAuth) {
+class TimeTableViewModel(
+    val timeTableRepository: TimeTableRepository,
+    val notificationRepository: NotificationRepository,
+    val auth: FirebaseAuth
+) : ViewModel() {
   private val _currentWeek =
       MutableStateFlow(
           Calendar.getInstance().apply {
@@ -29,6 +35,8 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
   private val _table: MutableStateFlow<WeeklyTable> = MutableStateFlow(emptyWeeklyTable())
   val table: StateFlow<WeeklyTable> = _table
 
+  var opened: Scheduled? = null
+
   /** Create a new document in the database and returns its id */
   fun getNewUid(): String {
     return timeTableRepository.getNewUid()
@@ -41,6 +49,15 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
         auth.currentUser!!.uid,
         { _table.value = buildWeekTable(it) },
         { Log.e("TimeTableViewModel", "Exception $it while trying to load data for the week") })
+  }
+
+  /**
+   * Return the scheduled with given id
+   *
+   * @param id the id of the scheduled
+   */
+  suspend fun getScheduledById(id: String): Scheduled {
+    return timeTableRepository.getScheduledById(id)
   }
 
   /**
@@ -92,6 +109,8 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
               currentTime += millisecInDay
             }
           }
+
+          notificationRepository.scheduleNotification(scheduled)
         },
         { Log.e("TimeTableViewModel", "Exception $it while trying to schedule an event") })
   }
@@ -111,6 +130,8 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
                     .map { if (it.id == scheduled.id) scheduled else it }
                     .sortedBy { it.start.timeInMillis }
               }
+
+          notificationRepository.scheduleNotification(scheduled)
         },
         { Log.e("TimeTableViewModel", "Exception $it while trying to modify a scheduled event") })
   }
@@ -123,7 +144,10 @@ class TimeTableViewModel(val timeTableRepository: TimeTableRepository, val auth:
   fun deleteScheduled(scheduled: Scheduled) {
     timeTableRepository.deleteScheduled(
         scheduled,
-        { _table.value = _table.value.map { innerList -> innerList - scheduled } },
+        {
+          _table.value = _table.value.map { innerList -> innerList - scheduled }
+          notificationRepository.cancelNotification(scheduled)
+        },
         { Log.e("TimeTableViewModel", "Exception $it while trying to delete a scheduled event") })
   }
 

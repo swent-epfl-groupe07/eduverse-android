@@ -34,7 +34,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   private val _error = MutableStateFlow<String?>(null)
   open val error: StateFlow<String?> = _error.asStateFlow()
 
-  fun loadProfile(userId: String) {
+  open fun loadProfile(userId: String) {
     viewModelScope.launch {
       _profileState.value = ProfileUiState.Loading
       try {
@@ -48,7 +48,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun loadLikedPublications(userId: String) {
+  open fun loadLikedPublications(userId: String) {
     viewModelScope.launch {
       try {
         val likedIds = repository.getUserLikedPublicationsIds(userId)
@@ -72,8 +72,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  // ProfileViewModel.kt
-  fun toggleFollow(currentUserId: String, targetUserId: String) {
+  open fun toggleFollow(currentUserId: String, targetUserId: String) {
     viewModelScope.launch {
       try {
         _followActionState.value = FollowActionState.Loading
@@ -93,31 +92,20 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         }
 
         // Perform database update
-        repository.toggleFollow(currentUserId, targetUserId)
+        val isNowFollowing = repository.toggleFollow(currentUserId, targetUserId)
 
-        // No need to reload entire profile
-        _followActionState.value = FollowActionState.Success
-      } catch (e: Exception) {
-        // On error, just update the affected fields instead of reloading entire profile
-        when (val state = _profileState.value) {
-          is ProfileUiState.Success -> {
-            _profileState.value =
-                ProfileUiState.Success(
-                    state.profile.copy(
-                        isFollowedByCurrentUser = !state.profile.isFollowedByCurrentUser,
-                        followers =
-                            if (state.profile.isFollowedByCurrentUser) state.profile.followers + 1
-                            else state.profile.followers - 1))
-          }
-          else -> {} // Handle other states if needed
-        }
+        // Update success state with all relevant information
         _followActionState.value =
-            FollowActionState.Error(
-                when {
-                  e.message?.contains("Firestore transactions require all reads") == true ->
-                      "Failed to update follow status"
-                  else -> e.message ?: "Failed to update follow status"
-                })
+            FollowActionState.Success(
+                followerId = currentUserId,
+                targetUserId = targetUserId,
+                isNowFollowing = isNowFollowing)
+      } catch (e: Exception) {
+        _followActionState.value =
+            FollowActionState.Error(e.message ?: "Failed to update follow status")
+
+        // Revert optimistic update if there was an error
+        loadProfile(targetUserId)
       }
     }
   }
@@ -136,7 +124,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  fun likeAndAddToFavorites(userId: String, publicationId: String) {
+  open fun likeAndAddToFavorites(userId: String, publicationId: String) {
     viewModelScope.launch {
       try {
         repository.incrementLikes(publicationId, userId)
@@ -154,7 +142,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     repository.addToUserCollection(userId, "likedPublications", publicationId)
   }
 
-  fun removeLike(userId: String, publicationId: String) {
+  open fun removeLike(userId: String, publicationId: String) {
     viewModelScope.launch {
       try {
         repository.removeFromLikedPublications(userId, publicationId)
@@ -241,6 +229,28 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       }
     }
   }
+
+  open fun resetUsernameState() {
+    _usernameState.value = UsernameUpdateState.Idle
+  }
+
+  open suspend fun getFollowers(userId: String): List<Profile> {
+    return try {
+      repository.getFollowers(userId)
+    } catch (e: Exception) {
+      _error.value = "Failed to load followers: ${e.message}"
+      emptyList()
+    }
+  }
+
+  open suspend fun getFollowing(userId: String): List<Profile> {
+    return try {
+      repository.getFollowing(userId)
+    } catch (e: Exception) {
+      _error.value = "Failed to load following: ${e.message}"
+      emptyList()
+    }
+  }
 }
 
 sealed class ProfileUiState {
@@ -286,7 +296,11 @@ sealed class FollowActionState {
 
   object Loading : FollowActionState()
 
-  object Success : FollowActionState()
+  data class Success(
+      val followerId: String,
+      val targetUserId: String,
+      val isNowFollowing: Boolean
+  ) : FollowActionState()
 
   data class Error(val message: String) : FollowActionState()
 }

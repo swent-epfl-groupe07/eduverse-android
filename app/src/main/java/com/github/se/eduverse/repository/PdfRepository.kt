@@ -1,12 +1,20 @@
 package com.github.se.eduverse.repository
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.util.Log
+import com.github.se.eduverse.showToast
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.lowagie.text.pdf.PdfReader
+import com.lowagie.text.pdf.parser.PdfTextExtractor
+import java.io.BufferedReader
 import java.io.File
 
 interface PdfRepository {
@@ -27,6 +35,19 @@ interface PdfRepository {
   fun deleteTempPdfFile(pdfFile: File)
 
   fun createUniqueFile(directory: File, fileName: String): File
+
+  fun readTextFromPdfFile(pdfUri: Uri?, context: Context, limit: Int = 0): String
+
+  fun writeTextToPdf(text: String): PdfDocument
+
+  fun getTempFileFromUri(uri: Uri?, context: Context): File
+
+  fun extractTextFromImage(
+      imageUri: Uri?,
+      context: Context,
+      onSuccess: (String) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
 
 class PdfRepositoryImpl : PdfRepository {
@@ -50,13 +71,7 @@ class PdfRepositoryImpl : PdfRepository {
   override fun convertImageToPdf(imageUri: Uri?, context: Context): PdfDocument {
     try {
       // Read the image bitmap from the URI
-      val imageBitmap =
-          context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
-            if (inputStream == null) {
-              throw Exception("Failed to open image file")
-            }
-            BitmapFactory.decodeStream(inputStream)
-          }
+      val imageBitmap = getImageBitmap(imageUri, context)
 
       // Create a new PDF document and add the image to it
       val pdfDocument = PdfDocument()
@@ -94,88 +109,7 @@ class PdfRepositoryImpl : PdfRepository {
           context.contentResolver.openInputStream(fileUri!!)
               ?: run { throw Exception("Failed to open text file") }
       val bufferedReader = inputStream.bufferedReader()
-
-      // Create a new PDF document
-      val pdfDocument = PdfDocument()
-      val pageInfo =
-          PdfDocument.PageInfo.Builder(A4_PAGE_WIDTH, A4_PAGE_HEIGHT, 1).create() // A4 page size
-      var page = pdfDocument.startPage(pageInfo)
-      var canvas = page.canvas
-      val paint =
-          Paint().apply { // Set the paint properties for the text to be written on the pdf document
-            isAntiAlias = true
-            textSize = TEXT_FONT_SIZE
-            color = Color.BLACK
-          }
-      var yPosition =
-          TEXT_PAGE_TOP_PADDING // Start writing the text from 40px from the top of the page
-
-      // Read the text from the file in buffered way to avoid memory issues
-      bufferedReader.use { reader ->
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
-          // Split the line into words to avoid overflowing the page width in case of long lines
-          val words = line!!.split(" ")
-
-          // Draw the read line word by word into the pdf document
-          var currentLine = ""
-          for (word in words) {
-            // Check if the line with the next word fits in the pdf page width
-            val tempLine =
-                if (currentLine.isEmpty()) word
-                else "$currentLine $word" // Add the next word to the current line after a space,
-            // for the first line of the doc no space needed before
-            // the word
-            val textWidth = paint.measureText(tempLine)
-            if (textWidth <= pageInfo.pageWidth - 40) { // 20px padding on each side of the page
-              currentLine = tempLine
-            } else {
-              // Draw the current line and start a new line with the current word
-              canvas.drawText(currentLine, TEXT_PAGE_LEFT_PADDING, yPosition, paint)
-              yPosition += paint.descent() - paint.ascent()
-              currentLine = word
-            }
-
-            // If the current page is full, create a new page and add it to the pdf document
-            if (yPosition >
-                pageInfo.pageHeight - 80) { // 40px padding on top and bottom of the page
-              pdfDocument.finishPage(page)
-              yPosition = TEXT_PAGE_TOP_PADDING
-              val newPageInfo =
-                  PdfDocument.PageInfo.Builder(
-                          A4_PAGE_WIDTH, A4_PAGE_HEIGHT, pdfDocument.pages.size + 1)
-                      .create()
-              page = pdfDocument.startPage(newPageInfo)
-              canvas = page.canvas
-            }
-          }
-
-          // Draw the last word of the read line if it didn't fit in the page's previous line
-          if (currentLine.isNotEmpty()) {
-            canvas.drawText(currentLine, TEXT_PAGE_LEFT_PADDING, yPosition, paint)
-            yPosition += paint.descent() - paint.ascent()
-          }
-
-          // If the last word of the read line was written on the last line of the page, create a
-          // new page
-          if (yPosition > pageInfo.pageHeight - 40) {
-            pdfDocument.finishPage(page)
-            yPosition = TEXT_PAGE_TOP_PADDING
-            val newPageInfo =
-                PdfDocument.PageInfo.Builder(
-                        A4_PAGE_WIDTH, A4_PAGE_HEIGHT, pdfDocument.pages.size + 1)
-                    .create()
-            page = pdfDocument.startPage(newPageInfo)
-            canvas = page.canvas
-          }
-        }
-      }
-
-      // Finish the last page and write the pdf document to the destination file, display a toast
-      // if document creation is successful
-      pdfDocument.finishPage(page)
-
-      return pdfDocument
+      return writeTextFileToPdf(bufferedReader)
     } catch (e: Exception) {
       // If an exception occurs during the conversion process, log the error and throw the exception
       Log.e("convertTextToPdf", "Text conversion failed", e)
@@ -199,7 +133,7 @@ class PdfRepositoryImpl : PdfRepository {
       onFailure: (e: Exception) -> Unit
   ) {
     try {
-      val file = createUniqueFile(destinationDirectory, pdfFileName + ".pdf")
+      val file = createUniqueFile(destinationDirectory, "$pdfFileName.pdf")
       pdfFile.copyTo(file)
       deleteTempPdfFile(pdfFile)
       onSuccess(file)
@@ -268,5 +202,246 @@ class PdfRepositoryImpl : PdfRepository {
       fileIndex++
     }
     return file
+  }
+
+  /**
+   * Read the text from the PDF file corresponding to the given URI
+   *
+   * @param pdfUri The URI of the PDF file to read
+   * @param context The context of the application
+   * @param limit The maximum number of characters to read from the PDF file
+   * @return The text read from the PDF file
+   * @throws Exception If an error occurs during the reading process
+   */
+  override fun readTextFromPdfFile(pdfUri: Uri?, context: Context, limit: Int): String {
+    try {
+      val inputStream =
+          context.contentResolver.openInputStream(pdfUri!!)
+              ?: run { throw Exception("Failed to open pdf file") }
+      val pdfReader = PdfReader(inputStream)
+      val pdfTextExtractor = PdfTextExtractor(pdfReader)
+      var text = ""
+      for (i in 1..pdfReader.numberOfPages) {
+        val extractedText = pdfTextExtractor.getTextFromPage(i)
+        if (extractedText.isNotEmpty()) {
+          text += extractedText
+        }
+        if (limit > 0 && text.length > limit) {
+          val error = "Pdf file contains too much text and exceeds tool's supported limit"
+          context.showToast(error)
+          throw Exception(error)
+        }
+      }
+      return text
+    } catch (e: Exception) {
+      Log.e("readTextFromPdfFile", "Failed to read text from pdf file", e)
+      throw e
+    }
+  }
+
+  /**
+   * Write the given text to a PDF document (the purpose of this function is to create a PDF file
+   * directly from a string given as input, rather than reading the text from an existing file)
+   *
+   * @param text The text to write to the PDF document
+   * @return The created PDF document
+   * @throws Exception If an error occurs during the process
+   */
+  override fun writeTextToPdf(text: String): PdfDocument {
+    try {
+      val tempFile = createTempTextFile(text)
+      val bufferedReader = tempFile.bufferedReader()
+      val pdfDocument = writeTextFileToPdf(bufferedReader)
+      tempFile.delete()
+      return pdfDocument
+    } catch (e: Exception) {
+      Log.e("writeTextToPdf", "Failed to write text to pdf", e)
+      throw e
+    }
+  }
+
+  /**
+   * Get a temporary file from the given URI
+   *
+   * @param uri The URI of the file to get
+   * @param context The context of the application
+   * @return The temporary file created from the URI
+   * @throws Exception If an error occurs during the process
+   */
+  override fun getTempFileFromUri(uri: Uri?, context: Context): File {
+    try {
+      val inputStream = context.contentResolver.openInputStream(uri!!)
+      val documentType = uri.path?.substringAfterLast(".") ?: ""
+      val tempFile = File.createTempFile("tempDocument", ".$documentType")
+      tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
+      return tempFile
+    } catch (e: Exception) {
+      Log.e("getTempFileFromUri", "Failed to get temp file from uri", e)
+      throw e
+    }
+  }
+
+  /**
+   * Extract text from the image corresponding to the given URI using the ML Kit Text Recognition
+   * library
+   *
+   * @param imageUri The URI of the image to extract text from
+   * @param context The context of the application
+   * @param onSuccess The callback to be called when the text is successfully extracted
+   * @param onFailure The callback to be called when an error occurs
+   */
+  override fun extractTextFromImage(
+      imageUri: Uri?,
+      context: Context,
+      onSuccess: (String) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    try {
+      val imageBitmap = getImageBitmap(imageUri, context)
+      val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+      val image = InputImage.fromBitmap(imageBitmap, 0)
+      recognizer
+          .process(image)
+          .addOnSuccessListener { visionText ->
+            val extractedText = visionText.text
+            if (extractedText.isNotEmpty()) {
+              onSuccess(extractedText)
+            } else {
+              onFailure(Exception("No text found on image"))
+            }
+          }
+          .addOnFailureListener { onFailure(it) }
+    } catch (e: Exception) {
+      Log.e("extractTextFromImage", "Failed to extract text from image", e)
+      onFailure(e)
+    }
+  }
+
+  /**
+   * Helper function to get the image bitmap from the given URI
+   *
+   * @param imageUri The URI of the image for which to get the bitmap
+   * @param context The context of the application
+   * @return The bitmap of the image
+   * @throws Exception If an error occurs during the process
+   */
+  private fun getImageBitmap(imageUri: Uri?, context: Context): Bitmap {
+    try {
+      val imageBitmap =
+          context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
+            if (inputStream == null) {
+              throw Exception("Failed to open image file")
+            }
+            BitmapFactory.decodeStream(inputStream)
+          }
+      return imageBitmap
+    } catch (e: Exception) {
+      Log.e("getImageBitmap", "Failed to get image bitmap", e)
+      throw Exception("Failed to get image bitmap", e)
+    }
+  }
+
+  /**
+   * Helper function to write the text read from the given buffered reader to a PDF document
+   *
+   * @param bufferedReader The buffered reader to read the text from
+   * @return The created PDF document
+   */
+  private fun writeTextFileToPdf(bufferedReader: BufferedReader): PdfDocument {
+    // Create a new PDF document
+    val pdfDocument = PdfDocument()
+    val pageInfo =
+        PdfDocument.PageInfo.Builder(A4_PAGE_WIDTH, A4_PAGE_HEIGHT, 1).create() // A4 page size
+    var page = pdfDocument.startPage(pageInfo)
+    var canvas = page.canvas
+    val paint =
+        Paint().apply { // Set the paint properties for the text to be written on the pdf document
+          isAntiAlias = true
+          textSize = TEXT_FONT_SIZE
+          color = Color.BLACK
+        }
+    var yPosition =
+        TEXT_PAGE_TOP_PADDING // Start writing the text from 40px from the top of the page
+
+    // Read the text from the file in buffered way to avoid memory issues
+    bufferedReader.use { reader ->
+      var line: String?
+      while (reader.readLine().also { line = it } != null) {
+        // Split the line into words to avoid overflowing the page width in case of long lines
+        val words = line!!.split(" ")
+
+        // Draw the read line word by word into the pdf document
+        var currentLine = ""
+        for (word in words) {
+          // Check if the line with the next word fits in the pdf page width
+          val tempLine =
+              if (currentLine.isEmpty()) word
+              else "$currentLine $word" // Add the next word to the current line after a space,
+          // for the first line of the doc no space needed before
+          // the word
+          val textWidth = paint.measureText(tempLine)
+          if (textWidth <=
+              pageInfo.pageWidth -
+                  (TEXT_PAGE_LEFT_PADDING +
+                      TEXT_PAGE_RIGHT_PADDING)) { // 20px padding on each side of the page
+            currentLine = tempLine
+          } else {
+            // Draw the current line and start a new line with the current word
+            canvas.drawText(currentLine, TEXT_PAGE_LEFT_PADDING, yPosition, paint)
+            yPosition += paint.descent() - paint.ascent()
+            currentLine = word
+          }
+
+          // If the current page is full, create a new page and add it to the pdf document
+          if (yPosition > pageInfo.pageHeight - TEXT_PAGE_BOTTOM_PADDING) {
+            pdfDocument.finishPage(page)
+            yPosition = TEXT_PAGE_TOP_PADDING
+            val newPageInfo =
+                PdfDocument.PageInfo.Builder(
+                        A4_PAGE_WIDTH, A4_PAGE_HEIGHT, pdfDocument.pages.size + 1)
+                    .create()
+            page = pdfDocument.startPage(newPageInfo)
+            canvas = page.canvas
+          }
+        }
+
+        // Draw the last word of the read line if it didn't fit in the page's previous line
+        if (currentLine.isNotEmpty()) {
+          canvas.drawText(currentLine, TEXT_PAGE_LEFT_PADDING, yPosition, paint)
+          yPosition += paint.descent() - paint.ascent()
+        }
+
+        // If the last word of the read line was written on the last line of the page, create a
+        // new page
+        if (yPosition > pageInfo.pageHeight - TEXT_PAGE_BOTTOM_PADDING) {
+          pdfDocument.finishPage(page)
+          yPosition = TEXT_PAGE_TOP_PADDING
+          val newPageInfo =
+              PdfDocument.PageInfo.Builder(
+                      A4_PAGE_WIDTH, A4_PAGE_HEIGHT, pdfDocument.pages.size + 1)
+                  .create()
+          page = pdfDocument.startPage(newPageInfo)
+          canvas = page.canvas
+        }
+      }
+    }
+
+    // Finish the last page and write the pdf document to the destination file, display a toast
+    // if document creation is successful
+    pdfDocument.finishPage(page)
+
+    return pdfDocument
+  }
+
+  /**
+   * Heleper function to create a temporary text file with the given text written to it
+   *
+   * @param text The text to write to the temp file
+   * @return The created temporary text file
+   */
+  private fun createTempTextFile(text: String): File {
+    val tempFile = File.createTempFile("temp_text", ".txt")
+    tempFile.writeText(text)
+    return tempFile
   }
 }

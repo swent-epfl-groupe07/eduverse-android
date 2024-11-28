@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +66,7 @@ fun DashboardScreen(
             title = {
               Text(
                   "Eduverse",
-                  style = MaterialTheme.typography.h6,
+                  style = MaterialTheme.typography.titleLarge,
                   modifier = Modifier.testTag("app_title"))
             },
             actions = {
@@ -74,18 +76,20 @@ fun DashboardScreen(
                     Icon(
                         Icons.Default.Search,
                         contentDescription = "Search profiles",
-                        tint = MaterialTheme.colors.onPrimary)
+                        tint = MaterialTheme.colorScheme.onPrimary)
                   }
             },
-            backgroundColor = MaterialTheme.colors.primary,
-            contentColor = MaterialTheme.colors.onPrimary,
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             elevation = 4.dp)
       },
       floatingActionButton = {
         FloatingActionButton(
             onClick = { showAddWidgetDialog = true },
             modifier = Modifier.testTag("add_widget_button"),
-            backgroundColor = MaterialTheme.colors.primary) {
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, "Add Widget")
             }
       },
@@ -275,7 +279,7 @@ private fun ReorderableWidgetList(
                       .testTag("widget_card")
                       .clickable {
                         val route =
-                            CommonWidgetType.values().find { it.name == item.widgetType }?.route
+                            CommonWidgetType.entries.find { it.name == item.widgetType }?.route
 
                         // Navigate if route exists
                         route?.let { navigationActions.navigateTo(it) }
@@ -292,17 +296,22 @@ private fun ReorderableWidgetList(
                                   "TIMER" -> Icons.Default.Timer
                                   "CALCULATOR" -> Icons.Default.Calculate
                                   "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
-                                  "WEEKLY_PLANNER" -> Icons.Default.DateRange
+                                  "FOLDERS" -> Icons.Default.FolderOpen
+                                  "TODO_LIST" -> Icons.Default.Checklist
+                                  "TIME_TABLE" -> Icons.Default.DateRange
+                                  "QUIZZ" -> Icons.Default.Book
                                   else -> Icons.Default.Widgets
                                 },
                             contentDescription = null,
-                            tint = MaterialTheme.colors.primary)
+                            tint = MaterialTheme.colorScheme.primary)
 
                         Spacer(modifier = Modifier.width(16.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
-                          Text(text = item.widgetTitle, style = MaterialTheme.typography.h6)
-                          Text(text = item.widgetContent, style = MaterialTheme.typography.body2)
+                          Text(text = item.widgetTitle, style = MaterialTheme.typography.titleLarge)
+                          Text(
+                              text = item.widgetContent,
+                              style = MaterialTheme.typography.bodyMedium)
                         }
 
                         IconButton(
@@ -311,7 +320,7 @@ private fun ReorderableWidgetList(
                               Icon(
                                   Icons.Default.Close,
                                   contentDescription = "Delete",
-                                  tint = MaterialTheme.colors.error)
+                                  tint = MaterialTheme.colorScheme.error)
                             }
                       }
                 }
@@ -323,11 +332,11 @@ private fun ReorderableWidgetList(
 @Composable
 private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit, userId: String) {
   Dialog(onDismissRequest = onDismiss) {
-    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colors.surface) {
+    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
       Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
         Text(
             text = "Add Widget",
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp))
 
         viewModel.getCommonWidgets().forEach { widget ->
@@ -349,11 +358,14 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                                 "TIMER" -> Icons.Default.Timer
                                 "CALCULATOR" -> Icons.Default.Calculate
                                 "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
-                                "WEEKLY_PLANNER" -> Icons.Default.DateRange
+                                "FOLDERS" -> Icons.Default.FolderOpen
+                                "TODO_LIST" -> Icons.Default.Checklist
+                                "TIME_TABLE" -> Icons.Default.DateRange
+                                "QUIZZ" -> Icons.Default.Book
                                 else -> Icons.Default.Widgets
                               },
                           contentDescription = null,
-                          tint = MaterialTheme.colors.primary)
+                          tint = MaterialTheme.colorScheme.primary)
                       Spacer(modifier = Modifier.width(8.dp))
                       Text(text = widget.widgetTitle)
                     }

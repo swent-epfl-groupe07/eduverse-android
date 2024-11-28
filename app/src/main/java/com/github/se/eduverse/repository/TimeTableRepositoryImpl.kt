@@ -5,12 +5,20 @@ import com.github.se.eduverse.model.ScheduledType
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
+import kotlinx.coroutines.tasks.await
 
 open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableRepository {
-  val collectionPath = "scheduled"
+  private val collection = db.collection("scheduled")
+
+  private val typeString = "type"
+  private val startTimeString = "startTime"
+  private val endTimeString = "endTime"
+  private val contentString = "content"
+  private val ownerIdString = "ownerId"
+  private val nameString = "name"
 
   override fun getNewUid(): String {
-    return db.collection(collectionPath).document().id
+    return collection.document().id
   }
 
   override fun getScheduled(
@@ -24,15 +32,20 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
           timeInMillis = firstDay.timeInMillis
           add(Calendar.WEEK_OF_YEAR, 1)
         }
-    db.collection(collectionPath)
-        .whereEqualTo("ownerId", ownerId)
-        .whereGreaterThanOrEqualTo("startTime", firstDay.timeInMillis)
-        .whereLessThan("endTime", lastDay.timeInMillis)
+    collection
+        .whereEqualTo(ownerIdString, ownerId)
+        .whereGreaterThanOrEqualTo(startTimeString, firstDay.timeInMillis)
+        .whereLessThan(endTimeString, lastDay.timeInMillis)
         .get()
         .addOnSuccessListener {
           onSuccess(it.documents.map { document -> convertScheduled(document) })
         }
         .addOnFailureListener(onFailure)
+  }
+
+  override suspend fun getScheduledById(id: String): Scheduled {
+    val document = collection.document(id).get().await()
+    return convertScheduled(document)
   }
 
   override fun addScheduled(
@@ -42,14 +55,14 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
   ) {
     val mappedScheduled =
         hashMapOf(
-            "type" to scheduled.type,
-            "startTime" to scheduled.start.timeInMillis,
-            "endTime" to scheduled.start.timeInMillis + scheduled.length,
-            "taskOrEventId" to scheduled.taskOrEventId,
-            "ownerId" to scheduled.ownerId,
-            "name" to scheduled.name)
+            typeString to scheduled.type,
+            startTimeString to scheduled.start.timeInMillis,
+            endTimeString to scheduled.start.timeInMillis + scheduled.length,
+            contentString to scheduled.content,
+            ownerIdString to scheduled.ownerId,
+            nameString to scheduled.name)
 
-    db.collection(collectionPath)
+    collection
         .document(scheduled.id)
         .set(mappedScheduled)
         .addOnSuccessListener { onSuccess() }
@@ -63,14 +76,14 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
   ) {
     val mappedScheduled =
         mapOf(
-            "type" to scheduled.type,
-            "startTime" to scheduled.start.timeInMillis,
-            "endTime" to scheduled.start.timeInMillis + scheduled.length,
-            "taskOrEventId" to scheduled.taskOrEventId,
-            "ownerId" to scheduled.ownerId,
-            "name" to scheduled.name)
+            typeString to scheduled.type,
+            startTimeString to scheduled.start.timeInMillis,
+            endTimeString to scheduled.start.timeInMillis + scheduled.length,
+            contentString to scheduled.content,
+            ownerIdString to scheduled.ownerId,
+            nameString to scheduled.name)
 
-    db.collection(collectionPath)
+    collection
         .document(scheduled.id)
         .update(mappedScheduled)
         .addOnSuccessListener { onSuccess() }
@@ -82,7 +95,7 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    db.collection(collectionPath)
+    collection
         .document(scheduled.id)
         .delete()
         .addOnSuccessListener { onSuccess() }
@@ -93,11 +106,13 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
     return Scheduled(
         id = document.id,
         type =
-            if (document.getString("type")!! == "TASK") ScheduledType.TASK else ScheduledType.EVENT,
-        start = Calendar.getInstance().apply { timeInMillis = document.getLong("startTime")!! },
-        length = document.getLong("endTime")!! - document.getLong("startTime")!!,
-        taskOrEventId = document.getString("taskOrEventId")!!,
-        ownerId = document.getString("ownerId")!!,
-        name = document.getString("name")!!)
+            if (document.getString(typeString)!! == "TASK") ScheduledType.TASK
+            else ScheduledType.EVENT,
+        start = Calendar.getInstance().apply { timeInMillis = document.getLong(startTimeString)!! },
+        length = document.getLong(endTimeString)!! - document.getLong(startTimeString)!!,
+        //                                             Backward-compatibility :
+        content = document.getString(contentString) ?: document.getString("taskOrEventId")!!,
+        ownerId = document.getString(ownerIdString)!!,
+        name = document.getString(nameString)!!)
   }
 }

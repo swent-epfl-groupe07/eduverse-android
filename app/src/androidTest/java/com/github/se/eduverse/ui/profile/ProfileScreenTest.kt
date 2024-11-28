@@ -1,6 +1,8 @@
 package com.github.se.eduverse.ui.profile
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -89,6 +91,14 @@ class ProfileScreenTest {
     fun setError(message: String?) {
       _error.value = message
     }
+
+    var wasResetCalled = false
+      private set
+
+    override fun resetUsernameState() {
+      wasResetCalled = true
+      _usernameState.value = UsernameUpdateState.Idle
+    }
   }
 
   class FakeNavigationActions : NavigationActions(mock()) {
@@ -108,6 +118,11 @@ class ProfileScreenTest {
       lastNavigatedRoute = route
     }
   }
+
+  fun isProgressIndicator() =
+      SemanticsMatcher("is progress indicator") { node ->
+        node.config.getOrNull(SemanticsProperties.ProgressBarRangeInfo) != null
+      }
 
   @Test
   fun whenScreenLoads_showsLoadingState() {
@@ -135,10 +150,14 @@ class ProfileScreenTest {
       ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    composeTestRule.onNodeWithTag("profile_image_container").assertExists()
-    composeTestRule.onNodeWithTag("stats_row").assertExists()
-    composeTestRule.onNodeWithTag("stat_count_Followers").assertTextContains("100")
-    composeTestRule.onNodeWithTag("stat_count_Following").assertTextContains("200")
+    composeTestRule.onNodeWithTag("profile_image_container", useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithTag("stats_row", useUnmergedTree = true).assertExists()
+    composeTestRule
+        .onNodeWithTag("stat_count_Followers", useUnmergedTree = true)
+        .assertTextContains("100")
+    composeTestRule
+        .onNodeWithTag("stat_count_Following", useUnmergedTree = true)
+        .assertTextContains("200")
   }
 
   @Test
@@ -217,7 +236,9 @@ class ProfileScreenTest {
       ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    composeTestRule.onNodeWithTag("profile_username").assertTextContains("TestUser")
+    composeTestRule
+        .onNodeWithTag("profile_username", useUnmergedTree = true)
+        .assertTextContains("TestUser")
   }
 
   @Test
@@ -671,5 +692,215 @@ class ProfileScreenTest {
         .onNodeWithTag("unliked_icon", useUnmergedTree = true)
         .assertExists()
         .assertHasNoClickAction()
+  }
+
+  private fun hasSetTextAction() =
+      SemanticsMatcher("has SetText action") { node ->
+        node.config.getOrNull(SemanticsProperties.EditableText) != null
+      }
+
+  private fun targetOutlinedTextFieldValue() =
+      SemanticsMatcher("OutlinedTextField with value property") { node ->
+        node.config.getOrNull(SemanticsProperties.EditableText) != null &&
+            node.config.getOrNull(SemanticsProperties.TextSelectionRange) != null
+      }
+
+  @Test
+  fun whenUsernameClicked_showsEditDialog() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    // Click on username row
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Verify dialog appears
+    composeTestRule.onNodeWithTag("username_edit_dialog", useUnmergedTree = true).assertExists()
+    composeTestRule.onNodeWithText("Edit Username", useUnmergedTree = true).assertExists()
+  }
+
+  @Test
+  fun usernameDialog_showsCurrentUsername() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    // Open dialog
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Find the input field specifically
+    composeTestRule
+        .onNode(hasTestTag("username_edit_dialog"))
+        .onChildren()
+        .filterToOne(hasSetTextAction())
+        .assert(hasText("TestUser"))
+  }
+
+  @Test
+  fun usernameDialog_initialSaveButtonDisabled() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+    composeTestRule.onNodeWithTag("submit_button", useUnmergedTree = true).assertIsNotEnabled()
+  }
+
+  @Test
+  fun whenUsernameChanged_enablesSaveButton() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Find and interact with the input field specifically
+    composeTestRule
+        .onNode(hasTestTag("username_edit_dialog"))
+        .onChildren()
+        .filterToOne(hasSetTextAction())
+        .performTextInput("NewUsername")
+
+    // Verify save button is enabled
+    composeTestRule.onNodeWithTag("submit_button", useUnmergedTree = true).assertIsEnabled()
+  }
+
+  @Test
+  fun whenLoadingState_showsProgressIndicator() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Set loading state
+    fakeViewModel.setUsernameState(UsernameUpdateState.Loading)
+
+    // Verify loading indicator is shown and save button is disabled
+    composeTestRule
+        .onNode(hasTestTag("username_edit_dialog"))
+        .onChildren()
+        .filterToOne(isProgressIndicator())
+        .assertExists()
+    composeTestRule.onNodeWithTag("submit_button").assertIsNotEnabled()
+  }
+
+  @Test
+  fun whenErrorState_showsErrorMessage() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Set error state
+    fakeViewModel.setUsernameState(UsernameUpdateState.Error("Username already taken"))
+
+    // Verify error message is shown
+    composeTestRule.onNodeWithText("Username already taken", useUnmergedTree = true).assertExists()
+  }
+
+  @Test
+  fun whenSuccessState_dialogDismisses() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Verify dialog is shown
+    composeTestRule.onNodeWithTag("username_edit_dialog", useUnmergedTree = true).assertExists()
+
+    // Set success state
+    fakeViewModel.setUsernameState(UsernameUpdateState.Success)
+
+    // Verify dialog is dismissed
+    composeTestRule
+        .onNodeWithTag("username_edit_dialog", useUnmergedTree = true)
+        .assertDoesNotExist()
+  }
+
+  @Test
+  fun whenCancelClicked_dialogDismissesAndResetsState() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+    composeTestRule.onNodeWithTag("cancel_button", useUnmergedTree = true).performClick()
+
+    // Verify dialog is dismissed
+    composeTestRule
+        .onNodeWithTag("username_edit_dialog", useUnmergedTree = true)
+        .assertDoesNotExist()
+  }
+
+  @Test
+  fun whenDialogDismissed_resetsUsernameState() {
+    val testProfile = Profile(id = "test", username = "TestUser")
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      ProfileScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
+    }
+
+    // Open dialog and set error state
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Verify dialog is shown
+    composeTestRule.onNodeWithTag("username_edit_dialog", useUnmergedTree = true).assertExists()
+
+    // Set error state
+    fakeViewModel.setUsernameState(UsernameUpdateState.Error("Some error"))
+
+    // Wait for state update
+    composeTestRule.waitForIdle()
+
+    // Verify error is shown
+    composeTestRule.onNodeWithText("Some error", useUnmergedTree = true).assertExists()
+
+    // Close dialog
+    composeTestRule.onNodeWithTag("cancel_button", useUnmergedTree = true).performClick()
+
+    // Wait for dialog to close
+    composeTestRule.waitForIdle()
+
+    // Verify reset was called
+    assertTrue("resetUsernameState should have been called", fakeViewModel.wasResetCalled)
+
+    // Verify the dialog is closed
+    composeTestRule
+        .onNodeWithTag("username_edit_dialog", useUnmergedTree = true)
+        .assertDoesNotExist()
+
+    // Reopen dialog
+    composeTestRule.onNodeWithTag("profile_username", useUnmergedTree = true).performClick()
+
+    // Verify new dialog is in clean state
+    composeTestRule.onNodeWithText("Some error", useUnmergedTree = true).assertDoesNotExist()
   }
 }

@@ -11,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import java.util.Calendar
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,9 +50,10 @@ class TimeTableRepositoryTest {
   fun setUp() {
     MockitoAnnotations.openMocks(this)
 
+    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
+
     timeTableRepository = TimeTableRepositoryImpl(mockFirestore)
 
-    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
@@ -65,7 +67,7 @@ class TimeTableRepositoryTest {
     `when`(documentSnapshot.getString(eq("type"))).thenReturn("TASK")
     `when`(documentSnapshot.getLong(eq("startTime"))).thenReturn(12)
     `when`(documentSnapshot.getLong(eq("endTime"))).thenReturn(19)
-    `when`(documentSnapshot.getString(eq("taskOrEventId"))).thenReturn("taskId")
+    `when`(documentSnapshot.getString(eq("content"))).thenReturn("taskId")
     `when`(documentSnapshot.getString(eq("ownerId"))).thenReturn("ownerId")
     `when`(documentSnapshot.getString(eq("name"))).thenReturn("name")
   }
@@ -115,6 +117,15 @@ class TimeTableRepositoryTest {
         Calendar.getInstance(), "ownerId", { assert(false) }, { test = true })
     shadowOf(Looper.getMainLooper()).idle()
     assert(test)
+  }
+
+  @Test
+  fun getScheduledByIdTest() = runBlocking {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    val result = timeTableRepository.getScheduledById("")
+
+    assertEquals("id", result.id)
+    assertEquals("name", result.name)
   }
 
   @Test

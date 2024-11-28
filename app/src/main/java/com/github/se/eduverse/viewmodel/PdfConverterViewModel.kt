@@ -1,29 +1,39 @@
 package com.github.se.eduverse.viewmodel
 
 import android.content.Context
-import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.github.se.eduverse.repository.ConvertApiRepository
+import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.converter.PdfConverterOption
 import java.io.File
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 
-class PdfConverterViewModel(private val pdfRepository: PdfRepository) : ViewModel() {
+class PdfConverterViewModel(
+    private val pdfRepository: PdfRepository,
+    private val openAiRepository: OpenAiRepository,
+    private val convertApiRepository: ConvertApiRepository
+) : ViewModel() {
 
   val DEFAULT_DESTINATION_DIRECTORY =
       Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+  val MAX_SUMMARY_INPUT_SIZE =
+      16000 // Limit set so that the max number of input tokens sent to openAI Api is not exceeded
 
   /** Sealed class representing the different states of the PDF generation process */
   sealed class PdfGenerationState {
@@ -54,7 +64,11 @@ class PdfConverterViewModel(private val pdfRepository: PdfRepository) : ViewMode
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PdfConverterViewModel(PdfRepositoryImpl()) as T
+            return PdfConverterViewModel(
+                PdfRepositoryImpl(),
+                OpenAiRepository(OkHttpClient()),
+                ConvertApiRepository(OkHttpClient()))
+                as T
           }
         }
   }
@@ -82,22 +96,43 @@ class PdfConverterViewModel(private val pdfRepository: PdfRepository) : ViewMode
     pdfGenerationJob =
         viewModelScope.launch {
           try {
-            val pdfFile: PdfDocument =
-                when (converterOption) {
-                  PdfConverterOption.IMAGE_TO_PDF -> pdfRepository.convertImageToPdf(uri, context)
-                  PdfConverterOption.TEXT_TO_PDF -> pdfRepository.convertTextToPdf(uri, context)
-                  PdfConverterOption.DOCUMENT_TO_PDF -> throw Exception("Not implemented")
-                  PdfConverterOption.SUMMARIZE_FILE -> throw Exception("Not implemented")
-                  PdfConverterOption.EXTRACT_TEXT -> throw Exception("Not implemented")
-                  PdfConverterOption.NONE ->
-                      throw Exception("No converter option selected") // Should never happen
-                }
+            when (converterOption) {
+              PdfConverterOption.IMAGE_TO_PDF -> {
+                val pdfFile = pdfRepository.convertImageToPdf(uri, context)
+                currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+              }
+              PdfConverterOption.TEXT_TO_PDF -> {
+                val pdfFile = pdfRepository.convertTextToPdf(uri, context)
+                currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+              }
+              PdfConverterOption.DOCUMENT_TO_PDF -> {
+                val file = pdfRepository.getTempFileFromUri(uri, context)
+                val pdfFile =
+                    withContext(Dispatchers.IO) {
+                      convertApiRepository.convertToPdf(file, newFileName.value)
+                    }
+                currentFile = pdfFile
+              }
+              PdfConverterOption.SUMMARIZE_FILE -> {
+                val text = pdfRepository.readTextFromPdfFile(uri, context, MAX_SUMMARY_INPUT_SIZE)
+                getSummary(text)
+              }
+              PdfConverterOption.EXTRACT_TEXT -> {
+                extractTextToPdf(uri, context)
+              }
+              PdfConverterOption.NONE ->
+                  throw Exception("No converter option selected") // Should never happen
+            }
+            delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
             // Simulate a delay to show the progress indicator(for testing purposes)
-            delay(3000)
-            currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
-            _pdfGenerationState.value = PdfGenerationState.Success(currentFile!!)
+            currentFile?.let { file ->
+              _pdfGenerationState.value = PdfGenerationState.Success(file)
+            } ?: { _pdfGenerationState.value = PdfGenerationState.Error }
           } catch (e: Exception) {
             Log.e("generatePdf", "Failed to generate pdf", e)
+            if (e is IllegalArgumentException) {
+              context.showToast(e.message.toString())
+            }
             _pdfGenerationState.value = PdfGenerationState.Error
           }
         }
@@ -141,5 +176,45 @@ class PdfConverterViewModel(private val pdfRepository: PdfRepository) : ViewMode
       }
       _pdfGenerationState.value = PdfGenerationState.Aborted
     }
+  }
+
+  /**
+   * Helper function to handle the summarization process
+   *
+   * @param text The text to summarize
+   */
+  private fun getSummary(text: String) {
+    openAiRepository.summarizeText(
+        text,
+        onSuccess = { summary ->
+          if (summary != null) {
+            val pdfFile = pdfRepository.writeTextToPdf(summary)
+            currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+          } else throw Exception("Failed to generate summary")
+        },
+        onFailure = {
+          Log.e("getSummary", "Failed to get summary from openAi api", it)
+          throw it
+        })
+  }
+
+  /**
+   * Helper function to handle the text extraction process
+   *
+   * @param uri The URI of the image to extract text from
+   * @param context The context of the application
+   */
+  private fun extractTextToPdf(uri: Uri?, context: Context) {
+    pdfRepository.extractTextFromImage(
+        uri,
+        context,
+        onSuccess = { extractedText ->
+          val pdfFile = pdfRepository.writeTextToPdf(extractedText)
+          currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+        },
+        onFailure = {
+          Log.e("extractTextFromImage", "Failed to extract text from image", it)
+          throw it
+        })
   }
 }

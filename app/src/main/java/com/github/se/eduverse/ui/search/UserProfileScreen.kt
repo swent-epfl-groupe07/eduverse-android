@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.search
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.se.eduverse.R
 import com.github.se.eduverse.model.Publication
+import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
+import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.profile.PublicationDetailDialog
 import com.github.se.eduverse.ui.profile.PublicationItem
@@ -93,6 +96,9 @@ fun UserProfileScreen(
                     Icon(Icons.Default.ArrowBack, "Back")
                   }
             })
+      },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { paddingValues ->
         Column(
             modifier =
@@ -124,8 +130,16 @@ fun UserProfileScreen(
                   Row(
                       modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
                       horizontalArrangement = Arrangement.SpaceEvenly) {
-                        StatItem("Followers", profile.followers, Modifier.testTag("followers_stat"))
-                        StatItem("Following", profile.following, Modifier.testTag("following_stat"))
+                        StatItem(
+                            "Followers",
+                            profile.followers,
+                            onClick = { navigationActions.navigateToFollowersList(profile.id) },
+                            Modifier.testTag("followers_stat"))
+                        StatItem(
+                            "Following",
+                            profile.following,
+                            onClick = { navigationActions.navigateToFollowingList(profile.id) },
+                            Modifier.testTag("following_stat"))
                       }
 
                   // Follow/Unfollow Button
@@ -141,7 +155,7 @@ fun UserProfileScreen(
                             FollowActionState.Loading -> {
                               CircularProgressIndicator(
                                   modifier = Modifier.size(24.dp),
-                                  color = MaterialTheme.colorScheme.onPrimary)
+                                  color = MaterialTheme.colorScheme.onTertiary)
                             }
                             else -> {
                               when (uiState) {
@@ -176,13 +190,15 @@ fun UserProfileScreen(
                     onClick = { selectedTab = 0 },
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
-                    icon = { Icon(Icons.Default.Article, contentDescription = null) })
+                    icon = { Icon(Icons.Default.Article, contentDescription = null) },
+                    selectedContentColor = MaterialTheme.colorScheme.secondary)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) })
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                    selectedContentColor = MaterialTheme.colorScheme.secondary)
               }
 
               // Content based on state
@@ -232,18 +248,25 @@ private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
-  Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-    Text(
-        text = count.toString(),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.testTag("stat_count_$label"))
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.testTag("stat_label_$label"))
-  }
+private fun StatItem(
+    label: String,
+    count: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Column(
+      modifier = modifier.clickable(onClick = onClick).testTag("stat_${label.lowercase()}"),
+      horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.testTag("stat_count_$label"))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("stat_label_$label"))
+      }
 }
 
 @Composable

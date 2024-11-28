@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.github.se.eduverse.repository.ConvertApiRepository
+import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.ui.converter.PdfConverterOption
 import java.io.File
@@ -32,6 +34,9 @@ class PdfConverterViewModelTest {
   private lateinit var context: Context
   private lateinit var uri: Uri
   private lateinit var file: File
+  private lateinit var openAiRepository: OpenAiRepository
+  private lateinit var pdfDocument: PdfDocument
+  private lateinit var convertApiRepository: ConvertApiRepository
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -42,7 +47,13 @@ class PdfConverterViewModelTest {
     context = mock(Context::class.java)
     uri = mock(Uri::class.java)
     file = mock(File::class.java)
-    viewModel = PdfConverterViewModel(pdfRepository)
+    openAiRepository = mock(OpenAiRepository::class.java)
+    convertApiRepository = mock(ConvertApiRepository::class.java)
+    viewModel = PdfConverterViewModel(pdfRepository, openAiRepository, convertApiRepository)
+    pdfDocument = mock(PdfDocument::class.java)
+    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
+    `when`(pdfRepository.readTextFromPdfFile(uri, context, viewModel.MAX_SUMMARY_INPUT_SIZE))
+        .thenReturn("This is a test text.")
   }
 
   @After
@@ -66,9 +77,7 @@ class PdfConverterViewModelTest {
 
   @Test
   fun `test generatePdf with IMAGE_TO_PDF option`() = runTest {
-    val pdfDocument = mock(PdfDocument::class.java)
     `when`(pdfRepository.convertImageToPdf(uri, context)).thenReturn(pdfDocument)
-    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
 
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
@@ -79,9 +88,7 @@ class PdfConverterViewModelTest {
 
   @Test
   fun `test generatePdf with TEXT_TO_PDF option`() = runTest {
-    val pdfDocument = mock(PdfDocument::class.java)
     `when`(pdfRepository.convertTextToPdf(uri, context)).thenReturn(pdfDocument)
-    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
 
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.TEXT_TO_PDF)
@@ -91,24 +98,79 @@ class PdfConverterViewModelTest {
   }
 
   @Test
-  fun `test setNewFileName with DOCUMENT_TO_PDF option`() = runTest {
+  fun `test generatePdf with DOCUMENT_TO_PDF option`() = runTest {
+    val document = mock(File::class.java)
+    `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(document)
+    `when`(convertApiRepository.convertToPdf(any(), any())).thenReturn(file)
+    viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.DOCUMENT_TO_PDF)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    verify(convertApiRepository).convertToPdf(eq(document), eq("test"))
   }
 
   @Test
-  fun `test setNewFileName with SUMMARIZE_FILE option`() = runTest {
+  fun `test generatePdf with SUMMARIZE_FILE option`() = runTest {
+    val summary = "This is a summarized text."
+    `when`(pdfRepository.writeTextToPdf(summary)).thenReturn(pdfDocument)
+    `when`(openAiRepository.summarizeText(any(), any(), any())).then {
+      it.getArgument<(String?) -> Unit>(1)(summary)
+    }
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    advanceUntilIdle()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test generatePdf with SUMMARIZE_FILE option on null result`() = runTest {
+    `when`(openAiRepository.summarizeText(any(), any(), any())).then {
+      it.getArgument<(String?) -> Unit>(1)(null)
+    }
+
+    viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
     advanceUntilIdle()
     assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
 
   @Test
-  fun `test setNewFileName with EXTRACT_TEXT option`() = runTest {
+  fun `test generatePdf with SUMMARIZE_FILE option on summarization failure`() = runTest {
+    `when`(openAiRepository.summarizeText(any(), any(), any())).then {
+      it.getArgument<(Exception) -> Unit>(2)(Exception())
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    advanceUntilIdle()
+    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test generatePdf with EXTRACT_TEXT option on extraction failure`() = runTest {
+    `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
+      it.getArgument<(Exception) -> Unit>(3)(Exception())
+    }
+
+    viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
     advanceUntilIdle()
     assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test generatePdf with EXTRACT_TEXT option on extraction success`() = runTest {
+    val extractedText = "Test extracted text."
+    `when`(pdfRepository.writeTextToPdf(extractedText)).thenReturn(pdfDocument)
+    `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
+      it.getArgument<(String) -> Unit>(2)(extractedText)
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    advanceUntilIdle()
+    assertEquals(
+        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -138,7 +200,6 @@ class PdfConverterViewModelTest {
   @Test
   fun `test savePdfToDevice calls repository`() {
     val pdfFile = mock(File::class.java)
-    val context = mock(Context::class.java)
     val fileName = "test.pdf"
 
     viewModel.setNewFileName(fileName)
