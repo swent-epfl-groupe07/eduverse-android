@@ -117,7 +117,9 @@ class PdfConverterViewModel(
                 val text = pdfRepository.readTextFromPdfFile(uri, context, MAX_SUMMARY_INPUT_SIZE)
                 getSummary(text)
               }
-              PdfConverterOption.EXTRACT_TEXT -> throw Exception("Not implemented")
+              PdfConverterOption.EXTRACT_TEXT -> {
+                extractTextToPdf(uri, context)
+              }
               PdfConverterOption.NONE ->
                   throw Exception("No converter option selected") // Should never happen
             }
@@ -192,6 +194,26 @@ class PdfConverterViewModel(
         },
         onFailure = {
           Log.e("getSummary", "Failed to get summary from openAi api", it)
+          throw it
+        })
+  }
+
+  /**
+   * Helper function to handle the text extraction process
+   *
+   * @param uri The URI of the image to extract text from
+   * @param context The context of the application
+   */
+  private fun extractTextToPdf(uri: Uri?, context: Context) {
+    pdfRepository.extractTextFromImage(
+        uri,
+        context,
+        onSuccess = { extractedText ->
+          val pdfFile = pdfRepository.writeTextToPdf(extractedText)
+          currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+        },
+        onFailure = {
+          Log.e("extractTextFromImage", "Failed to extract text from image", it)
           throw it
         })
   }

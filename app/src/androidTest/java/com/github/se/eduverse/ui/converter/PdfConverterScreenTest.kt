@@ -109,15 +109,6 @@ class PdfConverterScreenTest {
   }
 
   @Test
-  fun notImplementedOptionsClickDoesNotChangeGenerationState() {
-    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).performClick()
-    assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Ready,
-        pdfConverterViewModel.pdfGenerationState.value)
-  }
-
-  @Test
   fun clickingTextToPdfOption_launchesFilePicker() {
     composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
 
@@ -235,6 +226,22 @@ class PdfConverterScreenTest {
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
     composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
+    composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()
+  }
+
+  @Test
+  fun clickingExtractTextOption_launchesFilePicker() {
+    composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
+    // Set up the activity result for the intent
+    // Simulate the file picker intent
+    val expectedUri = Uri.parse("content://test-image-uri")
+    val resultIntent = Intent().apply { data = expectedUri }
+    Intent().apply { data = expectedUri }
+    Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
+    composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
     composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()

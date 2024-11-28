@@ -70,6 +70,7 @@ firebaseStorageKtx = "21.0.1"
 coreTesting = "2.1.0"
 junitKtx = "1.2.1"
 core = "1.46.0"
+workTesting = "2.8.1"
 
 [libraries]
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
@@ -131,6 +132,7 @@ firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage
 androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "coreTesting" }
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 core = { group = "com.google.ar", name = "core", version.ref = "core" }
+androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "workTesting" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
