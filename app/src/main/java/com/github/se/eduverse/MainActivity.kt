@@ -218,8 +218,10 @@ fun EduverseApp(
 
   notificationData.viewModel =
       when (notificationData.notificationType) {
-        NotificationType.TASK, NotificationType.EVENT -> timeTableViewModel
-        NotificationType.DEFAULT, null -> null
+        NotificationType.TASK,
+        NotificationType.EVENT -> timeTableViewModel
+        NotificationType.DEFAULT,
+        null -> null
       }
 
   NavHost(navController = navController, startDestination = Route.LOADING) {
@@ -341,7 +343,9 @@ fun EduverseApp(
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
       }
 
-      composable(Screen.NOTIFICATIONS) { NotificationsScreen(notifAuthorizations, navigationActions) }
+      composable(Screen.NOTIFICATIONS) {
+        NotificationsScreen(notifAuthorizations, navigationActions)
+      }
     }
 
     navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {

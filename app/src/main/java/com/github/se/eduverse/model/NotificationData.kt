@@ -24,7 +24,8 @@ data class NotificationData(
   suspend fun open(navigationActions: NavigationActions) {
     when (notificationType) {
       // Lot of job is common, so it is better to put them together
-      NotificationType.TASK, NotificationType.EVENT -> {
+      NotificationType.TASK,
+      NotificationType.EVENT -> {
         if (viewModel == null) navigationActions.navigateTo(Route.DASHBOARD)
         val timeTableViewModel = viewModel as TimeTableViewModel
 

@@ -19,10 +19,10 @@ import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInMin
-import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import kotlinx.serialization.json.Json
 
 // Parameter authorizations is not used for now, it is here to make the class easier to upgrade
 open class NotificationRepository(
@@ -108,7 +108,8 @@ open class NotificationRepository(
 class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     Worker(context, workerParameters) {
 
-  private val sharedPreferences: SharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+  private val sharedPreferences: SharedPreferences =
+      context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
 
   /** Called at the time the work was planned */
   override fun doWork(): Result {
@@ -118,17 +119,17 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     val objectId = inputData.getString("objectId")
     val channelId = inputData.getString("channelId") ?: "default_channel"
 
-      val json = sharedPreferences.getString("notifAuthKey", null)
-      val notifAuthorizations =
-          if (json != null) {
-              Json.decodeFromString<NotifAuthorizations>(json)
-          } else {
-              NotifAuthorizations(true, true) // Default value
-          }
+    val json = sharedPreferences.getString("notifAuthKey", null)
+    val notifAuthorizations =
+        if (json != null) {
+          Json.decodeFromString<NotifAuthorizations>(json)
+        } else {
+          NotifAuthorizations(true, true) // Default value
+        }
 
     if (type == NotificationType.TASK.name && notifAuthorizations.taskEnabled ||
         type == NotificationType.EVENT.name && notifAuthorizations.eventEnabled) {
-        showNotification(title, description, type, objectId, channelId)
+      showNotification(title, description, type, objectId, channelId)
     }
 
     return Result.success()

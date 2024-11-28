@@ -7,10 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -33,49 +29,50 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-private val taskText = "Do you want to receive notifications when you should start working on a task ?"
+private val taskText =
+    "Do you want to receive notifications when you should start working on a task ?"
 private val eventText = "Do you want to receive notifications when an event is about to start ?"
 
 @Composable
-fun NotificationsScreen(notifAuthorizations: NotifAuthorizations, navigationActions: NavigationActions) {
-    val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+fun NotificationsScreen(
+    notifAuthorizations: NotifAuthorizations,
+    navigationActions: NavigationActions
+) {
+  val context = LocalContext.current
+  val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
 
-    var taskNotifEnabled by remember { mutableStateOf(notifAuthorizations.taskEnabled) }
-    var eventNotifEnabled by remember { mutableStateOf(notifAuthorizations.eventEnabled) }
+  var taskNotifEnabled by remember { mutableStateOf(notifAuthorizations.taskEnabled) }
+  var eventNotifEnabled by remember { mutableStateOf(notifAuthorizations.eventEnabled) }
 
-    Scaffold(
-        topBar = {
-            TopNavigationBar("Notifications", navigationActions) },
-        bottomBar = {
-            BottomNavigationMenu(
-                { navigationActions.navigateTo(it) },
-                LIST_TOP_LEVEL_DESTINATION,
-                "") // No item is selected, as it is not one of the screens on the bottom bar
-        }
-    ) { padding ->
+  Scaffold(
+      topBar = { TopNavigationBar("Notifications", navigationActions) },
+      bottomBar = {
+        BottomNavigationMenu(
+            { navigationActions.navigateTo(it) },
+            LIST_TOP_LEVEL_DESTINATION,
+            "") // No item is selected, as it is not one of the screens on the bottom bar
+      }) { padding ->
         LazyColumn(modifier = Modifier.padding(padding).padding(16.dp)) {
-            item {
-                TextWithSwitch(taskText, taskNotifEnabled) {
-                    taskNotifEnabled = !taskNotifEnabled
-                    storeAuthorizations(notifAuthorizations, sharedPreferences)
-                }
-                TextWithSwitch(eventText, eventNotifEnabled) {
-                    eventNotifEnabled = !eventNotifEnabled
-                    storeAuthorizations(notifAuthorizations, sharedPreferences)
-                }
+          item {
+            TextWithSwitch(taskText, taskNotifEnabled) {
+              taskNotifEnabled = !taskNotifEnabled
+              storeAuthorizations(notifAuthorizations, sharedPreferences)
             }
+            TextWithSwitch(eventText, eventNotifEnabled) {
+              eventNotifEnabled = !eventNotifEnabled
+              storeAuthorizations(notifAuthorizations, sharedPreferences)
+            }
+          }
         }
-    }
+      }
 }
 
 @Composable
 fun TextWithSwitch(text: String, checked: Boolean, onCheckedChange: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 25.dp),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(bottom = 25.dp),
+      verticalAlignment = Alignment.Top,
+      horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = text,
             modifier = Modifier.fillMaxWidth(0.8f),
@@ -84,18 +81,17 @@ fun TextWithSwitch(text: String, checked: Boolean, onCheckedChange: () -> Unit) 
         Switch(
             checked = checked,
             onCheckedChange = { onCheckedChange() },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                checkedTrackColor = MaterialTheme.colorScheme.secondary))
-    }
+            colors =
+                SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = MaterialTheme.colorScheme.secondary))
+      }
 }
 
 fun storeAuthorizations(
     notifAuthorizations: NotifAuthorizations,
     sharedPreferences: SharedPreferences
 ) {
-    val json = Json.encodeToString(notifAuthorizations)
-    sharedPreferences.edit()
-        .putString("notifAuthKey", json)
-        .apply()
+  val json = Json.encodeToString(notifAuthorizations)
+  sharedPreferences.edit().putString("notifAuthKey", json).apply()
 }

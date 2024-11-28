@@ -76,7 +76,11 @@ fun SettingsScreen(navigationActions: NavigationActions) {
 
           // Notifications, Saved, Archive, and Gallery Fields
           SettingsOption(
-              "Notifications", Icons.Default.Notifications, navigationActions, Screen.NOTIFICATIONS, context)
+              "Notifications",
+              Icons.Default.Notifications,
+              navigationActions,
+              Screen.NOTIFICATIONS,
+              context)
           SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, null, context)
           SettingsOption(
               "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
