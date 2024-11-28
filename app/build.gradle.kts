@@ -13,7 +13,9 @@ plugins {
     alias(libs.plugins.sonar)
     kotlin("kapt")
     alias(libs.plugins.hilt)
-    id("kotlin-parcelize")}
+    id("kotlin-parcelize")
+    kotlin("plugin.serialization") version "1.9.0"
+}
 
 
 val hiltVersion = "2.48"

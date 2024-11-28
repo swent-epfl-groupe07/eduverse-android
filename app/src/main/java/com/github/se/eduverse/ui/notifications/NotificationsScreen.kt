@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -36,9 +37,9 @@ private val eventText = "Do you want to receive notifications when an event is a
 @Composable
 fun NotificationsScreen(
     notifAuthorizations: NotifAuthorizations,
-    navigationActions: NavigationActions
+    navigationActions: NavigationActions,
+    context: Context = LocalContext.current // Dependency injection for tests
 ) {
-  val context = LocalContext.current
   val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
 
   var taskNotifEnabled by remember { mutableStateOf(notifAuthorizations.taskEnabled) }
@@ -54,12 +55,14 @@ fun NotificationsScreen(
       }) { padding ->
         LazyColumn(modifier = Modifier.padding(padding).padding(16.dp)) {
           item {
-            TextWithSwitch(taskText, taskNotifEnabled) {
+            TextWithSwitch(taskText, taskNotifEnabled, "taskSwitch") {
               taskNotifEnabled = !taskNotifEnabled
+              notifAuthorizations.taskEnabled = taskNotifEnabled
               storeAuthorizations(notifAuthorizations, sharedPreferences)
             }
-            TextWithSwitch(eventText, eventNotifEnabled) {
+            TextWithSwitch(eventText, eventNotifEnabled, "eventSwitch") {
               eventNotifEnabled = !eventNotifEnabled
+              notifAuthorizations.eventEnabled = eventNotifEnabled
               storeAuthorizations(notifAuthorizations, sharedPreferences)
             }
           }
@@ -68,7 +71,7 @@ fun NotificationsScreen(
 }
 
 @Composable
-fun TextWithSwitch(text: String, checked: Boolean, onCheckedChange: () -> Unit) {
+fun TextWithSwitch(text: String, checked: Boolean, testTag: String, onCheckedChange: () -> Unit) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(bottom = 25.dp),
       verticalAlignment = Alignment.Top,
@@ -81,6 +84,7 @@ fun TextWithSwitch(text: String, checked: Boolean, onCheckedChange: () -> Unit) 
         Switch(
             checked = checked,
             onCheckedChange = { onCheckedChange() },
+            modifier = Modifier.testTag(testTag),
             colors =
                 SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.primary,
