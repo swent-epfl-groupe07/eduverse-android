@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -90,6 +91,7 @@ class MainActivity : ComponentActivity() {
 
   private var cameraPermissionGranted by mutableStateOf(false)
   private var audioPermissionGranted by mutableStateOf(false)
+  private var notificationPermissionGranted by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -120,7 +122,7 @@ class MainActivity : ComponentActivity() {
           NotifAuthorizations(true, true) // Default value
         }
 
-    // Handling camera and microphone permissions
+    // Handling permissions
     val requestPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             permissions ->
@@ -129,6 +131,10 @@ class MainActivity : ComponentActivity() {
               permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
           audioPermissionGranted =
               permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionGranted =
+                permissions[Manifest.permission.POST_NOTIFICATIONS] ?: notificationPermissionGranted
+          }
 
           // Now that permissions are handled, you can set the content
           setContent {
@@ -148,6 +154,14 @@ class MainActivity : ComponentActivity() {
     val audioPermissionStatus =
         ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
 
+    // Notification permission is checked only for Android 13+
+    val notificationPermissionStatus =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+          PackageManager.PERMISSION_GRANTED
+        }
+
     // Create a list to store permissions to request
     val permissionsToRequest = mutableListOf<String>()
 
@@ -161,6 +175,14 @@ class MainActivity : ComponentActivity() {
       audioPermissionGranted = true
     } else {
       permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (notificationPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+        notificationPermissionGranted = true
+      } else {
+        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+      }
     }
 
     if (permissionsToRequest.isEmpty()) {
@@ -224,7 +246,7 @@ fun EduverseApp(
         null -> null
       }
 
-  NavHost(navController = navController, startDestination = Route.PROFILE) {
+  NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
@@ -323,7 +345,7 @@ fun EduverseApp(
         }
 
     navigation(
-        startDestination = Screen.NOTIFICATIONS,
+        startDestination = Screen.PROFILE,
         route = Route.PROFILE,
     ) {
       composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
