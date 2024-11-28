@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.OneTimeWorkRequestBuilder
@@ -18,6 +19,7 @@ import com.github.se.eduverse.model.NotificationType
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInMin
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -37,11 +39,6 @@ open class NotificationRepository(
    *   should appear
    */
   open fun scheduleNotification(scheduled: Scheduled, timeBefore: Int = 1) {
-    if (scheduled.type == ScheduledType.TASK && !authorizations.taskEnabled ||
-        scheduled.type == ScheduledType.EVENT && !authorizations.eventEnabled) {
-      return
-    }
-
     cancelNotification(scheduled)
 
     val delay =
@@ -111,6 +108,8 @@ open class NotificationRepository(
 class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     Worker(context, workerParameters) {
 
+  private val sharedPreferences: SharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+
   /** Called at the time the work was planned */
   override fun doWork(): Result {
     val title = inputData.getString("title") ?: "Reminder"
@@ -119,7 +118,19 @@ class NotificationWorker(context: Context, workerParameters: WorkerParameters) :
     val objectId = inputData.getString("objectId")
     val channelId = inputData.getString("channelId") ?: "default_channel"
 
-    showNotification(title, description, type, objectId, channelId)
+      val json = sharedPreferences.getString("notifAuthKey", null)
+      val notifAuthorizations =
+          if (json != null) {
+              Json.decodeFromString<NotifAuthorizations>(json)
+          } else {
+              NotifAuthorizations(true, true) // Default value
+          }
+
+    if (type == NotificationType.TASK.name && notifAuthorizations.taskEnabled ||
+        type == NotificationType.EVENT.name && notifAuthorizations.eventEnabled) {
+        showNotification(title, description, type, objectId, channelId)
+    }
+
     return Result.success()
   }
 

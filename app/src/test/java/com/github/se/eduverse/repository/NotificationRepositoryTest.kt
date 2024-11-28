@@ -68,20 +68,6 @@ class NotificationRepositoryTest {
   }
 
   @Test
-  fun notificationDoesNotEnqueuesWhenNotEnabled() {
-    // Arrange
-    notifAut.taskEnabled = false
-    notifAut.eventEnabled = false
-
-    // Act
-    repository.scheduleNotification(task)
-    repository.scheduleNotification(event)
-
-    // Assert
-    verifyNoInteractions(mockWorkManager)
-  }
-
-  @Test
   fun scheduleNotificationEnqueuesWorkWhenDelayIsPositive() {
     // Arrange
     task.start.add(Calendar.MINUTE, 2)
