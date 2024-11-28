@@ -19,6 +19,7 @@ import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.model.millisecInHour
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.repository.TodoRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -40,6 +41,7 @@ import org.mockito.kotlin.verify
 
 class DetailsTasksScreenTest {
   private lateinit var timeTableRepository: TimeTableRepository
+  private lateinit var notificationRepository: NotificationRepository
   private lateinit var todoRepository: TodoRepository
   private lateinit var timeTableViewModel: TimeTableViewModel
   private lateinit var todoListViewModel: TodoListViewModel
@@ -68,6 +70,7 @@ class DetailsTasksScreenTest {
   @Before
   fun setUp() {
     timeTableRepository = mock(TimeTableRepository::class.java)
+    notificationRepository = mock(NotificationRepository::class.java)
     auth = mock(FirebaseAuth::class.java)
     val user = mock(FirebaseUser::class.java)
     navigationActions = mock(NavigationActions::class.java)
@@ -83,7 +86,7 @@ class DetailsTasksScreenTest {
       callback()
     }
 
-    timeTableViewModel = TimeTableViewModel(timeTableRepository, auth)
+    timeTableViewModel = TimeTableViewModel(timeTableRepository, notificationRepository, auth)
 
     todoRepository = mock(TodoRepository::class.java)
 

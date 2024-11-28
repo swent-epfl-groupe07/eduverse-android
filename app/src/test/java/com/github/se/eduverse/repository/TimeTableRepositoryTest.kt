@@ -11,6 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import java.util.Calendar
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -116,6 +117,15 @@ class TimeTableRepositoryTest {
         Calendar.getInstance(), "ownerId", { assert(false) }, { test = true })
     shadowOf(Looper.getMainLooper()).idle()
     assert(test)
+  }
+
+  @Test
+  fun getScheduledByIdTest() = runBlocking {
+    `when`(mockDocumentReference.get()).thenReturn(Tasks.forResult(documentSnapshot))
+    val result = timeTableRepository.getScheduledById("")
+
+    assertEquals("id", result.id)
+    assertEquals("name", result.name)
   }
 
   @Test
