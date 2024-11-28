@@ -608,6 +608,51 @@ class ProfileViewModelTest {
     verify(mockRepository).getFollowing(userId)
   }
 
+  @Test
+  fun `deletePublication success updates state and reloads profile`() = runTest {
+    val userId = "user123"
+    val publicationId = "pub123"
+
+    `when`(mockRepository.deletePublication(publicationId, userId)).thenReturn(true)
+    `when`(mockRepository.getProfile(userId)).thenReturn(defaultProfile)
+
+    profileViewModel.deletePublication(publicationId, userId)
+    advanceUntilIdle()
+
+    val deleteState = profileViewModel.deletePublicationState.first()
+    assertTrue(deleteState is DeletePublicationState.Success)
+    verify(mockRepository).deletePublication(publicationId, userId)
+    verify(mockRepository, times(2)).getProfile(userId)
+  }
+
+  @Test
+  fun `deletePublication failure updates error state`() = runTest {
+    val userId = "user123"
+    val publicationId = "pub123"
+
+    `when`(mockRepository.deletePublication(publicationId, userId))
+      .thenReturn(false)
+
+    profileViewModel.deletePublication(publicationId, userId)
+    advanceUntilIdle()
+
+    val deleteState = profileViewModel.deletePublicationState.first()
+    assertTrue(deleteState is DeletePublicationState.Error)
+    assertEquals(
+      "Failed to delete publication",
+      (deleteState as DeletePublicationState.Error).message
+    )
+  }
+
+  @Test
+  fun `resetDeleteState sets state to idle`() = runTest {
+    profileViewModel.resetDeleteState()
+    advanceUntilIdle()
+
+    val state = profileViewModel.deletePublicationState.first()
+    assertTrue(state is DeletePublicationState.Idle)
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain()
