@@ -5,10 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.Comment
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.PublicationRepository
+import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 open class PublicationViewModel(private val repository: PublicationRepository) : ViewModel() {
 
@@ -72,12 +72,12 @@ open class PublicationViewModel(private val repository: PublicationRepository) :
   open fun addComment(publicationId: String, ownerId: String, text: String) {
     viewModelScope.launch {
       try {
-        val newComment = Comment(
-          id = UUID.randomUUID().toString(),
-          publicationId = publicationId,
-          ownerId = ownerId,
-          text = text
-        )
+        val newComment =
+            Comment(
+                id = UUID.randomUUID().toString(),
+                publicationId = publicationId,
+                ownerId = ownerId,
+                text = text)
         repository.addComment(publicationId, newComment)
         loadComments(publicationId) // Reload comments after adding a new one
       } catch (e: Exception) {

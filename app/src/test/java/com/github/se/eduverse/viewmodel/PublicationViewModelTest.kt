@@ -130,100 +130,108 @@ class PublicationViewModelTest {
     coVerify { mockRepository.loadRandomPublications(20) }
   }
 
-    @Test
-    fun `test loading comments for a publication`() = runTest {
-        val publicationId = "testPublication"
-        val comments = listOf(
-            Comment(id = "comment1", publicationId = publicationId, ownerId = "user1", text = "Great!", likes = 5),
-            Comment(id = "comment2", publicationId = publicationId, ownerId = "user2", text = "Amazing!", likes = 3)
-        )
+  @Test
+  fun `test loading comments for a publication`() = runTest {
+    val publicationId = "testPublication"
+    val comments =
+        listOf(
+            Comment(
+                id = "comment1",
+                publicationId = publicationId,
+                ownerId = "user1",
+                text = "Great!",
+                likes = 5),
+            Comment(
+                id = "comment2",
+                publicationId = publicationId,
+                ownerId = "user2",
+                text = "Amazing!",
+                likes = 3))
 
-        // Mock repository to return the comments
-        coEvery { mockRepository.getComments(publicationId) } returns comments
+    // Mock repository to return the comments
+    coEvery { mockRepository.getComments(publicationId) } returns comments
 
-        // Act
-        viewModel.loadComments(publicationId)
-        testDispatcher.scheduler.advanceUntilIdle()
+    // Act
+    viewModel.loadComments(publicationId)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        // Assert
-        assertEquals(comments, viewModel.comments.first())
-        assertNull(viewModel.error.first())
-    }
+    // Assert
+    assertEquals(comments, viewModel.comments.first())
+    assertNull(viewModel.error.first())
+  }
 
-    @Test
-    fun `test adding a comment to a publication`() = runTest {
-        val publicationId = "testPublication"
-        val ownerId = "user1"
-        val text = "This is a comment"
+  @Test
+  fun `test adding a comment to a publication`() = runTest {
+    val publicationId = "testPublication"
+    val ownerId = "user1"
+    val text = "This is a comment"
 
-        // Prepare a captor for the Comment object
-        val commentCaptor = slot<Comment>()
+    // Prepare a captor for the Comment object
+    val commentCaptor = slot<Comment>()
 
-        // Mock repository to succeed when adding a comment
-        coEvery { mockRepository.addComment(publicationId, capture(commentCaptor)) } returns Unit
-        coEvery { mockRepository.getComments(publicationId) } returns listOf(
+    // Mock repository to succeed when adding a comment
+    coEvery { mockRepository.addComment(publicationId, capture(commentCaptor)) } returns Unit
+    coEvery { mockRepository.getComments(publicationId) } returns
+        listOf(
             Comment(
                 id = "capturedId",
                 publicationId = publicationId,
                 ownerId = ownerId,
                 text = text,
-                likes = 0
-            )
-        )
+                likes = 0))
 
-        // Act
-        viewModel.addComment(publicationId, ownerId, text)
-        testDispatcher.scheduler.advanceUntilIdle()
+    // Act
+    viewModel.addComment(publicationId, ownerId, text)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        // Assert
-        // Verify that addComment was called with a captured Comment object
-        coVerify { mockRepository.addComment(publicationId, any()) }
-        assertEquals(publicationId, commentCaptor.captured.publicationId)
-        assertEquals(ownerId, commentCaptor.captured.ownerId)
-        assertEquals(text, commentCaptor.captured.text)
+    // Assert
+    // Verify that addComment was called with a captured Comment object
+    coVerify { mockRepository.addComment(publicationId, any()) }
+    assertEquals(publicationId, commentCaptor.captured.publicationId)
+    assertEquals(ownerId, commentCaptor.captured.ownerId)
+    assertEquals(text, commentCaptor.captured.text)
 
-        // Verify that comments were reloaded after adding
-        assertEquals(1, viewModel.comments.first().size)
-        assertEquals(text, viewModel.comments.first()[0].text)
-    }
+    // Verify that comments were reloaded after adding
+    assertEquals(1, viewModel.comments.first().size)
+    assertEquals(text, viewModel.comments.first()[0].text)
+  }
 
+  @Test
+  fun `test liking a comment`() = runTest {
+    val publicationId = "testPublication"
+    val commentId = "comment1"
 
-    @Test
-    fun `test liking a comment`() = runTest {
-        val publicationId = "testPublication"
-        val commentId = "comment1"
+    // Mock repository to succeed when liking a comment
+    coEvery { mockRepository.likeComment(publicationId, commentId) } returns Unit
+    coEvery { mockRepository.getComments(publicationId) } returns emptyList()
 
-        // Mock repository to succeed when liking a comment
-        coEvery { mockRepository.likeComment(publicationId, commentId) } returns Unit
-        coEvery { mockRepository.getComments(publicationId) } returns emptyList()
+    // Act
+    viewModel.likeComment(publicationId, commentId)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        // Act
-        viewModel.likeComment(publicationId, commentId)
-        testDispatcher.scheduler.advanceUntilIdle()
+    // Assert
+    coVerify { mockRepository.likeComment(publicationId, commentId) }
+    coVerify { mockRepository.getComments(publicationId) }
+    assertNull(viewModel.error.first())
+  }
 
-        // Assert
-        coVerify { mockRepository.likeComment(publicationId, commentId) }
-        coVerify { mockRepository.getComments(publicationId) }
-        assertNull(viewModel.error.first())
-    }
+  @Test
+  fun `test deleting a comment`() = runTest {
+    val publicationId = "testPublication"
+    val commentId = "comment1"
 
-    @Test
-    fun `test deleting a comment`() = runTest {
-        val publicationId = "testPublication"
-        val commentId = "comment1"
+    // Mock repository to succeed when deleting a comment
+    coEvery { mockRepository.deleteComment(publicationId, commentId) } returns Unit
+    coEvery { mockRepository.getComments(publicationId) } returns emptyList()
 
-        // Mock repository to succeed when deleting a comment
-        coEvery { mockRepository.deleteComment(publicationId, commentId) } returns Unit
-        coEvery { mockRepository.getComments(publicationId) } returns emptyList()
+    // Act
+    viewModel.deleteComment(publicationId, commentId)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        // Act
-        viewModel.deleteComment(publicationId, commentId)
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Assert
-        coVerify { mockRepository.deleteComment(publicationId, commentId) }
-        coVerify { mockRepository.getComments(publicationId) }
-        assertEquals(emptyList<Comment>(), viewModel.comments.first())
-        assertNull(viewModel.error.first())
-    }
+    // Assert
+    coVerify { mockRepository.deleteComment(publicationId, commentId) }
+    coVerify { mockRepository.getComments(publicationId) }
+    assertEquals(emptyList<Comment>(), viewModel.comments.first())
+    assertNull(viewModel.error.first())
+  }
 }

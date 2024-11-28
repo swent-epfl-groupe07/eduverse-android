@@ -122,17 +122,18 @@ class PublicationRepositoryTest {
         assertTrue(result.isEmpty())
       }
 
-    @Test(timeout = 3000)
-    fun `addComment adds a comment successfully`(): Unit = runBlocking(Dispatchers.IO) {
+  @Test(timeout = 3000)
+  fun `addComment adds a comment successfully`(): Unit =
+      runBlocking(Dispatchers.IO) {
         // Arrange
         val publicationId = "testPublication"
-        val comment = Comment(
-            id = "comment1",
-            publicationId = publicationId,
-            ownerId = "user1",
-            text = "Nice post!",
-            likes = 0
-        )
+        val comment =
+            Comment(
+                id = "comment1",
+                publicationId = publicationId,
+                ownerId = "user1",
+                text = "Nice post!",
+                likes = 0)
 
         val mockCollection = mock(CollectionReference::class.java)
         val mockDocument = mock(DocumentReference::class.java)
@@ -148,10 +149,11 @@ class PublicationRepositoryTest {
 
         // Assert
         verify(mockDocument).set(comment)
-    }
+      }
 
-    @Test(timeout = 3000)
-    fun `getComments retrieves a list of comments`() = runBlocking(Dispatchers.IO) {
+  @Test(timeout = 3000)
+  fun `getComments retrieves a list of comments`() =
+      runBlocking(Dispatchers.IO) {
         // Arrange
         val publicationId = "testPublication"
 
@@ -160,28 +162,27 @@ class PublicationRepositoryTest {
         val mockCommentsCollection = mock(CollectionReference::class.java)
         val mockQuerySnapshot = mock(QuerySnapshot::class.java)
 
-        val commentList = listOf(
-            Comment(
-                id = "comment1",
-                publicationId = publicationId,
-                ownerId = "user1",
-                text = "Great!",
-                likes = 10
-            ),
-            Comment(
-                id = "comment2",
-                publicationId = publicationId,
-                ownerId = "user2",
-                text = "Amazing!",
-                likes = 5
-            )
-        )
+        val commentList =
+            listOf(
+                Comment(
+                    id = "comment1",
+                    publicationId = publicationId,
+                    ownerId = "user1",
+                    text = "Great!",
+                    likes = 10),
+                Comment(
+                    id = "comment2",
+                    publicationId = publicationId,
+                    ownerId = "user2",
+                    text = "Amazing!",
+                    likes = 5))
 
-        val documentSnapshots = commentList.map { comment ->
-            mock(com.google.firebase.firestore.DocumentSnapshot::class.java).apply {
+        val documentSnapshots =
+            commentList.map { comment ->
+              mock(com.google.firebase.firestore.DocumentSnapshot::class.java).apply {
                 `when`(toObject(Comment::class.java)).thenReturn(comment)
+              }
             }
-        }
 
         // Mocking Firestore interactions
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
@@ -197,10 +198,11 @@ class PublicationRepositoryTest {
         assertTrue(result.size == 2)
         assertTrue(result.any { it.text == "Great!" })
         assertTrue(result.any { it.text == "Amazing!" })
-    }
+      }
 
-    @Test(timeout = 3000)
-    fun `likeComment increments the like count of a comment`(): Unit = runBlocking(Dispatchers.IO) {
+  @Test(timeout = 3000)
+  fun `likeComment increments the like count of a comment`(): Unit =
+      runBlocking(Dispatchers.IO) {
         // Arrange
         val publicationId = "testPublication"
         val commentId = "comment1"
@@ -219,13 +221,14 @@ class PublicationRepositoryTest {
         `when`(mockSnapshot.getLong("likes")).thenReturn(5)
 
         // Mocking Firestore transaction
-        `when`(firestoreMock.runTransaction(any<Transaction.Function<Void>>())).thenAnswer { invocation ->
-            val transactionFunction = invocation.arguments[0] as Transaction.Function<Void>
-            transactionFunction.apply {
-                // Simulating the transaction function execution
-                mock(Transaction::class.java)
-            }
-            Tasks.forResult<Void>(null)
+        `when`(firestoreMock.runTransaction(any<Transaction.Function<Void>>())).thenAnswer {
+            invocation ->
+          val transactionFunction = invocation.arguments[0] as Transaction.Function<Void>
+          transactionFunction.apply {
+            // Simulating the transaction function execution
+            mock(Transaction::class.java)
+          }
+          Tasks.forResult<Void>(null)
         }
 
         // Act
@@ -233,10 +236,11 @@ class PublicationRepositoryTest {
 
         // Assert
         verify(firestoreMock).runTransaction(any<Transaction.Function<Void>>())
-    }
+      }
 
-    @Test(timeout = 3000)
-    fun `deleteComment removes a comment successfully`(): Unit = runBlocking(Dispatchers.IO) {
+  @Test(timeout = 3000)
+  fun `deleteComment removes a comment successfully`(): Unit =
+      runBlocking(Dispatchers.IO) {
         // Arrange
         val publicationId = "testPublication"
         val commentId = "comment1"
@@ -258,5 +262,5 @@ class PublicationRepositoryTest {
 
         // Assert
         verify(mockCommentDocument).delete()
-    }
+      }
 }
