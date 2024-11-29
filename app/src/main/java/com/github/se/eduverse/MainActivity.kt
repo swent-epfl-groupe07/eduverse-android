@@ -194,7 +194,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
       viewModel(factory = PdfConverterViewModel.Factory)
 
   val pubRepo = PublicationRepository(firestore)
-  val publicationViewModel = PublicationViewModel(pubRepo)
+  val publicationViewModel = PublicationViewModel(pubRepo, profileRepo)
 
   notificationData.viewModel =
       when (notificationData.notificationType) {

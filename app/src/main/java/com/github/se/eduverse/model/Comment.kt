@@ -5,5 +5,8 @@ data class Comment(
     val publicationId: String = "",
     val ownerId: String = "",
     val text: String = "",
-    val likes: Int = 0
+    val likes: Int = 0,
+    val profile: Profile? = null,
+    val likedBy: List<String> = emptyList()
 )
+
