@@ -166,6 +166,10 @@ class ProfileRepositoryImplTest {
           override suspend fun getFollowing(userId: String): List<Profile> {
             TODO("Not yet implemented")
           }
+
+          override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
+            TODO("Not yet implemented")
+          }
         }
 
     val viewModel = ProfileViewModel(mockRepo)
@@ -1035,6 +1039,67 @@ class ProfileRepositoryImplTest {
 
     assertEquals(2, following.size)
     assertTrue(following.all { it.isFollowedByCurrentUser })
+  }
+
+  @Test
+  fun `deletePublication successfully deletes publication and associated data`() = runTest {
+    val publicationId = "pub123"
+    val userId = "user123"
+    val mockMediaUrl = "http://example.com/media.jpg"
+    val mockThumbnailUrl = "http://example.com/thumb.jpg"
+    val mockLikedBy = listOf("user1", "user2")
+
+    // Mock document reference
+    val mockDocRef = mock(DocumentReference::class.java)
+    whenever(mockDocRef.delete()).thenReturn(Tasks.forResult(null))
+
+    // Mock publication query
+    whenever(mockCollectionRef.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+    whenever(mockQuery.whereEqualTo("userId", userId)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(false)
+    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
+    whenever(mockSnapshot.reference).thenReturn(mockDocRef)
+    whenever(mockSnapshot.getString("mediaUrl")).thenReturn(mockMediaUrl)
+    whenever(mockSnapshot.getString("thumbnailUrl")).thenReturn(mockThumbnailUrl)
+    whenever(mockSnapshot.get("likedBy")).thenReturn(mockLikedBy)
+
+    // Mock storage operations
+    val mockStorageRef = mock(StorageReference::class.java)
+    whenever(mockStorage.getReferenceFromUrl(any())).thenReturn(mockStorageRef)
+    whenever(mockStorageRef.delete()).thenReturn(Tasks.forResult(null))
+
+    // Mock users collection
+    val mockLikedPubRef = mock(DocumentReference::class.java)
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(any())).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("likedPublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(publicationId)).thenReturn(mockLikedPubRef)
+    whenever(mockLikedPubRef.delete()).thenReturn(Tasks.forResult(null))
+
+    val result = repository.deletePublication(publicationId, userId)
+    advanceUntilIdle()
+
+    assertTrue(result)
+    verify(mockDocRef).delete()
+    verify(mockStorageRef, times(2)).delete()
+  }
+
+  @Test
+  fun `deletePublication returns false when publication not found`() = runTest {
+    val publicationId = "pub123"
+    val userId = "user123"
+
+    val mockQuery = mock(Query::class.java)
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+    whenever(mockQuery.whereEqualTo("userId", userId)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(true)
+
+    val result = repository.deletePublication(publicationId, userId)
+
+    assertFalse(result)
   }
 
   @After
