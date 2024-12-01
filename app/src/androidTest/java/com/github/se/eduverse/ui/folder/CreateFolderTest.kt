@@ -230,4 +230,41 @@ class CreateFolderTest {
     composeTestRule.onNodeWithTag("confirm").performClick()
     composeTestRule.onAllNodesWithText("test_input").assertCountEquals(1)
   }
+
+  @Test
+  fun clickOnFileHaveExpectedBehavior_success() {
+    var test = false
+
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      test = true
+      null
+    }
+    `when`(folderRepository.addFolder(any(), any(), any())).then {
+      val callback = it.getArgument<() -> Unit>(1)
+      callback()
+    }
+
+    composeTestRule.onNodeWithTag("file").performClick()
+    assert(test)
+
+    composeTestRule.onNodeWithTag("folderSave").performClick()
+    composeTestRule.waitForIdle()
+
+    assert(folderViewModel.folders.value[0].files[0].numberAccess == 1)
+  }
+
+  @Test
+  fun clickOnFileHaveExpectedBehavior_failure() {
+    var test = false
+
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      val callback = it.getArgument<(Exception) -> Unit>(2)
+      callback(Exception("message"))
+      test = true
+      null
+    }
+
+    composeTestRule.onNodeWithTag("file").performClick()
+    assert(test)
+  }
 }

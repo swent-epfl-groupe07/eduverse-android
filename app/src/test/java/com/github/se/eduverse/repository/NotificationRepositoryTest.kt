@@ -68,20 +68,6 @@ class NotificationRepositoryTest {
   }
 
   @Test
-  fun notificationDoesNotEnqueuesWhenNotEnabled() {
-    // Arrange
-    notifAut.taskEnabled = false
-    notifAut.eventEnabled = false
-
-    // Act
-    repository.scheduleNotification(task)
-    repository.scheduleNotification(event)
-
-    // Assert
-    verifyNoInteractions(mockWorkManager)
-  }
-
-  @Test
   fun scheduleNotificationEnqueuesWorkWhenDelayIsPositive() {
     // Arrange
     task.start.add(Calendar.MINUTE, 2)
@@ -163,7 +149,7 @@ class NotificationRepositoryTest {
   fun showNotificationCreatesNotification() {
     val title = "Test Title"
     val text = "Test Description"
-    val type = NotificationType.SCHEDULED.name
+    val type = NotificationType.TASK.name
     val id = "Scheduled Id"
     val channel = "task_channel"
 

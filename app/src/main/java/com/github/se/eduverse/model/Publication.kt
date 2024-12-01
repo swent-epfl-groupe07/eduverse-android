@@ -9,7 +9,8 @@ data class Publication(
     val mediaType: MediaType = MediaType.PHOTO, // Type de média (photo ou vidéo)
     val timestamp: Long = System.currentTimeMillis(),
     val likes: Int = 0,
-    val likedBy: List<String> = emptyList()
+    val likedBy: List<String> = emptyList(),
+    val comments: List<Comment> = emptyList() // Ajout de la liste des commentaires
 )
 
 enum class MediaType {

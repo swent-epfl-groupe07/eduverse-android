@@ -110,7 +110,13 @@ fun PicTakenScreen(
                 Image(
                     painter = painterResource(id = R.drawable.vector),
                     contentDescription = "Crop Photo",
-                    modifier = Modifier.size(30.dp).clickable {}.testTag("cropIcon"))
+                    modifier =
+                        Modifier.size(30.dp)
+                            .clickable {
+                              val encodedPath = Uri.encode(photoFile.absolutePath)
+                              navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
+                            }
+                            .testTag("cropIcon"))
                 Image(
                     painter = painterResource(id = R.drawable.settings),
                     contentDescription = "Filters",
