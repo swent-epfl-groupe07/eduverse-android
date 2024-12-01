@@ -123,13 +123,11 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
                         if (fetchedQuestions.isNotEmpty()) {
                           questions = fetchedQuestions
                         } else {
-                          errorMessage =
-                              "Ouchhh! the AI failed to generate the quiz. Try again."
+                          errorMessage = "Ouchhh! the AI failed to generate the quiz. Try again."
                         }
                       } catch (e: Exception) {
                         e.printStackTrace()
-                        errorMessage =
-                            "Ouchhh! the AI failed to generate the quiz. Try again."
+                        errorMessage = "Ouchhh! the AI failed to generate the quiz. Try again."
                       } finally {
                         // Keep the loading spinner active until questions are displayed
                         isLoading = false
