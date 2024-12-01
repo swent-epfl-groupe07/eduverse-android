@@ -2,7 +2,9 @@ package com.github.se.eduverse
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -55,6 +57,7 @@ import com.github.se.eduverse.ui.gallery.GalleryScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.notifications.NotificationsScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
@@ -84,6 +87,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 
 @AndroidEntryPoint
@@ -91,6 +95,7 @@ class MainActivity : ComponentActivity() {
 
   private var cameraPermissionGranted by mutableStateOf(false)
   private var audioPermissionGranted by mutableStateOf(false)
+  private var notificationPermissionGranted by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -110,7 +115,18 @@ class MainActivity : ComponentActivity() {
           NotificationData(false)
         }
 
-    // Handling camera and microphone permissions
+    val sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+
+    // Retrieve the saved instance or use default
+    val json = sharedPreferences.getString("notifAuthKey", null)
+    val notifAuthorizations =
+        if (json != null) {
+          Json.decodeFromString<NotifAuthorizations>(json)
+        } else {
+          NotifAuthorizations(true, true) // Default value
+        }
+
+    // Handling permissions
     val requestPermissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             permissions ->
@@ -119,12 +135,19 @@ class MainActivity : ComponentActivity() {
               permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
           audioPermissionGranted =
               permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionGranted =
+                permissions[Manifest.permission.POST_NOTIFICATIONS] ?: notificationPermissionGranted
+          }
 
           // Now that permissions are handled, you can set the content
           setContent {
             EduverseTheme {
               Surface(modifier = Modifier.fillMaxSize()) {
-                EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
+                EduverseApp(
+                    cameraPermissionGranted = cameraPermissionGranted,
+                    notificationData,
+                    notifAuthorizations)
               }
             }
           }
@@ -134,6 +157,14 @@ class MainActivity : ComponentActivity() {
     val cameraPermissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
     val audioPermissionStatus =
         ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+
+    // Notification permission is checked only for Android 13+
+    val notificationPermissionStatus =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+          PackageManager.PERMISSION_GRANTED
+        }
 
     // Create a list to store permissions to request
     val permissionsToRequest = mutableListOf<String>()
@@ -150,12 +181,23 @@ class MainActivity : ComponentActivity() {
       permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
     }
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (notificationPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+        notificationPermissionGranted = true
+      } else {
+        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+      }
+    }
+
     if (permissionsToRequest.isEmpty()) {
       // All permissions are already granted, you can set the content
       setContent {
         EduverseTheme {
           Surface(modifier = Modifier.fillMaxSize()) {
-            EduverseApp(cameraPermissionGranted = cameraPermissionGranted, notificationData)
+            EduverseApp(
+                cameraPermissionGranted = cameraPermissionGranted,
+                notificationData,
+                notifAuthorizations)
           }
         }
       }
@@ -168,7 +210,11 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("ComposableDestinationInComposeScope")
 @Composable
-fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: NotificationData) {
+fun EduverseApp(
+    cameraPermissionGranted: Boolean,
+    notificationData: NotificationData,
+    notifAuthorizations: NotifAuthorizations
+) {
   val firestore = FirebaseFirestore.getInstance()
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
@@ -188,8 +234,7 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
   val videoViewModel = VideoViewModel(videoRepo, fileRepo)
   val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifAuthorisations = NotifAuthorizations(true, true)
-  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorisations)
+  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorizations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
@@ -199,7 +244,8 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
 
   notificationData.viewModel =
       when (notificationData.notificationType) {
-        NotificationType.SCHEDULED -> timeTableViewModel
+        NotificationType.TASK,
+        NotificationType.EVENT -> timeTableViewModel
         NotificationType.DEFAULT,
         null -> null
       }
@@ -330,6 +376,10 @@ fun EduverseApp(cameraPermissionGranted: Boolean, notificationData: Notification
             folderViewModel,
             navigationActions)
         Log.d("GalleryScreen", "Current Owner ID: $ownerId")
+      }
+
+      composable(Screen.NOTIFICATIONS) {
+        NotificationsScreen(notifAuthorizations, navigationActions)
       }
     }
 
