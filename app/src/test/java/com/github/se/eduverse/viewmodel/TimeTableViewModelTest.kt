@@ -2,21 +2,26 @@ package com.github.se.eduverse.viewmodel
 
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 
 class TimeTableViewModelTest {
   private lateinit var timeTableRepository: TimeTableRepository
+  private lateinit var notificationRepository: NotificationRepository
   private lateinit var firebaseAuth: FirebaseAuth
   private lateinit var user: FirebaseUser
   private lateinit var timeTableViewModel: TimeTableViewModel
@@ -60,6 +65,7 @@ class TimeTableViewModelTest {
   @Before
   fun setUp() {
     timeTableRepository = mock(TimeTableRepository::class.java)
+    notificationRepository = mock(NotificationRepository::class.java)
     firebaseAuth = mock(FirebaseAuth::class.java)
     user = mock(FirebaseUser::class.java)
 
@@ -73,7 +79,8 @@ class TimeTableViewModelTest {
       callback(listOf(scheduled1, scheduled2))
     }
 
-    timeTableViewModel = TimeTableViewModel(timeTableRepository, firebaseAuth)
+    timeTableViewModel =
+        TimeTableViewModel(timeTableRepository, notificationRepository, firebaseAuth)
     timeTableViewModel.getWeek()
 
     // 3 because scheduled1 and scheduled2 are tuesday, represented by 3
@@ -86,6 +93,12 @@ class TimeTableViewModelTest {
   fun getNewUidTest() {
     assertEquals("uid", timeTableViewModel.getNewUid())
     verify(timeTableRepository).getNewUid()
+  }
+
+  @Test
+  fun getScheduledByIdTest(): Unit = runBlocking {
+    timeTableViewModel.getScheduledById("")
+    verify(timeTableRepository).getScheduledById(eq(""))
   }
 
   @Test
@@ -136,8 +149,8 @@ class TimeTableViewModelTest {
 
     timeTableViewModel.getWeek()
     timeTableViewModel.addScheduled(scheduled2)
-    val t = timeTableViewModel.table.value
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
+    verify(1) { notificationRepository.scheduleNotification(any(), eq(1)) }
   }
 
   @Test
@@ -150,6 +163,7 @@ class TimeTableViewModelTest {
     timeTableViewModel.updateScheduled(scheduled2.apply { name = "newName" })
     assertEquals("newName", scheduled2.name)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
+    verify(1) { notificationRepository.scheduleNotification(any(), eq(1)) }
   }
 
   @Test
@@ -165,6 +179,7 @@ class TimeTableViewModelTest {
 
     timeTableViewModel.deleteScheduled(scheduled3)
     assertEquals(weekWithScheduled, timeTableViewModel.table.value)
+    verify(1) { notificationRepository.cancelNotification(any()) }
   }
 
   @Test

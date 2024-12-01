@@ -16,6 +16,7 @@ import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.model.Scheduled
 import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.millisecInHour
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
@@ -34,6 +35,7 @@ import org.mockito.kotlin.verify
 
 class DetailsEventScreenTest {
   private lateinit var timeTableRepository: TimeTableRepository
+  private lateinit var notificationRepository: NotificationRepository
   private lateinit var timeTableViewModel: TimeTableViewModel
   private lateinit var navigationActions: NavigationActions
   private lateinit var auth: FirebaseAuth
@@ -59,6 +61,7 @@ class DetailsEventScreenTest {
   @Before
   fun setUp() {
     timeTableRepository = mock(TimeTableRepository::class.java)
+    notificationRepository = mock(NotificationRepository::class.java)
     auth = mock(FirebaseAuth::class.java)
     val user = mock(FirebaseUser::class.java)
     navigationActions = mock(NavigationActions::class.java)
@@ -74,7 +77,7 @@ class DetailsEventScreenTest {
       callback()
     }
 
-    timeTableViewModel = TimeTableViewModel(timeTableRepository, auth)
+    timeTableViewModel = TimeTableViewModel(timeTableRepository, notificationRepository, auth)
   }
 
   @Test

@@ -3,7 +3,6 @@ package com.github.se.eduverse.ui.converter
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -120,7 +119,7 @@ fun PdfConverterScreen(
                         icon = Icons.Default.PictureAsPdf,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.DOCUMENT_TO_PDF
-                          Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
+                          filePickerLauncher.launch(arrayOf("*/*"))
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -144,7 +143,7 @@ fun PdfConverterScreen(
                   icon = Icons.Default.Abc,
                   onClick = {
                     currentPdfConverterOption = PdfConverterOption.EXTRACT_TEXT
-                    Toast.makeText(context, "Not available yet", Toast.LENGTH_LONG).show()
+                    filePickerLauncher.launch(arrayOf("image/*"))
                   },
                   optionEnabled =
                       pdfConversionState.value == PdfConverterViewModel.PdfGenerationState.Ready)

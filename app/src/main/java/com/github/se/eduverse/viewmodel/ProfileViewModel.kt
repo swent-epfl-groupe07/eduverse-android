@@ -28,6 +28,10 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
   private val _followActionState = MutableStateFlow<FollowActionState>(FollowActionState.Idle)
   open val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
+  private val _deletePublicationState =
+      MutableStateFlow<DeletePublicationState>(DeletePublicationState.Idle)
+  val deletePublicationState: StateFlow<DeletePublicationState> =
+      _deletePublicationState.asStateFlow()
 
   private var searchJob: Job? = null
 
@@ -72,7 +76,6 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  // ProfileViewModel.kt
   open fun toggleFollow(currentUserId: String, targetUserId: String) {
     viewModelScope.launch {
       try {
@@ -93,31 +96,20 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         }
 
         // Perform database update
-        repository.toggleFollow(currentUserId, targetUserId)
+        val isNowFollowing = repository.toggleFollow(currentUserId, targetUserId)
 
-        // No need to reload entire profile
-        _followActionState.value = FollowActionState.Success
-      } catch (e: Exception) {
-        // On error, just update the affected fields instead of reloading entire profile
-        when (val state = _profileState.value) {
-          is ProfileUiState.Success -> {
-            _profileState.value =
-                ProfileUiState.Success(
-                    state.profile.copy(
-                        isFollowedByCurrentUser = !state.profile.isFollowedByCurrentUser,
-                        followers =
-                            if (state.profile.isFollowedByCurrentUser) state.profile.followers + 1
-                            else state.profile.followers - 1))
-          }
-          else -> {} // Handle other states if needed
-        }
+        // Update success state with all relevant information
         _followActionState.value =
-            FollowActionState.Error(
-                when {
-                  e.message?.contains("Firestore transactions require all reads") == true ->
-                      "Failed to update follow status"
-                  else -> e.message ?: "Failed to update follow status"
-                })
+            FollowActionState.Success(
+                followerId = currentUserId,
+                targetUserId = targetUserId,
+                isNowFollowing = isNowFollowing)
+      } catch (e: Exception) {
+        _followActionState.value =
+            FollowActionState.Error(e.message ?: "Failed to update follow status")
+
+        // Revert optimistic update if there was an error
+        loadProfile(targetUserId)
       }
     }
   }
@@ -241,6 +233,52 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       }
     }
   }
+
+  open fun resetUsernameState() {
+    _usernameState.value = UsernameUpdateState.Idle
+  }
+
+  open suspend fun getFollowers(userId: String): List<Profile> {
+    return try {
+      repository.getFollowers(userId)
+    } catch (e: Exception) {
+      _error.value = "Failed to load followers: ${e.message}"
+      emptyList()
+    }
+  }
+
+  open suspend fun getFollowing(userId: String): List<Profile> {
+    return try {
+      repository.getFollowing(userId)
+    } catch (e: Exception) {
+      _error.value = "Failed to load following: ${e.message}"
+      emptyList()
+    }
+  }
+
+  fun deletePublication(publicationId: String, userId: String) {
+    viewModelScope.launch {
+      _deletePublicationState.value = DeletePublicationState.Loading
+      try {
+        val success = repository.deletePublication(publicationId, userId)
+        if (success) {
+          _deletePublicationState.value = DeletePublicationState.Success
+          // Reload profile to refresh the publications list
+          loadProfile(userId)
+        } else {
+          _deletePublicationState.value =
+              DeletePublicationState.Error("Failed to delete publication")
+        }
+      } catch (e: Exception) {
+        _deletePublicationState.value =
+            DeletePublicationState.Error(e.message ?: "Unknown error occurred")
+      }
+    }
+  }
+
+  fun resetDeleteState() {
+    _deletePublicationState.value = DeletePublicationState.Idle
+  }
 }
 
 sealed class ProfileUiState {
@@ -286,7 +324,21 @@ sealed class FollowActionState {
 
   object Loading : FollowActionState()
 
-  object Success : FollowActionState()
+  data class Success(
+      val followerId: String,
+      val targetUserId: String,
+      val isNowFollowing: Boolean
+  ) : FollowActionState()
 
   data class Error(val message: String) : FollowActionState()
+}
+
+sealed class DeletePublicationState {
+  object Idle : DeletePublicationState()
+
+  object Loading : DeletePublicationState()
+
+  object Success : DeletePublicationState()
+
+  data class Error(val message: String) : DeletePublicationState()
 }

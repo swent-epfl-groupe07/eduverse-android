@@ -44,6 +44,7 @@ import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.UsernameUpdateState
 import com.google.firebase.auth.FirebaseAuth
 
 var auth = FirebaseAuth.getInstance()
@@ -56,6 +57,8 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     userId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
+  var showUsernameDialog by remember { mutableStateOf(false) }
+  val usernameState by viewModel.usernameState.collectAsState()
   var selectedTab by remember { mutableStateOf(0) }
   val uiState by viewModel.profileState.collectAsState()
   val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
@@ -75,17 +78,46 @@ fun ProfileScreen(
     viewModel.loadLikedPublications(userId)
   }
 
+  if (showUsernameDialog) {
+    UsernameEditDialog(
+        onDismiss = {
+          showUsernameDialog = false
+          // Reset username state when dialog is dismissed
+          viewModel.resetUsernameState()
+        },
+        onSubmit = { newUsername -> viewModel.updateUsername(userId, newUsername) },
+        currentUsername = (uiState as? ProfileUiState.Success)?.profile?.username ?: "",
+        usernameState = usernameState,
+        onSuccess = {
+          showUsernameDialog = false
+          // Reset username state after successful update
+          viewModel.resetUsernameState()
+        })
+  }
+
   Scaffold(
       modifier = Modifier.testTag("profile_screen_container"),
       topBar = {
         TopAppBar(
-            modifier = Modifier.testTag("profile_top_bar"),
             title = {
               when (uiState) {
-                is ProfileUiState.Success ->
-                    Text(
-                        text = (uiState as ProfileUiState.Success).profile.username,
-                        modifier = Modifier.testTag("profile_username"))
+                is ProfileUiState.Success -> {
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier = Modifier.clickable { showUsernameDialog = true }) {
+                        Text(
+                            text = (uiState as ProfileUiState.Success).profile.username,
+                            modifier = Modifier.testTag("profile_username"))
+                        IconButton(
+                            onClick = { showUsernameDialog = true },
+                            modifier = Modifier.testTag("edit_username_button")) {
+                              Icon(
+                                  imageVector = Icons.Default.Edit,
+                                  contentDescription = "Edit username",
+                                  modifier = Modifier.size(16.dp))
+                            }
+                      }
+                }
                 else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
               }
             },
@@ -129,8 +161,16 @@ fun ProfileScreen(
                   Row(
                       modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
                       horizontalArrangement = Arrangement.SpaceEvenly) {
-                        StatItem("Followers", profile.followers, Modifier.testTag("followers_stat"))
-                        StatItem("Following", profile.following, Modifier.testTag("following_stat"))
+                        StatItem(
+                            "Followers",
+                            profile.followers,
+                            onClick = { navigationActions.navigateToFollowersList(profile.id) },
+                            Modifier.testTag("followers_stat"))
+                        StatItem(
+                            "Following",
+                            profile.following,
+                            onClick = { navigationActions.navigateToFollowingList(profile.id) },
+                            Modifier.testTag("following_stat"))
                       }
                 }
                 else -> {}
@@ -186,18 +226,25 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun StatItem(label: String, count: Int, modifier: Modifier = Modifier) {
-  Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-    Text(
-        text = count.toString(),
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.testTag("stat_count_$label"))
-    Text(
-        text = label,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.testTag("stat_label_$label"))
-  }
+private fun StatItem(
+    label: String,
+    count: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Column(
+      modifier = modifier.clickable(onClick = onClick).testTag("stat_${label.lowercase()}"),
+      horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.testTag("stat_count_$label"))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("stat_label_$label"))
+      }
 }
 
 @Composable
@@ -430,5 +477,88 @@ private fun ErrorMessage(message: String, modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.error,
         modifier = Modifier.testTag("error_message"))
+  }
+}
+
+@Composable
+private fun UsernameEditDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (String) -> Unit,
+    currentUsername: String,
+    usernameState: UsernameUpdateState,
+    onSuccess: () -> Unit
+) {
+  var username by remember { mutableStateOf(currentUsername) }
+  var isError by remember { mutableStateOf(false) }
+  var errorMessage by remember { mutableStateOf("") }
+
+  // Handle success state
+  LaunchedEffect(usernameState) {
+    if (usernameState is UsernameUpdateState.Success) {
+      onSuccess()
+    }
+  }
+
+  Dialog(onDismissRequest = onDismiss) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface) {
+          Column(
+              modifier = Modifier.padding(16.dp).testTag("username_edit_dialog"),
+              verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(text = "Edit Username", style = MaterialTheme.typography.titleLarge)
+
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = {
+                      username = it
+                      isError = false
+                      errorMessage = ""
+                    },
+                    label = { Text("Username") },
+                    isError = isError || usernameState is UsernameUpdateState.Error,
+                    supportingText =
+                        when {
+                          isError -> {
+                            { Text(errorMessage, color = MaterialTheme.colorScheme.error) }
+                          }
+                          usernameState is UsernameUpdateState.Error -> {
+                            { Text(usernameState.message, color = MaterialTheme.colorScheme.error) }
+                          }
+                          else -> null
+                        },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth())
+
+                when (usernameState) {
+                  is UsernameUpdateState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.CenterHorizontally))
+                  }
+                  else -> {}
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically) {
+                      TextButton(
+                          onClick = onDismiss, modifier = Modifier.testTag("cancel_button")) {
+                            Text("Cancel")
+                          }
+                      Spacer(modifier = Modifier.width(8.dp))
+                      Button(
+                          onClick = { onSubmit(username) },
+                          modifier = Modifier.testTag("submit_button"),
+                          enabled =
+                              username != currentUsername &&
+                                  username.isNotBlank() &&
+                                  usernameState !is UsernameUpdateState.Loading) {
+                            Text("Save")
+                          }
+                    }
+              }
+        }
   }
 }

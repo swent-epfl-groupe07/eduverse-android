@@ -17,6 +17,7 @@ import com.github.se.eduverse.model.ScheduledType
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.model.millisecInHour
+import com.github.se.eduverse.repository.NotificationRepository
 import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.repository.TodoRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -39,6 +40,7 @@ import org.mockito.kotlin.verify
 class TimeTableScreenTest {
   private lateinit var todoRepository: TodoRepository
   private lateinit var timeTableRepository: TimeTableRepository
+  private lateinit var notificationRepository: NotificationRepository
   private lateinit var auth: FirebaseAuth
   private lateinit var user: FirebaseUser
   private lateinit var navigationActions: NavigationActions
@@ -87,6 +89,7 @@ class TimeTableScreenTest {
   fun setUp() {
     todoRepository = mock(TodoRepository::class.java)
     timeTableRepository = mock(TimeTableRepository::class.java)
+    notificationRepository = mock(NotificationRepository::class.java)
     auth = mock(FirebaseAuth::class.java)
     user = mock(FirebaseUser::class.java)
     navigationActions = mock(NavigationActions::class.java)
@@ -118,7 +121,7 @@ class TimeTableScreenTest {
     }
 
     todoListViewModel = TodoListViewModel(todoRepository)
-    timeTableViewModel = TimeTableViewModel(timeTableRepository, auth)
+    timeTableViewModel = TimeTableViewModel(timeTableRepository, notificationRepository, auth)
 
     composeTestRule.setContent {
       density = LocalDensity.current

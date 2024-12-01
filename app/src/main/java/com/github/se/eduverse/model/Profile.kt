@@ -8,5 +8,5 @@ data class Profile(
     val publications: List<Publication> = emptyList(),
     val favoritePublications: List<Publication> = emptyList(),
     val profileImageUrl: String = "",
-    val isFollowedByCurrentUser: Boolean = false // New field
+    val isFollowedByCurrentUser: Boolean = false
 )

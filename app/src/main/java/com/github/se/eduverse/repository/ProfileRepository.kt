@@ -7,6 +7,8 @@ import com.github.se.eduverse.model.Publication
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 interface ProfileRepository {
@@ -53,6 +55,12 @@ interface ProfileRepository {
   suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean
 
   suspend fun updateFollowCounts(followerId: String, targetUserId: String, isFollowing: Boolean)
+
+  suspend fun getFollowers(userId: String): List<Profile>
+
+  suspend fun getFollowing(userId: String): List<Profile>
+
+  suspend fun deletePublication(publicationId: String, userId: String): Boolean
 }
 
 open class ProfileRepositoryImpl(
@@ -360,20 +368,22 @@ open class ProfileRepositoryImpl(
   }
 
   override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
-    val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
+    return try {
+      val isCurrentlyFollowing = isFollowing(followerId, targetUserId)
 
-    if (isCurrentlyFollowing) {
-      // Unfollow
-      unfollowUser(followerId, targetUserId)
-    } else {
-      // Follow
-      followUser(followerId, targetUserId)
+      if (isCurrentlyFollowing) {
+        unfollowUser(followerId, targetUserId)
+      } else {
+        followUser(followerId, targetUserId)
+      }
+
+      updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
+
+      !isCurrentlyFollowing
+    } catch (e: Exception) {
+      Log.e("TOGGLE_FOLLOW", "Failed to toggle follow: ${e.message}")
+      throw e
     }
-
-    // Update the follower counts for both users
-    updateFollowCounts(followerId, targetUserId, !isCurrentlyFollowing)
-
-    return !isCurrentlyFollowing
   }
 
   override suspend fun updateFollowCounts(
@@ -410,5 +420,106 @@ open class ProfileRepositoryImpl(
           null
         }
         .await()
+  }
+
+  override suspend fun getFollowers(userId: String): List<Profile> {
+    return try {
+      // Get all followers IDs
+      val followerDocs = followersCollection.whereEqualTo("followedId", userId).get().await()
+
+      // Get profile details for each follower
+      val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+      followerDocs.documents.mapNotNull { doc ->
+        val followerId = doc.getString("followerId") ?: return@mapNotNull null
+        val profileDoc = profilesCollection.document(followerId).get().await()
+        val profile = profileDoc.toObject(Profile::class.java) ?: return@mapNotNull null
+
+        // Check if the current user is following this profile
+        val isFollowed = currentUserId?.let { isFollowing(it, followerId) } ?: false
+
+        profile.copy(isFollowedByCurrentUser = isFollowed)
+      }
+    } catch (e: Exception) {
+      Log.e("GET_FOLLOWERS", "Failed to get followers: ${e.message}")
+      emptyList()
+    }
+  }
+
+  override suspend fun getFollowing(userId: String): List<Profile> {
+    return try {
+      // Get all following IDs
+      val followingDocs = followersCollection.whereEqualTo("followerId", userId).get().await()
+
+      // Get profile details for each following
+      followingDocs.documents.mapNotNull { doc ->
+        val followingId = doc.getString("followedId") ?: return@mapNotNull null
+        val profileDoc = profilesCollection.document(followingId).get().await()
+        profileDoc.toObject(Profile::class.java)?.let { profile ->
+          // Since this is from following list, we know the current user is following them
+          profile.copy(id = followingId, isFollowedByCurrentUser = true)
+        }
+      }
+    } catch (e: Exception) {
+      Log.e("GET_FOLLOWING", "Failed to get following: ${e.message}")
+      emptyList()
+    }
+  }
+
+  override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
+    return try {
+      coroutineScope {
+        val pubQuery =
+            publicationsCollection
+                .whereEqualTo("id", publicationId)
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+        if (pubQuery.isEmpty) {
+          throw Exception("Publication not found or user not authorized")
+        }
+
+        val pubDoc = pubQuery.documents[0]
+        val mediaUrlToDelete = pubDoc.getString("mediaUrl")
+        val thumbnailUrlToDelete = pubDoc.getString("thumbnailUrl")
+        val likedByUsers = pubDoc.get("likedBy") as? List<String> ?: emptyList()
+
+        // Delete Firestore document first
+        pubDoc.reference.delete().await()
+
+        // Use async for parallel deletion of liked publications
+        val likedPubsDeletion = launch {
+          likedByUsers.forEach { likedUserId ->
+            val likedPubRef =
+                usersCollection
+                    .document(likedUserId)
+                    .collection("likedPublications")
+                    .document(publicationId)
+            likedPubRef.delete().await()
+          }
+        }
+
+        // Delete media files in parallel
+        val mediaDeletion = launch {
+          if (!mediaUrlToDelete.isNullOrEmpty()) {
+            val mediaRef = storage.getReferenceFromUrl(mediaUrlToDelete)
+            mediaRef.delete().await()
+          }
+
+          if (!thumbnailUrlToDelete.isNullOrEmpty() && thumbnailUrlToDelete != mediaUrlToDelete) {
+            val thumbnailRef = storage.getReferenceFromUrl(thumbnailUrlToDelete)
+            thumbnailRef.delete().await()
+          }
+        }
+
+        // Wait for all deletions to complete
+        likedPubsDeletion.join()
+        mediaDeletion.join()
+        true
+      }
+    } catch (e: Exception) {
+      Log.e("DELETE_PUBLICATION", "Failed to delete publication: ${e.message}")
+      false
+    }
   }
 }

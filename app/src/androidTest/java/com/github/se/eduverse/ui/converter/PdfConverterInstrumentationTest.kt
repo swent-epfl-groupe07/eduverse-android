@@ -5,13 +5,17 @@ import android.graphics.Bitmap
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.core.graphics.drawable.toBitmap
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.R
+import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import java.io.File
+import junit.framework.TestCase
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,13 +33,16 @@ class PdfConverterInstrumentationTest {
   private lateinit var openAiRepository: OpenAiRepository
   private lateinit var context: Context
   private lateinit var pdfConverterViewModel: PdfConverterViewModel
+  private lateinit var convertApiRepository: ConvertApiRepository
 
   @Before
   fun setUp() {
     context = ApplicationProvider.getApplicationContext()
     pdfRepository = PdfRepositoryImpl()
     openAiRepository = OpenAiRepository(OkHttpClient())
-    pdfConverterViewModel = PdfConverterViewModel(pdfRepository, openAiRepository)
+    convertApiRepository = ConvertApiRepository(OkHttpClient())
+    pdfConverterViewModel =
+        PdfConverterViewModel(pdfRepository, openAiRepository, convertApiRepository)
   }
 
   @Test
@@ -163,5 +170,61 @@ class PdfConverterInstrumentationTest {
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
     assertEquals(text.replace(" ", ""), extractedText.replace(" ", ""))
     pdfFile.delete()
+  }
+
+  @Test
+  fun testGetTempFileFromUri() {
+    val tempFile = File.createTempFile("test", ".docx")
+    val uri = Uri.fromFile(tempFile)
+
+    val result = pdfRepository.getTempFileFromUri(uri, context)
+
+    TestCase.assertTrue(result.exists())
+    TestCase.assertTrue(result.name.endsWith(".docx"))
+    tempFile.delete()
+    result.delete()
+  }
+
+  @Test
+  fun testExtractTextImage_onSuccess() {
+    val bitmap = context.resources.getDrawable(R.drawable.text_extraction).toBitmap()
+    val imageFile = File.createTempFile("test", ".png")
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, imageFile.outputStream())
+
+    pdfRepository.extractTextFromImage(
+        Uri.fromFile(imageFile),
+        context,
+        { assertEquals("This is a test image with text", it) },
+        {
+          assertTrue(false) // Fail the test if onFailure is called
+        })
+
+    imageFile.delete()
+  }
+
+  @Test
+  fun testExtractTextImage_onImageWithoutText() {
+    Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888).also {
+      it.eraseColor(0xFFFFFFFF.toInt())
+      val imageFile = File.createTempFile("test", ".png")
+      it.compress(Bitmap.CompressFormat.PNG, 100, imageFile.outputStream())
+
+      pdfRepository.extractTextFromImage(
+          Uri.fromFile(imageFile),
+          context,
+          {},
+          { e -> assertEquals("No text found on image", e.message) })
+
+      imageFile.delete()
+    }
+  }
+
+  @Test
+  fun testExtractTextImage_onGetImageBitmapError() {
+    pdfRepository.extractTextFromImage(
+        Uri.parse("invalid uri"),
+        context,
+        {},
+        { assertEquals("Failed to get image bitmap", it.message) })
   }
 }

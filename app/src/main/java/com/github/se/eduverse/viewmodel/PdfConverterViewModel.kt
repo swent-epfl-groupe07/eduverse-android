@@ -7,23 +7,27 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.converter.PdfConverterOption
 import java.io.File
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
 class PdfConverterViewModel(
     private val pdfRepository: PdfRepository,
-    private val openAiRepository: OpenAiRepository
+    private val openAiRepository: OpenAiRepository,
+    private val convertApiRepository: ConvertApiRepository
 ) : ViewModel() {
 
   val DEFAULT_DESTINATION_DIRECTORY =
@@ -60,7 +64,11 @@ class PdfConverterViewModel(
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PdfConverterViewModel(PdfRepositoryImpl(), OpenAiRepository(OkHttpClient())) as T
+            return PdfConverterViewModel(
+                PdfRepositoryImpl(),
+                OpenAiRepository(OkHttpClient()),
+                ConvertApiRepository(OkHttpClient()))
+                as T
           }
         }
   }
@@ -97,21 +105,34 @@ class PdfConverterViewModel(
                 val pdfFile = pdfRepository.convertTextToPdf(uri, context)
                 currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
               }
-              PdfConverterOption.DOCUMENT_TO_PDF -> throw Exception("Not implemented")
+              PdfConverterOption.DOCUMENT_TO_PDF -> {
+                val file = pdfRepository.getTempFileFromUri(uri, context)
+                val pdfFile =
+                    withContext(Dispatchers.IO) {
+                      convertApiRepository.convertToPdf(file, newFileName.value)
+                    }
+                currentFile = pdfFile
+              }
               PdfConverterOption.SUMMARIZE_FILE -> {
                 val text = pdfRepository.readTextFromPdfFile(uri, context, MAX_SUMMARY_INPUT_SIZE)
                 getSummary(text)
               }
-              PdfConverterOption.EXTRACT_TEXT -> throw Exception("Not implemented")
+              PdfConverterOption.EXTRACT_TEXT -> {
+                extractTextToPdf(uri, context)
+              }
               PdfConverterOption.NONE ->
                   throw Exception("No converter option selected") // Should never happen
             }
             delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
+            // Simulate a delay to show the progress indicator(for testing purposes)
             currentFile?.let { file ->
               _pdfGenerationState.value = PdfGenerationState.Success(file)
             } ?: { _pdfGenerationState.value = PdfGenerationState.Error }
           } catch (e: Exception) {
             Log.e("generatePdf", "Failed to generate pdf", e)
+            if (e is IllegalArgumentException) {
+              context.showToast(e.message.toString())
+            }
             _pdfGenerationState.value = PdfGenerationState.Error
           }
         }
@@ -173,6 +194,26 @@ class PdfConverterViewModel(
         },
         onFailure = {
           Log.e("getSummary", "Failed to get summary from openAi api", it)
+          throw it
+        })
+  }
+
+  /**
+   * Helper function to handle the text extraction process
+   *
+   * @param uri The URI of the image to extract text from
+   * @param context The context of the application
+   */
+  private fun extractTextToPdf(uri: Uri?, context: Context) {
+    pdfRepository.extractTextFromImage(
+        uri,
+        context,
+        onSuccess = { extractedText ->
+          val pdfFile = pdfRepository.writeTextToPdf(extractedText)
+          currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+        },
+        onFailure = {
+          Log.e("extractTextFromImage", "Failed to extract text from image", it)
           throw it
         })
   }

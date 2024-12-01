@@ -5,6 +5,7 @@ import com.github.se.eduverse.model.ScheduledType
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
+import kotlinx.coroutines.tasks.await
 
 open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableRepository {
   private val collection = db.collection("scheduled")
@@ -40,6 +41,11 @@ open class TimeTableRepositoryImpl(val db: FirebaseFirestore) : TimeTableReposit
           onSuccess(it.documents.map { document -> convertScheduled(document) })
         }
         .addOnFailureListener(onFailure)
+  }
+
+  override suspend fun getScheduledById(id: String): Scheduled {
+    val document = collection.document(id).get().await()
+    return convertScheduled(document)
   }
 
   override fun addScheduled(
