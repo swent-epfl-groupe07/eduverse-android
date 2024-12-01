@@ -26,7 +26,7 @@ import com.github.se.eduverse.ui.theme.COLOR_INCORRECT
 import com.github.se.eduverse.ui.theme.COLOR_TEXT_PLACEHOLDER
 import kotlinx.coroutines.launch
 
-// Main composable for the quiz screen
+/// Main composable for the quiz screen
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepository) {
@@ -38,6 +38,8 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
   val selectedAnswers = remember { mutableStateMapOf<Int, String>() }
   var isQuizSubmitted by remember { mutableStateOf(false) }
   var score by remember { mutableStateOf(0) }
+  var isLoading by remember { mutableStateOf(false) }
+  var errorMessage by remember { mutableStateOf<String?>(null) } // Added error message state
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
@@ -97,7 +99,7 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
                     DropdownMenuDemo(
                         label = "Questions",
                         value = numberOfQuestions.toString(),
-                        options = (1..30).map { it.toString() },
+                        options = (1..20).map { it.toString() },
                         modifier = Modifier.testTag("numberOfQuestionsDropdown")) { selected ->
                           numberOfQuestions = selected.toInt()
                         }
@@ -110,14 +112,27 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
                   onClick = {
                     focusManager.clearFocus()
                     scope.launch {
+                      isLoading = true
+                      isQuizSubmitted = false
+                      selectedAnswers.clear()
+                      errorMessage = null
                       try {
-                        isQuizSubmitted = false
-                        questions =
+                        val fetchedQuestions =
                             quizzRepository.getQuestionsFromGPT(
                                 topic, difficulty, numberOfQuestions)
-                        selectedAnswers.clear()
+                        if (fetchedQuestions.isNotEmpty()) {
+                          questions = fetchedQuestions
+                        } else {
+                          errorMessage =
+                              "Ouchhh! the AI failed to generate the quiz. Try again."
+                        }
                       } catch (e: Exception) {
                         e.printStackTrace()
+                        errorMessage =
+                            "Ouchhh! the AI failed to generate the quiz. Try again."
+                      } finally {
+                        // Keep the loading spinner active until questions are displayed
+                        isLoading = false
                       }
                     }
                   },
@@ -128,10 +143,22 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
                     Text("Generate Quiz", color = MaterialTheme.colorScheme.onPrimary)
                   }
 
+              // Display error message if any
+              if (errorMessage != null) {
+                Text(
+                    text = errorMessage!!,
+                    color = COLOR_INCORRECT,
+                    modifier = Modifier.padding(16.dp).testTag("errorMessageText"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold)
+              }
+
               Spacer(modifier = Modifier.height(16.dp))
 
-              // Display list of questions
-              if (questions.isNotEmpty()) {
+              // Show loading animation or questions list
+              if (isLoading) {
+                QuizLoadingAnimation(modifier = Modifier.fillMaxSize())
+              } else if (questions.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f).testTag("questionsList")) {
                   itemsIndexed(questions) { index, question ->
                     QuestionItem(
@@ -321,4 +348,17 @@ fun <T> List<T>.countIndexed(predicate: (Int, T) -> Boolean): Int {
   var count = 0
   forEachIndexed { index, element -> if (predicate(index, element)) count++ }
   return count
+}
+
+// Generates a loading animation
+@Composable
+fun QuizLoadingAnimation(modifier: Modifier = Modifier) {
+  Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier.fillMaxSize().background(Color.White).testTag("loadingAnimation")) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(64.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 16.dp)
+      }
 }
