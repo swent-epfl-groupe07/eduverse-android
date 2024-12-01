@@ -28,6 +28,10 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open val usernameState: StateFlow<UsernameUpdateState> = _usernameState.asStateFlow()
   private val _followActionState = MutableStateFlow<FollowActionState>(FollowActionState.Idle)
   open val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
+  private val _deletePublicationState =
+      MutableStateFlow<DeletePublicationState>(DeletePublicationState.Idle)
+  val deletePublicationState: StateFlow<DeletePublicationState> =
+      _deletePublicationState.asStateFlow()
 
   private var searchJob: Job? = null
 
@@ -230,6 +234,10 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
+  open fun resetUsernameState() {
+    _usernameState.value = UsernameUpdateState.Idle
+  }
+
   open suspend fun getFollowers(userId: String): List<Profile> {
     return try {
       repository.getFollowers(userId)
@@ -246,6 +254,30 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       _error.value = "Failed to load following: ${e.message}"
       emptyList()
     }
+  }
+
+  fun deletePublication(publicationId: String, userId: String) {
+    viewModelScope.launch {
+      _deletePublicationState.value = DeletePublicationState.Loading
+      try {
+        val success = repository.deletePublication(publicationId, userId)
+        if (success) {
+          _deletePublicationState.value = DeletePublicationState.Success
+          // Reload profile to refresh the publications list
+          loadProfile(userId)
+        } else {
+          _deletePublicationState.value =
+              DeletePublicationState.Error("Failed to delete publication")
+        }
+      } catch (e: Exception) {
+        _deletePublicationState.value =
+            DeletePublicationState.Error(e.message ?: "Unknown error occurred")
+      }
+    }
+  }
+
+  fun resetDeleteState() {
+    _deletePublicationState.value = DeletePublicationState.Idle
   }
 }
 
@@ -299,4 +331,14 @@ sealed class FollowActionState {
   ) : FollowActionState()
 
   data class Error(val message: String) : FollowActionState()
+}
+
+sealed class DeletePublicationState {
+  object Idle : DeletePublicationState()
+
+  object Loading : DeletePublicationState()
+
+  object Success : DeletePublicationState()
+
+  data class Error(val message: String) : DeletePublicationState()
 }

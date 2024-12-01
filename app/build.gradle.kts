@@ -13,7 +13,9 @@ plugins {
     alias(libs.plugins.sonar)
     kotlin("kapt")
     alias(libs.plugins.hilt)
-    id("kotlin-parcelize")}
+    id("kotlin-parcelize")
+    kotlin("plugin.serialization") version "1.9.0"
+}
 
 
 val hiltVersion = "2.48"
@@ -316,6 +318,9 @@ dependencies {
 
     //Itext
     implementation("com.github.librepdf:openpdf:1.3.30")
+
+    // Text recognition
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
 }
 
