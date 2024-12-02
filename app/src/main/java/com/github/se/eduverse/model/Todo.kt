@@ -1,6 +1,5 @@
 package com.github.se.eduverse.model
 
-import java.util.Calendar
 import java.util.Date
 
 data class Todo(
