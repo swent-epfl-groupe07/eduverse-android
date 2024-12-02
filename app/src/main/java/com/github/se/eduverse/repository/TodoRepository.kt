@@ -7,6 +7,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 open class TodoRepository(private val db: FirebaseFirestore) {
   private val collectionPath = "todos"
@@ -44,12 +45,16 @@ open class TodoRepository(private val db: FirebaseFirestore) {
     db.collection(collectionPath)
         .whereEqualTo("ownerId", userId)
         .whereEqualTo("status", "ACTUAL")
+        .orderBy(
+            "creationTime",
+            Query.Direction
+                .ASCENDING) // makes sure the newly added todos are displayed at the bottom
         .get()
         .addOnSuccessListener { result ->
           val todos = result.documents.mapNotNull { document -> decodeTodo(document) }
           onSuccess(todos)
         }
-        .addOnFailureListener(onFailure)
+        .addOnFailureListener { onFailure(it) }
   }
 
   /**
@@ -66,12 +71,13 @@ open class TodoRepository(private val db: FirebaseFirestore) {
     db.collection(collectionPath)
         .whereEqualTo("ownerId", userId)
         .whereEqualTo("status", "DONE")
+        .orderBy("creationTime", Query.Direction.ASCENDING)
         .get()
         .addOnSuccessListener { result ->
           val todos = result.documents.mapNotNull { document -> decodeTodo(document) }
           onSuccess(todos)
         }
-        .addOnFailureListener(onFailure)
+        .addOnFailureListener { onFailure(it) }
   }
 
   /**
@@ -133,8 +139,15 @@ open class TodoRepository(private val db: FirebaseFirestore) {
       val statusString = document.getString("status") ?: return null
       val status = TodoStatus.valueOf(statusString)
       val ownerId = document.getString("ownerId") ?: return null
+      val creationTime = document.getDate("creationTime") ?: return null
 
-      Todo(uid = uid, name = name, timeSpent = timeSpent, status = status, ownerId = ownerId)
+      Todo(
+          uid = uid,
+          name = name,
+          timeSpent = timeSpent,
+          status = status,
+          ownerId = ownerId,
+          creationTime = creationTime)
     } catch (e: Exception) {
       Log.e("TodosRepositoryFirestore", "Error converting document to ToDo", e)
       null
