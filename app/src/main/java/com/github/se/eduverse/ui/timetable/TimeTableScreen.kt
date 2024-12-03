@@ -276,7 +276,6 @@ fun DialogCreate(
       },
       text = {
         if (newElementType == ScheduledType.TASK) {
-          todoViewModel.getActualTodos()
           Column(
               modifier = Modifier.fillMaxWidth().testTag("addTaskDialog"),
               verticalArrangement = Arrangement.spacedBy(8.dp)) {
