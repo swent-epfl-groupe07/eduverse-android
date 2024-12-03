@@ -31,6 +31,7 @@ open class VideoViewModel(
   fun saveVideo(
       video: Video,
       folder: Folder? = null,
+      onSuccess: () -> Unit = {},
       addToFolder: (String, String, Folder) -> Unit = { _, _, _ -> }
   ) {
     viewModelScope.launch {
@@ -43,6 +44,7 @@ open class VideoViewModel(
               uid,
               uid,
               folder) // The second uid is the name, might be replaced with a better one in future
+          onSuccess()
         }
       }
     }
