@@ -8,7 +8,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -183,17 +182,26 @@ class TimeTableViewModelTest {
   }
 
   @Test
+  fun getMonthAndYearTest() {
+    @Suppress("DEPRECATION") val cal = Calendar.getInstance().apply { time = Date(124, 10, 7) }
+
+    assertEquals("Nov\n2024", timeTableViewModel.getMonthAndYear(cal))
+  }
+
+  @Test
   fun getDateAtDayTest() {
     @Suppress("DEPRECATION") val cal = Calendar.getInstance().apply { time = Date(124, 10, 7) }
 
-    Locale.setDefault(Locale.ENGLISH) // To get the result in english
+    // Locale.setDefault(Locale.ENGLISH) // To get the result in english
     assertEquals("Thu\n7", timeTableViewModel.getDateAtDay(0, cal))
     assertEquals("Fri\n8", timeTableViewModel.getDateAtDay(1, cal))
     assertEquals("Wed\n13", timeTableViewModel.getDateAtDay(6, cal))
 
+    /* For now the results are all in english for app consistency
+
     Locale.setDefault(Locale.FRENCH) // To get the result in french
     assertEquals("jeu.\n7", timeTableViewModel.getDateAtDay(0, cal))
     assertEquals("ven.\n8", timeTableViewModel.getDateAtDay(1, cal))
-    assertEquals("mer.\n13", timeTableViewModel.getDateAtDay(6, cal))
+    assertEquals("mer.\n13", timeTableViewModel.getDateAtDay(6, cal))*/
   }
 }

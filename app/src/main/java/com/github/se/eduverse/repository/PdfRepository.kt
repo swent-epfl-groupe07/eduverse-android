@@ -1,6 +1,7 @@
 package com.github.se.eduverse.repository
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Paint
@@ -8,6 +9,9 @@ import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.util.Log
 import com.github.se.eduverse.showToast
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.lowagie.text.pdf.PdfReader
 import com.lowagie.text.pdf.parser.PdfTextExtractor
 import java.io.BufferedReader
@@ -37,6 +41,13 @@ interface PdfRepository {
   fun writeTextToPdf(text: String): PdfDocument
 
   fun getTempFileFromUri(uri: Uri?, context: Context): File
+
+  fun extractTextFromImage(
+      imageUri: Uri?,
+      context: Context,
+      onSuccess: (String) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
 
 class PdfRepositoryImpl : PdfRepository {
@@ -60,13 +71,7 @@ class PdfRepositoryImpl : PdfRepository {
   override fun convertImageToPdf(imageUri: Uri?, context: Context): PdfDocument {
     try {
       // Read the image bitmap from the URI
-      val imageBitmap =
-          context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
-            if (inputStream == null) {
-              throw Exception("Failed to open image file")
-            }
-            BitmapFactory.decodeStream(inputStream)
-          }
+      val imageBitmap = getImageBitmap(imageUri, context)
 
       // Create a new PDF document and add the image to it
       val pdfDocument = PdfDocument()
@@ -273,6 +278,66 @@ class PdfRepositoryImpl : PdfRepository {
     } catch (e: Exception) {
       Log.e("getTempFileFromUri", "Failed to get temp file from uri", e)
       throw e
+    }
+  }
+
+  /**
+   * Extract text from the image corresponding to the given URI using the ML Kit Text Recognition
+   * library
+   *
+   * @param imageUri The URI of the image to extract text from
+   * @param context The context of the application
+   * @param onSuccess The callback to be called when the text is successfully extracted
+   * @param onFailure The callback to be called when an error occurs
+   */
+  override fun extractTextFromImage(
+      imageUri: Uri?,
+      context: Context,
+      onSuccess: (String) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    try {
+      val imageBitmap = getImageBitmap(imageUri, context)
+      val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+      val image = InputImage.fromBitmap(imageBitmap, 0)
+      recognizer
+          .process(image)
+          .addOnSuccessListener { visionText ->
+            val extractedText = visionText.text
+            if (extractedText.isNotEmpty()) {
+              onSuccess(extractedText)
+            } else {
+              onFailure(Exception("No text found on image"))
+            }
+          }
+          .addOnFailureListener { onFailure(it) }
+    } catch (e: Exception) {
+      Log.e("extractTextFromImage", "Failed to extract text from image", e)
+      onFailure(e)
+    }
+  }
+
+  /**
+   * Helper function to get the image bitmap from the given URI
+   *
+   * @param imageUri The URI of the image for which to get the bitmap
+   * @param context The context of the application
+   * @return The bitmap of the image
+   * @throws Exception If an error occurs during the process
+   */
+  private fun getImageBitmap(imageUri: Uri?, context: Context): Bitmap {
+    try {
+      val imageBitmap =
+          context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
+            if (inputStream == null) {
+              throw Exception("Failed to open image file")
+            }
+            BitmapFactory.decodeStream(inputStream)
+          }
+      return imageBitmap
+    } catch (e: Exception) {
+      Log.e("getImageBitmap", "Failed to get image bitmap", e)
+      throw Exception("Failed to get image bitmap", e)
     }
   }
 
