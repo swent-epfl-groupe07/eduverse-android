@@ -88,7 +88,7 @@ class NextScreenTest3 {
 
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
-    io.mockk.verify { vViewModel.saveVideo(any<Video>()) }
+    io.mockk.verify { vViewModel.saveVideo(any<Video>(), onSuccess = any()) }
 
     io.mockk.verify(exactly = 3) { navigationActions.goBack() }
   }
@@ -112,7 +112,7 @@ class NextScreenTest3 {
 
     var test = false
     val func = slot<(String, String, Folder) -> Unit>()
-    every { vViewModel.saveVideo(any(), folder1, capture(func)) } answers
+    every { vViewModel.saveVideo(any(), folder1, any(), capture(func)) } answers
         {
           test = true
           func.captured("id", "name", folder1)
