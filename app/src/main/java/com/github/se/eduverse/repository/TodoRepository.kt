@@ -8,6 +8,9 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 open class TodoRepository(private val db: FirebaseFirestore) {
   private val collectionPath = "todos"
@@ -32,52 +35,55 @@ open class TodoRepository(private val db: FirebaseFirestore) {
   }
 
   /**
-   * Get the list pending todos from the database
+   * Sets up a Firestore listener that listens for real-time updates to the user's "actual" todos
+   * and emits them as a flow. The Firestore listener is automatically removed when the flow
+   * collection is cancelled.
    *
-   * @param onSuccess code executed if the todos are successfully accessed
-   * @param onFailure code executed if the todos can't be accessed
+   * @param userId the id of the user to get the todos for
+   * @return a flow of the user's "actual" todos list
    */
-  open fun getActualTodos(
-      userId: String,
-      onSuccess: (List<Todo>) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    db.collection(collectionPath)
-        .whereEqualTo("ownerId", userId)
-        .whereEqualTo("status", "ACTUAL")
-        .orderBy(
-            "creationTime",
-            Query.Direction
-                .ASCENDING) // makes sure the newly added todos are displayed at the bottom
-        .get()
-        .addOnSuccessListener { result ->
-          val todos = result.documents.mapNotNull { document -> decodeTodo(document) }
-          onSuccess(todos)
-        }
-        .addOnFailureListener { onFailure(it) }
+  open fun getActualTodos(userId: String): Flow<List<Todo>> = callbackFlow {
+    val listener =
+        db.collection(collectionPath)
+            .whereEqualTo("ownerId", userId)
+            .whereEqualTo("status", "ACTUAL")
+            .orderBy("creationTime", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshots, error ->
+              if (error != null) {
+                Log.e("getActualTodos", "Error getting todos", error)
+                trySend(emptyList()).isSuccess
+              } else {
+                val todos = snapshots?.documents?.mapNotNull { doc -> decodeTodo(doc) }.orEmpty()
+                trySend(todos).isSuccess
+              }
+            }
+    awaitClose { listener.remove() }
   }
 
   /**
-   * Get the list of done todos from the database
+   * Sets up a Firestore listener that listens for real-time updates to the user's "done" todos and
+   * emits them as a flow. The Firestore listener is automatically removed when the flow collection
+   * is cancelled.
    *
-   * @param onSuccess code executed if the todos are successfully accessed
-   * @param onFailure code executed if the todos can't be accessed
+   * @param userId the id of the user to get the todos for
+   * @return a flow of the user's "done" todos list
    */
-  open fun getDoneTodos(
-      userId: String,
-      onSuccess: (List<Todo>) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    db.collection(collectionPath)
-        .whereEqualTo("ownerId", userId)
-        .whereEqualTo("status", "DONE")
-        .orderBy("creationTime", Query.Direction.ASCENDING)
-        .get()
-        .addOnSuccessListener { result ->
-          val todos = result.documents.mapNotNull { document -> decodeTodo(document) }
-          onSuccess(todos)
-        }
-        .addOnFailureListener { onFailure(it) }
+  open fun getDoneTodos(userId: String): Flow<List<Todo>> = callbackFlow {
+    val listener =
+        db.collection(collectionPath)
+            .whereEqualTo("ownerId", userId)
+            .whereEqualTo("status", "DONE")
+            .orderBy("creationTime", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshots, error ->
+              if (error != null) {
+                Log.e("getDoneTodos", "Error getting todos", error)
+                trySend(emptyList()).isSuccess
+              } else {
+                val todos = snapshots?.documents?.mapNotNull { doc -> decodeTodo(doc) }.orEmpty()
+                trySend(todos).isSuccess
+              }
+            }
+    awaitClose { listener.remove() }
   }
 
   /**
