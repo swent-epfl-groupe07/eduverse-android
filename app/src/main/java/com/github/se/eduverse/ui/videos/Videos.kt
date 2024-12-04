@@ -167,9 +167,13 @@ fun VideoScreen(
                                     .testTag("PublicationItem_$page")) {
                               if (publication.mediaType == MediaType.VIDEO) {
                                 VideoItem(
-                                    context = LocalContext.current, mediaUrl = publication.mediaUrl)
+                                    context = LocalContext.current,
+                                    mediaUrl = publication.mediaUrl,
+                                    modifier = Modifier.testTag("VideoItem_$page"))
                               } else {
-                                PhotoItem(thumbnailUrl = publication.thumbnailUrl)
+                                PhotoItem(
+                                    thumbnailUrl = publication.thumbnailUrl,
+                                    modifier = Modifier.testTag("PhotoItem_$page"))
                               }
 
                               // Icon to like
@@ -425,6 +429,7 @@ fun CommentSection(
 fun VideoItem(
     context: Context,
     mediaUrl: String,
+    modifier: Modifier = Modifier.testTag("VideoItem"),
     exoPlayerProvider: () -> ExoPlayer = {
       ExoPlayer.Builder(context).build().apply {
         setMediaItem(MediaItem.fromUri(mediaUrl))
@@ -449,12 +454,15 @@ fun VideoItem(
           resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         }
       },
-      modifier = Modifier.fillMaxSize().background(Color.Black).testTag("VideoItem"))
+      modifier = modifier.fillMaxSize().background(Color.Black))
 }
 
 @Composable
-fun PhotoItem(thumbnailUrl: String) {
-  Box(modifier = Modifier.fillMaxSize().background(Color.Black).testTag("PhotoItem")) {
+fun PhotoItem(
+    thumbnailUrl: String,
+    modifier: Modifier = Modifier.testTag("PhotoItem") // Ajout du paramètre Modifier
+) {
+  Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
     SubcomposeAsyncImage(
         model = thumbnailUrl,
         contentDescription = "Publication photo",

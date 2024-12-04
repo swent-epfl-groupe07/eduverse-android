@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -119,7 +118,7 @@ class VideoScreenTest {
 
   @Test
   fun testCorrectDisplayOfPublications() {
-    // List of publications with different types (video and photo)
+    // Liste des publications avec différents types (vidéo et photo)
     val publications =
         listOf(
             Publication(
@@ -139,12 +138,12 @@ class VideoScreenTest {
                 thumbnailUrl = "https://via.placeholder.com/150",
                 timestamp = System.currentTimeMillis()))
 
-    // Set publications in the FakeRepository
+    // Configurer les publications dans le FakeRepository
     fakePublicationRepository.setPublications(publications)
-    // Update publications in the ViewModel
+    // Mettre à jour les publications dans le ViewModel
     fakePublicationViewModel.setPublications(publications)
 
-    // Set the content for the test
+    // Définir le contenu pour le test
     composeTestRule.setContent {
       VideoScreen(
           navigationActions = fakeNavigationActions,
@@ -154,24 +153,21 @@ class VideoScreenTest {
           "")
     }
 
-    // Wait for the UI to stabilize and ensure that VideoScreen is visible
+    // Attendre que l'UI se stabilise et s'assurer que VideoScreen est visible
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
 
-    // Verify correct display of the first item (video)
-    composeTestRule.waitUntil(timeoutMillis = 5000) {
-      composeTestRule.onAllNodesWithTag("VideoItem").fetchSemanticsNodes().isNotEmpty()
-    }
-    composeTestRule.onNodeWithTag("VideoItem").assertExists().assertIsDisplayed()
+    // Vérifier l'affichage correct du premier élément (vidéo)
+    composeTestRule.onNodeWithTag("VideoItem_0").assertExists().assertIsDisplayed()
 
-    // Swipe to the second page (photo)
+    // Faire défiler vers la deuxième page (photo)
     composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
 
-    // Verify correct display of the second item (photo)
-    composeTestRule.waitUntil(timeoutMillis = 5000) {
-      composeTestRule.onAllNodesWithTag("PhotoItem").fetchSemanticsNodes().isNotEmpty()
-    }
-    composeTestRule.onNodeWithTag("PhotoItem").assertExists().assertIsDisplayed()
+    // Attendre que l'UI se stabilise après le défilement
+    composeTestRule.waitForIdle()
+
+    // Vérifier l'affichage correct du deuxième élément (photo)
+    composeTestRule.onNodeWithTag("PhotoItem_1").assertExists().assertIsDisplayed()
   }
 
   @Test
