@@ -90,7 +90,6 @@ fun PomodoroScreen(
   var showTodoDialog by remember { mutableStateOf(false) }
   val currentTodoElapsedTime by timerViewModel.currentTodoElapsedTime.collectAsState()
   var lastTimerPausedState by remember { mutableStateOf(false) }
-  val iconButtonSize = 48.dp
 
   // Update the time spent on the selected todo when the screen is disposed so that the correct time
   // appears in the todo list
@@ -217,7 +216,7 @@ fun PomodoroScreen(
                           if (timerState.isPaused) timerViewModel.startTimer()
                           else timerViewModel.stopTimer()
                         },
-                        modifier = Modifier.size(iconButtonSize).testTag("playPauseButton")) {
+                        modifier = Modifier.size(48.dp).testTag("playPauseButton")) {
                           Icon(
                               imageVector =
                                   if (timerState.isPaused) Icons.Default.PlayArrow
@@ -227,7 +226,7 @@ fun PomodoroScreen(
                         }
                     IconButton(
                         onClick = { timerViewModel.resetTimer() },
-                        modifier = Modifier.size(iconButtonSize).testTag("resetButton")) {
+                        modifier = Modifier.size(48.dp).testTag("resetButton")) {
                           Icon(
                               Icons.Default.Refresh,
                               contentDescription = "Reset",
@@ -235,7 +234,7 @@ fun PomodoroScreen(
                         }
                     IconButton(
                         onClick = { timerViewModel.skipToNextTimer() },
-                        modifier = Modifier.size(iconButtonSize).testTag("skipButton")) {
+                        modifier = Modifier.size(48.dp).testTag("skipButton")) {
                           Icon(
                               Icons.Default.SkipNext,
                               contentDescription = "Skip",
