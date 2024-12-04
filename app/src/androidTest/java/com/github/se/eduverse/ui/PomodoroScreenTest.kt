@@ -207,7 +207,7 @@ class PomodoroScreenTest {
     composeTestRule
         .onNodeWithTag("selectTodoButton")
         .assertIsEnabled() // Button should be enabled since the unselected todo can be selected
-                           // again
+    // again
     assert(todoListViewModel.selectedTodo.value == null)
   }
 
