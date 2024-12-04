@@ -210,6 +210,7 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("name 1").performClick()
 
     assert(test)
+    assert(file1.numberAccess == 1)
   }
 
   @Test

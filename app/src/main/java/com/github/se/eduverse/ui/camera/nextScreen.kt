@@ -164,9 +164,13 @@ fun NextScreen(
                   bitmap?.let { bmp ->
                     val byteArray = imageBitmapToByteArray(bmp)
                     val photo = Photo(ownerId, byteArray, path)
-                    photoViewModel.savePhoto(photo, it) { id, name, folder ->
-                      folderViewModel.createFileInFolder(id, name, folder)
-                    }
+                    photoViewModel.savePhoto(
+                        photo, it, onSuccess = { mediaSavedToast(context, "Photo") }) {
+                            id,
+                            name,
+                            folder ->
+                          folderViewModel.createFileInFolder(id, name, folder)
+                        }
                     navigationActions.goBack()
                     navigationActions.goBack()
                     navigationActions.goBack()
@@ -175,9 +179,13 @@ fun NextScreen(
                   videoFile?.let { file ->
                     val videoByteArray = file.readBytes()
                     val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                    videoViewModel.saveVideo(video, it) { id, name, folder ->
-                      folderViewModel.createFileInFolder(id, name, folder)
-                    }
+                    videoViewModel.saveVideo(
+                        video, it, onSuccess = { mediaSavedToast(context, "Video") }) {
+                            id,
+                            name,
+                            folder ->
+                          folderViewModel.createFileInFolder(id, name, folder)
+                        }
                     navigationActions.goBack()
                     navigationActions.goBack()
                     navigationActions.goBack()
@@ -202,7 +210,7 @@ fun NextScreen(
                 bitmap?.let { bmp ->
                   val byteArray = imageBitmapToByteArray(bmp)
                   val photo = Photo(ownerId, byteArray, path)
-                  photoViewModel.savePhoto(photo)
+                  photoViewModel.savePhoto(photo, onSuccess = { mediaSavedToast(context, "Photo") })
                   navigationActions.goBack()
                   navigationActions.goBack()
                   navigationActions.goBack()
@@ -211,14 +219,14 @@ fun NextScreen(
                 videoFile?.let { file ->
                   val videoByteArray = file.readBytes()
                   val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                  videoViewModel.saveVideo(video)
+                  videoViewModel.saveVideo(video, onSuccess = { mediaSavedToast(context, "Video") })
                   navigationActions.goBack()
                   navigationActions.goBack()
                   navigationActions.goBack()
                 }
               },
               modifier = Modifier.weight(1f).height(56.dp).testTag("saveButton"),
-              colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+              colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray),
               shape = RoundedCornerShape(8.dp)) {
                 Text(
                     text = "Save",
