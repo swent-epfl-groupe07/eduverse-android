@@ -101,6 +101,8 @@ fun PomodoroScreen(
                 Modifier.padding(paddingValues).fillMaxSize().testTag("pomodoroScreenContent"),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
+              item { Spacer(modifier = Modifier.height(24.dp)) }
+
               item {
                 // If a todo is selected the todoItem is displayed, otherwise the button to select a
                 // todo is displayed
