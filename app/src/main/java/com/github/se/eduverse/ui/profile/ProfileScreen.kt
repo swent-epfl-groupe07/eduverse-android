@@ -300,107 +300,92 @@ fun PublicationDetailDialog(
     currentUserId: String,
     onDismiss: () -> Unit
 ) {
-    val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
-    val likeCount = remember { mutableStateOf(publication.likes) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    val deleteState by profileViewModel.deletePublicationState.collectAsState()
+  val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
+  val likeCount = remember { mutableStateOf(publication.likes) }
+  var showDeleteDialog by remember { mutableStateOf(false) }
+  val deleteState by profileViewModel.deletePublicationState.collectAsState()
 
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+  var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Handle delete state changes
-    LaunchedEffect(deleteState) {
-        when (deleteState) {
-            is DeletePublicationState.Success -> {
-                errorMessage = null
-                onDismiss() // Close the dialog after successful deletion
-                profileViewModel.resetDeleteState()
-            }
-            is DeletePublicationState.Error -> {
-                errorMessage = (deleteState as DeletePublicationState.Error).message
-                profileViewModel.resetDeleteState()
-            }
-            else -> {
-                errorMessage = null
-            }
-        }
+  // Handle delete state changes
+  LaunchedEffect(deleteState) {
+    when (deleteState) {
+      is DeletePublicationState.Success -> {
+        errorMessage = null
+        onDismiss() // Close the dialog after successful deletion
+        profileViewModel.resetDeleteState()
+      }
+      is DeletePublicationState.Error -> {
+        errorMessage = (deleteState as DeletePublicationState.Error).message
+        profileViewModel.resetDeleteState()
+      }
+      else -> {
+        errorMessage = null
+      }
     }
+  }
 
-    // Confirmation dialog for delete action
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Publication") },
-            text = { Text("Are you sure you want to delete this publication? This action cannot be undone.") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        profileViewModel.deletePublication(publication.id, currentUserId)
-                        showDeleteDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
+  // Confirmation dialog for delete action
+  if (showDeleteDialog) {
+    AlertDialog(
+        onDismissRequest = { showDeleteDialog = false },
+        title = { Text("Delete Publication") },
+        text = {
+          Text("Are you sure you want to delete this publication? This action cannot be undone.")
+        },
+        confirmButton = {
+          Button(
+              onClick = {
+                profileViewModel.deletePublication(publication.id, currentUserId)
+                showDeleteDialog = false
+              },
+              colors =
+                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                Text("Delete")
+              }
+        },
+        dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } })
+  }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
+  Dialog(
+      onDismissRequest = onDismiss,
+      properties =
+          DialogProperties(
+              usePlatformDefaultWidth = false,
+              dismissOnBackPress = true,
+              dismissOnClickOutside = false)) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.Black
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+          Column(modifier = Modifier.fillMaxSize()) {
+            Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+              Column(modifier = Modifier.fillMaxSize()) {
                 SmallTopAppBar(
                     title = {
-                        Text(
-                            publication.title,
-                            color = Color.White,
-                            modifier = Modifier.testTag("publication_title")
-                        )
+                      Text(
+                          publication.title,
+                          color = Color.White,
+                          modifier = Modifier.testTag("publication_title"))
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.testTag("close_button")
-                        ) {
-                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
-                        }
+                      IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_button")) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                      }
                     },
                     actions = {
-                        // Only show delete option if the current user owns the publication
-                        if (publication.userId == currentUserId) {
-                            IconButton(
-                                onClick = { showDeleteDialog = true },
-                                modifier = Modifier.testTag("delete_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete publication",
-                                    tint = Color.White
-                                )
+                      // Only show delete option if the current user owns the publication
+                      if (publication.userId == currentUserId) {
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.testTag("delete_button")) {
+                              Icon(
+                                  imageVector = Icons.Default.Delete,
+                                  contentDescription = "Delete publication",
+                                  tint = Color.White)
                             }
-                        }
+                      }
                     },
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Black,
-                        titleContentColor = Color.White
-                    )
-                )
+                    colors =
+                        TopAppBarDefaults.smallTopAppBarColors(
+                            containerColor = Color.Black, titleContentColor = Color.White))
 
                 Box(
                     modifier = Modifier.weight(1f).fillMaxWidth().testTag("media_container"),
@@ -464,31 +449,23 @@ fun PublicationDetailDialog(
                     }
               }
             }
+          }
+          errorMessage?.let { error ->
+            Box(modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.TopCenter)) {
+              Text(
+                  text = error,
+                  color = MaterialTheme.colorScheme.error,
+                  modifier =
+                      Modifier.background(
+                              color = MaterialTheme.colorScheme.errorContainer,
+                              shape = RoundedCornerShape(4.dp))
+                          .padding(8.dp)
+                          .testTag("delete_error_message")
+                          .fillMaxWidth(),
+                  style = MaterialTheme.typography.bodyMedium)
             }
-            errorMessage?.let { error ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .align(Alignment.TopCenter)
-                ) {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(8.dp)
-                            .testTag("delete_error_message")
-                            .fillMaxWidth(),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+          }
         }
-
       }
 }
 

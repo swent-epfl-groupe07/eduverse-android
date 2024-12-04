@@ -59,8 +59,10 @@ class ProfileScreenTest {
     private val _error = MutableStateFlow<String?>(null)
     override val error: StateFlow<String?> = _error.asStateFlow()
 
-      private val _deletePublicationState = MutableStateFlow<DeletePublicationState>(DeletePublicationState.Idle)
-      override val deletePublicationState: StateFlow<DeletePublicationState> = _deletePublicationState.asStateFlow()
+    private val _deletePublicationState =
+        MutableStateFlow<DeletePublicationState>(DeletePublicationState.Idle)
+    override val deletePublicationState: StateFlow<DeletePublicationState> =
+        _deletePublicationState.asStateFlow()
 
     // Method to set the profile state for testing
     fun setProfileState(state: ProfileUiState) {
@@ -104,22 +106,20 @@ class ProfileScreenTest {
       _usernameState.value = UsernameUpdateState.Idle
     }
 
+    fun setDeletePublicationState(state: DeletePublicationState) {
+      _deletePublicationState.value = state
+    }
 
+    var deletePublicationCalled = false
+      private set
 
-      fun setDeletePublicationState(state: DeletePublicationState) {
-          _deletePublicationState.value = state
-      }
+    override fun deletePublication(publicationId: String, userId: String) {
+      deletePublicationCalled = true
+    }
 
-      var deletePublicationCalled = false
-          private set
-
-      override fun deletePublication(publicationId: String, userId: String) {
-          deletePublicationCalled = true
-      }
-
-      override fun resetDeleteState() {
-          _deletePublicationState.value = DeletePublicationState.Idle
-      }
+    override fun resetDeleteState() {
+      _deletePublicationState.value = DeletePublicationState.Idle
+    }
   }
 
   class FakeNavigationActions : NavigationActions(mock()) {
@@ -453,7 +453,7 @@ class ProfileScreenTest {
             likes = 10)
 
     // Créer une instance simulée du ViewModel
-      val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel()
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -493,7 +493,7 @@ class ProfileScreenTest {
             likedBy = listOf("currentUser"),
             likes = 42)
 
-      val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel()
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -925,141 +925,135 @@ class ProfileScreenTest {
     composeTestRule.onNodeWithText("Some error", useUnmergedTree = true).assertDoesNotExist()
   }
 
-    @Test
-    fun whenUserOwnsPublication_showsDeleteButton() {
-        val publication = Publication(
+  @Test
+  fun whenUserOwnsPublication_showsDeleteButton() {
+    val publication =
+        Publication(
             id = "pub1",
             userId = "currentUser", // Same as currentUserId to test owner case
             title = "Test Publication",
-            mediaType = MediaType.PHOTO
-        )
-        val fakeViewModel = FakeProfileViewModel()
+            mediaType = MediaType.PHOTO)
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        // Verify delete button is shown for owner
-        composeTestRule.onNodeWithTag("delete_button").assertExists()
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
-    @Test
-    fun whenUserDoesNotOwnPublication_hideDeleteButton() {
-        val publication = Publication(
+    // Verify delete button is shown for owner
+    composeTestRule.onNodeWithTag("delete_button").assertExists()
+  }
+
+  @Test
+  fun whenUserDoesNotOwnPublication_hideDeleteButton() {
+    val publication =
+        Publication(
             id = "pub1",
             userId = "otherUser", // Different from currentUserId
             title = "Test Publication",
-            mediaType = MediaType.PHOTO
-        )
-        val fakeViewModel = FakeProfileViewModel()
+            mediaType = MediaType.PHOTO)
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        // Verify delete button is not shown for non-owner
-        composeTestRule.onNodeWithTag("delete_button").assertDoesNotExist()
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
-    @Test
-    fun whenDeleteButtonClicked_showsConfirmationDialog() {
-        val publication = Publication(
+    // Verify delete button is not shown for non-owner
+    composeTestRule.onNodeWithTag("delete_button").assertDoesNotExist()
+  }
+
+  @Test
+  fun whenDeleteButtonClicked_showsConfirmationDialog() {
+    val publication =
+        Publication(
             id = "pub1",
             userId = "currentUser",
             title = "Test Publication",
-            mediaType = MediaType.PHOTO
-        )
-        val fakeViewModel = FakeProfileViewModel()
+            mediaType = MediaType.PHOTO)
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        // Click delete button
-        composeTestRule.onNodeWithTag("delete_button").performClick()
-
-        // Verify confirmation dialog appears
-        composeTestRule.onNodeWithText("Delete Publication").assertExists()
-        composeTestRule.onNodeWithText("Are you sure you want to delete this publication? This action cannot be undone.").assertExists()
-        composeTestRule.onAllNodesWithText("Delete")[0].assertExists()
-        composeTestRule.onAllNodesWithText("Cancel")[0].assertExists()
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
+    // Click delete button
+    composeTestRule.onNodeWithTag("delete_button").performClick()
 
+    // Verify confirmation dialog appears
+    composeTestRule.onNodeWithText("Delete Publication").assertExists()
+    composeTestRule
+        .onNodeWithText(
+            "Are you sure you want to delete this publication? This action cannot be undone.")
+        .assertExists()
+    composeTestRule.onAllNodesWithText("Delete")[0].assertExists()
+    composeTestRule.onAllNodesWithText("Cancel")[0].assertExists()
+  }
 
-    @Test
-    fun whenDeleteConfirmed_callsDeletePublication() {
-        val publication = Publication(
+  @Test
+  fun whenDeleteConfirmed_callsDeletePublication() {
+    val publication =
+        Publication(
             id = "pub1",
             userId = "currentUser",
             title = "Test Publication",
-            mediaType = MediaType.PHOTO
-        )
-        val fakeViewModel = FakeProfileViewModel()
+            mediaType = MediaType.PHOTO)
+    val fakeViewModel = FakeProfileViewModel()
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = {}
-            )
-        }
-
-        // Click delete button and confirm
-        composeTestRule.onNodeWithTag("delete_button").performClick()
-        composeTestRule.onAllNodesWithText("Delete")[0].performClick()
-
-        // Verify deletePublication was called
-        assertTrue(fakeViewModel.deletePublicationCalled)
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = {})
     }
 
-    @Test
-    fun whenDeleteSucceeds_dismissesDialog() {
-        val publication = Publication(
+    // Click delete button and confirm
+    composeTestRule.onNodeWithTag("delete_button").performClick()
+    composeTestRule.onAllNodesWithText("Delete")[0].performClick()
+
+    // Verify deletePublication was called
+    assertTrue(fakeViewModel.deletePublicationCalled)
+  }
+
+  @Test
+  fun whenDeleteSucceeds_dismissesDialog() {
+    val publication =
+        Publication(
             id = "pub1",
             userId = "currentUser",
             title = "Test Publication",
-            mediaType = MediaType.PHOTO
-        )
-        val fakeViewModel = FakeProfileViewModel()
-        var dialogDismissed = false
+            mediaType = MediaType.PHOTO)
+    val fakeViewModel = FakeProfileViewModel()
+    var dialogDismissed = false
 
-        composeTestRule.setContent {
-            PublicationDetailDialog(
-                publication = publication,
-                profileViewModel = fakeViewModel,
-                currentUserId = "currentUser",
-                onDismiss = { dialogDismissed = true }
-            )
-        }
-
-        // Click delete button and confirm
-        composeTestRule.onNodeWithTag("delete_button").performClick()
-        composeTestRule.onAllNodesWithText("Delete")[0].performClick()
-
-        // Simulate successful deletion and wait for UI update
-        fakeViewModel.setDeletePublicationState(DeletePublicationState.Success)
-        composeTestRule.waitForIdle()
-
-        // Verify dialog was dismissed
-        assertTrue(dialogDismissed)
+    composeTestRule.setContent {
+      PublicationDetailDialog(
+          publication = publication,
+          profileViewModel = fakeViewModel,
+          currentUserId = "currentUser",
+          onDismiss = { dialogDismissed = true })
     }
 
+    // Click delete button and confirm
+    composeTestRule.onNodeWithTag("delete_button").performClick()
+    composeTestRule.onAllNodesWithText("Delete")[0].performClick()
 
+    // Simulate successful deletion and wait for UI update
+    fakeViewModel.setDeletePublicationState(DeletePublicationState.Success)
+    composeTestRule.waitForIdle()
+
+    // Verify dialog was dismissed
+    assertTrue(dialogDismissed)
+  }
 }
