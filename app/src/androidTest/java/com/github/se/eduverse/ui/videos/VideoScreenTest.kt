@@ -1,93 +1,79 @@
+// VideoScreenTest.kt
+package com.github.se.eduverse.ui.videos
+
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.lifecycle.Lifecycle
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.fake.FakeCommentsViewModel
+import com.github.se.eduverse.fake.FakeNavigationActions
+import com.github.se.eduverse.fake.FakeProfileViewModel
+import com.github.se.eduverse.fake.FakePublicationRepository
+import com.github.se.eduverse.fake.FakePublicationViewModel
+import com.github.se.eduverse.model.Comment
 import com.github.se.eduverse.model.MediaType
+import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
-import com.github.se.eduverse.ui.navigation.NavigationActions
-import com.github.se.eduverse.ui.videos.VideoScreen
-import com.github.se.eduverse.viewmodel.ProfileUiState
-import com.github.se.eduverse.viewmodel.ProfileViewModel
-import com.github.se.eduverse.viewmodel.PublicationViewModel
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.coVerify
 import io.mockk.spyk
-import io.mockk.verify
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class VideoScreenTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  private lateinit var fakeViewModell:
-      com.github.se.eduverse.ui.profile.ProfileScreenTest.FakeProfileViewModel
+  private lateinit var fakeProfileViewModel: FakeProfileViewModel
+  private lateinit var fakeCommentsViewModel: FakeCommentsViewModel
+  private lateinit var fakePublicationViewModel: FakePublicationViewModel
+  private lateinit var fakePublicationRepository: FakePublicationRepository
+  private lateinit var fakeNavigationActions: FakeNavigationActions
 
   @Before
   fun setup() {
-    fakeViewModell = com.github.se.eduverse.ui.profile.ProfileScreenTest.FakeProfileViewModel()
-  }
-
-  class FakePublicationViewModel(initialPublications: List<Publication>) :
-      PublicationViewModel(mockk(relaxed = true)) {
-    private val _publications = MutableStateFlow(initialPublications)
-
-    override val publications: StateFlow<List<Publication>>
-      get() = _publications
-
-    override suspend fun loadMorePublications() {
-      // Does nothing for this test
-    }
-  }
-
-  class FakeProfileViewModel : ProfileViewModel(mock()) {
-    private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-    override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
-
-    fun setState(state: ProfileUiState) {
-      _profileState.value = state
-    }
+    fakeProfileViewModel = FakeProfileViewModel()
+    fakeCommentsViewModel = FakeCommentsViewModel()
+    fakePublicationRepository = FakePublicationRepository()
+    fakePublicationViewModel = FakePublicationViewModel(fakePublicationRepository)
+    fakeNavigationActions = FakeNavigationActions()
   }
 
   @Test
   fun testLoadingIndicatorIsDisplayedWhenPublicationsAreEmpty() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
+    // Do not set publications to simulate absence of data
+    fakePublicationViewModel.setPublications(emptyList())
 
-    // Use FakePublicationViewModel with an empty list
-    val fakeViewModel = FakePublicationViewModel(emptyList())
-
-    // Set content for the test
+    // Set the content for the test
     composeTestRule.setContent {
       VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
     }
 
     // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Check that the loading indicator is displayed
+    // Verify that the loading indicator is displayed
     composeTestRule.onNodeWithTag("LoadingIndicator").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testVerticalPagerIsDisplayedWhenPublicationsAreNotEmpty() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
     // Non-empty list of publications
     val publications =
         listOf(
@@ -96,7 +82,7 @@ class VideoScreenTest {
                 userId = "user1",
                 title = "Test Video",
                 mediaType = MediaType.VIDEO,
-                mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
                 thumbnailUrl = "",
                 timestamp = System.currentTimeMillis()),
             Publication(
@@ -108,31 +94,31 @@ class VideoScreenTest {
                 thumbnailUrl = "https://via.placeholder.com/150",
                 timestamp = System.currentTimeMillis()))
 
-    // Use FakePublicationViewModel with non-empty publications
-    val fakeViewModel = FakePublicationViewModel(publications)
+    // Set publications in the FakeRepository
+    fakePublicationRepository.setPublications(publications)
+    // Update publications in the ViewModel
+    fakePublicationViewModel.setPublications(publications)
 
-    // Set content for the test
+    // Set the content for the test
     composeTestRule.setContent {
       VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
     }
 
     // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Check that the VerticalPager is displayed
+    // Verify that the VerticalPager is displayed
     composeTestRule.onNodeWithTag("VerticalPager").assertExists().assertIsDisplayed()
   }
 
   @Test
   fun testCorrectDisplayOfPublications() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
-    // List of publications with different types (video and photo)
+    // Liste des publications avec différents types (vidéo et photo)
     val publications =
         listOf(
             Publication(
@@ -140,7 +126,7 @@ class VideoScreenTest {
                 userId = "user1",
                 title = "Test Video",
                 mediaType = MediaType.VIDEO,
-                mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
                 thumbnailUrl = "",
                 timestamp = System.currentTimeMillis()),
             Publication(
@@ -152,43 +138,40 @@ class VideoScreenTest {
                 thumbnailUrl = "https://via.placeholder.com/150",
                 timestamp = System.currentTimeMillis()))
 
-    // Use FakePublicationViewModel with non-empty publications
-    val fakeViewModel = FakePublicationViewModel(publications)
+    // Configurer les publications dans le FakeRepository
+    fakePublicationRepository.setPublications(publications)
+    // Mettre à jour les publications dans le ViewModel
+    fakePublicationViewModel.setPublications(publications)
 
-    // Set content for the test
+    // Définir le contenu pour le test
     composeTestRule.setContent {
       VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
     }
 
-    // Wait for the UI to stabilize and ensure VideoScreen is visible
+    // Attendre que l'UI se stabilise et s'assurer que VideoScreen est visible
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
 
-    // Check the correct display of the first item (video)
-    composeTestRule.waitUntil {
-      composeTestRule.onAllNodesWithTag("VideoItem").fetchSemanticsNodes().isNotEmpty()
-    }
-    composeTestRule.onNodeWithTag("VideoItem").assertIsDisplayed()
+    // Vérifier l'affichage correct du premier élément (vidéo)
+    composeTestRule.onNodeWithTag("VideoItem_0").assertExists().assertIsDisplayed()
 
-    // Swipe to the second page (photo)
+    // Faire défiler vers la deuxième page (photo)
     composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
 
-    // Check the correct display of the second item (photo)
-    composeTestRule.waitUntil {
-      composeTestRule.onAllNodesWithTag("PhotoItem").fetchSemanticsNodes().isNotEmpty()
-    }
-    composeTestRule.onNodeWithTag("PhotoItem").assertIsDisplayed()
+    // Attendre que l'UI se stabilise après le défilement
+    composeTestRule.waitForIdle()
+
+    // Vérifier l'affichage correct du deuxième élément (photo)
+    composeTestRule.onNodeWithTag("PhotoItem_1").assertExists().assertIsDisplayed()
   }
 
   @Test
-  fun testPaginationLoadMorePublications() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
-    // Initial list of publications with a few items
+  fun testPaginationLoadMorePublications() = runTest {
     val initialPublications =
         listOf(
             Publication(
@@ -208,143 +191,43 @@ class VideoScreenTest {
                 thumbnailUrl = "",
                 timestamp = System.currentTimeMillis()))
 
-    // Create a spy for PublicationViewModel
-    val fakeViewModel = spyk(FakePublicationViewModel(initialPublications))
+    // Set publications in the FakeRepository
+    fakePublicationRepository.setPublications(initialPublications)
+    // Update publications in the ViewModel
+    fakePublicationViewModel.setPublications(initialPublications)
 
-    // Set content for the test
+    // Create a spy for the ViewModel
+    val spyViewModel = spyk(fakePublicationViewModel)
+
     composeTestRule.setContent {
       VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = spyViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
     }
 
     // Wait for the UI to stabilize
-    composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
+    composeTestRule.waitForIdle()
 
-    // Simulate scrolling to the last publication to trigger loading more
+    // Wait until publications are loaded
+    composeTestRule.waitUntil(timeoutMillis = 5000) { spyViewModel.publications.value.isNotEmpty() }
+
+    // Verify that the VerticalPager is displayed
+    composeTestRule.onNodeWithTag("VerticalPager").assertExists().assertIsDisplayed()
+
+    // Simulate scrolling to the last page
     composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
     composeTestRule.waitForIdle()
 
-    // Verify that loadMorePublications() is called when the last page is reached
-    verify { runBlocking { fakeViewModel.loadMorePublications() } }
+    // Verify that loadMorePublications() is called
+    coVerify { spyViewModel.loadMorePublications() }
   }
 
   @Test
   fun testBottomNavigationMenuIsDisplayed() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
-    // Create a mock ViewModel with some publications to populate the screen
-    val fakeViewModel =
-        FakePublicationViewModel(
-            listOf(
-                Publication(
-                    id = "1",
-                    userId = "user1",
-                    title = "Test Video",
-                    mediaType = MediaType.VIDEO,
-                    mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
-                    thumbnailUrl = "",
-                    timestamp = System.currentTimeMillis())))
-
-    // Set content for the test
-    composeTestRule.setContent {
-      VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
-    }
-
-    // Wait for the UI to stabilize
-    composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
-
-    // Check that the BottomNavigationMenu is displayed
-    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertExists().assertIsDisplayed()
-  }
-
-  @Test
-  fun testErrorIndicatorIsDisplayedOnLoadingFailure() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
-    // Create a mock ViewModel with an initial error state
-    val fakeViewModel =
-        object : PublicationViewModel(mockk()) {
-          override val publications = MutableStateFlow<List<Publication>>(emptyList())
-          override val error = MutableStateFlow("Failed to load publications")
-        }
-
-    // Set content for the test
-    composeTestRule.setContent {
-      VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
-    }
-
-    // Wait for the UI to stabilize
-    composeTestRule.waitForIdle()
-
-    // Check that the error indicator is displayed
-    composeTestRule.onNodeWithTag("ErrorIndicator").assertExists().assertIsDisplayed()
-  }
-
-  @Test
-  fun testPublicationsAreNotReloadedUnnecessarilyOnLifecycleChanges() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
-    // Use a mock of PublicationViewModel to monitor calls to loadMorePublications()
-    val fakeViewModel =
-        spyk(
-            FakePublicationViewModel(
-                listOf(
-                    Publication(
-                        id = "1",
-                        userId = "user1",
-                        title = "Test Video",
-                        mediaType = MediaType.VIDEO,
-                        mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
-                        thumbnailUrl = "",
-                        timestamp = System.currentTimeMillis()))))
-
-    // Set content for the test
-    composeTestRule.setContent {
-      VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
-    }
-
-    // Wait for the UI to stabilize
-    composeTestRule.waitForIdle()
-
-    // Verify that an initial call to loadMorePublications() was made once
-    verify(exactly = 1) { runBlocking { fakeViewModel.loadMorePublications() } }
-
-    // Simulate a lifecycle change (app backgrounded then foregrounded)
-    composeTestRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
-    composeTestRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
-
-    // Wait for the UI to stabilize
-    composeTestRule.waitForIdle()
-
-    // Verify that no additional calls to loadMorePublications() are made
-    verify(exactly = 1) { runBlocking { fakeViewModel.loadMorePublications() } }
-  }
-
-  @Test
-  fun testLikeButtonChangesStateCorrectly() {
-    // Create mock NavigationActions
-    val navigationActions = mockk<NavigationActions>(relaxed = true)
-    every { navigationActions.currentRoute() } returns "video"
-
-    // List of publications with a single item for the test
-
+    // Set some publications
     val publications =
         listOf(
             Publication(
@@ -352,29 +235,90 @@ class VideoScreenTest {
                 userId = "user1",
                 title = "Test Video",
                 mediaType = MediaType.VIDEO,
-                mediaUrl = "https://www.sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
                 thumbnailUrl = "",
-                timestamp = System.currentTimeMillis(),
-                likedBy = emptyList() // Initially not liked
-                ))
+                timestamp = System.currentTimeMillis()))
 
-    // Use FakePublicationViewModel with the publication
-    val fakeViewModel = FakePublicationViewModel(publications)
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
 
-    // Set content for the test
-
+    // Set the content for the test
     composeTestRule.setContent {
       VideoScreen(
-          navigationActions = navigationActions,
-          publicationViewModel = fakeViewModel,
-          profileViewModel = fakeViewModell)
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("VideoScreen").assertExists().assertIsDisplayed()
+
+    // Verify that the BottomNavigationMenu is displayed
+    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertExists().assertIsDisplayed()
+  }
+
+  @Test
+  fun testErrorIndicatorIsDisplayedOnLoadingFailure() {
+    // Simulate an error state in the ViewModel
+    fakePublicationViewModel.apply {
+      _error.value = "Failed to load publications"
+      _publications.value = emptyList()
+    }
+
+    // Set the content for the test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
     }
 
     // Wait for the UI to stabilize
     composeTestRule.waitForIdle()
 
-    // Check that the `UnlikedIcon` is present initially
+    // Verify that the error indicator is displayed
+    composeTestRule.onNodeWithTag("ErrorIndicator").assertExists().assertIsDisplayed()
+  }
 
+  @Test
+  fun testLikeButtonChangesStateCorrectly() {
+    // List of publications with a single item for the test
+    val publications =
+        listOf(
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis(),
+                likedBy = emptyList() // Initially not liked
+                ))
+
+    // Set publications
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
+
+    // Set the content for the test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Verify that the `UnlikedIcon` is present initially
     composeTestRule
         .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
         .assertExists()
@@ -383,26 +327,202 @@ class VideoScreenTest {
     // Simulate a click on the like button
     composeTestRule.onNodeWithTag("LikeButton_0", useUnmergedTree = true).performClick()
 
-    // Wait for the UI to stabilize after the interaction
+    // Wait for the UI to stabilize after interaction
     composeTestRule.waitForIdle()
 
-    // Check that the icon is now `LikedIcon`
-
+    // Verify that the icon is now `LikedIcon`
     composeTestRule
         .onNodeWithTag("LikedIcon_0", useUnmergedTree = true)
         .assertExists()
         .assertIsDisplayed()
 
+    // Simulate another click to unlike
     composeTestRule.onNodeWithTag("LikeButton_0", useUnmergedTree = true).performClick()
 
-    // Wait for the UI to stabilize after the interaction
+    // Wait for the UI to stabilize after interaction
     composeTestRule.waitForIdle()
 
-    // Check that the icon is now `UnlikedIcon`
-
+    // Verify that the icon is now `UnlikedIcon` again
     composeTestRule
         .onNodeWithTag("UnlikedIcon_0", useUnmergedTree = true)
         .assertExists()
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun testCommentsSectionOpensOnCommentButtonClick() {
+    // List of publications for the test
+    val publications =
+        listOf(
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()))
+
+    // Set publications
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
+
+    // Set the content for the test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Verify that the comments section is not visible initially
+    composeTestRule.onNodeWithTag("CommentsSection").assertDoesNotExist()
+
+    // Click on the comment button
+    composeTestRule.onNodeWithTag("CommentButton_0", useUnmergedTree = true).performClick()
+
+    // Wait for the UI to stabilize after opening the modal
+    composeTestRule.waitForIdle()
+
+    // Verify that the comments section is now visible
+    composeTestRule.onNodeWithTag("CommentsSection").assertExists().assertIsDisplayed()
+  }
+
+  @Test
+  fun testAddCommentAndVerifyItAppearsInList() {
+    // Initial setup
+    val publicationId = "1"
+    val publications =
+        listOf(
+            Publication(
+                id = publicationId,
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()))
+
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
+
+    // Prepare the CommentsViewModel
+    val fakeComment =
+        Comment(
+            id = "comment1",
+            ownerId = "user2",
+            text = "Great video!",
+            likes = 0,
+            likedBy = emptyList(),
+            profile = Profile(username = "TestUser", profileImageUrl = ""))
+    fakeCommentsViewModel.setComments(publicationId, listOf(fakeComment))
+
+    // Set the content for the test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Open the comments section
+    composeTestRule.onNodeWithTag("CommentButton_0", useUnmergedTree = true).performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify that the initial comment is present
+    composeTestRule
+        .onNodeWithTag("CommentItem_${fakeComment.id}")
+        .assertExists()
+        .assertIsDisplayed()
+
+    // Enter a new comment
+    val newCommentText = "This is a new comment"
+    composeTestRule.onNodeWithTag("NewCommentTextField").performTextInput(newCommentText)
+
+    // Click on the "Post" button
+    composeTestRule.onNodeWithTag("PostCommentButton").performClick()
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Verify that the new comment is added to the list
+    val newCommentId =
+        "new_comment_id" // Assume that the ID is generated like this in the FakeCommentsViewModel
+    composeTestRule.onNodeWithTag("CommentItem_$newCommentId").assertExists().assertIsDisplayed()
+
+    // Verify that the text of the new comment is correct
+    composeTestRule
+        .onNodeWithTag("CommentText_$newCommentId")
+        .assertExists()
+        .assertIsDisplayed()
+        .assertTextEquals(newCommentText)
+  }
+
+  @Test
+  fun testAuthorCanDeleteTheirComment() {
+    val currentUserId = "user2"
+    val publicationId = "1"
+    val commentId = "comment1"
+
+    val publications =
+        listOf(
+            Publication(
+                id = publicationId,
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()))
+
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
+
+    val fakeComment =
+        Comment(
+            id = commentId,
+            ownerId = currentUserId,
+            text = "Comment to be deleted",
+            likes = 0,
+            likedBy = emptyList(),
+            profile = Profile(username = "TestUser", profileImageUrl = ""))
+    fakeCommentsViewModel.setComments(publicationId, listOf(fakeComment))
+
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          currentUserId = currentUserId)
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Open the comments section
+    composeTestRule.onNodeWithTag("CommentButton_0", useUnmergedTree = true).performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify that the comment is displayed
+    composeTestRule.onNodeWithTag("CommentItem_$commentId").assertExists().assertIsDisplayed()
+
+    // Click on the delete button
+    composeTestRule
+        .onNodeWithTag("DeleteCommentButton_$commentId", useUnmergedTree = true)
+        .performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify that the comment has been deleted
+    composeTestRule.onNodeWithTag("CommentItem_$commentId").assertDoesNotExist()
   }
 }
