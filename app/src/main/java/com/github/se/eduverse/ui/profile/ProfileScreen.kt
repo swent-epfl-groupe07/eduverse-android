@@ -450,21 +450,7 @@ fun PublicationDetailDialog(
               }
             }
           }
-          errorMessage?.let { error ->
-            Box(modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.TopCenter)) {
-              Text(
-                  text = error,
-                  color = MaterialTheme.colorScheme.error,
-                  modifier =
-                      Modifier.background(
-                              color = MaterialTheme.colorScheme.errorContainer,
-                              shape = RoundedCornerShape(4.dp))
-                          .padding(8.dp)
-                          .testTag("delete_error_message")
-                          .fillMaxWidth(),
-                  style = MaterialTheme.typography.bodyMedium)
-            }
-          }
+
         }
       }
 }
