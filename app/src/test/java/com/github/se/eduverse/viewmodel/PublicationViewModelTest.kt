@@ -106,7 +106,7 @@ class PublicationViewModelTest {
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    assertEquals("Échec du chargement des publications", viewModel.error.first())
+    assertEquals("fail to load publications", viewModel.error.first())
   }
 
   @Test
