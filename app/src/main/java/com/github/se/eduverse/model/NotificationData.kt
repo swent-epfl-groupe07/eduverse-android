@@ -23,7 +23,9 @@ data class NotificationData(
    */
   suspend fun open(navigationActions: NavigationActions) {
     when (notificationType) {
-      NotificationType.SCHEDULED -> {
+      // Lot of job is common, so it is better to put them together
+      NotificationType.TASK,
+      NotificationType.EVENT -> {
         if (viewModel == null) navigationActions.navigateTo(Route.DASHBOARD)
         val timeTableViewModel = viewModel as TimeTableViewModel
 
@@ -54,7 +56,7 @@ data class NotificationData(
 }
 
 enum class NotificationType {
-  SCHEDULED, // Not TASK and EVENT because when creating the notification, we only have the object
-  // ID
+  TASK,
+  EVENT,
   DEFAULT // Will open the app on the dashboard menu
 }

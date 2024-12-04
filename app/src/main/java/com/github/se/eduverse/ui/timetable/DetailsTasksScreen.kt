@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +47,6 @@ import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsTasksScreen(
     timeTableViewModel: TimeTableViewModel,
@@ -102,7 +100,7 @@ fun DetailsTasksScreen(
                             onClick = {
                               timeTableViewModel.updateScheduled(task.apply { name = newName })
                               newName += " " // Change the value to trigger calculation of isEnabled
-                              newName.dropLast(1)
+                              newName = newName.dropLast(1)
                             },
                             isEnabled = { task.name != newName })
                       })
@@ -128,16 +126,19 @@ fun DetailsTasksScreen(
                                   task.start.set(
                                       Calendar.DAY_OF_MONTH, date.get(Calendar.DAY_OF_MONTH))
                                   timeTableViewModel.updateScheduled(task)
+
+                                  // Trigger recomposition
+                                  date = date.clone() as Calendar
                                 }
                                 "time" -> {
                                   // Get the time of the new event but not the date
                                   task.start.set(
                                       Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
                                   task.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
-                                  task.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
-                                  task.start.set(
-                                      Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
                                   timeTableViewModel.updateScheduled(task)
+
+                                  // Trigger recomposition
+                                  date = date.clone() as Calendar
                                 }
                                 "length" -> {
                                   timeTableViewModel.updateScheduled(
@@ -155,8 +156,14 @@ fun DetailsTasksScreen(
                             },
                             isEnabled = {
                               when (type) {
-                                "date" -> date.timeInMillis != task.start.timeInMillis
-                                "time" -> date.timeInMillis != task.start.timeInMillis
+                                "date" ->
+                                    date.get(Calendar.YEAR) != task.start.get(Calendar.YEAR) ||
+                                        date.get(Calendar.DAY_OF_YEAR) !=
+                                            task.start.get(Calendar.DAY_OF_YEAR)
+                                "time" ->
+                                    date.get(Calendar.HOUR_OF_DAY) !=
+                                        task.start.get(Calendar.HOUR_OF_DAY) ||
+                                        date.get(Calendar.MINUTE) != task.start.get(Calendar.MINUTE)
                                 "length" ->
                                     task.length !=
                                         ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
@@ -202,7 +209,10 @@ fun DetailsTasksScreen(
                           OutlinedButton(
                               onClick = {
                                 todoListViewModel.setTodoActual(todo!!)
-                                todo = todoListViewModel.getTodoById(todo!!.uid)
+                                val uid = todo!!.uid
+
+                                todo = null // Trigger recomposition of the button
+                                todo = todoListViewModel.getTodoById(uid)
                               },
                               modifier = Modifier.fillMaxWidth(2f / 3).testTag("markAsCurrent"),
                               colors = transparentButtonColor(MaterialTheme.colorScheme.tertiary)) {
