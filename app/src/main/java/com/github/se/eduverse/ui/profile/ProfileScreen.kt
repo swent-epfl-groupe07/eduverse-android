@@ -305,18 +305,23 @@ fun PublicationDetailDialog(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val deleteState by profileViewModel.deletePublicationState.collectAsState()
 
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
     // Handle delete state changes
     LaunchedEffect(deleteState) {
         when (deleteState) {
             is DeletePublicationState.Success -> {
+                errorMessage = null
                 onDismiss() // Close the dialog after successful deletion
                 profileViewModel.resetDeleteState()
             }
             is DeletePublicationState.Error -> {
-                // You might want to show a toast or error message here
+                errorMessage = (deleteState as DeletePublicationState.Error).message
                 profileViewModel.resetDeleteState()
             }
-            else -> {}
+            else -> {
+                errorMessage = null
+            }
         }
     }
 
@@ -353,11 +358,13 @@ fun PublicationDetailDialog(
             dismissOnClickOutside = false
         )
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color.Black
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.Black
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
                 SmallTopAppBar(
                     title = {
                         Text(
@@ -457,6 +464,31 @@ fun PublicationDetailDialog(
                     }
               }
             }
+            }
+            errorMessage?.let { error ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .align(Alignment.TopCenter)
+                ) {
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(8.dp)
+                            .testTag("delete_error_message")
+                            .fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+
       }
 }
 
