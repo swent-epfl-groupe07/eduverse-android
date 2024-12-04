@@ -239,4 +239,38 @@ class SettingsRepositoryTest {
 
     coVerify(exactly = 1) { documentReference.get().await() }
   }
+
+  @Test
+  fun `getSelectedLanguage handles exceptions`() = runTest {
+    // Arrange
+    val userId = "user123"
+    coEvery { documentReference.get().await() } throws Exception("Firestore error")
+
+    // Act & Assert
+    try {
+      repository.getSelectedLanguage(userId)
+      fail("Expected exception was not thrown")
+    } catch (e: Exception) {
+      assertEquals("Firestore error", e.message)
+    }
+
+    coVerify(exactly = 1) { documentReference.get().await() }
+  }
+
+  @Test
+  fun `getSelectedTheme handles exceptions`() = runTest {
+    // Arrange
+    val userId = "user123"
+    coEvery { documentReference.get().await() } throws Exception("Firestore error")
+
+    // Act & Assert
+    try {
+      repository.getSelectedTheme(userId)
+      fail("Expected exception was not thrown")
+    } catch (e: Exception) {
+      assertEquals("Firestore error", e.message)
+    }
+
+    coVerify(exactly = 1) { documentReference.get().await() }
+  }
 }

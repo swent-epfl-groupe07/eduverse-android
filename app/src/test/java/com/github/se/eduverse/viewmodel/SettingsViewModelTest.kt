@@ -165,4 +165,37 @@ class SettingsViewModelTest {
     // Verify repository is called
     coVerify { repository.setPrivacySettings("user123", false) }
   }
+
+  @Test
+  fun updateSelectedLanguage_handlesException() = runTest {
+    // Arrange
+    coEvery { repository.setSelectedLanguage("user123", "Français") } throws
+        Exception("Firestore error")
+
+    // Act
+    viewModel.updateSelectedLanguage("Français")
+
+    // Assert
+    // StateFlow is updated even if repository fails
+    assertEquals("Français", viewModel.selectedLanguage.value)
+
+    // Verify repository is called
+    coVerify { repository.setSelectedLanguage("user123", "Français") }
+  }
+
+  @Test
+  fun updateSelectedTheme_handlesException() = runTest {
+    // Arrange
+    coEvery { repository.setSelectedTheme("user123", "Dark") } throws Exception("Firestore error")
+
+    // Act
+    viewModel.updateSelectedTheme("Dark")
+
+    // Assert
+    // StateFlow is updated even if repository fails
+    assertEquals("Dark", viewModel.selectedTheme.value)
+
+    // Verify repository is called
+    coVerify { repository.setSelectedTheme("user123", "Dark") }
+  }
 }

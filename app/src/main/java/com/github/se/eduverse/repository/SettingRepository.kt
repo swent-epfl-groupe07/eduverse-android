@@ -6,15 +6,12 @@ import kotlinx.coroutines.tasks.await
 
 class SettingsRepository(private val firestore: FirebaseFirestore) {
 
-  private fun getUserSettingsDocument(userId: String) =
-      firestore.collection("user_settings").document(userId)
-
   suspend fun setPrivacySettings(userId: String, value: Boolean) {
     try {
       val data = mapOf("privacySettings" to value)
       firestore.collection("user_settings").document(userId).set(data, SetOptions.merge()).await()
     } catch (e: Exception) {
-      // Handle exceptions as needed
+      // Handle exceptions as needed from caller
       throw e
     }
   }
