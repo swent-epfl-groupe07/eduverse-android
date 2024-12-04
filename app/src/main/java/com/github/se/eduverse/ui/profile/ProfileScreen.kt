@@ -354,7 +354,7 @@ fun PublicationDetailDialog(
               usePlatformDefaultWidth = false,
               dismissOnBackPress = true,
               dismissOnClickOutside = false)) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog")) {
           Column(modifier = Modifier.fillMaxSize()) {
             Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
               Column(modifier = Modifier.fillMaxSize()) {
