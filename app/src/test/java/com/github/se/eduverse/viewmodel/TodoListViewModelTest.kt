@@ -91,6 +91,14 @@ class TodoListViewModelTest {
   }
 
   @Test
+  fun setTodoDoneSetsSelectedTodoToNull() {
+    viewModel.selectTodo(todos[0])
+    assertNotNull(viewModel.selectedTodo.value)
+    viewModel.setTodoDone(todos[0])
+    assertNull(viewModel.selectedTodo.value)
+  }
+
+  @Test
   fun setTodoActualCallsRepository() {
     viewModel.setTodoActual(todos[1])
     val actualTodo = todos[1].copy(status = TodoStatus.ACTUAL)
@@ -104,11 +112,28 @@ class TodoListViewModelTest {
   }
 
   @Test
+  fun deleteTodoSetsSelectedTodoToNull() {
+    viewModel.selectTodo(todos[0])
+    assertNotNull(viewModel.selectedTodo.value)
+    viewModel.deleteTodo("1")
+    assertNull(viewModel.selectedTodo.value)
+  }
+
+  @Test
   fun renameTodoCallsRepositoryWithCorrectlyUpdatedTodo() {
     val newTodoName = "new name"
     viewModel.renameTodo(todos[0], newTodoName)
     val renamedTodo = todos[0].copy(name = newTodoName)
     verify(mockRepository).updateTodo(eq(renamedTodo), any(), any())
+  }
+
+  @Test
+  fun renameTodoUpdatesSelectedTodo() {
+    val newTodoName = "new name"
+    viewModel.selectTodo(todos[0])
+    assertNotNull(viewModel.selectedTodo.value)
+    viewModel.renameTodo(todos[0], newTodoName)
+    assertEquals(newTodoName, viewModel.selectedTodo.value?.name)
   }
 
   @Test
