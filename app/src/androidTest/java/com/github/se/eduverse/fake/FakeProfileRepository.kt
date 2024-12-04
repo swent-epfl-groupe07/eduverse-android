@@ -113,4 +113,8 @@ class FakeProfileRepository : ProfileRepository {
   override suspend fun getFollowing(userId: String): List<Profile> {
     TODO("Not yet implemented")
   }
+
+  override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
+    TODO("Not yet implemented")
+  }
 }
