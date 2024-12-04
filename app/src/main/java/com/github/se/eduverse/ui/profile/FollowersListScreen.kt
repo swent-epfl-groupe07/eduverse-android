@@ -42,16 +42,22 @@ fun FollowListScreen(
     }
   }
 
-  // React to follow action state changes
+  // React to follow action state changes but don't reload the list
   LaunchedEffect(followActionState) {
     when (followActionState) {
       is FollowActionState.Success -> {
-        // Reload the list after any successful follow/unfollow action
-        isLoading = true
-        loadProfiles(viewModel, userId, isFollowersList) { newProfiles ->
-          profiles = newProfiles
-          isLoading = false
-        }
+        // Update the specific profile's follow status instead of reloading the entire list
+        val updatedProfiles =
+            profiles.map { profile ->
+              if (profile.id == (followActionState as FollowActionState.Success).targetUserId) {
+                profile.copy(
+                    isFollowedByCurrentUser =
+                        (followActionState as FollowActionState.Success).isNowFollowing)
+              } else {
+                profile
+              }
+            }
+        profiles = updatedProfiles
       }
       else -> {
         /* Handle other states if needed */
@@ -87,12 +93,74 @@ fun FollowListScreen(
                         onFollowClick = { profileId ->
                           viewModel.toggleFollow(currentUserId ?: "", profileId)
                         },
-                        onProfileClick = { navigationActions.navigateToUserProfile(profile.id) })
+                        onProfileClick = { navigationActions.navigateToUserProfile(profile.id) },
+                        followActionState = followActionState,
+                        targetUserId =
+                            (followActionState as? FollowActionState.Success)?.targetUserId)
                   }
                 }
           }
         }
       }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FollowListItem(
+    profile: Profile,
+    currentUserId: String?,
+    isFollowersList: Boolean,
+    onFollowClick: (String) -> Unit,
+    onProfileClick: () -> Unit,
+    followActionState: FollowActionState,
+    targetUserId: String?
+) {
+  val isLoading = followActionState is FollowActionState.Loading && targetUserId == profile.id
+
+  ListItem(
+      modifier =
+          Modifier.clickable(onClick = onProfileClick).testTag("follow_list_item_${profile.id}"),
+      headlineContent = {
+        Text(text = profile.username, style = MaterialTheme.typography.titleMedium)
+      },
+      leadingContent = {
+        AsyncImage(
+            model = profile.profileImageUrl,
+            contentDescription = "Profile picture of ${profile.username}",
+            modifier = Modifier.size(48.dp).clip(CircleShape),
+            fallback = painterResource(R.drawable.eduverse_logo_alone))
+      },
+      trailingContent = {
+        if (currentUserId != null && currentUserId != profile.id) {
+          val buttonEnabled = !isLoading && followActionState !is FollowActionState.Loading
+
+          Button(
+              onClick = { onFollowClick(profile.id) },
+              modifier = Modifier.testTag("follow_button_${profile.id}"),
+              enabled = buttonEnabled,
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor =
+                          if (profile.isFollowedByCurrentUser) MaterialTheme.colorScheme.secondary
+                          else MaterialTheme.colorScheme.primary,
+                      disabledContainerColor =
+                          if (profile.isFollowedByCurrentUser)
+                              MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                          else MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))) {
+                if (isLoading) {
+                  CircularProgressIndicator(
+                      modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                  Text(
+                      when {
+                        profile.isFollowedByCurrentUser -> "Following"
+                        isFollowersList -> "Follow Back"
+                        else -> "Follow"
+                      })
+                }
+              }
+        }
+      })
 }
 
 // Extracted helper function for loading profiles
@@ -109,45 +177,4 @@ private suspend fun loadProfiles(
         viewModel.getFollowing(userId).map { it.copy(isFollowedByCurrentUser = true) }
       }
   onResult(newProfiles)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FollowListItem(
-    profile: Profile,
-    currentUserId: String?,
-    isFollowersList: Boolean,
-    onFollowClick: (String) -> Unit,
-    onProfileClick: () -> Unit
-) {
-  ListItem(
-      modifier =
-          Modifier.clickable(onClick = onProfileClick).testTag("follow_list_item_${profile.id}"),
-      headlineContent = {
-        Text(text = profile.username, style = MaterialTheme.typography.titleMedium)
-      },
-      leadingContent = {
-        AsyncImage(
-            model = profile.profileImageUrl,
-            contentDescription = "Profile picture of ${profile.username}",
-            modifier = Modifier.size(48.dp).clip(CircleShape),
-            fallback = painterResource(R.drawable.eduverse_logo_alone))
-      },
-      trailingContent = {
-        if (currentUserId != null && currentUserId != profile.id) {
-          if (isFollowersList && !profile.isFollowedByCurrentUser) {
-            Button(
-                onClick = { onFollowClick(profile.id) },
-                modifier = Modifier.testTag("follow_button_${profile.id}")) {
-                  Text("Follow")
-                }
-          } else if (!isFollowersList) {
-            Button(
-                onClick = { onFollowClick(profile.id) },
-                modifier = Modifier.testTag("follow_button_${profile.id}")) {
-                  Text("Following")
-                }
-          }
-        }
-      })
 }

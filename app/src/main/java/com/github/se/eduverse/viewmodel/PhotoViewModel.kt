@@ -28,6 +28,7 @@ open class PhotoViewModel(
   fun savePhoto(
       photo: Photo,
       folder: Folder? = null,
+      onSuccess: () -> Unit = {},
       addToFolder: (String, String, Folder) -> Unit = { _, _, _ -> }
   ) {
     viewModelScope.launch {
@@ -40,6 +41,7 @@ open class PhotoViewModel(
               uid,
               uid,
               folder) // The second uid is the name, might be replaced with a better one in future
+          onSuccess()
         }
       }
     }
