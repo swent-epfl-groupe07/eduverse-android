@@ -450,7 +450,6 @@ fun PublicationDetailDialog(
               }
             }
           }
-
         }
       }
 }
