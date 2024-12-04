@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-open class PublicationViewModel(private val repository: PublicationRepository) : ViewModel() {
+open class PublicationViewModel(
+    val repository: PublicationRepository,
+) : ViewModel() {
 
   private val _publications = MutableStateFlow<List<Publication>>(emptyList())
   open val publications: StateFlow<List<Publication>>
@@ -22,6 +24,8 @@ open class PublicationViewModel(private val repository: PublicationRepository) :
   open val error: StateFlow<String?>
     get() = _error
 
+  private val userProfileCache = mutableMapOf<String, String?>()
+
   init {
     loadPublications()
   }
@@ -33,7 +37,7 @@ open class PublicationViewModel(private val repository: PublicationRepository) :
         _publications.value = newPublications
         _error.value = null
       } catch (e: Exception) {
-        _error.value = "Échec du chargement des publications"
+        _error.value = "fail to load publications"
       }
     }
   }
@@ -50,7 +54,7 @@ open class PublicationViewModel(private val repository: PublicationRepository) :
         }
         _error.value = null
       } catch (e: Exception) {
-        _error.value = "Échec du chargement des publications"
+        _error.value = "fail to load publications"
       }
     }
   }
