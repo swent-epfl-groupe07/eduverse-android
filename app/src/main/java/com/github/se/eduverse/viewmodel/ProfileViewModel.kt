@@ -30,7 +30,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open val followActionState: StateFlow<FollowActionState> = _followActionState.asStateFlow()
   private val _deletePublicationState =
       MutableStateFlow<DeletePublicationState>(DeletePublicationState.Idle)
-  open val deletePublicationState: StateFlow<DeletePublicationState> =
+  val deletePublicationState: StateFlow<DeletePublicationState> =
       _deletePublicationState.asStateFlow()
 
   private var searchJob: Job? = null
@@ -256,7 +256,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  open fun deletePublication(publicationId: String, userId: String) {
+  fun deletePublication(publicationId: String, userId: String) {
     viewModelScope.launch {
       _deletePublicationState.value = DeletePublicationState.Loading
       try {
@@ -276,7 +276,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
     }
   }
 
-  open fun resetDeleteState() {
+  fun resetDeleteState() {
     _deletePublicationState.value = DeletePublicationState.Idle
   }
 }

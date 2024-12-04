@@ -29,8 +29,6 @@ import androidx.navigation.navigation
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.model.NotificationType
-import com.github.se.eduverse.repository.CommentsRepository
-import com.github.se.eduverse.repository.CommentsRepositoryImpl
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
 import com.github.se.eduverse.repository.NotificationRepository
@@ -73,7 +71,6 @@ import com.github.se.eduverse.ui.timetable.DetailsTasksScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.ui.videos.VideoScreen
-import com.github.se.eduverse.viewmodel.CommentsViewModel
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
@@ -227,8 +224,6 @@ fun EduverseApp(
       ProfileRepositoryImpl(
           firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
   val profileViewModel = ProfileViewModel(profileRepo)
-  val CommentsRepository = CommentsRepositoryImpl(FirebaseFirestore.getInstance())
-  val CommentsViewModel = CommentsViewModel(CommentsRepository, profileRepo)
   val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
   val pomodoroViewModel: TimerViewModel = viewModel()
   val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
@@ -307,12 +302,7 @@ fun EduverseApp(
         route = Route.VIDEOS,
     ) {
       composable(Screen.VIDEOS) {
-        VideoScreen(
-            navigationActions,
-            publicationViewModel,
-            profileViewModel,
-            CommentsViewModel,
-        )
+        VideoScreen(navigationActions, publicationViewModel, profileViewModel)
       }
     }
 
