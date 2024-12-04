@@ -16,7 +16,9 @@ import com.github.se.eduverse.ui.camera.adjustImageRotation
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import java.io.File
 import org.junit.Assert.assertNotNull
@@ -106,11 +108,13 @@ class PicTakenScreenTest {
           pViewModel,
           vViewModel)
     }
+    val func = slot<() -> Unit>()
+    every { pViewModel.savePhoto(any(), any(), capture(func), any()) } answers { func.captured() }
 
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Verify if `viewModel.savePhoto()` is called with a `Photo` object
-    verify { pViewModel.savePhoto(any<Photo>()) }
+    verify { pViewModel.savePhoto(any<Photo>(), onSuccess = any()) }
 
     // Verify if `navigationActions.goBack()` is called twice
     verify(exactly = 2) { navigationActions.goBack() }
@@ -299,12 +303,14 @@ class PicTakenScreenTest {
           pViewModel,
           vViewModel)
     }
+    val func = slot<() -> Unit>()
+    every { vViewModel.saveVideo(any(), any(), capture(func), any()) } answers { func.captured() }
 
     // Perform click on the "Save" button
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
     // Verify that `videoViewModel.saveVideo` is called with a `Video` object
-    verify { vViewModel.saveVideo(any<Video>()) }
+    verify { vViewModel.saveVideo(any<Video>(), onSuccess = any()) }
 
     // Verify that `navigationActions.goBack()` is called twice after saving
     verify(exactly = 2) { navigationActions.goBack() }
