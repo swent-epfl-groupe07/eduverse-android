@@ -454,16 +454,16 @@ fun AnimatedTodoTimeIcon() {
   val infiniteTransition = rememberInfiniteTransition(label = "opacity")
   val alpha by
       infiniteTransition.animateFloat(
-          initialValue = 0.1f,
-          targetValue = 1f,
+          initialValue = 1f,
+          targetValue = 0.1f,
           animationSpec =
               infiniteRepeatable(
-                  animation = tween(durationMillis = 30000, easing = LinearEasing),
+                  animation = tween(durationMillis = 2000, easing = LinearEasing),
                   repeatMode = RepeatMode.Reverse),
           label = "opacity")
   Icon(
       imageVector = Icons.Filled.Timer,
       contentDescription = "Animated Timer Icon",
       modifier = Modifier.size(22.dp).alpha(alpha),
-      tint = MaterialTheme.colorScheme.tertiary)
+      tint = MaterialTheme.colorScheme.secondary)
 }
