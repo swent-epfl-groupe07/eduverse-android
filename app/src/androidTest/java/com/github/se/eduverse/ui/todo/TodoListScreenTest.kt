@@ -255,4 +255,23 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("todoName_1").assertTextContains(newName)
     todos = sampleTodos
   }
+
+  @Test
+  fun newTodoIsDisplayedWhenAddedWhileCompletedTasksAreDisplayed() {
+    val newTodoName = "New ToDo"
+    composeTestRule.onNodeWithTag("completedTasksButton").performClick()
+    composeTestRule.onNodeWithTag("todoItem_2").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("todoItem_1").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("addTodoTextField").performTextInput(newTodoName)
+    composeTestRule.onNodeWithTag("addTodoButton").performClick()
+    // Check that the new todo is displayed
+    composeTestRule.onNodeWithTag("todoItem_uid").assertIsDisplayed()
+    // The lines below are there to check that the switch to the current tasks list is done
+    // correctly
+    composeTestRule.onNodeWithTag("todoItem_2").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("currentTasksButton").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("completedTasksButton").assertIsEnabled()
+    todos = sampleTodos
+  }
 }
