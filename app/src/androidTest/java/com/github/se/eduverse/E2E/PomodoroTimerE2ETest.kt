@@ -39,7 +39,6 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 
 class PomodoroTimerE2ETest {
-
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   private lateinit var viewModel: FakeDashboardViewModel
@@ -63,7 +62,7 @@ class PomodoroTimerE2ETest {
 
   @After
   fun tearDown() {
-    unmockkAll() // Clean up all mockk mocks
+    unmockkAll()
   }
 
   @Test
@@ -71,16 +70,26 @@ class PomodoroTimerE2ETest {
     composeTestRule.apply {
       waitForIdle()
 
-      // 1. Add Timer Widget
-      onNodeWithTag("add_widget_button").performClick()
+      // 1. Verify Empty State
+      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+      onNodeWithTag("add_widget_button").assertDoesNotExist()
+
+      // 2. Add Timer Widget from Empty State
+      onNodeWithTag("empty_state_add_button").performClick()
       val timerWidget = CommonWidgetType.TIMER
       onNodeWithText(timerWidget.title).performClick()
+
+      // Verify transition from empty state to widget list
+      onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
+      onNodeWithTag("widget_list").assertIsDisplayed()
+      onNodeWithTag("add_widget_button").assertIsDisplayed()
 
       // Verify timer widget appears on dashboard
       onNodeWithText(timerWidget.title).assertIsDisplayed()
       onNodeWithText(timerWidget.content).assertIsDisplayed()
 
-      // 2. Open Timer
+      // 3. Open Timer
       onNodeWithText("Study Timer").performClick()
       navigationActions.navigateToPomodoro()
       waitForIdle()
@@ -92,8 +101,7 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("cycleText").assertTextContains("Cycle: 1/4")
       onNodeWithTag("focusIcon").assertExists()
 
-      // 3. Test timer controls
-      // Get initial timer text
+      // 4. Test timer controls
       val initialTime =
           onNodeWithTag("timerText")
               .fetchSemanticsNode()
@@ -106,7 +114,7 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("playPauseButton").performClick()
       waitForIdle()
 
-      // Verify timer started (text should be different from initial)
+      // Verify timer started
       val afterStartTime =
           onNodeWithTag("timerText")
               .fetchSemanticsNode()
@@ -120,22 +128,20 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("playPauseButton").performClick()
       waitForIdle()
 
-      // 4. Test timer settings
+      // 5. Test timer settings
       onNodeWithTag("settingsButton").performClick()
       waitForIdle()
 
-      // If your Slider has SemanticProperties.ProgressBarRangeInfo set
       onNode(hasTestTag("Focus Time Slider"), useUnmergedTree = true).performSemanticsAction(
           SemanticsActions.SetProgress) {
-            it(1.8f) // Set to 2 min
-      }
-
+            it(1.8f)
+          }
       waitForIdle()
 
       onNode(hasTestTag("settingsSaveButton"), useUnmergedTree = true).performClick()
       waitForIdle()
 
-      // 5. Test timer type changes
+      // 6. Test timer type changes
       onNodeWithTag("skipButton").performClick()
       waitForIdle()
 
@@ -143,7 +149,7 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("shortBreakIcon").assertExists()
       onNodeWithTag("timerText").assertTextContains("5:00")
 
-      // 6. Test reset
+      // 7. Test reset
       onNodeWithTag("resetButton").performClick()
       waitForIdle()
 
@@ -151,15 +157,18 @@ class PomodoroTimerE2ETest {
       onNodeWithTag("timerText").assertTextContains("2:00")
       onNodeWithTag("focusIcon").assertExists()
 
-      // 7. Return to dashboard
+      // 8. Return to dashboard
       onNodeWithTag("goBackButton").performClick()
       navigationActions.goBack()
       waitForIdle()
 
-      // 8. Clean up
+      // 9. Delete widget and verify empty state
       onAllNodesWithTag("delete_icon").onFirst().performScrollTo().performClick()
 
-      // Verify widget removed
+      // Verify transition back to empty state
+      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+      onNodeWithTag("add_widget_button").assertDoesNotExist()
       onNodeWithTag("widget_card").assertDoesNotExist()
     }
   }
