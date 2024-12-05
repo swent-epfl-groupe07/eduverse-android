@@ -13,9 +13,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -26,6 +29,7 @@ import com.github.se.eduverse.viewmodel.FolderViewModel
 @Composable
 fun ArchiveScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
+  val context = LocalContext.current
 
   LaunchedEffect(Unit) { folderViewModel.getArchivedUserFolders() }
 
@@ -41,8 +45,12 @@ fun ArchiveScreen(navigationActions: NavigationActions, folderViewModel: FolderV
                     Modifier.padding(8.dp)
                         .fillMaxWidth()
                         .clickable {
-                          folderViewModel.unarchiveFolder(it)
-                          navigationActions.navigateTo(Route.LIST_FOLDERS)
+                          if (context.isNetworkAvailable()) {
+                            folderViewModel.unarchiveFolder(it)
+                            navigationActions.navigateTo(Route.LIST_FOLDERS)
+                          } else {
+                            context.showToast("Not available offline")
+                          }
                         }
                         .testTag("folderCard${it.id}"),
                 elevation = 4.dp) {
