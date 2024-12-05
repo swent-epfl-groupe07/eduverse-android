@@ -22,8 +22,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.se.eduverse.api.SUPPORTED_CONVERSION_TYPES
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -58,6 +62,9 @@ fun PdfConverterScreen(
   val pdfFileName = converterViewModel.newFileName.collectAsState()
   var currentPdfConverterOption by remember { mutableStateOf(PdfConverterOption.NONE) }
   val pdfConversionState = converterViewModel.pdfGenerationState.collectAsState()
+  var showInfoWindow by remember { mutableStateOf(false) }
+  var showSelectSourceDialog by remember { mutableStateOf(false) }
+  var inputFileMIMEType by remember { mutableStateOf("") }
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
@@ -89,10 +96,12 @@ fun PdfConverterScreen(
                     OptionCard(
                         testTag = PdfConverterOption.TEXT_TO_PDF.name,
                         optionName = "Text to PDF",
+                        explanation = "Converts a .txt file to PDF",
                         icon = Icons.AutoMirrored.Filled.TextSnippet,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.TEXT_TO_PDF
-                          filePickerLauncher.launch(arrayOf("text/plain"))
+                          inputFileMIMEType = "text/plain"
+                          showInfoWindow = true
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -100,10 +109,12 @@ fun PdfConverterScreen(
                     OptionCard(
                         testTag = PdfConverterOption.IMAGE_TO_PDF.name,
                         optionName = "Image to PDF",
+                        explanation = "Converts an image to PDF",
                         icon = Icons.Default.Image,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.IMAGE_TO_PDF
-                          filePickerLauncher.launch(arrayOf("image/*"))
+                          inputFileMIMEType = "image/*"
+                          showInfoWindow = true
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -116,10 +127,12 @@ fun PdfConverterScreen(
                     OptionCard(
                         testTag = PdfConverterOption.DOCUMENT_TO_PDF.name,
                         optionName = "Doc to PDF",
+                        explanation = "Converts a document to PDF",
                         icon = Icons.Default.PictureAsPdf,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.DOCUMENT_TO_PDF
-                          filePickerLauncher.launch(arrayOf("*/*"))
+                          inputFileMIMEType = "*/*"
+                          showInfoWindow = true
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -127,10 +140,12 @@ fun PdfConverterScreen(
                     OptionCard(
                         testTag = PdfConverterOption.SUMMARIZE_FILE.name,
                         optionName = "Summarize file",
+                        explanation = "Generates a summary of a file",
                         icon = Icons.Default.Summarize,
                         onClick = {
                           currentPdfConverterOption = PdfConverterOption.SUMMARIZE_FILE
-                          filePickerLauncher.launch(arrayOf("application/pdf"))
+                          inputFileMIMEType = "application/pdf"
+                          showInfoWindow = true
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -140,24 +155,89 @@ fun PdfConverterScreen(
               OptionCard(
                   testTag = PdfConverterOption.EXTRACT_TEXT.name,
                   optionName = "Extract text",
+                  explanation = "Extracts text from an image",
                   icon = Icons.Default.Abc,
                   onClick = {
                     currentPdfConverterOption = PdfConverterOption.EXTRACT_TEXT
-                    filePickerLauncher.launch(arrayOf("image/*"))
+                    inputFileMIMEType = "image/*"
+                    showInfoWindow = true
                   },
                   optionEnabled =
                       pdfConversionState.value == PdfConverterViewModel.PdfGenerationState.Ready)
             }
       }
 
-  // Ask for the name of the PDF file to be created when the file to be converted is selected, and
-  // launch the file convertion once the name is selected
+  // Show the info window when an option is selected to inform the user what kind of file he needs
+  // to select depending on the selected option
+  if (showInfoWindow) {
+    var title = ""
+    var text = ""
+    // Set the title and text of the info window depending on the selected option
+    when (currentPdfConverterOption) {
+      PdfConverterOption.TEXT_TO_PDF -> {
+        title = "Text to PDF converter"
+        text = "Select a .txt file to convert to PDF"
+      }
+      PdfConverterOption.IMAGE_TO_PDF -> {
+        title = "Image to PDF converter"
+        text = "Select an image to convert to PDF"
+      }
+      PdfConverterOption.DOCUMENT_TO_PDF -> {
+        title = "Document to PDF converter"
+        text =
+            "Select a document to convert to PDF. Supported document types are: ${
+                    SUPPORTED_CONVERSION_TYPES.joinToString(
+                        ", "
+                    )
+                }"
+      }
+      PdfConverterOption.SUMMARIZE_FILE -> {
+        title = "Pdf file summarizer"
+        text = "Select a PDF file to summarize. The summary will be generated in a PDF file"
+      }
+      PdfConverterOption.EXTRACT_TEXT -> {
+        title = "Text extractor"
+        text =
+            "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file"
+      }
+      PdfConverterOption.NONE -> {
+        showInfoWindow = false
+      }
+    }
+    // Show the info window
+    InfoWindow(
+        title = title,
+        text = text,
+        onDismiss = { showInfoWindow = false },
+        onConfirm = {
+          showInfoWindow = false
+          showSelectSourceDialog = true
+        })
+  }
+
+  // Show a dialog that asks the user to choose from where to select the source file (device storage
+  // or app folders) after the info window has been displayed
+  if (showSelectSourceDialog) {
+    SelectSourceFileDialog(
+        onDismiss = { showSelectSourceDialog = false },
+        onDeviceStorageClick = {
+          showSelectSourceDialog = false
+          filePickerLauncher.launch(arrayOf(inputFileMIMEType))
+        },
+        onFoldersClick = {
+          showSelectSourceDialog = false
+          /** logic for this option will be added later */
+        })
+  }
+
+  // Ask for the name of the PDF file to be created when the input file has been selected, and
+  // launch the pdf file generation on confirm
   if (showNameInputDialog) {
     PdfNameInputDialog(
         pdfFileName = pdfFileName.value,
         onDismiss = {
           showNameInputDialog = false
-          context.showToast("PDF file creation cancelled")
+          context.showToast("PDF file generation cancelled")
         }, // On dismiss the pdf file creation is not launched
         onConfirm = { name ->
           converterViewModel.setNewFileName(name)
@@ -202,7 +282,12 @@ fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (S
   AlertDialog(
       modifier = Modifier.testTag("pdfNameInputDialog"),
       onDismissRequest = onDismiss,
-      title = { Text("Enter the name of the PDF file") },
+      title = {
+        Text(
+            "Enter a name for the PDF file that will be generated",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center)
+      },
       text = {
         OutlinedTextField(
             modifier = Modifier.testTag("pdfNameInput"),
@@ -231,6 +316,7 @@ fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (S
  *
  * @param testTag Test tag for the option
  * @param optionName Name of the option
+ * @param explanation Brief explanation on what the option does
  * @param icon Icon for the option
  * @param onClick Action to be performed when the option is clicked
  */
@@ -238,13 +324,14 @@ fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (S
 fun OptionCard(
     testTag: String,
     optionName: String,
+    explanation: String,
     icon: ImageVector,
     onClick: () -> Unit,
     optionEnabled: Boolean
 ) {
   Card(
       modifier =
-          Modifier.padding(16.dp)
+          Modifier.padding(8.dp)
               .size(150.dp)
               .clickable(onClick = onClick, enabled = optionEnabled)
               .testTag(testTag),
@@ -253,15 +340,21 @@ fun OptionCard(
               containerColor = MaterialTheme.colorScheme.primaryContainer,
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
               Icon(imageVector = icon, contentDescription = null, Modifier.size(80.dp))
-              Text(optionName)
+              Text(optionName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+              Text(explanation, fontSize = 8.sp)
             }
       }
 }
 
+/**
+ * Composable for displaying a loading indicator while the PDF is being generated
+ *
+ * @param onAbort Action to be performed when the abort PDF generation button is clicked
+ */
 @Composable
 fun LoadingIndicator(onAbort: () -> Unit) {
   Column(
@@ -278,6 +371,95 @@ fun LoadingIndicator(onAbort: () -> Unit) {
           Text("Abort PDF Generation")
         }
       }
+}
+
+/**
+ * Composable for displaying an info window which informs the user what type of file the selected
+ * option accepts as input (and when necessary that the output is going to be in a pdf file) and
+ * invites him to select an input or cancel the pdf generation
+ *
+ * @param title Title of the info window
+ * @param text Text body of the info window
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onConfirm Action to be performed when the dialog is confirmed
+ */
+@Composable
+fun InfoWindow(title: String, text: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+  AlertDialog(
+      modifier = Modifier.testTag("infoWindow"),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            title,
+            modifier = Modifier.fillMaxWidth().testTag("infoWindowTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = { Text(text, modifier = Modifier.fillMaxWidth().testTag("infoWindowText")) },
+      confirmButton = {
+        Button(
+            onClick = onConfirm,
+            modifier = Modifier.fillMaxWidth().testTag("infoWindowConfirmButton")) {
+              Text("Select file")
+            }
+      },
+      dismissButton = {
+        Button(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth().testTag("infoWindowDismissButton")) {
+              Text("Cancel")
+            }
+      })
+}
+
+/**
+ * Composable for displaying a dialog for the user to choose if he wants to select the input file
+ * from local device's files or from the app's folders
+ *
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onDeviceStorageClick Action to be performed when the device storage button is clicked
+ * @param onFoldersClick Action to be performed when the app folders button is clicked
+ */
+@Composable
+fun SelectSourceFileDialog(
+    onDismiss: () -> Unit,
+    onDeviceStorageClick: () -> Unit,
+    onFoldersClick: () -> Unit
+) {
+  AlertDialog(
+      modifier = Modifier.testTag("selectSourceFileDialog"),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            text = "Choose from where to select the source file",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              // Button to proceed towards selecting a file from the app folders
+              Button(
+                  onClick = { onFoldersClick() },
+                  modifier = Modifier.fillMaxWidth().testTag("appFoldersButton")) {
+                    Text("App folders")
+                  }
+              // Button to launch the file picker
+              Button(
+                  onClick = { onDeviceStorageClick() },
+                  modifier = Modifier.fillMaxWidth().testTag("deviceStorageButton")) {
+                    Text("Device storage")
+                  }
+            }
+      },
+      confirmButton = {},
+      dismissButton = {
+        Button(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth().testTag("selectSourceFileDismissButton")) {
+              Text("Cancel")
+            }
+      })
 }
 
 /**

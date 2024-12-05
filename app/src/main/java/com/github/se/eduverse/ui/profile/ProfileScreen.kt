@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayCircle
@@ -42,6 +43,7 @@ import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.viewmodel.DeletePublicationState
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.UsernameUpdateState
@@ -300,6 +302,50 @@ fun PublicationDetailDialog(
 ) {
   val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
   val likeCount = remember { mutableStateOf(publication.likes) }
+  var showDeleteDialog by remember { mutableStateOf(false) }
+  val deleteState by profileViewModel.deletePublicationState.collectAsState()
+
+  var errorMessage by remember { mutableStateOf<String?>(null) }
+
+  // Handle delete state changes
+  LaunchedEffect(deleteState) {
+    when (deleteState) {
+      is DeletePublicationState.Success -> {
+        errorMessage = null
+        onDismiss() // Close the dialog after successful deletion
+        profileViewModel.resetDeleteState()
+      }
+      is DeletePublicationState.Error -> {
+        errorMessage = (deleteState as DeletePublicationState.Error).message
+        profileViewModel.resetDeleteState()
+      }
+      else -> {
+        errorMessage = null
+      }
+    }
+  }
+
+  // Confirmation dialog for delete action
+  if (showDeleteDialog) {
+    AlertDialog(
+        onDismissRequest = { showDeleteDialog = false },
+        title = { Text("Delete Publication") },
+        text = {
+          Text("Are you sure you want to delete this publication? This action cannot be undone.")
+        },
+        confirmButton = {
+          Button(
+              onClick = {
+                profileViewModel.deletePublication(publication.id, currentUserId)
+                showDeleteDialog = false
+              },
+              colors =
+                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                Text("Delete")
+              }
+        },
+        dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } })
+  }
 
   Dialog(
       onDismissRequest = onDismiss,
@@ -308,10 +354,10 @@ fun PublicationDetailDialog(
               usePlatformDefaultWidth = false,
               dismissOnBackPress = true,
               dismissOnClickOutside = false)) {
-        Surface(
-            modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog"),
-            color = Color.Black) {
-              Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Top) {
+        Box(modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog")) {
+          Column(modifier = Modifier.fillMaxSize()) {
+            Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+              Column(modifier = Modifier.fillMaxSize()) {
                 SmallTopAppBar(
                     title = {
                       Text(
@@ -322,6 +368,19 @@ fun PublicationDetailDialog(
                     navigationIcon = {
                       IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_button")) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                      }
+                    },
+                    actions = {
+                      // Only show delete option if the current user owns the publication
+                      if (publication.userId == currentUserId) {
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.testTag("delete_button")) {
+                              Icon(
+                                  imageVector = Icons.Default.Delete,
+                                  contentDescription = "Delete publication",
+                                  tint = Color.White)
+                            }
                       }
                     },
                     colors =
@@ -390,6 +449,8 @@ fun PublicationDetailDialog(
                     }
               }
             }
+          }
+        }
       }
 }
 
