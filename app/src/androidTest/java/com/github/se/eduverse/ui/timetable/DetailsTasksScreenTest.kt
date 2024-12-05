@@ -24,11 +24,13 @@ import com.github.se.eduverse.repository.TimeTableRepository
 import com.github.se.eduverse.repository.TodoRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.profile.auth
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -63,7 +65,19 @@ class DetailsTasksScreenTest {
           "id_todo",
           "ownerId",
           "name")
-  private var todo = Todo("id_todo", "name", 0, TodoStatus.ACTUAL, "owner")
+  private val sampleTodo = Todo("id_todo", "name", 0, TodoStatus.ACTUAL, "owner")
+  private var todo = sampleTodo
+
+  // StateFlow used to simulate real-time updates of the todos
+  private val actualTodosFlow = MutableStateFlow(listOf(todo))
+  private val doneTodosFlow = MutableStateFlow(emptyList<Todo>())
+
+  // Helper function used to update the flows when todo lists are updated by repository functions
+  // (mock the behavior of the snapshot listener)
+  private fun updateFlows() {
+    actualTodosFlow.value = if (todo.status == TodoStatus.ACTUAL) listOf(todo) else emptyList()
+    doneTodosFlow.value = if (todo.status == TodoStatus.DONE) listOf(todo) else emptyList()
+  }
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -90,20 +104,19 @@ class DetailsTasksScreenTest {
 
     todoRepository = mock(TodoRepository::class.java)
 
-    `when`(todoRepository.init(any())).then { it.getArgument<(String) -> Unit>(0)("owner") }
-    `when`(todoRepository.getActualTodos(any(), any(), any())).then {
-      it.getArgument<(List<Todo>) -> Unit>(1)(
-          if (todo.status == TodoStatus.ACTUAL) listOf(todo) else emptyList())
-    }
-    `when`(todoRepository.getDoneTodos(any(), any(), any())).then {
-      it.getArgument<(List<Todo>) -> Unit>(1)(
-          if (todo.status == TodoStatus.DONE) listOf(todo) else emptyList())
-    }
+    // Mock getActualTodos and getDoneTodos to return the flows defined above
+    `when`(todoRepository.getActualTodos(any())).thenReturn(actualTodosFlow)
+    `when`(todoRepository.getDoneTodos(any())).thenReturn(doneTodosFlow)
+
     `when`(todoRepository.updateTodo(any(), any(), any())).then {
-      todo =
-          todo.copy(
-              status = if (todo.status == TodoStatus.DONE) TodoStatus.ACTUAL else TodoStatus.DONE)
+      val updatedTodo = it.getArgument<Todo>(0)
+      todo = updatedTodo
+      updateFlows()
       it.getArgument<() -> Unit>(1)()
+    }
+    `when`(todoRepository.init(any())).then {
+      todo = sampleTodo
+      it.getArgument<(String?) -> Unit>(0)("owner")
     }
 
     todoListViewModel = TodoListViewModel(todoRepository)
@@ -121,11 +134,7 @@ class DetailsTasksScreenTest {
 
   @Test
   fun goesBackOnNullLinkedTodo() {
-    `when`(todoRepository.getActualTodos(any(), any(), any())).then {
-      it.getArgument<(List<Todo>) -> Unit>(1)(emptyList())
-    }
-    todoListViewModel.getActualTodos()
-    todoListViewModel.getDoneTodos()
+    actualTodosFlow.value = emptyList()
     launch()
 
     verify(navigationActions).goBack()
@@ -203,13 +212,15 @@ class DetailsTasksScreenTest {
 
     composeTestRule.onNodeWithTag("markAsDone").performClick()
 
-    assertEquals(TodoStatus.DONE, todo.status)
+    assert(todoListViewModel.doneTodos.value.contains(todo))
+    assert(!todoListViewModel.actualTodos.value.contains(todo))
     composeTestRule.onNodeWithTag("markAsDone").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("markAsCurrent").assertIsDisplayed()
 
     composeTestRule.onNodeWithTag("markAsCurrent").performClick()
 
-    assertEquals(TodoStatus.ACTUAL, todo.status)
+    assert(!todoListViewModel.doneTodos.value.contains(todo))
+    assert(todoListViewModel.actualTodos.value.contains(todo))
     composeTestRule.onNodeWithTag("markAsCurrent").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("markAsDone").assertIsDisplayed()
   }

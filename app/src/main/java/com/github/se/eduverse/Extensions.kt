@@ -2,6 +2,8 @@
 package com.github.se.eduverse
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.widget.Toast
 
 /**
@@ -12,4 +14,19 @@ import android.widget.Toast
  */
 fun Context.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
   Toast.makeText(this, message, duration).show()
+}
+
+/**
+ * Extension function to check if the device is connected to the internet
+ *
+ * @return True if the device is connected to the internet, false otherwise
+ */
+fun Context.isNetworkAvailable(): Boolean {
+  val connectivityManager =
+      this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  val activeNetwork = connectivityManager.activeNetwork
+  val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+
+  return networkCapabilities != null &&
+      networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
