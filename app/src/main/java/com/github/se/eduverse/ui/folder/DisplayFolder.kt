@@ -43,8 +43,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.MyFile
+import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.DeleteFileDialog
 import com.github.se.eduverse.ui.EditFileMenu
 import com.github.se.eduverse.ui.RenameFileDialog
@@ -86,8 +88,12 @@ fun FolderScreen(
         TopNavigationBar(activeFolder!!.name, navigationActions) {
           IconButton(
               onClick = {
-                folderViewModel.archiveFolder(activeFolder!!)
-                navigationActions.goBack()
+                if (context.isNetworkAvailable()) {
+                  folderViewModel.archiveFolder(activeFolder!!)
+                  navigationActions.goBack()
+                } else {
+                  context.showToast("Not available offline")
+                }
               },
               modifier = Modifier.testTag("archive")) {
                 Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
@@ -102,7 +108,13 @@ fun FolderScreen(
       },
       floatingActionButton = {
         FloatingActionButton(
-            onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
+            onClick = {
+              if (context.isNetworkAvailable()) {
+                navigationActions.navigateTo(Screen.CREATE_FILE)
+              } else {
+                context.showToast("Not available offline")
+              }
+            },
             modifier = Modifier.testTag("createFile"),
             backgroundColor = MaterialTheme.colorScheme.primaryContainer,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
