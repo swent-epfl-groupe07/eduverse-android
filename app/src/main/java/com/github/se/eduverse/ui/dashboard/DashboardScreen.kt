@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
@@ -84,14 +86,18 @@ fun DashboardScreen(
             elevation = 4.dp)
       },
       floatingActionButton = {
-        FloatingActionButton(
-            onClick = { showAddWidgetDialog = true },
-            modifier = Modifier.testTag("add_widget_button"),
-            backgroundColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
-              Icon(Icons.Default.Add, "Add Widget")
-            }
+          // Only show FAB when we have widgets
+          if (widgets.isNotEmpty()) {
+              FloatingActionButton(
+                  onClick = { showAddWidgetDialog = true },
+                  modifier = Modifier.testTag("add_widget_button"),
+                  backgroundColor = MaterialTheme.colorScheme.primary,
+                  contentColor = MaterialTheme.colorScheme.onPrimary,
+                  elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
+              ) {
+                  Icon(Icons.Default.Add, "Add Widget")
+              }
+          }
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -129,7 +135,8 @@ fun DashboardScreen(
 
                 viewModel.removeWidgetAndUpdateOrder(widgetId, remainingWidgets)
               },
-              navigationActions = navigationActions)
+              navigationActions = navigationActions,
+              onAddWidget = { showAddWidgetDialog = true })
 
           if (showAddWidgetDialog) {
             AddWidgetDialog(
@@ -146,8 +153,9 @@ private fun ReorderableWidgetList(
     items: List<Widget>,
     onReorder: (List<Widget>) -> Unit,
     onDelete: (String) -> Unit,
-    navigationActions: NavigationActions // Add navigation actions parameter
-) {
+    navigationActions: NavigationActions,
+    onAddWidget: () -> Unit
+    ) {
   val listState = rememberLazyListState()
   val scope = rememberCoroutineScope()
   val dragChannel = remember { Channel<Float>(Channel.CONFLATED) }
@@ -167,6 +175,60 @@ private fun ReorderableWidgetList(
     }
   }
 
+    if (items.isEmpty()) {
+        // Empty state guidance message
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("empty_dashboard_message"),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Widgets,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Welcome to Eduverse!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Your dashboard is empty. Start by adding widgets using the + button below to customize your learning experience.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                //Add a direct action button
+                FilledTonalButton(
+                    onClick = onAddWidget ,
+                    modifier = Modifier.testTag("empty_state_add_button")
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add Your First Widget")
+                }
+            }
+        }
+    } else {
   LazyColumn(
       state = listState,
       modifier =
@@ -327,7 +389,7 @@ private fun ReorderableWidgetList(
               }
         }
       }
-}
+}}
 
 @Composable
 private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit, userId: String) {
