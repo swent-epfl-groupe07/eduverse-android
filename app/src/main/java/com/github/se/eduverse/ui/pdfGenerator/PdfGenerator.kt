@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.converter
+package com.github.se.eduverse.ui.pdfGenerator
 
 import android.content.Context
 import android.net.Uri
@@ -33,7 +33,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
-import com.github.se.eduverse.viewmodel.PdfConverterViewModel
+import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
 
 // Enum class to list the different options available in the PDF converter tool
 enum class PdfConverterOption {
@@ -52,9 +52,9 @@ enum class PdfConverterOption {
  * @param converterViewModel ViewModel for the PDF converter screen
  */
 @Composable
-fun PdfConverterScreen(
+fun PdfGeneratorScreen(
     navigationActions: NavigationActions,
-    converterViewModel: PdfConverterViewModel = viewModel(factory = PdfConverterViewModel.Factory)
+    converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory)
 ) {
   val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
@@ -81,7 +81,7 @@ fun PdfConverterScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar(screenTitle = "PDF Converter", navigationActions = navigationActions)
+        TopNavigationBar(screenTitle = "PDF Generator", navigationActions = navigationActions)
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
@@ -105,7 +105,7 @@ fun PdfConverterScreen(
                         },
                         optionEnabled =
                             pdfConversionState.value ==
-                                PdfConverterViewModel.PdfGenerationState.Ready)
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
                     OptionCard(
                         testTag = PdfConverterOption.IMAGE_TO_PDF.name,
                         optionName = "Image to PDF",
@@ -118,7 +118,7 @@ fun PdfConverterScreen(
                         },
                         optionEnabled =
                             pdfConversionState.value ==
-                                PdfConverterViewModel.PdfGenerationState.Ready)
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
                   }
 
               Row(
@@ -136,7 +136,7 @@ fun PdfConverterScreen(
                         },
                         optionEnabled =
                             pdfConversionState.value ==
-                                PdfConverterViewModel.PdfGenerationState.Ready)
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
                     OptionCard(
                         testTag = PdfConverterOption.SUMMARIZE_FILE.name,
                         optionName = "Summarize file",
@@ -149,7 +149,7 @@ fun PdfConverterScreen(
                         },
                         optionEnabled =
                             pdfConversionState.value ==
-                                PdfConverterViewModel.PdfGenerationState.Ready)
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
                   }
 
               OptionCard(
@@ -163,7 +163,7 @@ fun PdfConverterScreen(
                     showInfoWindow = true
                   },
                   optionEnabled =
-                      pdfConversionState.value == PdfConverterViewModel.PdfGenerationState.Ready)
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
             }
       }
 
@@ -248,19 +248,19 @@ fun PdfConverterScreen(
 
   // Handle the different states of the PDF generation process
   when (val conversionState = pdfConversionState.value) {
-    is PdfConverterViewModel.PdfGenerationState.InProgress -> {
+    is PdfGeneratorViewModel.PdfGenerationState.InProgress -> {
       LoadingIndicator { converterViewModel.abortPdfGeneration() }
     }
-    is PdfConverterViewModel.PdfGenerationState.Aborted -> {
+    is PdfGeneratorViewModel.PdfGenerationState.Aborted -> {
       context.showToast("PDF generation aborted")
       converterViewModel.setPdfGenerationStateToReady()
     }
-    is PdfConverterViewModel.PdfGenerationState.Error -> {
+    is PdfGeneratorViewModel.PdfGenerationState.Error -> {
       context.showToast("Failed to generate PDF")
       converterViewModel.setPdfGenerationStateToReady()
     }
-    is PdfConverterViewModel.PdfGenerationState.Ready -> {}
-    is PdfConverterViewModel.PdfGenerationState.Success -> {
+    is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
+    is PdfGeneratorViewModel.PdfGenerationState.Success -> {
       context.showToast("Pdf created successfully")
       converterViewModel.savePdfToDevice(conversionState.pdfFile, context)
       converterViewModel.setPdfGenerationStateToReady()

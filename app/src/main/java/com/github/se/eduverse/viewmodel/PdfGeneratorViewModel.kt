@@ -12,7 +12,7 @@ import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.showToast
-import com.github.se.eduverse.ui.converter.PdfConverterOption
+import com.github.se.eduverse.ui.pdfGenerator.PdfConverterOption
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
-class PdfConverterViewModel(
+class PdfGeneratorViewModel(
     private val pdfRepository: PdfRepository,
     private val openAiRepository: OpenAiRepository,
     private val convertApiRepository: ConvertApiRepository
@@ -64,7 +64,7 @@ class PdfConverterViewModel(
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PdfConverterViewModel(
+            return PdfGeneratorViewModel(
                 PdfRepositoryImpl(),
                 OpenAiRepository(OkHttpClient()),
                 ConvertApiRepository(OkHttpClient()))
