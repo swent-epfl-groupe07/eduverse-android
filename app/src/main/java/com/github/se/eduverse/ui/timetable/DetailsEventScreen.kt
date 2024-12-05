@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -39,7 +38,6 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsEventScreen(
     timeTableViewModel: TimeTableViewModel,
@@ -97,7 +95,7 @@ fun DetailsEventScreen(
                             onClick = {
                               timeTableViewModel.updateScheduled(event.apply { name = newName })
                               newName += " " // Change the value to trigger calculation of isEnabled
-                              newName.dropLast(1)
+                              newName = newName.dropLast(1)
                             },
                             isEnabled = { event.name != newName })
                       })
@@ -116,7 +114,7 @@ fun DetailsEventScreen(
                                   event.apply { content = description })
                               description +=
                                   " " // Change the value to trigger calculation of isEnabled
-                              description.dropLast(1)
+                              description = description.dropLast(1)
                             },
                             isEnabled = { event.content != description })
                       },
@@ -143,16 +141,19 @@ fun DetailsEventScreen(
                                   event.start.set(
                                       Calendar.DAY_OF_MONTH, date.get(Calendar.DAY_OF_MONTH))
                                   timeTableViewModel.updateScheduled(event)
+
+                                  // Trigger recomposition
+                                  date = date.clone() as Calendar
                                 }
                                 "time" -> {
                                   // Get the time of the new event but not the date
                                   event.start.set(
                                       Calendar.HOUR_OF_DAY, date.get(Calendar.HOUR_OF_DAY))
                                   event.start.set(Calendar.MINUTE, date.get(Calendar.MINUTE))
-                                  event.start.set(Calendar.SECOND, date.get(Calendar.SECOND))
-                                  event.start.set(
-                                      Calendar.MILLISECOND, date.get(Calendar.MILLISECOND))
                                   timeTableViewModel.updateScheduled(event)
+
+                                  // Trigger recomposition
+                                  date = date.clone() as Calendar
                                 }
                                 "length" -> {
                                   timeTableViewModel.updateScheduled(
@@ -170,8 +171,15 @@ fun DetailsEventScreen(
                             },
                             isEnabled = {
                               when (type) {
-                                "date" -> date.timeInMillis != event.start.timeInMillis
-                                "time" -> date.timeInMillis != event.start.timeInMillis
+                                "date" ->
+                                    date.get(Calendar.YEAR) != event.start.get(Calendar.YEAR) ||
+                                        date.get(Calendar.DAY_OF_YEAR) !=
+                                            event.start.get(Calendar.DAY_OF_YEAR)
+                                "time" ->
+                                    date.get(Calendar.HOUR_OF_DAY) !=
+                                        event.start.get(Calendar.HOUR_OF_DAY) ||
+                                        date.get(Calendar.MINUTE) !=
+                                            event.start.get(Calendar.MINUTE)
                                 "length" ->
                                     event.length !=
                                         ((lengthH + lengthM.toDouble() / 60) * millisecInHour)
