@@ -47,7 +47,12 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
       },
       content = { pd ->
         Column(modifier = Modifier.fillMaxSize().padding(pd).testTag("todoListScreen")) {
-          AddTodoEntry { name -> todoListViewModel.addNewTodo(name) }
+          AddTodoEntry { name ->
+            todoListViewModel.addNewTodo(name)
+            // For better UX display the current tasks whenever a new task is added so that the user
+            // can see the added task even if the done todos are currently being displayed
+            showCompleted = false
+          }
           Spacer(modifier = Modifier.height(10.dp))
           Row(
               modifier = Modifier.padding(8.dp),
