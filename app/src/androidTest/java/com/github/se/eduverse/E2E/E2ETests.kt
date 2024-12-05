@@ -48,77 +48,88 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
 class CalculatorWidgetE2ETest {
+    @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+    private lateinit var viewModel: FakeDashboardViewModel
+    private lateinit var navigationActions: FakeNavigationActions
 
-  private lateinit var viewModel: FakeDashboardViewModel
-  private lateinit var navigationActions: FakeNavigationActions
+    @Before
+    fun setup() {
+        MockFirebaseAuth.setup()
+        viewModel = FakeDashboardViewModel()
+        navigationActions = FakeNavigationActions()
 
-  @Before
-  fun setup() {
-    MockFirebaseAuth.setup()
-    viewModel = FakeDashboardViewModel()
-    navigationActions = FakeNavigationActions()
-
-    composeTestRule.setContent {
-      TestNavigation(viewModel = viewModel, navigationActions = navigationActions)
+        composeTestRule.setContent {
+            TestNavigation(viewModel = viewModel, navigationActions = navigationActions)
+        }
     }
-  }
 
-  @After
-  fun tearDown() {
-    unmockkAll() // Clean up all mockk mocks
-  }
-
-  @Test
-  fun testCalculatorWidgetFlow() {
-    composeTestRule.apply {
-      waitForIdle()
-
-      // 1. Add Calculator Widget
-      onNodeWithTag("add_widget_button").performClick()
-
-      // Get button with Calculator text from CommonWidgetType
-      val calculatorWidget = CommonWidgetType.CALCULATOR
-      onNodeWithText(calculatorWidget.title).performClick()
-
-      // Verify calculator widget appears on dashboard
-      onNodeWithText(calculatorWidget.title).assertIsDisplayed()
-      onNodeWithText(calculatorWidget.content).assertIsDisplayed()
-
-      // 2. Open Calculator
-      onNodeWithText("Calculator").performClick()
-      navigationActions.navigateToCalculator()
-      waitForIdle()
-
-      // Verify calculator screen elements
-      onNodeWithTag("display").assertExists()
-      onNodeWithTag("displayText").assertExists()
-
-      // 3. Perform Basic Calculation
-      onNodeWithTag("button_7").performClick()
-      onNodeWithTag("button_+").performClick()
-      onNodeWithTag("button_3").performClick()
-      onNodeWithTag("button_=").performClick()
-      onNodeWithTag("resultText").assertTextContains("10")
-
-      // 4. Return to Dashboard
-      onNodeWithTag("goBackButton").performClick()
-      navigationActions.navigateToDashboard()
-      waitForIdle()
-
-      // Re-verify the calculator widget is still there
-      onNodeWithText("Calculator").assertIsDisplayed()
-
-      // 5. Delete the Calculator widget
-      onAllNodesWithTag("widget_card").onFirst().assertExists().performScrollTo()
-
-      onAllNodesWithTag("delete_icon").onFirst().assertExists().performClick()
-
-      // Verify widget is removed
-      onNodeWithText("Calculator").assertDoesNotExist()
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
-  }
+
+    @Test
+    fun testCalculatorWidgetFlow() {
+        composeTestRule.apply {
+            waitForIdle()
+
+            // 1. Verify Empty State
+            onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+            onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+            onNodeWithTag("add_widget_button").assertDoesNotExist()
+
+            // 2. Add Calculator Widget from Empty State
+            onNodeWithTag("empty_state_add_button").performClick()
+
+            // Get button with Calculator text from CommonWidgetType
+            val calculatorWidget = CommonWidgetType.CALCULATOR
+            onNodeWithText(calculatorWidget.title).performClick()
+
+            // Verify transition from empty state to widget list
+            onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
+            onNodeWithTag("widget_list").assertIsDisplayed()
+            onNodeWithTag("add_widget_button").assertIsDisplayed()
+
+            // Verify calculator widget appears on dashboard
+            onNodeWithText(calculatorWidget.title).assertIsDisplayed()
+            onNodeWithText(calculatorWidget.content).assertIsDisplayed()
+
+            // 3. Open Calculator
+            onNodeWithText("Calculator").performClick()
+            navigationActions.navigateToCalculator()
+            waitForIdle()
+
+            // Verify calculator screen elements
+            onNodeWithTag("display").assertExists()
+            onNodeWithTag("displayText").assertExists()
+
+            // 4. Perform Basic Calculation
+            onNodeWithTag("button_7").performClick()
+            onNodeWithTag("button_+").performClick()
+            onNodeWithTag("button_3").performClick()
+            onNodeWithTag("button_=").performClick()
+            onNodeWithTag("resultText").assertTextContains("10")
+
+            // 5. Return to Dashboard
+            onNodeWithTag("goBackButton").performClick()
+            navigationActions.navigateToDashboard()
+            waitForIdle()
+
+            // Re-verify the calculator widget is still there
+            onNodeWithText("Calculator").assertIsDisplayed()
+
+            // 6. Delete the Calculator widget
+            onAllNodesWithTag("widget_card").onFirst().assertExists().performScrollTo()
+            onAllNodesWithTag("delete_icon").onFirst().assertExists().performClick()
+
+            // 7. Verify return to empty state
+            onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+            onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+            onNodeWithTag("add_widget_button").assertDoesNotExist()
+            onNodeWithText("Calculator").assertDoesNotExist()
+        }
+    }
 }
 
 class SocialInteractionE2ETest {
@@ -486,130 +497,136 @@ class MockFirebaseAuth {
 }
 
 class PomodoroTimerE2ETest {
+    @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+    private lateinit var viewModel: FakeDashboardViewModel
+    private lateinit var timerViewModel: FakeTimerViewModel
+    private lateinit var navigationActions: FakePomodoroNavigationActions
 
-  private lateinit var viewModel: FakeDashboardViewModel
-  private lateinit var timerViewModel: FakeTimerViewModel
-  private lateinit var navigationActions: FakePomodoroNavigationActions
+    @Before
+    fun setup() {
+        MockFirebaseAuth.setup()
+        viewModel = FakeDashboardViewModel()
+        timerViewModel = FakeTimerViewModel()
+        navigationActions = FakePomodoroNavigationActions()
 
-  @Before
-  fun setup() {
-    MockFirebaseAuth.setup()
-    viewModel = FakeDashboardViewModel()
-    timerViewModel = FakeTimerViewModel()
-    navigationActions = FakePomodoroNavigationActions()
-
-    composeTestRule.setContent {
-      TestPomodoroNavigation(
-          dashboardViewModel = viewModel,
-          timerViewModel = timerViewModel,
-          navigationActions = navigationActions)
+        composeTestRule.setContent {
+            TestPomodoroNavigation(
+                dashboardViewModel = viewModel,
+                timerViewModel = timerViewModel,
+                navigationActions = navigationActions
+            )
+        }
     }
-  }
 
-  @After
-  fun tearDown() {
-    unmockkAll() // Clean up all mockk mocks
-  }
-
-  @Test
-  fun testPomodoroTimerFlow() {
-    composeTestRule.apply {
-      waitForIdle()
-
-      // 1. Add Timer Widget
-      onNodeWithTag("add_widget_button").performClick()
-      val timerWidget = CommonWidgetType.TIMER
-      onNodeWithText(timerWidget.title).performClick()
-
-      // Verify timer widget appears on dashboard
-      onNodeWithText(timerWidget.title).assertIsDisplayed()
-      onNodeWithText(timerWidget.content).assertIsDisplayed()
-
-      // 2. Open Timer
-      onNodeWithText("Study Timer").performClick()
-      navigationActions.navigateToPomodoro()
-      waitForIdle()
-      waitForIdle()
-      waitForIdle()
-
-      // Verify initial state
-      onNodeWithTag("timerText").assertTextContains("25:00")
-      onNodeWithTag("cycleText").assertTextContains("Cycle: 1/4")
-      onNodeWithTag("focusIcon").assertExists()
-
-      // 3. Test timer controls
-      // Get initial timer text
-      val initialTime =
-          onNodeWithTag("timerText")
-              .fetchSemanticsNode()
-              .config
-              .first { it.key.name == "Text" }
-              .value
-              .toString()
-
-      // Start timer
-      onNodeWithTag("playPauseButton").performClick()
-      waitForIdle()
-
-      // Verify timer started (text should be different from initial)
-      val afterStartTime =
-          onNodeWithTag("timerText")
-              .fetchSemanticsNode()
-              .config
-              .first { it.key.name == "Text" }
-              .value
-              .toString()
-      assert(initialTime != afterStartTime) { "Timer value should change after starting" }
-
-      // Pause timer
-      onNodeWithTag("playPauseButton").performClick()
-      waitForIdle()
-
-      // 4. Test timer settings
-      onNodeWithTag("settingsButton").performClick()
-      waitForIdle()
-
-      // If your Slider has SemanticProperties.ProgressBarRangeInfo set
-      onNode(hasTestTag("Focus Time Slider"), useUnmergedTree = true).performSemanticsAction(
-          SemanticsActions.SetProgress) {
-            it(1.8f) // Set to 2 min
-      }
-
-      waitForIdle()
-
-      onNode(hasTestTag("settingsSaveButton"), useUnmergedTree = true).performClick()
-      waitForIdle()
-
-      // 5. Test timer type changes
-      onNodeWithTag("skipButton").performClick()
-      waitForIdle()
-
-      // Verify short break mode
-      onNodeWithTag("shortBreakIcon").assertExists()
-      onNodeWithTag("timerText").assertTextContains("5:00")
-
-      // 6. Test reset
-      onNodeWithTag("resetButton").performClick()
-      waitForIdle()
-
-      // Verify reset state
-      onNodeWithTag("timerText").assertTextContains("2:00")
-      onNodeWithTag("focusIcon").assertExists()
-
-      // 7. Return to dashboard
-      onNodeWithTag("goBackButton").performClick()
-      navigationActions.goBack()
-      waitForIdle()
-
-      // 8. Clean up
-      onAllNodesWithTag("delete_icon").onFirst().performScrollTo().performClick()
-
-      // Verify widget removed
-      onNodeWithTag("widget_card").assertDoesNotExist()
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
-  }
+
+    @Test
+    fun testPomodoroTimerFlow() {
+        composeTestRule.apply {
+            waitForIdle()
+
+            // 1. Verify Empty State
+            onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+            onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+            onNodeWithTag("add_widget_button").assertDoesNotExist()
+
+            // 2. Add Timer Widget from Empty State
+            onNodeWithTag("empty_state_add_button").performClick()
+            val timerWidget = CommonWidgetType.TIMER
+            onNodeWithText(timerWidget.title).performClick()
+
+            // Verify transition from empty state to widget list
+            onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
+            onNodeWithTag("widget_list").assertIsDisplayed()
+            onNodeWithTag("add_widget_button").assertIsDisplayed()
+
+            // Verify timer widget appears on dashboard
+            onNodeWithText(timerWidget.title).assertIsDisplayed()
+            onNodeWithText(timerWidget.content).assertIsDisplayed()
+
+            // 3. Open Timer
+            onNodeWithText("Study Timer").performClick()
+            navigationActions.navigateToPomodoro()
+            waitForIdle()
+            waitForIdle()
+            waitForIdle()
+
+            // Verify initial state
+            onNodeWithTag("timerText").assertTextContains("25:00")
+            onNodeWithTag("cycleText").assertTextContains("Cycle: 1/4")
+            onNodeWithTag("focusIcon").assertExists()
+
+            // 4. Test timer controls
+            val initialTime = onNodeWithTag("timerText")
+                .fetchSemanticsNode()
+                .config
+                .first { it.key.name == "Text" }
+                .value
+                .toString()
+
+            // Start timer
+            onNodeWithTag("playPauseButton").performClick()
+            waitForIdle()
+
+            // Verify timer started
+            val afterStartTime = onNodeWithTag("timerText")
+                .fetchSemanticsNode()
+                .config
+                .first { it.key.name == "Text" }
+                .value
+                .toString()
+            assert(initialTime != afterStartTime) { "Timer value should change after starting" }
+
+            // Pause timer
+            onNodeWithTag("playPauseButton").performClick()
+            waitForIdle()
+
+            // 5. Test timer settings
+            onNodeWithTag("settingsButton").performClick()
+            waitForIdle()
+
+            onNode(hasTestTag("Focus Time Slider"), useUnmergedTree = true)
+                .performSemanticsAction(SemanticsActions.SetProgress) { it(1.8f) }
+            waitForIdle()
+
+            onNode(hasTestTag("settingsSaveButton"), useUnmergedTree = true).performClick()
+            waitForIdle()
+
+            // 6. Test timer type changes
+            onNodeWithTag("skipButton").performClick()
+            waitForIdle()
+
+            // Verify short break mode
+            onNodeWithTag("shortBreakIcon").assertExists()
+            onNodeWithTag("timerText").assertTextContains("5:00")
+
+            // 7. Test reset
+            onNodeWithTag("resetButton").performClick()
+            waitForIdle()
+
+            // Verify reset state
+            onNodeWithTag("timerText").assertTextContains("2:00")
+            onNodeWithTag("focusIcon").assertExists()
+
+            // 8. Return to dashboard
+            onNodeWithTag("goBackButton").performClick()
+            navigationActions.goBack()
+            waitForIdle()
+
+            // 9. Delete widget and verify empty state
+            onAllNodesWithTag("delete_icon").onFirst().performScrollTo().performClick()
+
+            // Verify transition back to empty state
+            onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+            onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+            onNodeWithTag("add_widget_button").assertDoesNotExist()
+            onNodeWithTag("widget_card").assertDoesNotExist()
+        }
+    }
 }
 
 @HiltViewModel
