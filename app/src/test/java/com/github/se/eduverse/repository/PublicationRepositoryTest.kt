@@ -37,6 +37,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
+        `when`(mockCollection.whereNotEqualTo("mediaUrl", null)).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
         `when`(mockQuerySnapshot.documents).thenReturn(listOf())
 
@@ -58,6 +59,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
+        `when`(mockCollection.whereNotEqualTo("mediaUrl", null)).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
 
         // Créons des publications simulées sous forme de DocumentSnapshot
@@ -108,6 +110,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
+        `when`(mockCollection.whereNotEqualTo("mediaUrl", null)).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenThrow(RuntimeException("Firestore error"))
 
         // Act
