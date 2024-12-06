@@ -36,7 +36,7 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
 
 // Enum class to list the different options available in the PDF converter tool
-enum class PdfConverterOption {
+enum class PdfGeneratorOption {
   TEXT_TO_PDF,
   IMAGE_TO_PDF,
   DOCUMENT_TO_PDF,
@@ -60,7 +60,7 @@ fun PdfGeneratorScreen(
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
   var showNameInputDialog by remember { mutableStateOf(false) }
   val pdfFileName = converterViewModel.newFileName.collectAsState()
-  var currentPdfConverterOption by remember { mutableStateOf(PdfConverterOption.NONE) }
+  var currentPdfGeneratorOption by remember { mutableStateOf(PdfGeneratorOption.NONE) }
   val pdfConversionState = converterViewModel.pdfGenerationState.collectAsState()
   var showInfoWindow by remember { mutableStateOf(false) }
   var showSelectSourceDialog by remember { mutableStateOf(false) }
@@ -94,12 +94,12 @@ fun PdfGeneratorScreen(
                   modifier = Modifier.fillMaxWidth(),
                   horizontalArrangement = Arrangement.SpaceEvenly) {
                     OptionCard(
-                        testTag = PdfConverterOption.TEXT_TO_PDF.name,
+                        testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
                         optionName = "Text to PDF",
                         explanation = "Converts a .txt file to PDF",
                         icon = Icons.AutoMirrored.Filled.TextSnippet,
                         onClick = {
-                          currentPdfConverterOption = PdfConverterOption.TEXT_TO_PDF
+                          currentPdfGeneratorOption = PdfGeneratorOption.TEXT_TO_PDF
                           inputFileMIMEType = "text/plain"
                           showInfoWindow = true
                         },
@@ -107,12 +107,12 @@ fun PdfGeneratorScreen(
                             pdfConversionState.value ==
                                 PdfGeneratorViewModel.PdfGenerationState.Ready)
                     OptionCard(
-                        testTag = PdfConverterOption.IMAGE_TO_PDF.name,
+                        testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
                         optionName = "Image to PDF",
                         explanation = "Converts an image to PDF",
                         icon = Icons.Default.Image,
                         onClick = {
-                          currentPdfConverterOption = PdfConverterOption.IMAGE_TO_PDF
+                          currentPdfGeneratorOption = PdfGeneratorOption.IMAGE_TO_PDF
                           inputFileMIMEType = "image/*"
                           showInfoWindow = true
                         },
@@ -125,12 +125,12 @@ fun PdfGeneratorScreen(
                   modifier = Modifier.fillMaxWidth(),
                   horizontalArrangement = Arrangement.SpaceEvenly) {
                     OptionCard(
-                        testTag = PdfConverterOption.DOCUMENT_TO_PDF.name,
+                        testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
                         optionName = "Doc to PDF",
                         explanation = "Converts a document to PDF",
                         icon = Icons.Default.PictureAsPdf,
                         onClick = {
-                          currentPdfConverterOption = PdfConverterOption.DOCUMENT_TO_PDF
+                          currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
                           inputFileMIMEType = "*/*"
                           showInfoWindow = true
                         },
@@ -138,12 +138,12 @@ fun PdfGeneratorScreen(
                             pdfConversionState.value ==
                                 PdfGeneratorViewModel.PdfGenerationState.Ready)
                     OptionCard(
-                        testTag = PdfConverterOption.SUMMARIZE_FILE.name,
+                        testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
                         optionName = "Summarize file",
                         explanation = "Generates a summary of a file",
                         icon = Icons.Default.Summarize,
                         onClick = {
-                          currentPdfConverterOption = PdfConverterOption.SUMMARIZE_FILE
+                          currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
                           inputFileMIMEType = "application/pdf"
                           showInfoWindow = true
                         },
@@ -153,12 +153,12 @@ fun PdfGeneratorScreen(
                   }
 
               OptionCard(
-                  testTag = PdfConverterOption.EXTRACT_TEXT.name,
+                  testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
                   optionName = "Extract text",
                   explanation = "Extracts text from an image",
                   icon = Icons.Default.Abc,
                   onClick = {
-                    currentPdfConverterOption = PdfConverterOption.EXTRACT_TEXT
+                    currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
                     inputFileMIMEType = "image/*"
                     showInfoWindow = true
                   },
@@ -173,16 +173,16 @@ fun PdfGeneratorScreen(
     var title = ""
     var text = ""
     // Set the title and text of the info window depending on the selected option
-    when (currentPdfConverterOption) {
-      PdfConverterOption.TEXT_TO_PDF -> {
+    when (currentPdfGeneratorOption) {
+      PdfGeneratorOption.TEXT_TO_PDF -> {
         title = "Text to PDF converter"
         text = "Select a .txt file to convert to PDF"
       }
-      PdfConverterOption.IMAGE_TO_PDF -> {
+      PdfGeneratorOption.IMAGE_TO_PDF -> {
         title = "Image to PDF converter"
         text = "Select an image to convert to PDF"
       }
-      PdfConverterOption.DOCUMENT_TO_PDF -> {
+      PdfGeneratorOption.DOCUMENT_TO_PDF -> {
         title = "Document to PDF converter"
         text =
             "Select a document to convert to PDF. Supported document types are: ${
@@ -191,16 +191,16 @@ fun PdfGeneratorScreen(
                     )
                 }"
       }
-      PdfConverterOption.SUMMARIZE_FILE -> {
+      PdfGeneratorOption.SUMMARIZE_FILE -> {
         title = "Pdf file summarizer"
         text = "Select a PDF file to summarize. The summary will be generated in a PDF file"
       }
-      PdfConverterOption.EXTRACT_TEXT -> {
+      PdfGeneratorOption.EXTRACT_TEXT -> {
         title = "Text extractor"
         text =
             "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file"
       }
-      PdfConverterOption.NONE -> {
+      PdfGeneratorOption.NONE -> {
         showInfoWindow = false
       }
     }
@@ -242,7 +242,7 @@ fun PdfGeneratorScreen(
         onConfirm = { name ->
           converterViewModel.setNewFileName(name)
           showNameInputDialog = false
-          converterViewModel.generatePdf(selectedFileUri!!, context, currentPdfConverterOption)
+          converterViewModel.generatePdf(selectedFileUri!!, context, currentPdfGeneratorOption)
         })
   }
 

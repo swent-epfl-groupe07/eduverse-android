@@ -7,7 +7,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
-import com.github.se.eduverse.ui.pdfGenerator.PdfConverterOption
+import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -70,7 +70,7 @@ class PdfGeneratorViewModelTest {
   @Test
   fun `test generatePdf when conversion error`() = runTest {
     `when`(pdfRepository.convertImageToPdf(uri, context)).then { throw Exception() }
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     advanceUntilIdle()
     assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
@@ -80,7 +80,7 @@ class PdfGeneratorViewModelTest {
     `when`(pdfRepository.convertImageToPdf(uri, context)).thenReturn(pdfDocument)
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     advanceUntilIdle()
     assertEquals(
         PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
@@ -91,7 +91,7 @@ class PdfGeneratorViewModelTest {
     `when`(pdfRepository.convertTextToPdf(uri, context)).thenReturn(pdfDocument)
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.TEXT_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.TEXT_TO_PDF)
     advanceUntilIdle()
     assertEquals(
         PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
@@ -103,7 +103,7 @@ class PdfGeneratorViewModelTest {
     `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(document)
     `when`(convertApiRepository.convertToPdf(any(), any())).thenReturn(file)
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.DOCUMENT_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.DOCUMENT_TO_PDF)
     advanceUntilIdle()
     verify(convertApiRepository).convertToPdf(eq(document), eq("test"))
   }
@@ -116,7 +116,7 @@ class PdfGeneratorViewModelTest {
       it.getArgument<(String?) -> Unit>(1)(summary)
     }
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
     assertEquals(
         PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
@@ -129,7 +129,7 @@ class PdfGeneratorViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
     assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
@@ -141,7 +141,7 @@ class PdfGeneratorViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
     assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
@@ -153,7 +153,7 @@ class PdfGeneratorViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.EXTRACT_TEXT)
     advanceUntilIdle()
     assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
@@ -167,7 +167,7 @@ class PdfGeneratorViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.EXTRACT_TEXT)
     advanceUntilIdle()
     assertEquals(
         PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
@@ -181,7 +181,7 @@ class PdfGeneratorViewModelTest {
 
   @Test
   fun `test generatePdf with NONE option throws exception`() = runTest {
-    viewModel.generatePdf(uri, context, PdfConverterOption.NONE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.NONE)
     advanceUntilIdle()
     assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
@@ -190,7 +190,7 @@ class PdfGeneratorViewModelTest {
   fun `test setPdfGenerationStateToReady resets state and deletes file`() {
     viewModel.currentFile = file
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     viewModel.setPdfGenerationStateToReady()
 
     verify(pdfRepository).deleteTempPdfFile(any())
@@ -211,7 +211,7 @@ class PdfGeneratorViewModelTest {
   @Test
   fun `test abortPdfGeneration cancels job and sets state`() = runTest {
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     viewModel.abortPdfGeneration()
 
     assertTrue(viewModel.pdfGenerationJob?.isCancelled == true)
@@ -223,7 +223,7 @@ class PdfGeneratorViewModelTest {
   fun `test abortPdfGeneration calls deleteTempPdfFile`() = runTest {
     viewModel.currentFile = file
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     viewModel.abortPdfGeneration()
     verify(pdfRepository).deleteTempPdfFile(eq(file))
   }

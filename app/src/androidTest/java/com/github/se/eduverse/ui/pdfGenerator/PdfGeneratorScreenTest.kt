@@ -23,7 +23,7 @@ import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.pdfGenerator.PdfConverterOption
+import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorScreen
 import com.github.se.eduverse.ui.pdfGenerator.PdfNameInputDialog
 import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
@@ -81,34 +81,34 @@ class PdfGeneratorScreenTest {
   }
 
   @Test
-  fun allPdfConverterOptionsAreCorrectlyDisplayed() {
+  fun allPdfGeneratorOptionsAreCorrectlyDisplayed() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name)
+        .onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name)
         .assertTextContains("Text to PDF")
         .assertTextContains("Converts a .txt file to PDF")
-    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name)
+        .onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name)
         .assertTextContains("Image to PDF")
         .assertTextContains("Converts an image to PDF")
-    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).assertHasClickAction()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.DOCUMENT_TO_PDF.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.DOCUMENT_TO_PDF.name).assertHasClickAction()
     composeTestRule
-        .onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name)
+        .onNodeWithTag(PdfGeneratorOption.DOCUMENT_TO_PDF.name)
         .assertTextContains("Doc to PDF")
         .assertTextContains("Converts a document to PDF")
-    composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).assertHasClickAction()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.SUMMARIZE_FILE.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.SUMMARIZE_FILE.name).assertHasClickAction()
     composeTestRule
-        .onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name)
+        .onNodeWithTag(PdfGeneratorOption.SUMMARIZE_FILE.name)
         .assertTextContains("Summarize file")
         .assertTextContains("Generates a summary of a file")
-    composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).assertHasClickAction()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.EXTRACT_TEXT.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.EXTRACT_TEXT.name).assertHasClickAction()
     composeTestRule
-        .onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name)
+        .onNodeWithTag(PdfGeneratorOption.EXTRACT_TEXT.name)
         .assertTextContains("Extract text")
         .assertTextContains("Extracts text from an image")
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
@@ -177,7 +177,7 @@ class PdfGeneratorScreenTest {
   @Test
   fun clickingTextToPdfOption_correctlyDisplaysInfoWindow() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("infoWindowTitle").assertTextEquals("Text to PDF converter")
     composeTestRule
@@ -194,7 +194,7 @@ class PdfGeneratorScreenTest {
   @Test
   fun clickingImageToPdfOption_correctlyDisplaysInfoWindow() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("infoWindowTitle").assertTextEquals("Image to PDF converter")
     composeTestRule
@@ -205,7 +205,7 @@ class PdfGeneratorScreenTest {
   @Test
   fun clickingSummarizeFileOption_correctlyDisplaysInfoWindow() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.SUMMARIZE_FILE.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.SUMMARIZE_FILE.name).performClick()
     composeTestRule.onNodeWithTag("infoWindow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("infoWindowTitle").assertTextEquals("Pdf file summarizer")
     composeTestRule
@@ -217,7 +217,7 @@ class PdfGeneratorScreenTest {
   @Test
   fun clickingDocumentToPdfOption_correctlyDisplaysInfoWindow() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.DOCUMENT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("infoWindowTitle").assertTextEquals("Document to PDF converter")
     composeTestRule
@@ -233,7 +233,7 @@ class PdfGeneratorScreenTest {
   @Test
   fun clickingExtractTextOption_correctlyDisplaysInfoWindow() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.EXTRACT_TEXT.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.EXTRACT_TEXT.name).performClick()
     composeTestRule.onNodeWithTag("infoWindow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("infoWindowTitle").assertTextEquals("Text extractor")
     composeTestRule
@@ -245,7 +245,7 @@ class PdfGeneratorScreenTest {
   @Test
   fun selectSourceFileDialogIsCorrectlyDisplayed() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsDisplayed()
@@ -271,7 +271,7 @@ class PdfGeneratorScreenTest {
     Intent().apply { data = expectedUri }
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
-    composeTestRule.onNodeWithTag(PdfConverterOption.DOCUMENT_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.DOCUMENT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
     composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsNotDisplayed()
@@ -297,7 +297,7 @@ class PdfGeneratorScreenTest {
           pdfGeneratorViewModel.pdfGenerationState.value,
           PdfGeneratorViewModel.PdfGenerationState.Ready)
     }
-    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
     composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
@@ -317,7 +317,7 @@ class PdfGeneratorScreenTest {
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
     `when`(mockPdfRepository.convertImageToPdf(any(), any())).then { throw Exception() }
-    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
     composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
@@ -339,7 +339,7 @@ class PdfGeneratorScreenTest {
     Intent().apply { data = expectedUri }
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
-    composeTestRule.onNodeWithTag(PdfConverterOption.IMAGE_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
     composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
@@ -361,7 +361,7 @@ class PdfGeneratorScreenTest {
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null))
 
-    composeTestRule.onNodeWithTag(PdfConverterOption.TEXT_TO_PDF.name).performClick()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
     composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
