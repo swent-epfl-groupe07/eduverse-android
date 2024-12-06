@@ -45,6 +45,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,6 +90,16 @@ fun PomodoroScreen(
   var showTodoDialog by remember { mutableStateOf(false) }
   val currentTodoElapsedTime by timerViewModel.currentTodoElapsedTime.collectAsState()
   var lastTimerPausedState by remember { mutableStateOf(false) }
+
+  // Update the time spent on the selected todo when the screen is disposed so that the correct time
+  // appears in the todo list
+  DisposableEffect(Unit) {
+    onDispose {
+      selectedTodo.value?.let {
+        todoListViewModel.updateTodoTimeSpent(it, currentTodoElapsedTime!!)
+      }
+    }
+  }
 
   Scaffold(
       topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) },
