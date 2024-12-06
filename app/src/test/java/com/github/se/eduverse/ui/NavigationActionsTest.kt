@@ -68,8 +68,8 @@ class NavigationActionsTest {
     navigationActions.navigateTo(Screen.POMODORO)
     verify(navHostController).navigate(Screen.POMODORO)
 
-    navigationActions.navigateTo(Screen.PDF_CONVERTER)
-    verify(navHostController).navigate(Screen.PDF_CONVERTER)
+    navigationActions.navigateTo(Screen.PDF_GENERATOR)
+    verify(navHostController).navigate(Screen.PDF_GENERATOR)
 
     navigationActions.navigateTo(Screen.VIDEOS)
     verify(navHostController).navigate(Screen.VIDEOS)
