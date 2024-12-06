@@ -300,6 +300,7 @@ private fun ReorderableWidgetList(
                                   "TODO_LIST" -> Icons.Default.Checklist
                                   "TIME_TABLE" -> Icons.Default.DateRange
                                   "QUIZZ" -> Icons.Default.Book
+                                  "ASSISTANT" -> Icons.Default.Psychology
                                   else -> Icons.Default.Widgets
                                 },
                             contentDescription = null,
@@ -362,6 +363,7 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                                 "TODO_LIST" -> Icons.Default.Checklist
                                 "TIME_TABLE" -> Icons.Default.DateRange
                                 "QUIZZ" -> Icons.Default.Book
+                                "ASSISTANT" -> Icons.Default.Psychology
                                 else -> Icons.Default.Widgets
                               },
                           contentDescription = null,

@@ -17,6 +17,7 @@ enum class CommonWidgetType(val title: String, val content: String, val route: S
   PDF_CONVERTER("PDF Converter", "Convert images to PDFs.", Screen.PDF_CONVERTER),
   FOLDERS("Folders", "Access your personal space", Screen.LIST_FOLDERS),
   TODO_LIST("Todo List", "Access your todo list", Screen.TODO_LIST),
-  TIME_TABLE("Time table", "Plan your activities for the week", Screen.TIME_TABLE),
-  QUIZZ("Quiz generator", "Generate a quiz on the topic of your choice", Screen.QUIZZ)
+  TIME_TABLE("Time Table", "Plan your activities for the week", Screen.TIME_TABLE),
+  QUIZZ("Quiz Generator", "Generate a quiz on the topic of your choice", Screen.QUIZZ),
+  ASSISTANT("Ai Assistant ", "Ask questions to your AI assistant", Screen.ASSISTANT)
 }
