@@ -74,7 +74,7 @@ class PdfGeneratorScreenTest {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("screenTitle").assertTextEquals("PDF Converter")
+    composeTestRule.onNodeWithTag("screenTitle").assertTextEquals("PDF Generator")
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").performClick()
     verify(mockNavigationActions).goBack()
