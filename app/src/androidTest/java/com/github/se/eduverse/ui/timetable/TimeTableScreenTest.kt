@@ -27,6 +27,7 @@ import com.github.se.eduverse.viewmodel.TodoListViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -83,6 +84,10 @@ class TimeTableScreenTest {
   private val todo3 =
       Todo(uid = "3", name = "todo3", timeSpent = 60, status = TodoStatus.ACTUAL, ownerId = "owner")
 
+  // StateFlow used to simulate real-time updates of the todos
+  private val actualTodosFlow = MutableStateFlow(listOf(todo1, todo2, todo3))
+  private val doneTodosFlow = MutableStateFlow(listOf<Todo>())
+
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
@@ -114,11 +119,10 @@ class TimeTableScreenTest {
       callback()
     }
 
-    `when`(todoRepository.init(any())).then { it.getArgument<(String?) -> Unit>(0)("3") }
-    `when`(todoRepository.getActualTodos(any(), any(), any())).then {
-      val callback = it.getArgument<(List<Todo>) -> Unit>(1)
-      callback(listOf(todo1, todo2, todo3))
-    }
+    // Mock getActualTodos and getDoneTodos to return the flows defined above
+    `when`(todoRepository.getActualTodos(any())).thenReturn(actualTodosFlow)
+    `when`(todoRepository.getDoneTodos(any())).thenReturn(doneTodosFlow)
+    `when`(todoRepository.init(any())).then { it.getArgument<(String?) -> Unit>(0)("owner") }
 
     todoListViewModel = TodoListViewModel(todoRepository)
     timeTableViewModel = TimeTableViewModel(timeTableRepository, notificationRepository, auth)
