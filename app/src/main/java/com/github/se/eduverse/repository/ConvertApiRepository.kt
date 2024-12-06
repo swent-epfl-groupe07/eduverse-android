@@ -68,7 +68,7 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
       // asynchronous
       val response = client.newCall(request).execute()
       if (!response.isSuccessful) {
-        throw Exception("Unsuccessful convert respsonse: $response")
+        throw Exception("Unsuccessful convert api respsonse: $response")
       }
 
       response.body?.let { body ->

@@ -45,7 +45,7 @@ class PdfGeneratorViewModel(
 
     data class Success(val pdfFile: File) : PdfGenerationState()
 
-    data object Error : PdfGenerationState()
+    data class Error(val message: String = "Failed to generate PDF") : PdfGenerationState()
   }
 
   private val _newFileName = MutableStateFlow<String>("")
@@ -127,13 +127,9 @@ class PdfGeneratorViewModel(
             // Simulate a delay to show the progress indicator(for testing purposes)
             currentFile?.let { file ->
               _pdfGenerationState.value = PdfGenerationState.Success(file)
-            } ?: { _pdfGenerationState.value = PdfGenerationState.Error }
+            } ?: { _pdfGenerationState.value = PdfGenerationState.Error() }
           } catch (e: Exception) {
-            Log.e("generatePdf", "Failed to generate pdf", e)
-            if (e is IllegalArgumentException) {
-              context.showToast(e.message.toString())
-            }
-            _pdfGenerationState.value = PdfGenerationState.Error
+            handleException(e)
           }
         }
   }
@@ -216,5 +212,10 @@ class PdfGeneratorViewModel(
           Log.e("extractTextFromImage", "Failed to extract text from image", it)
           throw it
         })
+  }
+
+  private fun handleException(e: Exception) {
+    Log.e("generatePdf", "Failed to generate pdf", e)
+    _pdfGenerationState.value = PdfGenerationState.Error(e.message ?: "Failed to generate PDF")
   }
 }

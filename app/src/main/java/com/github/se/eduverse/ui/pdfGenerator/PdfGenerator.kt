@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.api.SUPPORTED_CONVERSION_TYPES
+import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -130,9 +131,15 @@ fun PdfGeneratorScreen(
                         explanation = "Converts a document to PDF",
                         icon = Icons.Default.PictureAsPdf,
                         onClick = {
-                          currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
-                          inputFileMIMEType = "*/*"
-                          showInfoWindow = true
+                          // Since the conversion is done through convert API, it can't be done
+                          // offline
+                          if (!context.isNetworkAvailable()) {
+                            showOfflineToast(context)
+                          } else {
+                            currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
+                            inputFileMIMEType = "*/*"
+                            showInfoWindow = true
+                          }
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -143,9 +150,15 @@ fun PdfGeneratorScreen(
                         explanation = "Generates a summary of a file",
                         icon = Icons.Default.Summarize,
                         onClick = {
-                          currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
-                          inputFileMIMEType = "application/pdf"
-                          showInfoWindow = true
+                          // Since the summarization is done through openAI API, it can't be done
+                          // offline
+                          if (!context.isNetworkAvailable()) {
+                            showOfflineToast(context)
+                          } else {
+                            currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
+                            inputFileMIMEType = "application/pdf"
+                            showInfoWindow = true
+                          }
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -256,7 +269,7 @@ fun PdfGeneratorScreen(
       converterViewModel.setPdfGenerationStateToReady()
     }
     is PdfGeneratorViewModel.PdfGenerationState.Error -> {
-      context.showToast("Failed to generate PDF")
+      context.showToast(conversionState.message)
       converterViewModel.setPdfGenerationStateToReady()
     }
     is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
@@ -478,4 +491,14 @@ private fun getFileNameFromUri(context: Context, uri: Uri): String {
     }
   }
   return fileName.substringBeforeLast(".") // Return the name without the file extension
+}
+
+/**
+ * Helper function used to show a toast message when the device is offline and the tool requires an
+ * internet connection
+ *
+ * @param context The context of the application
+ */
+private fun showOfflineToast(context: Context) {
+  context.showToast("Your device is offline. Please connect to the internet to use this tool.")
 }
