@@ -89,7 +89,7 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
       if (e is FileDownloadException || e is IllegalArgumentException) {
         throw e
       } else {
-        throw FileConversionException("Failed to convert file to PDF", e)
+        throw FileConversionException("Failed to convert file to PDF: ${e.message}", e)
       }
     }
   }
