@@ -45,7 +45,7 @@ class PdfGeneratorViewModel(
 
     data class Success(val pdfFile: File) : PdfGenerationState()
 
-    data class Error(val message: String = "Failed to generate PDF") : PdfGenerationState()
+    data class Error(val message: String = "Failed to generate PDF file") : PdfGenerationState()
   }
 
   private val _newFileName = MutableStateFlow<String>("")
@@ -99,23 +99,25 @@ class PdfGeneratorViewModel(
             when (converterOption) {
               PdfGeneratorOption.IMAGE_TO_PDF -> {
                 val pdfFile = pdfRepository.convertImageToPdf(uri, context)
-                currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+                currentFile =
+                    pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
               }
               PdfGeneratorOption.TEXT_TO_PDF -> {
                 val pdfFile = pdfRepository.convertTextToPdf(uri, context)
-                currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+                currentFile =
+                    pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
               }
               PdfGeneratorOption.DOCUMENT_TO_PDF -> {
                 val file = pdfRepository.getTempFileFromUri(uri, context)
                 val pdfFile =
                     withContext(Dispatchers.IO) {
-                      convertApiRepository.convertToPdf(file, newFileName.value)
+                      convertApiRepository.convertToPdf(file, newFileName.value, context)
                     }
                 currentFile = pdfFile
               }
               PdfGeneratorOption.SUMMARIZE_FILE -> {
                 val text = pdfRepository.readTextFromPdfFile(uri, context, MAX_SUMMARY_INPUT_SIZE)
-                getSummary(text)
+                getSummary(text, context)
               }
               PdfGeneratorOption.EXTRACT_TEXT -> {
                 extractTextToPdf(uri, context)
@@ -123,8 +125,9 @@ class PdfGeneratorViewModel(
               PdfGeneratorOption.NONE ->
                   throw Exception("No converter option selected") // Should never happen
             }
+
             delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
-            // Simulate a delay to show the progress indicator(for testing purposes)
+
             currentFile?.let { file ->
               _pdfGenerationState.value = PdfGenerationState.Success(file)
             } ?: { _pdfGenerationState.value = PdfGenerationState.Error() }
@@ -179,13 +182,14 @@ class PdfGeneratorViewModel(
    *
    * @param text The text to summarize
    */
-  private fun getSummary(text: String) {
+  private fun getSummary(text: String, context: Context) {
     openAiRepository.summarizeText(
         text,
         onSuccess = { summary ->
           if (summary != null) {
-            val pdfFile = pdfRepository.writeTextToPdf(summary)
-            currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+            val pdfFile = pdfRepository.writeTextToPdf(summary, context)
+            currentFile =
+                pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
           } else throw Exception("Failed to generate summary")
         },
         onFailure = {
@@ -205,8 +209,9 @@ class PdfGeneratorViewModel(
         uri,
         context,
         onSuccess = { extractedText ->
-          val pdfFile = pdfRepository.writeTextToPdf(extractedText)
-          currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+          val pdfFile = pdfRepository.writeTextToPdf(extractedText, context)
+          currentFile =
+              pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
         },
         onFailure = {
           Log.e("extractTextFromImage", "Failed to extract text from image", it)
