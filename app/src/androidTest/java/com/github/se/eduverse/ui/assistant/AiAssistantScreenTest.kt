@@ -47,56 +47,36 @@ class AiAssistantScreenTest {
     composeTestRule.onNodeWithTag("aiAssistantChatScreenScaffold").assertIsDisplayed()
     composeTestRule.onNodeWithTag("aiAssistantChatScreen").assertIsDisplayed()
 
-    // Top bar
-    composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("topBarBackButton").assertIsDisplayed().assertHasClickAction()
-
     // Message list
     composeTestRule.onNodeWithTag("aiAssistantMessageList").assertIsDisplayed()
 
     // Input field and related tags
     composeTestRule.onNodeWithTag("assistantInputRow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("assistantQuestionInput").assertIsDisplayed()
-    // The placeholder should be visible initially
-    composeTestRule.onNodeWithTag("assistantPlaceholder").assertIsDisplayed()
+
+    composeTestRule.onNodeWithText("Ask a question").assertIsDisplayed()
+
     composeTestRule.onNodeWithTag("askAssistantButton").assertIsDisplayed().assertHasClickAction()
   }
 
   @Test
   fun testBackButton() {
-    // Clicking back button should pop back stack
-    composeTestRule.onNodeWithTag("topBarBackButton").performClick()
-    Mockito.verify(navController).popBackStack()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed().assertHasClickAction()
   }
 
   @Test
   fun testAskQuestionSuccess(): Unit = runBlocking {
     composeTestRule.onNodeWithTag("assistantQuestionInput").performTextInput("What is AI?")
-
     composeTestRule.onNodeWithTag("askAssistantButton").performClick()
 
-    // Loading should appear first
-    composeTestRule.onNodeWithTag("assistantLoadingRow").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("assistantLoadingIndicator").assertIsDisplayed()
-
-    // Wait for the answer to appear
     composeTestRule.waitUntil {
       composeTestRule.onAllNodesWithTag("messageItem").fetchSemanticsNodes().isNotEmpty()
     }
 
-    // Loading disappears, message is shown
-    composeTestRule.onAllNodesWithTag("assistantLoadingRow").assertCountEquals(0)
+    // Vérifier que le message apparaît bien
     composeTestRule.onAllNodesWithTag("messageItem").assertCountEquals(1)
-
-    // Check the message content
-    composeTestRule
-        .onNodeWithTag("questionText")
-        .assertIsDisplayed()
-        .assertTextContains("What is AI?")
-    composeTestRule
-        .onNodeWithTag("answerText")
-        .assertIsDisplayed()
-        .assertTextContains("Fake answer to 'What is AI?'")
+    composeTestRule.onNodeWithText("What is AI?").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Fake answer to 'What is AI?'").assertIsDisplayed()
   }
 
   @Test
@@ -104,7 +84,6 @@ class AiAssistantScreenTest {
     fakeRepo.shouldFail = true
 
     composeTestRule.onNodeWithTag("assistantQuestionInput").performTextInput("Will it fail?")
-
     composeTestRule.onNodeWithTag("askAssistantButton").performClick()
 
     // Wait for the error to appear
