@@ -76,7 +76,7 @@ class PdfGeneratorViewModel(
                         1250,
                         TimeUnit
                             .SECONDS) // makes sure the socket doesn't timeout too early for large
-                                      // files conversion
+                    // files conversion
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .writeTimeout(30, TimeUnit.SECONDS)
                     .build()
@@ -235,8 +235,13 @@ class PdfGeneratorViewModel(
         })
   }
 
+  /**
+   * Helper function to handle exceptions that occur during the PDF generation process
+   *
+   * @param e The exception that occurred
+   */
   private fun handleException(e: Exception) {
-    Log.e("generatePdf", "Failed to generate pdf", e)
-    _pdfGenerationState.value = PdfGenerationState.Error(e.message ?: "Failed to generate PDF")
+    Log.e("generatePdf", "PDF generation failed", e)
+    _pdfGenerationState.value = PdfGenerationState.Error(e.message ?: "Failed to generate PDF file")
   }
 }
