@@ -32,7 +32,7 @@ interface PdfRepository {
 
   fun convertTextToPdf(fileUri: Uri?, context: Context): PdfDocument
 
-  fun writePdfDocumentToTempFile(pdf: PdfDocument, pdfFileName: String): File
+  fun writePdfDocumentToTempFile(pdf: PdfDocument, pdfFileName: String, context: Context): File?
 
   fun deleteTempPdfFile(pdfFile: File)
 
@@ -40,7 +40,7 @@ interface PdfRepository {
 
   fun readTextFromPdfFile(pdfUri: Uri?, context: Context, limit: Int = 0): String
 
-  fun writeTextToPdf(text: String): PdfDocument
+  fun writeTextToPdf(text: String, context: Context): PdfDocument
 
   fun getTempFileFromUri(uri: Uri?, context: Context): File
 
@@ -151,22 +151,45 @@ class PdfRepositoryImpl : PdfRepository {
    *
    * @param pdf The PdfDocument to write to the file
    * @param pdfFileName The name of the file to create
+   * @param context The context of the application
    * @return The created temporary file
    * @throws Exception If an error occurs during the writing process
    */
-  override fun writePdfDocumentToTempFile(pdf: PdfDocument, pdfFileName: String): File {
-    val tempFile = File.createTempFile(pdfFileName, ".pdf")
-    val outputStream = tempFile.outputStream()
+  override fun writePdfDocumentToTempFile(
+      pdf: PdfDocument,
+      pdfFileName: String,
+      context: Context
+  ): File? {
+    var tempFile: File? = null
+
     try {
-      pdf.writeTo(outputStream)
-      pdf.close()
-      outputStream.close()
+      // Create a temporary file with the given file name, in the external cache directory of the
+      // app since it has more space (and can support large files) than the internal cache directory
+      // (used by default by createTempFile in the previous implementation)
+      tempFile = File.createTempFile(pdfFileName, ".pdf", context.externalCacheDir)
+
+      // Write the PDF document to the file and ensure outputStream is always closed
+      tempFile.outputStream().use { outputStream -> pdf.writeTo(outputStream) }
+
       return tempFile
     } catch (e: Exception) {
-      pdf.close()
-      outputStream.close()
-      Log.e("writePdfDocumentToTempFile", "Failed to write PdfDocument to temp file", e)
-      throw e
+      // If an error occurs, delete the temp file if it was created
+      tempFile?.delete()
+
+      Log.e(
+          "writePdfDocumentToTempFile",
+          "Failed to write PdfDocument with name $pdfFileName to temp file",
+          e)
+
+      return null // Return null to indicate that the temp file creation failed
+    } finally {
+      // Ensure the PdfDocument is always closed and make sure that if an exception occurs while
+      // closing the pdf document doesn't result in throwing an exception
+      try {
+        pdf.close()
+      } catch (closeException: Exception) {
+        Log.e("writePdfDocumentToTempFile", "Failed to close PdfDocument", closeException)
+      }
     }
   }
 
@@ -246,12 +269,13 @@ class PdfRepositoryImpl : PdfRepository {
    * directly from a string given as input, rather than reading the text from an existing file)
    *
    * @param text The text to write to the PDF document
+   * @param context the context of the app
    * @return The created PDF document
    * @throws Exception If an error occurs during the process
    */
-  override fun writeTextToPdf(text: String): PdfDocument {
+  override fun writeTextToPdf(text: String, context: Context): PdfDocument {
     try {
-      val tempFile = createTempTextFile(text)
+      val tempFile = createTempTextFile(text, context)
       val bufferedReader = tempFile.bufferedReader()
       val pdfDocument = writeTextFileToPdf(bufferedReader)
       tempFile.delete()
@@ -274,7 +298,7 @@ class PdfRepositoryImpl : PdfRepository {
     try {
       val inputStream = context.contentResolver.openInputStream(uri!!)
       val documentType = uri.path?.substringAfterLast(".") ?: ""
-      val tempFile = File.createTempFile("tempDocument", ".$documentType")
+      val tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
       tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
       return tempFile
     } catch (e: Exception) {
@@ -449,10 +473,11 @@ class PdfRepositoryImpl : PdfRepository {
    * Heleper function to create a temporary text file with the given text written to it
    *
    * @param text The text to write to the temp file
+   * @param context the context of the app
    * @return The created temporary text file
    */
-  private fun createTempTextFile(text: String): File {
-    val tempFile = File.createTempFile("temp_text", ".txt")
+  private fun createTempTextFile(text: String, context: Context): File {
+    val tempFile = File.createTempFile("temp_text", ".txt", context.externalCacheDir)
     tempFile.writeText(text)
     return tempFile
   }
