@@ -262,11 +262,13 @@ class NextScreenTest {
     composeTestRule.onNodeWithTag("folder_button2").assertIsDisplayed()
 
     var test = false
-    val func = slot<(String, String, Folder) -> Unit>()
-    every { photoViewModel.savePhoto(any(), folder1, capture(func)) } answers
+    val func1 = slot<() -> Unit>()
+    val func2 = slot<(String, String, Folder) -> Unit>()
+    every { photoViewModel.savePhoto(any(), folder1, capture(func1), capture(func2)) } answers
         {
           test = true
-          func.captured("id", "name", folder1)
+          func1.captured()
+          func2.captured("id", "name", folder1)
         }
     composeTestRule.onNodeWithTag("folder_button1").performClick()
 
@@ -281,7 +283,11 @@ class NextScreenTest {
   @Test
   fun testSaveButtonCallsSavePhotoWithCorrectArguments() {
     val capturedPhoto = slot<Photo>()
-    every { photoViewModel.savePhoto(capture(capturedPhoto), any(), any()) } returns Unit
+    val func = slot<() -> Unit>()
+    every { photoViewModel.savePhoto(capture(capturedPhoto), any(), capture(func), any()) } answers
+        {
+          func.captured()
+        }
 
     composeTestRule.onNodeWithTag("saveButton").performClick()
 

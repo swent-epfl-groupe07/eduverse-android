@@ -1,10 +1,12 @@
 package com.github.se.eduverse.ui.camera
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -186,7 +188,8 @@ fun PicTakenScreen(
                     bitmap?.let {
                       val byteArray = imageBitmapToByteArray(it)
                       val photo = Photo(ownerId, byteArray, path)
-                      photoViewModel.savePhoto(photo)
+                      photoViewModel.savePhoto(
+                          photo, onSuccess = { mediaSavedToast(context, "Photo") })
                       navigationActions.goBack()
                       navigationActions.goBack()
                     }
@@ -194,7 +197,8 @@ fun PicTakenScreen(
                     videoFile?.let {
                       val videoByteArray = it.readBytes() // Convert video file to byte array
                       val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                      videoViewModel.saveVideo(video)
+                      videoViewModel.saveVideo(
+                          video, onSuccess = { mediaSavedToast(context, "Video") })
                       navigationActions.goBack()
                       navigationActions.goBack()
                     }
@@ -256,4 +260,8 @@ fun adjustImageRotation(bitmap: Bitmap): Bitmap {
   val matrix = Matrix()
   matrix.postRotate(90f)
   return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}
+
+fun mediaSavedToast(context: Context, media: String) {
+  Toast.makeText(context, "$media saved successfully", Toast.LENGTH_SHORT).show()
 }
