@@ -16,6 +16,8 @@ import com.lowagie.text.pdf.PdfReader
 import com.lowagie.text.pdf.parser.PdfTextExtractor
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 
 interface PdfRepository {
   fun savePdfToDevice(
@@ -69,10 +71,10 @@ class PdfRepositoryImpl : PdfRepository {
    * @throws Exception If an error occurs during the conversion process
    */
   override fun convertImageToPdf(imageUri: Uri?, context: Context): PdfDocument {
-    try {
-      // Read the image bitmap from the URI
-      val imageBitmap = getImageBitmap(imageUri, context)
+    // Read the image bitmap from the URI
+    val imageBitmap = getImageBitmap(imageUri, context)
 
+    try {
       // Create a new PDF document and add the image to it
       val pdfDocument = PdfDocument()
       val pageInfo =
@@ -89,8 +91,8 @@ class PdfRepositoryImpl : PdfRepository {
       return pdfDocument
     } catch (e: Exception) {
       // If an exception occurs during the conversion process, log the error and display a toast
-      Log.e("convertImageToPdf", "Image conversion failed", e)
-      throw e
+      Log.e("convertImageToPdf", "Image conversion failed for uri: $imageUri", e)
+      throw Exception("Image to PDF conversion failed, please try again.")
     }
   }
 
@@ -330,14 +332,24 @@ class PdfRepositoryImpl : PdfRepository {
       val imageBitmap =
           context.contentResolver.openInputStream(imageUri!!).use { inputStream ->
             if (inputStream == null) {
-              throw Exception("Failed to open image file")
+              throw FileNotFoundException("Failed to open image file, opened input stream is null")
             }
             BitmapFactory.decodeStream(inputStream)
           }
       return imageBitmap
     } catch (e: Exception) {
-      Log.e("getImageBitmap", "Failed to get image bitmap", e)
-      throw Exception("Failed to get image bitmap", e)
+      // If an exception occurs while getting the image bitmap, log the error to be able to easily
+      // trace back the origin of the exception when debugging
+      Log.e(
+          "getImageBitmap", "An exception occurred while getting image bitmap of uri: $imageUri", e)
+      if (e is IOException) {
+        // If an IOException occurs while reading the image file the user should be notified to
+        // retry
+        throw Exception("Failed to read the image file, please try again.")
+      } else {
+        // If the image cannot be decoded, the user should be notified to try with another image
+        throw Exception("The selected image cannot be decoded, please try with another image.")
+      }
     }
   }
 
