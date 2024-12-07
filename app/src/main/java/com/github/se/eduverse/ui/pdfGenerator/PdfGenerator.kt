@@ -269,7 +269,7 @@ fun PdfGeneratorScreen(
       converterViewModel.setPdfGenerationStateToReady()
     }
     is PdfGeneratorViewModel.PdfGenerationState.Error -> {
-      context.showToast(conversionState.message)
+      context.showToast("Error: ${conversionState.message}")
       converterViewModel.setPdfGenerationStateToReady()
     }
     is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
