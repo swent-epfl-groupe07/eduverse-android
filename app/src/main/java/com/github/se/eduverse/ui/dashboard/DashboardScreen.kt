@@ -315,17 +315,56 @@ private fun ReorderableWidgetList(
             val isDragging = index == draggingItemIndex
             val elevation by animateFloatAsState(if (isDragging) 8f else 1f)
 
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .graphicsLayer {
-                          if (isDragging) {
-                            translationY = dragOffset
-                            scaleX = 1.05f
-                            scaleY = 1.05f
-                            shadowElevation = elevation
-                          }
+          Card(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 16.dp, vertical = 8.dp)
+                      .graphicsLayer {
+                        if (isDragging) {
+                          translationY = dragOffset
+                          scaleX = 1.05f
+                          scaleY = 1.05f
+                          shadowElevation = elevation
+                        }
+                      }
+                      .zIndex(if (isDragging) 1f else 0f)
+                      .testTag("widget_card")
+                      .clickable {
+                        val route =
+                            CommonWidgetType.entries.find { it.name == item.widgetType }?.route
+
+                        // Navigate if route exists
+                        route?.let { navigationActions.navigateTo(it) }
+                      },
+              elevation = elevation.dp,
+              shape = RoundedCornerShape(8.dp)) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                  Row(
+                      modifier = Modifier.fillMaxWidth().padding(16.dp),
+                      verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector =
+                                when (item.widgetType) {
+                                  "TIMER" -> Icons.Default.Timer
+                                  "CALCULATOR" -> Icons.Default.Calculate
+                                  "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
+                                  "FOLDERS" -> Icons.Default.FolderOpen
+                                  "TODO_LIST" -> Icons.Default.Checklist
+                                  "TIME_TABLE" -> Icons.Default.DateRange
+                                  "QUIZZ" -> Icons.Default.Book
+                                  "ASSISTANT" -> Icons.Default.Psychology
+                                  else -> Icons.Default.Widgets
+                                },
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary)
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                          Text(text = item.widgetTitle, style = MaterialTheme.typography.titleLarge)
+                          Text(
+                              text = item.widgetContent,
+                              style = MaterialTheme.typography.bodyMedium)
                         }
                         .zIndex(if (isDragging) 1f else 0f)
                         .testTag("widget_card")
@@ -417,6 +456,7 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                                 "TODO_LIST" -> Icons.Default.Checklist
                                 "TIME_TABLE" -> Icons.Default.DateRange
                                 "QUIZZ" -> Icons.Default.Book
+                                "ASSISTANT" -> Icons.Default.Psychology
                                 else -> Icons.Default.Widgets
                               },
                           contentDescription = null,
