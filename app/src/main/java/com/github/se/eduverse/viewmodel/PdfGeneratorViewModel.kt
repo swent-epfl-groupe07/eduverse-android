@@ -14,6 +14,7 @@ import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
 import java.io.File
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -64,10 +65,25 @@ class PdfGeneratorViewModel(
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            // Use a custom OkHttpClient for the conversion process to prevent okhttp socket timeout
+            // errors that prevent the conversion of large files to succeed even though the
+            // conversion process is still running on the server (also the latter already has a
+            // timeout of 1200 seconds so the client read timeout is set a little bit higher to
+            // account for overhead)
+            val conversionOkHttpClient =
+                OkHttpClient.Builder()
+                    .readTimeout(
+                        1250,
+                        TimeUnit
+                            .SECONDS) // makes sure the socket doesn't timeout too early for large
+                                      // files conversion
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .build()
             return PdfGeneratorViewModel(
                 PdfRepositoryImpl(),
                 OpenAiRepository(OkHttpClient()),
-                ConvertApiRepository(OkHttpClient()))
+                ConvertApiRepository(conversionOkHttpClient))
                 as T
           }
         }
