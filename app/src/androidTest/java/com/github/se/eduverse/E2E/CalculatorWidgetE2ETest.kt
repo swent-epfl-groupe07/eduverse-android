@@ -31,7 +31,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
 class CalculatorWidgetE2ETest {
-
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   private lateinit var viewModel: FakeDashboardViewModel
@@ -50,7 +49,7 @@ class CalculatorWidgetE2ETest {
 
   @After
   fun tearDown() {
-    unmockkAll() // Clean up all mockk mocks
+    unmockkAll()
   }
 
   @Test
@@ -58,18 +57,28 @@ class CalculatorWidgetE2ETest {
     composeTestRule.apply {
       waitForIdle()
 
-      // 1. Add Calculator Widget
-      onNodeWithTag("add_widget_button").performClick()
+      // 1. Verify Empty State
+      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+      onNodeWithTag("add_widget_button").assertDoesNotExist()
+
+      // 2. Add Calculator Widget from Empty State
+      onNodeWithTag("empty_state_add_button").performClick()
 
       // Get button with Calculator text from CommonWidgetType
       val calculatorWidget = CommonWidgetType.CALCULATOR
       onNodeWithText(calculatorWidget.title).performClick()
 
+      // Verify transition from empty state to widget list
+      onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
+      onNodeWithTag("widget_list").assertIsDisplayed()
+      onNodeWithTag("add_widget_button").assertIsDisplayed()
+
       // Verify calculator widget appears on dashboard
       onNodeWithText(calculatorWidget.title).assertIsDisplayed()
       onNodeWithText(calculatorWidget.content).assertIsDisplayed()
 
-      // 2. Open Calculator
+      // 3. Open Calculator
       onNodeWithText("Calculator").performClick()
       navigationActions.navigateToCalculator()
       waitForIdle()
@@ -78,14 +87,14 @@ class CalculatorWidgetE2ETest {
       onNodeWithTag("display").assertExists()
       onNodeWithTag("displayText").assertExists()
 
-      // 3. Perform Basic Calculation
+      // 4. Perform Basic Calculation
       onNodeWithTag("button_7").performClick()
       onNodeWithTag("button_+").performClick()
       onNodeWithTag("button_3").performClick()
       onNodeWithTag("button_=").performClick()
       onNodeWithTag("resultText").assertTextContains("10")
 
-      // 4. Return to Dashboard
+      // 5. Return to Dashboard
       onNodeWithTag("goBackButton").performClick()
       navigationActions.navigateToDashboard()
       waitForIdle()
@@ -93,12 +102,14 @@ class CalculatorWidgetE2ETest {
       // Re-verify the calculator widget is still there
       onNodeWithText("Calculator").assertIsDisplayed()
 
-      // 5. Delete the Calculator widget
+      // 6. Delete the Calculator widget
       onAllNodesWithTag("widget_card").onFirst().assertExists().performScrollTo()
-
       onAllNodesWithTag("delete_icon").onFirst().assertExists().performClick()
 
-      // Verify widget is removed
+      // 7. Verify return to empty state
+      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+      onNodeWithTag("add_widget_button").assertDoesNotExist()
       onNodeWithText("Calculator").assertDoesNotExist()
     }
   }
