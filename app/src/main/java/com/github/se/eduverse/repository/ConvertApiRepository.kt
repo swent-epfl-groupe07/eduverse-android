@@ -1,5 +1,6 @@
 package com.github.se.eduverse.repository
 
+import android.content.Context
 import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.api.ConvertApiResponse
 import com.github.se.eduverse.api.FileConversionException
@@ -18,6 +19,7 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
   private val apiKey = BuildConfig.CONVERT_API_KEY
   private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
   private val responseAdapter = moshi.adapter(ConvertApiResponse::class.java)
+  private val CONVERSION_TIMEOUT = "1200" // Maximum conversion timeout value accepted by ConvertAPI
 
   /**
    * Converts the given file to a PDF file using the ConvertAPI service
@@ -29,7 +31,7 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
    * @throws FileDownloadException If the download of the converted PDF file fails
    * @throws IllegalArgumentException If the file type is not supported for conversion
    */
-  open fun convertToPdf(file: File, pdfName: String): File? {
+  open fun convertToPdf(file: File, pdfName: String, context: Context): File? {
     val fileType = file.extension
 
     try {
@@ -51,6 +53,7 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
               // is entirely provided in the response body which can lead to out of
               // memory errors if the file is too large, and with the url we download
               // the file in a streamed manner avoiding memory issues
+              .addFormDataPart("Timeout", CONVERSION_TIMEOUT) // Set the conversion timeout
               .build()
 
       val request =
@@ -79,7 +82,9 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
           file.delete() // Delete the original file (which is a temp copy file and not needed
           // anymore once converted)
           return downloadPdfFile(
-              fileUrl, pdfName) // Download the converted PDF file and return it if successful
+              fileUrl,
+              pdfName,
+              context) // Download the converted PDF file and return it if successful
         } else {
           throw Exception("File URL not found in convert response")
         }
@@ -102,8 +107,8 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
    * @return The downloaded PDF file
    * @throws FileDownloadException If the download fails
    */
-  private fun downloadPdfFile(fileUrl: String, pdfName: String): File? {
-    val pdfFile = File.createTempFile(pdfName, ".pdf")
+  private fun downloadPdfFile(fileUrl: String, pdfName: String, context: Context): File? {
+    val pdfFile = File.createTempFile(pdfName, ".pdf", context.externalCacheDir)
     try {
       val request = Request.Builder().url(fileUrl).build()
 
