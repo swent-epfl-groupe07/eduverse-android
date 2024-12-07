@@ -48,23 +48,42 @@ class PomodoroScreenTest {
           Todo("2", "Test Todo 2", 0, TodoStatus.DONE, "uid"))
   private var todos = sampleTodos
 
+  // StateFlow used to simulate real-time updates of the todos
+  private val actualTodosFlow = MutableStateFlow(todos.filter { it.status == TodoStatus.ACTUAL })
+  private val doneTodosFlow = MutableStateFlow(todos.filter { it.status == TodoStatus.DONE })
+
+  // Helper function used to update the flows when todo lists are updated by repository functions
+  // (mock the behavior of the snapshot listener)
+  private fun updateFlows() {
+    actualTodosFlow.value = todos.filter { todo -> todo.status == TodoStatus.ACTUAL }
+    doneTodosFlow.value = todos.filter { todo -> todo.status == TodoStatus.DONE }
+  }
+
   @Before
   fun setup() {
     mockTodoRepository = mock(TodoRepository::class.java)
-    todoListViewModel = TodoListViewModel(mockTodoRepository)
-    `when`(mockTodoRepository.getActualTodos(any(), any(), any())).then {
-      it.getArgument<(List<Todo>) -> Unit>(1)(
-          todos.filter { todo -> todo.status == TodoStatus.ACTUAL })
-    }
-    `when`(mockTodoRepository.getDoneTodos(any(), any(), any())).then {
-      it.getArgument<(List<Todo>) -> Unit>(1)(
-          todos.filter { todo -> todo.status == TodoStatus.DONE })
-    }
+    // Mock getActualTodos and getDoneTodos to return the flows defined above
+    `when`(mockTodoRepository.getActualTodos(any())).thenReturn(actualTodosFlow)
+    `when`(mockTodoRepository.getDoneTodos(any())).thenReturn(doneTodosFlow)
+
     `when`(mockTodoRepository.deleteTodoById(any(), any(), any())).then {
-      val todoToDeleteId = it.getArgument<String>(0)
-      todos = todos.filter { todo -> todo.uid != todoToDeleteId }
+      val todoIdToDelete = it.getArgument<String>(0)
+      todos = todos.filter { todo -> todo.uid != todoIdToDelete }
+      updateFlows()
       it.getArgument<() -> Unit>(1)()
     }
+    `when`(mockTodoRepository.updateTodo(any(), any(), any())).then {
+      val updatedTodo = it.getArgument<Todo>(0)
+      todos = todos.map { todo -> if (todo.uid == updatedTodo.uid) updatedTodo else todo }
+      updateFlows()
+      it.getArgument<() -> Unit>(1)()
+    }
+    `when`(mockTodoRepository.init(any())).then {
+      todos = sampleTodos
+      it.getArgument<(String?) -> Unit>(0)("uid")
+    }
+
+    todoListViewModel = TodoListViewModel(mockTodoRepository)
   }
 
   @Test
@@ -144,27 +163,17 @@ class PomodoroScreenTest {
   @Test
   fun testSelectTodoButtonIsCorrectlyDisplayed() {
     setupPomodoroScreen()
-    todoListViewModel.currentUid = "uid"
-    todoListViewModel.getActualTodos()
     composeTestRule.onNodeWithTag("selectTodoButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("selectTodoButton").assertHasClickAction()
     composeTestRule.onNodeWithTag("selectTodoButton").assertTextContains("Choose a Todo to work on")
     composeTestRule
         .onNodeWithTag("selectTodoButton")
         .assertIsEnabled() // Test button is enabled when actual todos list is not empty
-    todos = emptyList()
-    todoListViewModel.getActualTodos()
-    composeTestRule
-        .onNodeWithTag("selectTodoButton")
-        .assertIsNotEnabled() // Test button is disabled when actual todos list is empty
   }
 
   @Test
   fun testSelectTodoDialogIsCorrectlyDisplayed() {
     setupPomodoroScreen()
-    todoListViewModel.currentUid = "uid"
-    todoListViewModel.getActualTodos()
-    todoListViewModel.getDoneTodos()
     composeTestRule.onNodeWithTag("selectTodoButton").performClick()
     composeTestRule.onNodeWithTag("selectTodoDialog").assertIsDisplayed()
     composeTestRule.onNodeWithTag("selectTodoDialogTitle").assertIsDisplayed()
@@ -183,9 +192,6 @@ class PomodoroScreenTest {
   @Test
   fun testSelectedTodoIsCorrectlyDisplayed() {
     setupPomodoroScreen()
-    todoListViewModel.currentUid = "uid"
-    todoListViewModel.getActualTodos()
-    todoListViewModel.getDoneTodos()
     composeTestRule.onNodeWithTag("selectTodoButton").performClick()
     composeTestRule.onNodeWithTag("todoOption_1").performClick()
     assert(todoListViewModel.selectedTodo.value == sampleTodos[0])
@@ -198,43 +204,37 @@ class PomodoroScreenTest {
     composeTestRule.onNodeWithTag("unselectTodoButton").performClick()
     composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("selectTodoButton").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("selectTodoButton")
+        .assertIsEnabled() // Button should be enabled since the unselected todo can be selected
+    // again
     assert(todoListViewModel.selectedTodo.value == null)
   }
 
   @Test
   fun testTodoIsNoMoreDisplayedWhenDeleted() {
     setupPomodoroScreen()
-
-    todoListViewModel.currentUid = "uid"
-    todoListViewModel.getActualTodos()
-    todoListViewModel.getDoneTodos()
     todoListViewModel.selectTodo(sampleTodos[0])
     composeTestRule.onNodeWithTag("todoItem_1").assertIsDisplayed()
     todoListViewModel.deleteTodo(sampleTodos[0].uid)
     assert(todoListViewModel.selectedTodo.value == null)
     composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("selectTodoButton").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("selectTodoButton")
+        .assertIsNotEnabled() // Test button is disabled when actual todos list is empty
     todos = sampleTodos
   }
 
   @Test
   fun testTodoIsNoMoreDisplayedWhenSetToDone() {
     setupPomodoroScreen()
-
-    `when`(mockTodoRepository.updateTodo(any(), any(), any())).then {
-      todos -= it.getArgument<Todo>(0).copy(status = TodoStatus.ACTUAL)
-      todos += it.getArgument<Todo>(0)
-      it.getArgument<() -> Unit>(1)()
-    }
-
-    todoListViewModel.currentUid = "uid"
-    todoListViewModel.getActualTodos()
-    todoListViewModel.getDoneTodos()
     todoListViewModel.selectTodo(sampleTodos[0])
     composeTestRule.onNodeWithTag("todoDoneButton_1").performClick()
     assert(todoListViewModel.selectedTodo.value == null)
     composeTestRule.onNodeWithTag("todoItem_1").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("selectTodoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("selectTodoButton").assertIsNotEnabled()
     todos = sampleTodos
   }
 
