@@ -38,6 +38,7 @@ import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
 import com.github.se.eduverse.repository.QuizzRepository
+import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.archive.ArchiveScreen
@@ -81,6 +82,7 @@ import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
+import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
@@ -247,6 +249,9 @@ fun EduverseApp(
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
+  val settingsRepo = SettingsRepository(firestore)
+  val settingsViewModel = SettingsViewModel(settingsRepo, FirebaseAuth.getInstance())
+
   notificationData.viewModel =
       when (notificationData.notificationType) {
         NotificationType.TASK,
@@ -373,7 +378,7 @@ fun EduverseApp(
     ) {
       composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
-      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
@@ -413,7 +418,7 @@ fun EduverseApp(
       composable(Screen.POMODORO) {
         PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
       }
-      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
     }
 
     // video
