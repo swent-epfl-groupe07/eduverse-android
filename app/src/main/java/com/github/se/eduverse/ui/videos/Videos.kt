@@ -63,6 +63,13 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import java.io.File
+import java.io.FileOutputStream
+import okhttp3.Request
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -254,14 +261,8 @@ fun VideoScreen(
                             // Share button
                             IconButton(
                                 onClick = {
-                                    handleShare(
-                                        publication = publication,
-                                        context = context
-                                    )
-                                    Log.d(
-                                        "SHARE",
-                                        "Share button clicked for publication: ${publication.id}"
-                                    )
+                                    handleShare(publication = publication, context = context)
+                                    Log.d("SHARE", "Share button clicked for publication: ${publication.id}")
                                 },
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
@@ -276,6 +277,7 @@ fun VideoScreen(
                                     modifier = Modifier.size(48.dp)
                                 )
                             }
+
                         }
                     }
 
@@ -561,29 +563,63 @@ fun PhotoItem(
 }
 
 fun handleShare(publication: Publication, context: Context) {
-    val shareIntent: Intent = when (publication.mediaType) {
-        MediaType.PHOTO -> {
-            Intent(Intent.ACTION_SEND).apply {
-                type = "image/jpeg"
-                putExtra(Intent.EXTRA_TEXT, "Check out this photo: ${publication.mediaUrl}")
-                putExtra(Intent.EXTRA_STREAM, Uri.parse(publication.mediaUrl))
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val client = OkHttpClient()
+            val request = Request.Builder().url(publication.mediaUrl).build()
+            val response = client.newCall(request).execute()
+            if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
+
+            val bytes = response.body?.bytes() ?: throw Exception("Corps de réponse vide")
+
+            val fileExtension = when (publication.mediaType) {
+                MediaType.PHOTO -> ".jpg"
+                MediaType.VIDEO -> ".mp4"
+            }
+
+            val mediaDir = when (publication.mediaType) {
+                MediaType.PHOTO -> File(context.cacheDir, "shared_images")
+                MediaType.VIDEO -> File(context.filesDir, "shared_videos")
+            }
+            if (!mediaDir.exists()) mediaDir.mkdirs()
+            val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
+
+            FileOutputStream(mediaFile).use { it.write(bytes) }
+
+            val uri: Uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                mediaFile
+            )
+
+            val shareIntent: Intent = Intent(Intent.ACTION_SEND).apply {
+                type = when (publication.mediaType) {
+                    MediaType.PHOTO -> "image/jpeg"
+                    MediaType.VIDEO -> "video/mp4"
+                }
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_TEXT, when (publication.mediaType) {
+                    MediaType.PHOTO -> ""
+                    MediaType.VIDEO -> ""
+                })
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-        }
-        MediaType.VIDEO -> {
-            Intent(Intent.ACTION_SEND).apply {
-                type = "video/mp4"
-                putExtra(Intent.EXTRA_TEXT, "Check out this video: ${publication.mediaUrl}")
-                putExtra(Intent.EXTRA_STREAM, Uri.parse(publication.mediaUrl))
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            CoroutineScope(Dispatchers.Main).launch {
+                context.startActivity(
+                    Intent.createChooser(
+                        shareIntent,
+                        if (publication.mediaType == MediaType.PHOTO) "Partager la photo via" else "Partager la vidéo via"
+                    )
+                )
+                Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            CoroutineScope(Dispatchers.Main).launch {
+                Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
-    context.startActivity(
-        Intent.createChooser(
-            shareIntent,
-            if (publication.mediaType == MediaType.PHOTO) "Share photo via" else "Share video via"
-        )
-    )
 }
+
