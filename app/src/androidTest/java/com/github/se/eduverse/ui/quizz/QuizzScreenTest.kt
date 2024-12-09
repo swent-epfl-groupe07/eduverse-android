@@ -26,6 +26,8 @@ class QuizScreenTest {
 
     var sampleQuestions: List<Question> = emptyList()
     var shouldThrowException: Boolean = false
+    var simulateDelay: Boolean = false
+    var delayDuration: Long = 3000L
 
     override suspend fun getQuestionsFromGPT(
         topic: String,
@@ -34,6 +36,9 @@ class QuizScreenTest {
     ): List<Question> {
       if (shouldThrowException) {
         throw Exception("Simulated error")
+      }
+      if (simulateDelay) {
+        kotlinx.coroutines.delay(delayDuration)
       }
       return sampleQuestions
     }
@@ -149,5 +154,55 @@ class QuizScreenTest {
   fun testBackButtonFunctionality() {
     composeTestRule.onNodeWithTag("goBackButton").performClick()
     Mockito.verify(navController).popBackStack()
+  }
+
+  @Test
+  fun testLoadingAnimationDisplays(): Unit = runBlocking {
+    val fakeRepo = quizzRepository as FakeQuizzRepository
+    fakeRepo.simulateDelay = true
+    fakeRepo.delayDuration = 4000L
+
+    composeTestRule.onNodeWithTag("topicInput").performTextInput("Math")
+    composeTestRule.onNodeWithTag("generateQuizButton").performClick()
+
+    composeTestRule.onNodeWithTag("loadingAnimation").assertIsDisplayed()
+
+    composeTestRule.waitUntil(timeoutMillis = 3000L) {
+      !composeTestRule.onAllNodesWithTag("loadingAnimation").fetchSemanticsNodes().isNotEmpty()
+    }
+
+    composeTestRule.onNodeWithTag("errorMessageText").assertIsDisplayed()
+  }
+
+  @Test
+  fun testErrorMessageDisplaysOnException(): Unit = runBlocking {
+    val fakeRepo = quizzRepository as FakeQuizzRepository
+    fakeRepo.shouldThrowException = true
+
+    composeTestRule.onNodeWithTag("topicInput").performTextInput("Math")
+    composeTestRule.onNodeWithTag("generateQuizButton").performClick()
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("errorMessageText").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("errorMessageText")
+        .assertTextContains("Ouchhh! the AI failed to generate the quiz. Try again.")
+  }
+
+  @Test
+  fun testErrorMessageDisplaysWhenNoQuestions(): Unit = runBlocking {
+    val fakeRepo = quizzRepository as FakeQuizzRepository
+    fakeRepo.sampleQuestions = emptyList()
+
+    composeTestRule.onNodeWithTag("topicInput").performTextInput("Math")
+    composeTestRule.onNodeWithTag("generateQuizButton").performClick()
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("errorMessageText").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("errorMessageText")
+        .assertTextContains("Ouchhh! the AI failed to generate the quiz. Try again.")
   }
 }
