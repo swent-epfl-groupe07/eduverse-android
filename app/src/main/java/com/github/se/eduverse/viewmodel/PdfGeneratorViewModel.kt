@@ -127,7 +127,19 @@ class PdfGeneratorViewModel(
                 val file = pdfRepository.getTempFileFromUri(uri, context)
                 val pdfFile =
                     withContext(Dispatchers.IO) {
-                      convertApiRepository.convertToPdf(file, newFileName.value, context)
+                      try {
+                        convertApiRepository.convertToPdf(file, newFileName.value, context)
+                      } catch (e: Exception) {
+                        Log.e(
+                            "convertApiRepository",
+                            "Document to PDF conversion failed for uri: ${uri!!}",
+                            e)
+                        if (e is IllegalArgumentException) {
+                          throw e
+                        } else {
+                          throw Exception("Document conversion failed, please try again")
+                        }
+                      }
                     }
                 currentFile = pdfFile
               }
@@ -206,11 +218,11 @@ class PdfGeneratorViewModel(
             val pdfFile = pdfRepository.writeTextToPdf(summary, context)
             currentFile =
                 pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
-          } else throw Exception("Failed to generate summary")
+          } else throw Exception("Generated summary is null")
         },
         onFailure = {
           Log.e("getSummary", "Failed to get summary from openAi api", it)
-          throw it
+          throw Exception("Summarization failed, please try again")
         })
   }
 
@@ -219,6 +231,7 @@ class PdfGeneratorViewModel(
    *
    * @param uri The URI of the image to extract text from
    * @param context The context of the application
+   * @throws Exception If the text extraction process fails
    */
   private fun extractTextToPdf(uri: Uri?, context: Context) {
     pdfRepository.extractTextFromImage(
@@ -229,10 +242,7 @@ class PdfGeneratorViewModel(
           currentFile =
               pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
         },
-        onFailure = {
-          Log.e("extractTextFromImage", "Failed to extract text from image", it)
-          throw it
-        })
+        onFailure = { throw it })
   }
 
   /**
