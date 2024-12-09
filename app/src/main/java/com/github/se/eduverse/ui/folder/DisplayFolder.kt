@@ -104,7 +104,7 @@ fun FolderScreen(
         FloatingActionButton(
             onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
             modifier = Modifier.testTag("createFile"),
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+            backgroundColor = MaterialTheme.colorScheme.primary,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, contentDescription = "Create File")
             }
