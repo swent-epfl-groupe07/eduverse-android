@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import com.github.se.eduverse.showToast
 import com.google.mlkit.vision.common.InputImage
@@ -297,13 +298,13 @@ class PdfRepositoryImpl : PdfRepository {
   override fun getTempFileFromUri(uri: Uri?, context: Context): File {
     try {
       val inputStream = context.contentResolver.openInputStream(uri!!)
-      val documentType = uri.path?.substringAfterLast(".") ?: ""
+      val documentType = getFileExtensionFromUri(context, uri)
       val tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
       tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
       return tempFile
     } catch (e: Exception) {
       Log.e("getTempFileFromUri", "Failed to get temp file from uri", e)
-      throw e
+      throw Exception("Failed to open the selected file, please try with another file.")
     }
   }
 
@@ -480,5 +481,45 @@ class PdfRepositoryImpl : PdfRepository {
     val tempFile = File.createTempFile("temp_text", ".txt", context.externalCacheDir)
     tempFile.writeText(text)
     return tempFile
+  }
+
+  /**
+   * Helper function to get the file extension from the given URI
+   *
+   * @param context The context of the application
+   * @param uri The URI of the file to get the extension from
+   * @return The extension of the file
+   * @throws Exception If an error occurs during the process
+   */
+  private fun getFileExtensionFromUri(context: Context, uri: Uri): String {
+    try {
+      val cursor = context.contentResolver.query(uri, null, null, null, null)
+      var extension = ""
+
+      // Different exceptions are thrown to be able to easily trace back the cause of the failure
+      cursor?.use {
+        if (it.moveToFirst()) {
+          val fileName = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+          extension = fileName.substringAfterLast('.', "")
+        } else {
+          throw Exception("Queried cursor is empty")
+        }
+      } ?: throw Exception("Cursor is null")
+      if (extension.isEmpty()) {
+        throw Exception("No extension found in file name")
+      } else {
+        return extension
+      }
+    } catch (e: Exception) {
+      // Throw the exception so that the caller doesn't proceed with the rest of execution if the
+      // extension is not valid (i.e empty), since it may lead to errors and make it harder to debug
+      // and find the cause of the problem (for example when getTempFileFromUri calls
+      // File.createTempFile with an empty extension, the latter will fail to create the file and
+      // throw an exception, when the cause of its failure is actually the empty extension and it's
+      // easier to trace back the cause of the failure if the exception is thrown here and the the
+      // log is made as soon as the problem is detected)
+      Log.e("getFileExtensionFromUri", "Failed to get file extension from uri", e)
+      throw e
+    }
   }
 }
