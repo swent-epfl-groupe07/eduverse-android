@@ -46,7 +46,6 @@ import androidx.compose.ui.window.PopupProperties
 import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.MyFile
-import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.DeleteFileDialog
 import com.github.se.eduverse.ui.EditFileMenu
 import com.github.se.eduverse.ui.RenameFileDialog
@@ -92,7 +91,7 @@ fun FolderScreen(
                   folderViewModel.archiveFolder(activeFolder!!)
                   navigationActions.goBack()
                 } else {
-                  context.showToast("Not available offline")
+                  folderViewModel.showOfflineMessage(context)
                 }
               },
               modifier = Modifier.testTag("archive")) {
@@ -112,7 +111,7 @@ fun FolderScreen(
               if (context.isNetworkAvailable()) {
                 navigationActions.navigateTo(Screen.CREATE_FILE)
               } else {
-                context.showToast("Not available offline")
+                folderViewModel.showOfflineMessage(context)
               }
             },
             modifier = Modifier.testTag("createFile"),

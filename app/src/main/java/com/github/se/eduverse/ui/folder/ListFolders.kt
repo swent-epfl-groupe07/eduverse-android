@@ -26,7 +26,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.Folder
-import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -63,7 +62,7 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
               if (context.isNetworkAvailable()) {
                 navigationActions.navigateTo(Screen.CREATE_FOLDER)
               } else {
-                context.showToast("Not available offline")
+                folderViewModel.showOfflineMessage(context)
               }
             },
             modifier = Modifier.testTag("createFolder"),
