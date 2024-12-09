@@ -141,10 +141,10 @@ class PdfGeneratorViewModel(
   /** Set the PDF generation state to ready and reset the current file */
   fun setPdfGenerationStateToReady() {
     _pdfGenerationState.value = PdfGenerationState.Ready
-    if (currentFile != null) {
-      pdfRepository.deleteTempPdfFile(currentFile!!)
-      currentFile = null
-    }
+    currentFile =
+        null // Just resets currentFile without deleting it from the device (because it's not the
+             // purpose of this function), it's only meant to reset the generator state, the actual
+             // file deletion should be handled by the user
   }
 
   /** Save the PDF file to the device */
@@ -175,6 +175,7 @@ class PdfGeneratorViewModel(
     }
   }
 
+  /** Delete the generated PDF file */
   fun deleteGeneratedPdf() {
     if (currentFile != null) {
       pdfRepository.deleteTempPdfFile(currentFile!!)
