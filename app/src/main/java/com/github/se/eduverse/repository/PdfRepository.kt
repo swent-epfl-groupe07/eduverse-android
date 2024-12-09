@@ -94,6 +94,9 @@ class PdfRepositoryImpl : PdfRepository {
       // If an exception occurs during the conversion process, log the error and display a toast
       Log.e("convertImageToPdf", "Image conversion failed for uri: $imageUri", e)
       throw Exception("Image to PDF conversion failed, please try again.")
+    } finally {
+      // Recycle the image bitmap to free up memory
+      imageBitmap.recycle()
     }
   }
 
@@ -303,7 +306,7 @@ class PdfRepositoryImpl : PdfRepository {
       tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
       return tempFile
     } catch (e: Exception) {
-      Log.e("getTempFileFromUri", "Failed to get temp file from uri", e)
+      Log.e("getTempFileFromUri", "Failed to get temp file from uri: $uri", e)
       throw Exception("Failed to open the selected file, please try with another file.")
     }
   }
@@ -323,9 +326,12 @@ class PdfRepositoryImpl : PdfRepository {
       onSuccess: (String) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
+    // Read the image bitmap from the URI
+    val imageBitmap = getImageBitmap(imageUri, context)
+
+    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
     try {
-      val imageBitmap = getImageBitmap(imageUri, context)
-      val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
       val image = InputImage.fromBitmap(imageBitmap, 0)
       recognizer
           .process(image)
@@ -334,13 +340,16 @@ class PdfRepositoryImpl : PdfRepository {
             if (extractedText.isNotEmpty()) {
               onSuccess(extractedText)
             } else {
-              onFailure(Exception("No text found on image"))
+              onFailure(Exception("No text found on the selected image"))
             }
           }
           .addOnFailureListener { onFailure(it) }
     } catch (e: Exception) {
-      Log.e("extractTextFromImage", "Failed to extract text from image", e)
-      onFailure(e)
+      Log.e("extractTextFromImage", "Failed to extract text from image with uri: $imageUri", e)
+      onFailure(Exception("Failed to extract text from image, please try again."))
+    } finally {
+      recognizer.close() // Close the recognizer client when no longer needed
+      imageBitmap.recycle() // Recycle the image bitmap to free up memory
     }
   }
 
@@ -518,7 +527,7 @@ class PdfRepositoryImpl : PdfRepository {
       // throw an exception, when the cause of its failure is actually the empty extension and it's
       // easier to trace back the cause of the failure if the exception is thrown here and the the
       // log is made as soon as the problem is detected)
-      Log.e("getFileExtensionFromUri", "Failed to get file extension from uri", e)
+      Log.e("getFileExtensionFromUri", "Failed to get file extension from uri: $uri", e)
       throw e
     }
   }
