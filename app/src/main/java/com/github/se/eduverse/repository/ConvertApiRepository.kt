@@ -37,7 +37,8 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
     try {
       // Check if the file type is supported for conversion
       if (fileType !in SUPPORTED_CONVERSION_TYPES) {
-        throw IllegalArgumentException("Unsupported file type: $fileType")
+        throw IllegalArgumentException(
+            "Selected file type: $fileType, is not supported for conversion")
       }
 
       val url = "https://v2.convertapi.com/convert/$fileType/to/pdf"
