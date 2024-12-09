@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.Abc
@@ -29,11 +30,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.api.SUPPORTED_CONVERSION_TYPES
 import com.github.se.eduverse.isNetworkAvailable
+import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
 
 // Enum class to list the different options available in the PDF converter tool
@@ -55,7 +58,8 @@ enum class PdfGeneratorOption {
 @Composable
 fun PdfGeneratorScreen(
     navigationActions: NavigationActions,
-    converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory)
+    converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory),
+    folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
 ) {
   val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
@@ -66,6 +70,8 @@ fun PdfGeneratorScreen(
   var showInfoWindow by remember { mutableStateOf(false) }
   var inputFileMIMEType by remember { mutableStateOf("") }
   var showDestinationDialog by remember { mutableStateOf(false) }
+  var showSelectFolderDialog by remember { mutableStateOf(false) }
+  val folders by folderViewModel.folders.collectAsState()
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
@@ -217,14 +223,12 @@ fun PdfGeneratorScreen(
         showInfoWindow = false
       }
     }
+
     // Show the info window
     InfoWindow(
         title = title,
         text = text,
-        onDismiss = {
-          showInfoWindow = false
-          context.showToast("PDF file generation cancelled")
-        },
+        onDismiss = { showInfoWindow = false },
         onConfirm = {
           showInfoWindow = false
           filePickerLauncher.launch(arrayOf(inputFileMIMEType))
@@ -284,7 +288,32 @@ fun PdfGeneratorScreen(
           converterViewModel.savePdfToDevice(pdf, context)
         },
         onFoldersClick = {
-          showDestinationDialog = false
+          if (!context.isNetworkAvailable()) {
+            // If the device is offline the file can't be uploaded to firebase storage
+            context.showToast(
+                "Your device is offline. Please connect to the internet to be able to save to folders")
+          } else {
+            showDestinationDialog = false
+            showSelectFolderDialog = true
+          }
+        })
+  }
+
+  // Show the dialog to select the destination folder from the app's folders
+  if (showSelectFolderDialog) {
+    SelectFolderDialog(
+        folders = folders,
+        onDismiss = {
+          showSelectFolderDialog = false
+          showDestinationDialog = true
+        },
+        onSelect = { folder ->
+          showSelectFolderDialog = false
+          converterViewModel.deleteGeneratedPdf()
+          converterViewModel.setPdfGenerationStateToReady()
+        },
+        onCreate = {
+          showSelectFolderDialog = false
           converterViewModel.deleteGeneratedPdf()
           converterViewModel.setPdfGenerationStateToReady()
         })
@@ -438,7 +467,7 @@ fun InfoWindow(title: String, text: String, onDismiss: () -> Unit, onConfirm: ()
  * Composable for displaying a dialog for the user to choose if he wants to save the generated PDF
  * file in local device's storage or in one of the app's folders or discard the generated PDF
  *
- * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onDiscard Action to be performed when the discard PDF button is clicked
  * @param onDeviceStorageClick Action to be performed when the device storage button is clicked
  * @param onFoldersClick Action to be performed when the app folders button is clicked
  */
@@ -488,6 +517,58 @@ fun SelectDestinationDialog(
           Text("Discard PDF", color = Color.Red)
         }
       })
+}
+
+/**
+ * Composable for displaying a dialog to select the destination folder from the app's folders
+ *
+ * @param folders List of folders to be displayed
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onSelect Action to be performed when a folder is selected
+ */
+@Composable
+fun SelectFolderDialog(
+    folders: List<Folder>,
+    onDismiss: () -> Unit,
+    onSelect: (Folder) -> Unit,
+    onCreate: () -> Unit
+) {
+  AlertDialog(
+      onDismissRequest = { onDismiss() },
+      title = {
+        Text(
+            "Select destination folder",
+            modifier = Modifier.fillMaxWidth().testTag("selectFolderDialogTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        LazyColumn {
+          items(folders.size) { i ->
+            val folder = folders[i]
+            TextButton(
+                modifier = Modifier.testTag("folderButton_${folder.id}"),
+                onClick = { onSelect(folder) }) {
+                  Text(folder.name)
+                }
+            HorizontalDivider()
+          }
+        }
+      },
+      confirmButton = {
+        // Allow the user to create a new folder in which to store the generated pdf
+        Button(
+            modifier = Modifier.fillMaxWidth().testTag("createFolderButton"), onClick = onCreate) {
+              Text("Create a new folder")
+            }
+      },
+      dismissButton = {
+        Button(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth().testTag("cancelSelectFolderButton")) {
+              Text("Cancel")
+            }
+      },
+      modifier = Modifier.testTag("selectFolderDialog"))
 }
 
 /**
