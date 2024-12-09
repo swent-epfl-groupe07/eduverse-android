@@ -281,7 +281,7 @@ fun EduverseApp(
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
       composable(Screen.PDF_GENERATOR) {
-        PdfGeneratorScreen(navigationActions, pdfGeneratorViewModel)
+        PdfGeneratorScreen(navigationActions, pdfGeneratorViewModel, folderViewModel)
       }
       composable(Screen.SEARCH) {
         SearchProfileScreen(navigationActions, viewModel = profileViewModel)
