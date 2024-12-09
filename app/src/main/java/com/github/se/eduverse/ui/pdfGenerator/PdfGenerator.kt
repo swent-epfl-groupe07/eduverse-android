@@ -38,12 +38,12 @@ import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
 
 // Enum class to list the different options available in the PDF converter tool
 enum class PdfGeneratorOption {
-    TEXT_TO_PDF,
-    IMAGE_TO_PDF,
-    DOCUMENT_TO_PDF,
-    SUMMARIZE_FILE,
-    EXTRACT_TEXT,
-    NONE
+  TEXT_TO_PDF,
+  IMAGE_TO_PDF,
+  DOCUMENT_TO_PDF,
+  SUMMARIZE_FILE,
+  EXTRACT_TEXT,
+  NONE
 }
 
 /**
@@ -57,212 +57,238 @@ fun PdfGeneratorScreen(
     navigationActions: NavigationActions,
     converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory)
 ) {
-    val context = LocalContext.current
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var showNameInputDialog by remember { mutableStateOf(false) }
-    val pdfFileName = converterViewModel.newFileName.collectAsState()
-    var currentPdfGeneratorOption by remember { mutableStateOf(PdfGeneratorOption.NONE) }
-    val pdfConversionState = converterViewModel.pdfGenerationState.collectAsState()
-    var showInfoWindow by remember { mutableStateOf(false) }
-    var inputFileMIMEType by remember { mutableStateOf("") }
+  val context = LocalContext.current
+  var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
+  var showNameInputDialog by remember { mutableStateOf(false) }
+  val pdfFileName = converterViewModel.newFileName.collectAsState()
+  var currentPdfGeneratorOption by remember { mutableStateOf(PdfGeneratorOption.NONE) }
+  val pdfConversionState = converterViewModel.pdfGenerationState.collectAsState()
+  var showInfoWindow by remember { mutableStateOf(false) }
+  var inputFileMIMEType by remember { mutableStateOf("") }
+  var showDestinationDialog by remember { mutableStateOf(false) }
 
-    // Launcher for opening the android file picker launcher
-    val filePickerLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            if (uri != null) {
-                selectedFileUri = uri
-                val defaultFileName = getFileNameFromUri(context, selectedFileUri!!)
-                converterViewModel.setNewFileName(defaultFileName)
-                showNameInputDialog = true
-            } else {
-                context.showToast("No file selected")
-            }
+  // Launcher for opening the android file picker launcher
+  val filePickerLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+          selectedFileUri = uri
+          val defaultFileName = getFileNameFromUri(context, selectedFileUri!!)
+          converterViewModel.setNewFileName(defaultFileName)
+          showNameInputDialog = true
+        } else {
+          context.showToast("No file selected")
         }
+      }
 
-    Scaffold(
-        topBar = {
-            TopNavigationBar(screenTitle = "PDF Generator", navigationActions = navigationActions)
-        },
-        bottomBar = {
-            BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
-        }) { pd ->
+  Scaffold(
+      topBar = {
+        TopNavigationBar(screenTitle = "PDF Generator", navigationActions = navigationActions)
+      },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
+      }) { pd ->
         Column(
             modifier = Modifier.fillMaxSize().padding(pd),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly) {
-                OptionCard(
-                    testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
-                    optionName = "Text to PDF",
-                    explanation = "Converts a .txt file to PDF",
-                    icon = Icons.AutoMirrored.Filled.TextSnippet,
-                    onClick = {
-                        currentPdfGeneratorOption = PdfGeneratorOption.TEXT_TO_PDF
-                        inputFileMIMEType = "text/plain"
-                        showInfoWindow = true
-                    },
-                    optionEnabled =
-                    pdfConversionState.value ==
-                            PdfGeneratorViewModel.PdfGenerationState.Ready)
-                OptionCard(
-                    testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
-                    optionName = "Image to PDF",
-                    explanation = "Converts an image to PDF",
-                    icon = Icons.Default.Image,
-                    onClick = {
-                        currentPdfGeneratorOption = PdfGeneratorOption.IMAGE_TO_PDF
-                        inputFileMIMEType = "image/*"
-                        showInfoWindow = true
-                    },
-                    optionEnabled =
-                    pdfConversionState.value ==
-                            PdfGeneratorViewModel.PdfGenerationState.Ready)
-            }
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceEvenly) {
+                    OptionCard(
+                        testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
+                        optionName = "Text to PDF",
+                        explanation = "Converts a .txt file to PDF",
+                        icon = Icons.AutoMirrored.Filled.TextSnippet,
+                        onClick = {
+                          currentPdfGeneratorOption = PdfGeneratorOption.TEXT_TO_PDF
+                          inputFileMIMEType = "text/plain"
+                          showInfoWindow = true
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
+                    OptionCard(
+                        testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
+                        optionName = "Image to PDF",
+                        explanation = "Converts an image to PDF",
+                        icon = Icons.Default.Image,
+                        onClick = {
+                          currentPdfGeneratorOption = PdfGeneratorOption.IMAGE_TO_PDF
+                          inputFileMIMEType = "image/*"
+                          showInfoWindow = true
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
+                  }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly) {
-                OptionCard(
-                    testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
-                    optionName = "Doc to PDF",
-                    explanation = "Converts a document to PDF",
-                    icon = Icons.Default.PictureAsPdf,
-                    onClick = {
-                        // Since the conversion is done through convert API, it can't be done
-                        // offline
-                        if (!context.isNetworkAvailable()) {
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceEvenly) {
+                    OptionCard(
+                        testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
+                        optionName = "Doc to PDF",
+                        explanation = "Converts a document to PDF",
+                        icon = Icons.Default.PictureAsPdf,
+                        onClick = {
+                          // Since the conversion is done through convert API, it can't be done
+                          // offline
+                          if (!context.isNetworkAvailable()) {
                             showOfflineToast(context)
-                        } else {
+                          } else {
                             currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
                             inputFileMIMEType = "*/*"
                             showInfoWindow = true
-                        }
-                    },
-                    optionEnabled =
-                    pdfConversionState.value ==
-                            PdfGeneratorViewModel.PdfGenerationState.Ready)
-                OptionCard(
-                    testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
-                    optionName = "Summarize file",
-                    explanation = "Generates a summary of a file",
-                    icon = Icons.Default.Summarize,
-                    onClick = {
-                        // Since the summarization is done through openAI API, it can't be done
-                        // offline
-                        if (!context.isNetworkAvailable()) {
+                          }
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
+                    OptionCard(
+                        testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
+                        optionName = "Summarize file",
+                        explanation = "Generates a summary of a file",
+                        icon = Icons.Default.Summarize,
+                        onClick = {
+                          // Since the summarization is done through openAI API, it can't be done
+                          // offline
+                          if (!context.isNetworkAvailable()) {
                             showOfflineToast(context)
-                        } else {
+                          } else {
                             currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
                             inputFileMIMEType = "application/pdf"
                             showInfoWindow = true
-                        }
-                    },
-                    optionEnabled =
-                    pdfConversionState.value ==
-                            PdfGeneratorViewModel.PdfGenerationState.Ready)
-            }
+                          }
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
+                  }
 
-            OptionCard(
-                testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
-                optionName = "Extract text",
-                explanation = "Extracts text from an image",
-                icon = Icons.Default.Abc,
-                onClick = {
+              OptionCard(
+                  testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
+                  optionName = "Extract text",
+                  explanation = "Extracts text from an image",
+                  icon = Icons.Default.Abc,
+                  onClick = {
                     currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
                     inputFileMIMEType = "image/*"
                     showInfoWindow = true
-                },
-                optionEnabled =
-                pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
-        }
-    }
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+            }
+      }
 
-    // Show the info window when an option is selected to inform the user what kind of file he needs
-    // to select depending on the selected option
-    if (showInfoWindow) {
-        var title = ""
-        var text = ""
-        // Set the title and text of the info window depending on the selected option
-        when (currentPdfGeneratorOption) {
-            PdfGeneratorOption.TEXT_TO_PDF -> {
-                title = "Text to PDF converter"
-                text = "Select a .txt file to convert to PDF"
-            }
-            PdfGeneratorOption.IMAGE_TO_PDF -> {
-                title = "Image to PDF converter"
-                text = "Select an image to convert to PDF"
-            }
-            PdfGeneratorOption.DOCUMENT_TO_PDF -> {
-                title = "Document to PDF converter"
-                text =
-                    "Select a document to convert to PDF. Supported document types are: ${
+  // Show the info window when an option is selected to inform the user what kind of file he needs
+  // to select depending on the selected option
+  if (showInfoWindow) {
+    var title = ""
+    var text = ""
+    // Set the title and text of the info window depending on the selected option
+    when (currentPdfGeneratorOption) {
+      PdfGeneratorOption.TEXT_TO_PDF -> {
+        title = "Text to PDF converter"
+        text = "Select a .txt file to convert to PDF"
+      }
+      PdfGeneratorOption.IMAGE_TO_PDF -> {
+        title = "Image to PDF converter"
+        text = "Select an image to convert to PDF"
+      }
+      PdfGeneratorOption.DOCUMENT_TO_PDF -> {
+        title = "Document to PDF converter"
+        text =
+            "Select a document to convert to PDF. Supported document types are: ${
                         SUPPORTED_CONVERSION_TYPES.joinToString(
                             ", "
                         )
                     }"
-            }
-            PdfGeneratorOption.SUMMARIZE_FILE -> {
-                title = "Pdf file summarizer"
-                text = "Select a PDF file to summarize. The summary will be generated in a PDF file"
-            }
-            PdfGeneratorOption.EXTRACT_TEXT -> {
-                title = "Text extractor"
-                text =
-                    "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file"
-            }
-            PdfGeneratorOption.NONE -> {
-                showInfoWindow = false
-            }
-        }
-        // Show the info window
-        InfoWindow(
-            title = title,
-            text = text,
-            onDismiss = { showInfoWindow = false },
-            onConfirm = {
-                showInfoWindow = false
-                filePickerLauncher.launch(arrayOf(inputFileMIMEType))
-            })
+      }
+      PdfGeneratorOption.SUMMARIZE_FILE -> {
+        title = "Pdf file summarizer"
+        text = "Select a PDF file to summarize. The summary will be generated in a PDF file"
+      }
+      PdfGeneratorOption.EXTRACT_TEXT -> {
+        title = "Text extractor"
+        text =
+            "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file"
+      }
+      PdfGeneratorOption.NONE -> {
+        showInfoWindow = false
+      }
     }
+    // Show the info window
+    InfoWindow(
+        title = title,
+        text = text,
+        onDismiss = {
+          showInfoWindow = false
+          context.showToast("PDF file generation cancelled")
+        },
+        onConfirm = {
+          showInfoWindow = false
+          filePickerLauncher.launch(arrayOf(inputFileMIMEType))
+        })
+  }
 
-    // Ask for the name of the PDF file to be created when the input file has been selected, and
-    // launch the pdf file generation on confirm
-    if (showNameInputDialog) {
-        PdfNameInputDialog(
-            pdfFileName = pdfFileName.value,
-            onDismiss = {
-                showNameInputDialog = false
-                context.showToast("PDF file generation cancelled")
-            }, // On dismiss the pdf file creation is not launched
-            onConfirm = { name ->
-                converterViewModel.setNewFileName(name)
-                showNameInputDialog = false
-                converterViewModel.generatePdf(selectedFileUri!!, context, currentPdfGeneratorOption)
-            })
-    }
+  // Ask for the name of the PDF file to be created when the input file has been selected, and
+  // launch the pdf file generation on confirm
+  if (showNameInputDialog) {
+    PdfNameInputDialog(
+        pdfFileName = pdfFileName.value,
+        onDismiss = {
+          showNameInputDialog = false
+          context.showToast("PDF file generation cancelled")
+        }, // On dismiss the pdf file creation is not launched
+        onConfirm = { name ->
+          converterViewModel.setNewFileName(name)
+          showNameInputDialog = false
+          converterViewModel.generatePdf(selectedFileUri!!, context, currentPdfGeneratorOption)
+        })
+  }
 
-    // Handle the different states of the PDF generation process
-    when (val conversionState = pdfConversionState.value) {
-        is PdfGeneratorViewModel.PdfGenerationState.InProgress -> {
-            LoadingIndicator { converterViewModel.abortPdfGeneration() }
-        }
-        is PdfGeneratorViewModel.PdfGenerationState.Aborted -> {
-            context.showToast("PDF generation aborted")
-            converterViewModel.setPdfGenerationStateToReady()
-        }
-        is PdfGeneratorViewModel.PdfGenerationState.Error -> {
-            context.showToast("Failed to generate PDF")
-            converterViewModel.setPdfGenerationStateToReady()
-        }
-        is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
-        is PdfGeneratorViewModel.PdfGenerationState.Success -> {
-            context.showToast("Pdf created successfully")
-            converterViewModel.savePdfToDevice(conversionState.pdfFile, context)
-            converterViewModel.setPdfGenerationStateToReady()
-        }
+  // Handle the different states of the PDF generation process
+  when (pdfConversionState.value) {
+    is PdfGeneratorViewModel.PdfGenerationState.InProgress -> {
+      LoadingIndicator { converterViewModel.abortPdfGeneration() }
     }
+    is PdfGeneratorViewModel.PdfGenerationState.Aborted -> {
+      context.showToast("PDF generation aborted")
+      converterViewModel.setPdfGenerationStateToReady()
+    }
+    is PdfGeneratorViewModel.PdfGenerationState.Error -> {
+      context.showToast("Failed to generate PDF")
+      converterViewModel.setPdfGenerationStateToReady()
+    }
+    is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
+    is PdfGeneratorViewModel.PdfGenerationState.Success -> {
+      showDestinationDialog = true
+    }
+  }
+
+  // Ask the user to choose where to save the generated PDF file
+  if (showDestinationDialog) {
+    SelectDestinationDialog(
+        onDiscard = {
+          showDestinationDialog = false
+          converterViewModel.deleteGeneratedPdf()
+          converterViewModel.setPdfGenerationStateToReady()
+        },
+        onDeviceStorageClick = {
+          showDestinationDialog = false
+          converterViewModel.savePdfToDevice(
+              (converterViewModel.pdfGenerationState.value
+                      as PdfGeneratorViewModel.PdfGenerationState.Success)
+                  .pdfFile,
+              context)
+          converterViewModel.setPdfGenerationStateToReady()
+        },
+        onFoldersClick = {
+          showDestinationDialog = false
+          converterViewModel.deleteGeneratedPdf()
+          converterViewModel.setPdfGenerationStateToReady()
+        })
+  }
 }
 
 /**
@@ -274,37 +300,37 @@ fun PdfGeneratorScreen(
  */
 @Composable
 fun PdfNameInputDialog(pdfFileName: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var inputText by remember { mutableStateOf(pdfFileName) } // Initialized with the default name
+  var inputText by remember { mutableStateOf(pdfFileName) } // Initialized with the default name
 
-    AlertDialog(
-        modifier = Modifier.testTag("pdfNameInputDialog"),
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                "Enter a name for the PDF file that will be generated",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center)
-        },
-        text = {
-            OutlinedTextField(
-                modifier = Modifier.testTag("pdfNameInput"),
-                value = inputText,
-                onValueChange = { inputText = it },
-                label = { Text("PDF File Name") })
-        },
-        confirmButton = {
-            Button(
-                modifier = Modifier.testTag("confirmCreatePdfButton"),
-                enabled = inputText.isNotEmpty(), // If input text is empty confirm button is disabled
-                onClick = { onConfirm(inputText) }) {
-                Text("Create PDF")
+  AlertDialog(
+      modifier = Modifier.testTag("pdfNameInputDialog"),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            "Enter a name for the PDF file that will be generated",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        OutlinedTextField(
+            modifier = Modifier.testTag("pdfNameInput"),
+            value = inputText,
+            onValueChange = { inputText = it },
+            label = { Text("PDF File Name") })
+      },
+      confirmButton = {
+        Button(
+            modifier = Modifier.testTag("confirmCreatePdfButton"),
+            enabled = inputText.isNotEmpty(), // If input text is empty confirm button is disabled
+            onClick = { onConfirm(inputText) }) {
+              Text("Create PDF")
             }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss, modifier = Modifier.testTag("dismissCreatePdfButton")) {
-                Text("Cancel")
-            }
-        })
+      },
+      dismissButton = {
+        Button(onClick = onDismiss, modifier = Modifier.testTag("dismissCreatePdfButton")) {
+          Text("Cancel")
+        }
+      })
 }
 
 /**
@@ -326,25 +352,25 @@ fun OptionCard(
     onClick: () -> Unit,
     optionEnabled: Boolean
 ) {
-    Card(
-        modifier =
-        Modifier.padding(8.dp)
-            .size(150.dp)
-            .clickable(onClick = onClick, enabled = optionEnabled)
-            .testTag(testTag),
-        colors =
-        CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
+  Card(
+      modifier =
+          Modifier.padding(8.dp)
+              .size(150.dp)
+              .clickable(onClick = onClick, enabled = optionEnabled)
+              .testTag(testTag),
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.primaryContainer,
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
-            Icon(imageVector = icon, contentDescription = null, Modifier.size(80.dp))
-            Text(optionName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(explanation, fontSize = 8.sp)
-        }
-    }
+              Icon(imageVector = icon, contentDescription = null, Modifier.size(80.dp))
+              Text(optionName, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+              Text(explanation, fontSize = 8.sp)
+            }
+      }
 }
 
 /**
@@ -354,10 +380,10 @@ fun OptionCard(
  */
 @Composable
 fun LoadingIndicator(onAbort: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().testTag("loadingIndicator"),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally) {
+  Column(
+      modifier = Modifier.fillMaxSize().testTag("loadingIndicator"),
+      verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally) {
         CircularProgressIndicator(
             color = Color.LightGray,
             trackColor = Color.Cyan,
@@ -365,9 +391,9 @@ fun LoadingIndicator(onAbort: () -> Unit) {
             strokeCap = StrokeCap.Round)
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onAbort, modifier = Modifier.testTag("abortButton")) {
-            Text("Abort PDF Generation")
+          Text("Abort PDF Generation")
         }
-    }
+      }
 }
 
 /**
@@ -382,35 +408,35 @@ fun LoadingIndicator(onAbort: () -> Unit) {
  */
 @Composable
 fun InfoWindow(title: String, text: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    AlertDialog(
-        modifier = Modifier.testTag("infoWindow"),
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                title,
-                modifier = Modifier.fillMaxWidth().testTag("infoWindowTitle"),
-                textAlign = TextAlign.Center)
-        },
-        text = { Text(text, modifier = Modifier.fillMaxWidth().testTag("infoWindowText")) },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                modifier = Modifier.fillMaxWidth().testTag("infoWindowConfirmButton")) {
-                Text("Select file")
+  AlertDialog(
+      modifier = Modifier.testTag("infoWindow"),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            title,
+            modifier = Modifier.fillMaxWidth().testTag("infoWindowTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = { Text(text, modifier = Modifier.fillMaxWidth().testTag("infoWindowText")) },
+      confirmButton = {
+        Button(
+            onClick = onConfirm,
+            modifier = Modifier.fillMaxWidth().testTag("infoWindowConfirmButton")) {
+              Text("Select file")
             }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth().testTag("infoWindowDismissButton")) {
-                Text("Cancel")
+      },
+      dismissButton = {
+        Button(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth().testTag("infoWindowDismissButton")) {
+              Text("Cancel")
             }
-        })
+      })
 }
 
 /**
- * Composable for displaying a dialog for the user to choose if he wants to save the generated PDF file
- * in local device's storage or in one of the app's folders
+ * Composable for displaying a dialog for the user to choose if he wants to save the generated PDF
+ * file in local device's storage or in one of the app's folders or discard the generated PDF
  *
  * @param onDismiss Action to be performed when the dialog is dismissed
  * @param onDeviceStorageClick Action to be performed when the device storage button is clicked
@@ -418,45 +444,52 @@ fun InfoWindow(title: String, text: String, onDismiss: () -> Unit, onConfirm: ()
  */
 @Composable
 fun SelectDestinationDialog(
-    onDismiss: () -> Unit,
+    onDiscard: () -> Unit,
     onDeviceStorageClick: () -> Unit,
     onFoldersClick: () -> Unit
 ) {
-    AlertDialog(
-        modifier = Modifier.testTag("selectDestinationDialog"),
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Choose where to save the generated PDF file",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center)
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                // Button to proceed towards selecting the folder in which the user wants to save the PDF from the app folders
-                Button(
-                    onClick = { onFoldersClick() },
-                    modifier = Modifier.fillMaxWidth().testTag("appFoldersButton")) {
+  AlertDialog(
+      modifier = Modifier.testTag("selectDestinationDialog"),
+      onDismissRequest = {
+      /**
+       * Don't allow the user to dismiss the dialog by clicking outside of it, the user needs to
+       * explicitly take a decision regarding the generated file to avoid losing the file by mistake
+       * and having to restart the file generation.
+       */
+      },
+      title = {
+        Text(
+            text = "PDF file generation is complete. Choose where to save it.",
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              // Button to proceed towards selecting the folder in which the user wants to save the
+              // PDF from the app folders
+              Button(
+                  onClick = { onFoldersClick() },
+                  modifier = Modifier.fillMaxWidth().testTag("appFoldersButton")) {
                     Text("App folders")
-                }
-                // Button to save the PDF in the device storage
-                Button(
-                    onClick = { onDeviceStorageClick() },
-                    modifier = Modifier.fillMaxWidth().testTag("deviceStorageButton")) {
+                  }
+              // Button to save the PDF in the device storage
+              Button(
+                  onClick = { onDeviceStorageClick() },
+                  modifier = Modifier.fillMaxWidth().testTag("deviceStorageButton")) {
                     Text("Device storage")
-                }
+                  }
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth().testTag("selectDestinationDismissButton")) {
-                Text("Cancel")
+      },
+      confirmButton = {},
+      dismissButton = {
+        Button(
+            onClick = onDiscard,
+            modifier = Modifier.fillMaxWidth().testTag("selectDestinationDiscardButton")) {
+              Text("Discard PDF", color = Color.Red)
             }
-        })
+      })
 }
 
 /**
@@ -467,14 +500,14 @@ fun SelectDestinationDialog(
  * @return Name of the file
  */
 private fun getFileNameFromUri(context: Context, uri: Uri): String {
-    var fileName = ""
-    val cursor = context.contentResolver.query(uri, null, null, null, null)
-    cursor?.use {
-        if (it.moveToFirst()) {
-            fileName = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
-        }
+  var fileName = ""
+  val cursor = context.contentResolver.query(uri, null, null, null, null)
+  cursor?.use {
+    if (it.moveToFirst()) {
+      fileName = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
     }
-    return fileName.substringBeforeLast(".") // Return the name without the file extension
+  }
+  return fileName.substringBeforeLast(".") // Return the name without the file extension
 }
 
 /**
@@ -484,5 +517,5 @@ private fun getFileNameFromUri(context: Context, uri: Uri): String {
  * @param context The context of the application
  */
 private fun showOfflineToast(context: Context) {
-    context.showToast("Your device is offline. Please connect to the internet to use this tool.")
+  context.showToast("Your device is offline. Please connect to the internet to use this tool.")
 }
