@@ -242,27 +242,28 @@ class PdfGeneratorScreenTest {
             "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file")
   }
 
+  /**
+   * Change with dest dialog test
+   *
+   * @Test fun selectSourceFileDialogIsCorrectlyDisplayed() { composeTestRule.setContent {
+   *   PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
+   *   composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).performClick()
+   *   composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
+   *   composeTestRule.onNodeWithTag("infoWindowConfirmButton").assertIsNotDisplayed()
+   *   composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsDisplayed()
+   *   composeTestRule.onNodeWithTag("appFoldersButton").assertIsDisplayed()
+   *   composeTestRule.onNodeWithTag("appFoldersButton").assertTextContains("App folders")
+   *   composeTestRule.onNodeWithTag("appFoldersButton").assertHasClickAction()
+   *   composeTestRule.onNodeWithTag("deviceStorageButton").assertIsDisplayed()
+   *   composeTestRule.onNodeWithTag("deviceStorageButton").assertTextContains("Device storage")
+   *   composeTestRule.onNodeWithTag("deviceStorageButton").assertHasClickAction()
+   *   composeTestRule.onNodeWithTag("selectSourceFileDismissButton").assertIsDisplayed()
+   *   composeTestRule.onNodeWithTag("selectSourceFileDismissButton").assertTextContains("Cancel")
+   *   composeTestRule.onNodeWithTag("selectSourceFileDismissButton").performClick()
+   *   composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsNotDisplayed() }
+   */
   @Test
-  fun selectSourceFileDialogIsCorrectlyDisplayed() {
-    composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
-    composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).performClick()
-    composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
-    composeTestRule.onNodeWithTag("infoWindowConfirmButton").assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("appFoldersButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("appFoldersButton").assertTextContains("App folders")
-    composeTestRule.onNodeWithTag("appFoldersButton").assertHasClickAction()
-    composeTestRule.onNodeWithTag("deviceStorageButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("deviceStorageButton").assertTextContains("Device storage")
-    composeTestRule.onNodeWithTag("deviceStorageButton").assertHasClickAction()
-    composeTestRule.onNodeWithTag("selectSourceFileDismissButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("selectSourceFileDismissButton").assertTextContains("Cancel")
-    composeTestRule.onNodeWithTag("selectSourceFileDismissButton").performClick()
-    composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsNotDisplayed()
-  }
-
-  @Test
-  fun clickingDeviceStorageButtonInSelectSourceFileDialog_launchesFilePicker() {
+  fun clickingSelectSourceFileButtonFromInfoWindow_launchesFilePicker() {
     composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
     // Set up the activity result for the intent
     // Simulate the file picker intent
@@ -273,8 +274,6 @@ class PdfGeneratorScreenTest {
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
     composeTestRule.onNodeWithTag(PdfGeneratorOption.DOCUMENT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
-    composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
-    composeTestRule.onNodeWithTag("selectSourceFileDialog").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
     composeTestRule.onNodeWithTag("dismissCreatePdfButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
@@ -299,7 +298,6 @@ class PdfGeneratorScreenTest {
     }
     composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
-    composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
     composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
@@ -319,7 +317,6 @@ class PdfGeneratorScreenTest {
     `when`(mockPdfRepository.convertImageToPdf(any(), any())).then { throw Exception() }
     composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
-    composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
     composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
@@ -341,7 +338,6 @@ class PdfGeneratorScreenTest {
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
     composeTestRule.onNodeWithTag(PdfGeneratorOption.IMAGE_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
-    composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsDisplayed()
     composeTestRule.onNodeWithTag("pdfNameInput").performTextInput("test.pdf")
     composeTestRule.onNodeWithTag("confirmCreatePdfButton").performClick()
@@ -363,7 +359,6 @@ class PdfGeneratorScreenTest {
 
     composeTestRule.onNodeWithTag(PdfGeneratorOption.TEXT_TO_PDF.name).performClick()
     composeTestRule.onNodeWithTag("infoWindowConfirmButton").performClick()
-    composeTestRule.onNodeWithTag("deviceStorageButton").performClick()
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
     assertEquals(
         PdfGeneratorViewModel.PdfGenerationState.Ready,
