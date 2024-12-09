@@ -73,8 +73,7 @@ class PdfConverterScreenTest {
   fun topNavigationBarIsCorrectlyDisplayed() {
     composeTestRule.setContent { PdfConverterScreen(mockNavigationActions, pdfConverterViewModel) }
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("screenTitle").assertTextEquals("PDF Converter")
+    composeTestRule.onNodeWithTag("centerImage").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").performClick()
     verify(mockNavigationActions).goBack()

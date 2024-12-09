@@ -93,7 +93,7 @@ fun TimeTableScreen(
   }
 
   Scaffold(
-      topBar = { TopNavigationBar("Time Table", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->

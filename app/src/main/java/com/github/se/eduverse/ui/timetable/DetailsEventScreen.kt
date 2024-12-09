@@ -64,7 +64,7 @@ fun DetailsEventScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar(event.name, navigationActions) {
+        TopNavigationBar(navigationActions) {
           IconButton(
               onClick = {
                 timeTableViewModel.deleteScheduled(event)

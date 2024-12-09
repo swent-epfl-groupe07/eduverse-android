@@ -65,43 +65,37 @@ fun FollowListScreen(
     }
   }
 
-  Scaffold(
-      topBar = {
-        TopNavigationBar(
-            screenTitle = if (isFollowersList) "Followers" else "Following",
-            navigationActions = navigationActions)
-      }) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-          if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.testTag("loading_indicator").align(Alignment.Center))
-          } else if (profiles.isEmpty()) {
-            Text(
-                text = if (isFollowersList) "No followers yet" else "Not following anyone",
-                modifier = Modifier.testTag("empty_message").align(Alignment.Center),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-          } else {
-            LazyColumn(
-                modifier = Modifier.testTag("follow_list").padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                  items(items = profiles, key = { it.id }) { profile ->
-                    FollowListItem(
-                        profile = profile,
-                        currentUserId = currentUserId,
-                        isFollowersList = isFollowersList,
-                        onFollowClick = { profileId ->
-                          viewModel.toggleFollow(currentUserId ?: "", profileId)
-                        },
-                        onProfileClick = { navigationActions.navigateToUserProfile(profile.id) },
-                        followActionState = followActionState,
-                        targetUserId =
-                            (followActionState as? FollowActionState.Success)?.targetUserId)
-                  }
-                }
-          }
-        }
+  Scaffold(topBar = { TopNavigationBar(navigationActions = navigationActions) }) { padding ->
+    Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+      if (isLoading) {
+        CircularProgressIndicator(
+            modifier = Modifier.testTag("loading_indicator").align(Alignment.Center))
+      } else if (profiles.isEmpty()) {
+        Text(
+            text = if (isFollowersList) "No followers yet" else "Not following anyone",
+            modifier = Modifier.testTag("empty_message").align(Alignment.Center),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+      } else {
+        LazyColumn(
+            modifier = Modifier.testTag("follow_list").padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+              items(items = profiles, key = { it.id }) { profile ->
+                FollowListItem(
+                    profile = profile,
+                    currentUserId = currentUserId,
+                    isFollowersList = isFollowersList,
+                    onFollowClick = { profileId ->
+                      viewModel.toggleFollow(currentUserId ?: "", profileId)
+                    },
+                    onProfileClick = { navigationActions.navigateToUserProfile(profile.id) },
+                    followActionState = followActionState,
+                    targetUserId = (followActionState as? FollowActionState.Success)?.targetUserId)
+              }
+            }
       }
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

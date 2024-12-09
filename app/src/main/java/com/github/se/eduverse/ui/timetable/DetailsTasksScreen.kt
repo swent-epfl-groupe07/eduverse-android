@@ -69,7 +69,7 @@ fun DetailsTasksScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar(task.name, navigationActions) {
+        TopNavigationBar(navigationActions) {
           IconButton(
               onClick = {
                 timeTableViewModel.deleteScheduled(task)

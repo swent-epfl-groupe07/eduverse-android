@@ -95,9 +95,9 @@ object TopLevelDestinations {
 val LIST_TOP_LEVEL_DESTINATION =
     listOf(
         TopLevelDestinations.DASHBOARD,
-        TopLevelDestinations.FOLDERS,
         TopLevelDestinations.CAMERA,
         TopLevelDestinations.VIDEOS,
+        TopLevelDestinations.FOLDERS,
         TopLevelDestinations.PROFILE)
 
 open class NavigationActions(

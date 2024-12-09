@@ -2,6 +2,8 @@ package com.github.se.eduverse.ui.dashboard
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
@@ -19,14 +21,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.github.se.eduverse.R
 import com.github.se.eduverse.model.CommonWidgetType
 import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -34,6 +39,8 @@ import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.theme.md_theme_light_primary
+import com.github.se.eduverse.ui.theme.md_theme_light_secondary
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.abs
@@ -65,11 +72,18 @@ fun DashboardScreen(
   Scaffold(
       topBar = {
         TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(md_theme_light_secondary, md_theme_light_primary))),
             title = {
-              Text(
-                  "Eduverse",
-                  style = MaterialTheme.typography.titleLarge,
-                  modifier = Modifier.testTag("app_title"))
+              Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(id = R.drawable.eduverse_logo_png),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(140.dp).testTag("centerImage"))
+              }
             },
             actions = {
               IconButton(

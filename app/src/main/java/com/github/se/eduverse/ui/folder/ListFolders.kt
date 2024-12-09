@@ -40,7 +40,7 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
 
   Scaffold(
       topBar = {
-        TopNavigationBar("My Courses", navigationActions) {
+        TopNavigationBar(navigationActions) {
           IconButton(
               onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
               modifier = Modifier.testTag("archive")) {

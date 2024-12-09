@@ -66,7 +66,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
         else -> functionButtons
       }
 
-  Scaffold(topBar = { TopNavigationBar("Calculator", navigationActions) }) {
+  Scaffold(topBar = { TopNavigationBar(navigationActions) }) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         MenuButton("Basic", selectedMenu == "Basic") { selectedMenu = "Basic" }

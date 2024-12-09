@@ -56,7 +56,7 @@ fun NotificationsScreen(
   var eventNotifEnabled by remember { mutableStateOf(notifAuthorizations.eventEnabled) }
 
   Scaffold(
-      topBar = { TopNavigationBar("Notifications", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions) },
       bottomBar = {
         BottomNavigationMenu(
             { navigationActions.navigateTo(it) },

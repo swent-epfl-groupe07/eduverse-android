@@ -3,15 +3,15 @@ package com.github.se.eduverse.ui.theme
 import androidx.compose.material3.ButtonColors
 import androidx.compose.ui.graphics.Color
 
-val md_theme_light_primary = Color(0xC840E0D0)
+val md_theme_light_primary = Color(0xFF099ACC)
 val md_theme_light_onPrimary = Color(0xFF000000)
 val md_theme_light_primaryContainer = Color(0xFFABF1EA)
 val md_theme_light_onPrimaryContainer = Color(0xFF000000)
-val md_theme_light_secondary = Color(0xFF217384)
+val md_theme_light_secondary = Color(0xFF0D5ABD)
 val md_theme_light_onSecondary = Color(0xFFFFFFFF)
 val md_theme_light_secondaryContainer = Color(0xFFD1E5F4)
 val md_theme_light_onSecondaryContainer = Color(0xFF0A1E28)
-val md_theme_light_tertiary = Color(0xFF8000FF)
+val md_theme_light_tertiary = Color(0xFF000000)
 val md_theme_light_onTertiary = Color(0xFFFFFFFF)
 val md_theme_light_tertiaryContainer = Color(0xFFC3E7FF)
 val md_theme_light_onTertiaryContainer = Color(0xFF001E2C)

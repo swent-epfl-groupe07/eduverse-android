@@ -62,7 +62,7 @@ fun CreateFileScreen(navigationActions: NavigationActions, fileViewModel: FileVi
       }
 
   Scaffold(
-      topBar = { TopNavigationBar("Add File", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions) },
       bottomBar = {
         BottomNavigationMenu(
             { navigationActions.navigateTo(it) },

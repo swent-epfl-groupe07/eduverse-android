@@ -67,7 +67,7 @@ fun CreateFolderScreen(
           archived = false)
 
   Scaffold(
-      topBar = { TopNavigationBar("Create Course", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions) },
       bottomBar = {
         BottomNavigationMenu(
             { navigationActions.navigateTo(it) },

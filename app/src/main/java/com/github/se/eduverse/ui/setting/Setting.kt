@@ -33,7 +33,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
   var isThemeDropdownExpanded by remember { mutableStateOf(false) }
   var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
 
-  Scaffold(topBar = { TopNavigationBar("Settings", navigationActions) }) { padding ->
+  Scaffold(topBar = { TopNavigationBar(navigationActions) }) { padding ->
     Column(
         modifier =
             Modifier.fillMaxSize()
@@ -45,7 +45,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
             Text(
                 text = "Confidentiality:",
                 fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.secondary,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(vertical = 8.dp))
             Row(
                 modifier =
@@ -54,7 +54,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                   Text(
                       text = if (privacySettings) "Private" else "Public",
                       modifier = Modifier.weight(1f).testTag("confidentialityToggleState"),
-                      color = MaterialTheme.colorScheme.secondary)
+                      color = MaterialTheme.colorScheme.primary)
                   Switch(
                       checked = privacySettings,
                       onCheckedChange = { privacySettings = it },
@@ -69,7 +69,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                         "Only you and your followers can see your profile and posts."
                     else "Your profile and posts are visible to everyone.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f))
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
           }
 
           Spacer(modifier = Modifier.height(16.dp))
@@ -144,8 +144,6 @@ fun SettingsScreen(navigationActions: NavigationActions) {
   }
 }
 
-// Other helper functions (SettingsOption and SettingsDropdown) remain the same
-
 @Composable
 fun SettingsOption(
     title: String,
@@ -170,9 +168,9 @@ fun SettingsOption(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.secondary,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(end = 16.dp))
-        Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.secondary)
+        Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.primary)
         Icon(
             imageVector = Icons.Default.ArrowForward,
             contentDescription = null,
@@ -198,7 +196,7 @@ fun SettingsDropdown(
           Text(
               text = "$label: $selectedOption",
               modifier = Modifier.weight(1f),
-              color = MaterialTheme.colorScheme.secondary)
+              color = MaterialTheme.colorScheme.primary)
           Icon(
               imageVector = Icons.Filled.ArrowDropDown,
               contentDescription = null,

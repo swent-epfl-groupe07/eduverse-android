@@ -83,7 +83,7 @@ fun FolderScreen(
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
       topBar = {
-        TopNavigationBar(activeFolder!!.name, navigationActions) {
+        TopNavigationBar(navigationActions) {
           IconButton(
               onClick = {
                 folderViewModel.archiveFolder(activeFolder!!)

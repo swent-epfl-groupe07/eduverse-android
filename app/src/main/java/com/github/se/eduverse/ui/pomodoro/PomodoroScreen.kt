@@ -102,7 +102,7 @@ fun PomodoroScreen(
   }
 
   Scaffold(
-      topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { paddingValues ->
