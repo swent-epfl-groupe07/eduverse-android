@@ -1,5 +1,6 @@
 package com.github.se.eduverse.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
@@ -10,6 +11,7 @@ import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.repository.FolderRepositoryImpl
+import com.github.se.eduverse.showToast
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
@@ -101,6 +103,12 @@ open class FolderViewModel(
         true,
         { _folders.value = it.toMutableList() },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
+  }
+
+  /** Show a toast indicating that the device is offline */
+  fun showOfflineMessage(context: Context) {
+    context.showToast(
+        "Your device is offline. Please connect to the internet to manage your folders")
   }
 
   /**
