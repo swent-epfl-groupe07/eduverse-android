@@ -65,7 +65,13 @@ class CropPhotoScreenTest {
     // Verify that the save method in PhotoViewModel was called
     io.mockk.verify { pViewModel.savePhoto(any<Photo>()) }
 
-    // Verify that the navigation back action was triggered
+    // Verify that the Snackbar is displayed with the correct message
+    composeTestRule.onNodeWithText("Cropped image saved in the gallery").assertIsDisplayed()
+
+    // Simulate clicking the Snackbar action to open the gallery
+    composeTestRule.onNodeWithText("Open Gallery").assertExists().performClick()
+
+    // Verify that the navigation back action was triggered twice (after manual exit)
     io.mockk.verify(exactly = 2) { navigationActions.goBack() }
   }
 
