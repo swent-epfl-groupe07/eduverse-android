@@ -276,12 +276,12 @@ fun PdfGeneratorScreen(
         },
         onDeviceStorageClick = {
           showDestinationDialog = false
-          converterViewModel.savePdfToDevice(
+          val pdf =
               (converterViewModel.pdfGenerationState.value
                       as PdfGeneratorViewModel.PdfGenerationState.Success)
-                  .pdfFile,
-              context)
+                  .pdfFile
           converterViewModel.setPdfGenerationStateToReady()
+          converterViewModel.savePdfToDevice(pdf, context)
         },
         onFoldersClick = {
           showDestinationDialog = false
@@ -451,16 +451,16 @@ fun SelectDestinationDialog(
   AlertDialog(
       modifier = Modifier.testTag("selectDestinationDialog"),
       onDismissRequest = {
-      /**
-       * Don't allow the user to dismiss the dialog by clicking outside of it, the user needs to
-       * explicitly take a decision regarding the generated file to avoid losing the file by mistake
-       * and having to restart the file generation.
-       */
+        /**
+         * Don't allow the user to dismiss the dialog by clicking outside of it, the user needs to
+         * explicitly take a decision regarding the generated file to avoid losing the file by
+         * mistake and having to restart the file generation.
+         */
       },
       title = {
         Text(
             text = "PDF file generation is complete. Choose where to save it.",
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("selectDestinationDialogTitle"),
             textAlign = TextAlign.Center)
       },
       text = {
@@ -484,11 +484,9 @@ fun SelectDestinationDialog(
       },
       confirmButton = {},
       dismissButton = {
-        Button(
-            onClick = onDiscard,
-            modifier = Modifier.fillMaxWidth().testTag("selectDestinationDiscardButton")) {
-              Text("Discard PDF", color = Color.Red)
-            }
+        Button(onClick = onDiscard, modifier = Modifier.fillMaxWidth().testTag("discardButton")) {
+          Text("Discard PDF", color = Color.Red)
+        }
       })
 }
 
