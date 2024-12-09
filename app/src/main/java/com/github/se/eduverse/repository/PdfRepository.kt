@@ -244,27 +244,31 @@ class PdfRepositoryImpl : PdfRepository {
    */
   override fun readTextFromPdfFile(pdfUri: Uri?, context: Context, limit: Int): String {
     try {
-      val inputStream =
-          context.contentResolver.openInputStream(pdfUri!!)
-              ?: run { throw Exception("Failed to open pdf file") }
-      val pdfReader = PdfReader(inputStream)
-      val pdfTextExtractor = PdfTextExtractor(pdfReader)
-      var text = ""
-      for (i in 1..pdfReader.numberOfPages) {
-        val extractedText = pdfTextExtractor.getTextFromPage(i)
-        if (extractedText.isNotEmpty()) {
-          text += extractedText
+      // Make sure the input stream is correctly
+      context.contentResolver.openInputStream(pdfUri!!)?.use { inputStream ->
+        // Make sure the pdf reader is correctly closed
+        PdfReader(inputStream).use { pdfReader ->
+          val pdfTextExtractor = PdfTextExtractor(pdfReader)
+          var text = ""
+          for (i in 1..pdfReader.numberOfPages) {
+            val extractedText = pdfTextExtractor.getTextFromPage(i)
+            if (extractedText.isNotEmpty()) {
+              text += extractedText
+            }
+            if (limit > 0 && text.length > limit) {
+              throw Exception("Limit exceeded")
+            }
+          }
+          return text // Return the extracted text after successful reading
         }
-        if (limit > 0 && text.length > limit) {
-          val error = "Pdf file contains too much text and exceeds tool's supported limit"
-          context.showToast(error)
-          throw Exception(error)
-        }
-      }
-      return text
+      } ?: throw Exception("Failed to open InputStream for the URI (openInputStream returned null).")
     } catch (e: Exception) {
-      Log.e("readTextFromPdfFile", "Failed to read text from pdf file", e)
-      throw e
+      Log.e("readTextFromPdfFile", "Failed to read text from pdf file with uri: $pdfUri", e)
+      if (e.message == "Limit exceeded") {
+        throw Exception("The PDF file is too large to be processed, please try with a smaller file.")
+      } else {
+        throw Exception("Failed to read text from PDF file, please try again.")
+      }
     }
   }
 
@@ -300,10 +304,12 @@ class PdfRepositoryImpl : PdfRepository {
    */
   override fun getTempFileFromUri(uri: Uri?, context: Context): File {
     try {
-      val inputStream = context.contentResolver.openInputStream(uri!!)
-      val documentType = getFileExtensionFromUri(context, uri)
+      val documentType = getFileExtensionFromUri(context, uri!!)
       val tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
-      tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
+
+      // Make sure the input stream is correctly closed
+      context.contentResolver.openInputStream(uri).use { inputStream ->
+      tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) } } ?: throw Exception("Failed to open InputStream for the URI (openInputStream returned null).")
       return tempFile
     } catch (e: Exception) {
       Log.e("getTempFileFromUri", "Failed to get temp file from uri: $uri", e)
