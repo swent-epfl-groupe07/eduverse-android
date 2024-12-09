@@ -170,11 +170,15 @@ class PdfGeneratorViewModel(
       if (pdfGenerationJob!!.isActive) {
         pdfGenerationJob!!.cancel()
       }
-      if (currentFile != null) {
-        pdfRepository.deleteTempPdfFile(currentFile!!)
-        currentFile = null
-      }
+      deleteGeneratedPdf()
       _pdfGenerationState.value = PdfGenerationState.Aborted
+    }
+  }
+
+  fun deleteGeneratedPdf() {
+    if (currentFile != null) {
+      pdfRepository.deleteTempPdfFile(currentFile!!)
+      currentFile = null
     }
   }
 
