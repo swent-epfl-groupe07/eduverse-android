@@ -143,8 +143,8 @@ class PdfGeneratorViewModel(
     _pdfGenerationState.value = PdfGenerationState.Ready
     currentFile =
         null // Just resets currentFile without deleting it from the device (because it's not the
-             // purpose of this function), it's only meant to reset the generator state, the actual
-             // file deletion should be handled by the user
+    // purpose of this function), it's only meant to reset the generator state, the actual
+    // file deletion should be handled by the user
   }
 
   /** Save the PDF file to the device */
