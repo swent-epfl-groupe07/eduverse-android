@@ -2,6 +2,8 @@ package com.github.se.eduverse.ui.dashboard
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
@@ -19,6 +21,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -134,23 +139,35 @@ fun DashboardScreen(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(bottom = 76.dp, end = 16.dp)
-                    ) {
-                        Button(
-                            onClick = { showAddWidgetDialog = true },
-                            modifier = Modifier
-                                .size(56.dp)
-                                .testTag("add_widget_button"),
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            .size(56.dp)
+                            .shadow(
+                                elevation = 6.dp,
+                                shape = RoundedCornerShape(16.dp)
                             )
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add Widget",
-                                modifier = Modifier.size(24.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable { showAddWidgetDialog = true }
+                            .testTag("add_widget_button"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
+                        Canvas(modifier = Modifier.size(24.dp)) {
+                            val strokeWidth = 2.dp.toPx()
+
+                            // Draw horizontal line
+                            drawLine(
+                                color = onPrimaryColor,
+                                start = Offset(0f, size.height / 2),
+                                end = Offset(size.width, size.height / 2),
+                                strokeWidth = strokeWidth
+                            )
+
+                            // Draw vertical line
+                            drawLine(
+                                color = onPrimaryColor,
+                                start = Offset(size.width / 2, 0f),
+                                end = Offset(size.width / 2, size.height),
+                                strokeWidth = strokeWidth
                             )
                         }
                     }
@@ -167,6 +184,7 @@ fun DashboardScreen(
         }
     }
 }
+
 
 @Composable
 private fun ReorderableWidgetList(
