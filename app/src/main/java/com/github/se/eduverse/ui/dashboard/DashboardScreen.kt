@@ -59,96 +59,110 @@ fun DashboardScreen(
         auth.currentUser?.let { user -> viewModel.fetchWidgets(user.uid) }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Eduverse",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.testTag("app_title")
-                    )
-                },
-                actions = {
-                    IconButton(
-                        onClick = { navigationActions.navigateTo(Screen.SEARCH) },
-                        modifier = Modifier.testTag("search_button")
-                    ) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = "Search profiles",
-                            tint = MaterialTheme.colorScheme.onPrimary
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Eduverse",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.testTag("app_title")
                         )
-                    }
-                },
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                elevation = 4.dp
-            )
-        },
-        floatingActionButton = {
-            if (widgets.isNotEmpty()) {
-                FloatingActionButton(
-                    onClick = { showAddWidgetDialog = true },
-                    modifier = Modifier
-                        .testTag("add_widget_button")
-                        .padding(bottom = 64.dp),
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { navigationActions.navigateTo(Screen.SEARCH) },
+                            modifier = Modifier.testTag("search_button")
+                        ) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Search profiles",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    },
                     backgroundColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    elevation = FloatingActionButtonDefaults.elevation(4.dp)
-                ) {
-                    Icon(Icons.Default.Add, "Add Widget")
-                }
-            }
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = Route.DASHBOARD
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                // Only apply top padding from scaffold, not bottom
-                .padding(top = innerPadding.calculateTopPadding())
-        ) {
-            val sortedWidgets = remember(widgets) { widgets.sortedBy { it.order } }
-
-            ReorderableWidgetList(
-                items = sortedWidgets,
-                onReorder = { reorderedList ->
-                    val updatedList = reorderedList.mapIndexed { index, widget ->
-                        widget.copy(order = index)
-                    }
-                    viewModel.updateWidgetOrder(updatedList)
-                },
-                onDelete = { widgetId ->
-                    val deletedWidget = widgets.find { it.widgetId == widgetId }
-                        ?: return@ReorderableWidgetList
-                    val remainingWidgets = widgets
-                        .filter { it.widgetId != widgetId }
-                        .map { widget ->
-                            if (widget.order > deletedWidget.order) {
-                                widget.copy(order = widget.order - 1)
-                            } else {
-                                widget
-                            }
-                        }
-                    viewModel.removeWidgetAndUpdateOrder(widgetId, remainingWidgets)
-                },
-                navigationActions = navigationActions,
-                onAddWidget = { showAddWidgetDialog = true }
-            )
-
-            if (showAddWidgetDialog) {
-                AddWidgetDialog(
-                    viewModel = viewModel,
-                    onDismiss = { showAddWidgetDialog = false },
-                    userId = auth.currentUser?.uid ?: return@Box
+                    elevation = 4.dp
                 )
+            },
+            bottomBar = {
+                BottomNavigationMenu(
+                    onTabSelect = { route -> navigationActions.navigateTo(route) },
+                    tabList = LIST_TOP_LEVEL_DESTINATION,
+                    selectedItem = Route.DASHBOARD
+                )
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding())
+            ) {
+                val sortedWidgets = remember(widgets) { widgets.sortedBy { it.order } }
+
+                ReorderableWidgetList(
+                    items = sortedWidgets,
+                    onReorder = { reorderedList ->
+                        val updatedList = reorderedList.mapIndexed { index, widget ->
+                            widget.copy(order = index)
+                        }
+                        viewModel.updateWidgetOrder(updatedList)
+                    },
+                    onDelete = { widgetId ->
+                        val deletedWidget = widgets.find { it.widgetId == widgetId }
+                            ?: return@ReorderableWidgetList
+                        val remainingWidgets = widgets
+                            .filter { it.widgetId != widgetId }
+                            .map { widget ->
+                                if (widget.order > deletedWidget.order) {
+                                    widget.copy(order = widget.order - 1)
+                                } else {
+                                    widget
+                                }
+                            }
+                        viewModel.removeWidgetAndUpdateOrder(widgetId, remainingWidgets)
+                    },
+                    navigationActions = navigationActions,
+                    onAddWidget = { showAddWidgetDialog = true }
+                )
+
+                // FAB positioned manually
+                if (widgets.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = 76.dp, end = 16.dp)
+                    ) {
+                        Button(
+                            onClick = { showAddWidgetDialog = true },
+                            modifier = Modifier
+                                .size(56.dp)
+                                .testTag("add_widget_button"),
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add Widget",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (showAddWidgetDialog) {
+                    AddWidgetDialog(
+                        viewModel = viewModel,
+                        onDismiss = { showAddWidgetDialog = false },
+                        userId = auth.currentUser?.uid ?: return@Box
+                    )
+                }
             }
         }
     }
