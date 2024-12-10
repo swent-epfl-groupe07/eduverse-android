@@ -20,8 +20,6 @@ interface ProfileRepository {
 
   suspend fun removePublication(publicationId: String)
 
-  suspend fun removeFromFavorites(userId: String, publicationId: String)
-
   suspend fun followUser(followerId: String, followedId: String)
 
   suspend fun unfollowUser(followerId: String, followedId: String)
@@ -61,6 +59,10 @@ interface ProfileRepository {
   suspend fun getFollowing(userId: String): List<Profile>
 
   suspend fun deletePublication(publicationId: String, userId: String): Boolean
+    suspend fun addToFavorites(userId: String, publicationId: String)
+    suspend fun removeFromFavorites(userId: String, publicationId: String)
+    suspend fun getFavoritePublicationsIds(userId: String): List<String>
+    suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean
 }
 
 open class ProfileRepositoryImpl(
@@ -151,15 +153,7 @@ open class ProfileRepositoryImpl(
     publicationsCollection.document(publicationId).delete().await()
   }
 
-  override suspend fun removeFromFavorites(userId: String, publicationId: String) {
-    favoritesCollection
-        .whereEqualTo("userId", userId)
-        .whereEqualTo("publicationId", publicationId)
-        .get()
-        .await()
-        .documents
-        .forEach { it.reference.delete().await() }
-  }
+
 
   override suspend fun followUser(followerId: String, followedId: String) {
     followersCollection
@@ -522,4 +516,71 @@ open class ProfileRepositoryImpl(
       false
     }
   }
+
+    override suspend fun addToFavorites(userId: String, publicationId: String) {
+        try {
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("favoritePublications")
+                .document(publicationId)
+                .set(
+                    hashMapOf(
+                        "publicationId" to publicationId,
+                        "timestamp" to System.currentTimeMillis()
+                    )
+                )
+                .await()
+        } catch (e: Exception) {
+            Log.e("ADD_TO_FAVORITES", "Failed to add to favorites: ${e.message}")
+            throw e
+        }
+    }
+
+    override suspend fun removeFromFavorites(userId: String, publicationId: String) {
+        try {
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("favoritePublications")
+                .document(publicationId)
+                .delete()
+                .await()
+        } catch (e: Exception) {
+            Log.e("REMOVE_FROM_FAVORITES", "Failed to remove from favorites: ${e.message}")
+            throw e
+        }
+    }
+
+    override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
+        return try {
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("favoritePublications")
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.getString("publicationId") }
+        } catch (e: Exception) {
+            Log.e("GET_FAVORITES", "Failed to get favorites: ${e.message}")
+            emptyList()
+        }
+    }
+
+    override suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean {
+        return try {
+            val doc = firestore
+                .collection("users")
+                .document(userId)
+                .collection("favoritePublications")
+                .document(publicationId)
+                .get()
+                .await()
+            doc.exists()
+        } catch (e: Exception) {
+            Log.e("CHECK_FAVORITE", "Failed to check favorite status: ${e.message}")
+            false
+        }
+    }
 }
