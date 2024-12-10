@@ -21,7 +21,9 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.TabRow
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
@@ -31,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
@@ -73,16 +76,35 @@ fun VideoScreen(
     commentsViewModel: CommentsViewModel,
     currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
-  val publications by publicationViewModel.publications.collectAsState()
+  val globalPublications by publicationViewModel.publications.collectAsState()
+  val followedPublications by publicationViewModel.followedPublications.collectAsState()
+  var publications by remember { mutableStateOf(globalPublications) }
   val publicationError by publicationViewModel.error.collectAsState()
   val pagerState = rememberPagerState()
 
   var isCommentsVisible by remember { mutableStateOf(false) }
   var selectedPublicationId by remember { mutableStateOf<String?>(null) }
 
+  var isPublicationGlobal by remember { mutableStateOf(true) }
+  var followedUsers = emptyList<String>()
+
   val sheetState =
       rememberModalBottomSheetState(
           initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = true)
+
+    // Load the list of followed users
+    LaunchedEffect(Unit) {
+        followedUsers = profileViewModel.getFollowing(currentUserId).map { it.id }
+    }
+
+    // Handle changes of feed
+    LaunchedEffect(isPublicationGlobal) {
+        publications = if (isPublicationGlobal) {
+            globalPublications
+        } else {
+            followedPublications
+        }
+    }
 
   // Handle opening and closing of the sheet
   LaunchedEffect(isCommentsVisible) {
@@ -131,9 +153,10 @@ fun VideoScreen(
                 publicationError != null -> {
                   Box(
                       modifier =
-                          Modifier.fillMaxSize()
-                              .background(Color.Red.copy(alpha = 0.2f))
-                              .testTag("ErrorIndicator")) {
+                      Modifier
+                          .fillMaxSize()
+                          .background(Color.Red.copy(alpha = 0.2f))
+                          .testTag("ErrorIndicator")) {
                         Text(
                             text = publicationError ?: "An error occurred",
                             color = Color.Red,
@@ -145,7 +168,10 @@ fun VideoScreen(
                       count = publications.size,
                       state = pagerState,
                       modifier =
-                          Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")) {
+                      Modifier
+                          .fillMaxSize()
+                          .padding(paddingValues)
+                          .testTag("VerticalPager")) {
                           page ->
                         val publication = publications[page]
 
@@ -155,16 +181,18 @@ fun VideoScreen(
 
                         Box(
                             modifier =
-                                Modifier.fillMaxSize()
-                                    .pointerInput(Unit) {
-                                      detectTapGestures(
-                                          onDoubleTap = {
+                            Modifier
+                                .fillMaxSize()
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onDoubleTap = {
                                             profileViewModel.likeAndAddToFavorites(
-                                                currentUserId, publication.id)
+                                                currentUserId, publication.id
+                                            )
                                             isLiked.value = true
-                                          })
-                                    }
-                                    .testTag("PublicationItem_$page")) {
+                                        })
+                                }
+                                .testTag("PublicationItem_$page")) {
                               if (publication.mediaType == MediaType.VIDEO) {
                                 VideoItem(
                                     context = LocalContext.current,
@@ -175,6 +203,27 @@ fun VideoScreen(
                                     thumbnailUrl = publication.thumbnailUrl,
                                     modifier = Modifier.testTag("PhotoItem_$page"))
                               }
+
+                            // Tab to switch between global feed and followed feed
+                            TabRow(
+                                selectedTabIndex = if (isPublicationGlobal) 0 else 1,
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .offset(y = 128.dp)
+                            ) {
+                                Tab(
+                                    selected = isPublicationGlobal,
+                                    onClick = { isPublicationGlobal = true },
+                                    modifier = Modifier.testTag("globalFeed"),
+                                    text = { Text("Global") },
+                                    selectedContentColor = Color.White)
+                                Tab(
+                                    selected = !isPublicationGlobal,
+                                    onClick = { isPublicationGlobal = false },
+                                    modifier = Modifier.testTag("followedFeed"),
+                                    text = { Text("Followed") },
+                                    selectedContentColor = Color.White)
+                            }
 
                               // Icon to like
                               IconButton(
@@ -192,19 +241,22 @@ fun VideoScreen(
                                         "Like button clicked for publication: ${publication.id}")
                                   },
                                   modifier =
-                                      Modifier.align(Alignment.CenterEnd)
-                                          .offset(y = 64.dp)
-                                          .padding(12.dp)
-                                          .testTag("LikeButton_$page")) {
+                                  Modifier
+                                      .align(Alignment.CenterEnd)
+                                      .offset(y = 64.dp)
+                                      .padding(12.dp)
+                                      .testTag("LikeButton_$page")) {
                                     Icon(
                                         imageVector = Icons.Default.Favorite,
                                         contentDescription = "Like",
                                         tint = if (isLiked.value) Color.Red else Color.White,
                                         modifier =
-                                            Modifier.size(48.dp)
-                                                .testTag(
-                                                    if (isLiked.value) "LikedIcon_$page"
-                                                    else "UnlikedIcon_$page"))
+                                        Modifier
+                                            .size(48.dp)
+                                            .testTag(
+                                                if (isLiked.value) "LikedIcon_$page"
+                                                else "UnlikedIcon_$page"
+                                            ))
                                   }
 
                               // Comment button
@@ -217,10 +269,11 @@ fun VideoScreen(
                                         "Comment button clicked for publication: ${publication.id}")
                                   },
                                   modifier =
-                                      Modifier.align(Alignment.CenterEnd)
-                                          .offset(y = 128.dp)
-                                          .padding(12.dp)
-                                          .testTag("CommentButton_$page")) {
+                                  Modifier
+                                      .align(Alignment.CenterEnd)
+                                      .offset(y = 128.dp)
+                                      .padding(12.dp)
+                                      .testTag("CommentButton_$page")) {
                                     Icon(
                                         imageVector = Icons.Default.Comment,
                                         contentDescription = "Comment",
@@ -233,12 +286,18 @@ fun VideoScreen(
                   // Load more publications when the user reaches the last visible page
                   LaunchedEffect(pagerState.currentPage) {
                     if (pagerState.currentPage == publications.size - 1) {
-                      publicationViewModel.loadMorePublications()
+                        if (isPublicationGlobal) {
+                            publicationViewModel.loadMorePublications()
+                        } else {
+                            publicationViewModel.loadFollowedPublications(userIds = followedUsers)
+                        }
                     }
                   }
                 }
                 else -> {
-                  Box(modifier = Modifier.fillMaxSize().testTag("LoadingIndicator")) {
+                  Box(modifier = Modifier
+                      .fillMaxSize()
+                      .testTag("LoadingIndicator")) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                   }
                 }
@@ -254,7 +313,10 @@ fun CommentsMenuContent(
     currentUserId: String,
     onDismiss: () -> Unit
 ) {
-  Box(modifier = Modifier.fillMaxWidth().background(Color.White).testTag("CommentsMenuContent")) {
+  Box(modifier = Modifier
+      .fillMaxWidth()
+      .background(Color.White)
+      .testTag("CommentsMenuContent")) {
     CommentSection(publicationId, commentsViewModel, currentUserId)
   }
 }
@@ -274,7 +336,11 @@ fun CommentSection(
 
   Column(
       modifier =
-          Modifier.fillMaxHeight(0.75f).fillMaxWidth().padding(16.dp).testTag("CommentsSection")) {
+      Modifier
+          .fillMaxHeight(0.75f)
+          .fillMaxWidth()
+          .padding(16.dp)
+          .testTag("CommentsSection")) {
         Text(
             "Comments",
             style = MaterialTheme.typography.h6,
@@ -284,7 +350,9 @@ fun CommentSection(
           is CommentsUiState.Loading -> {
             // Display a loading indicator only during initial loading
             Box(
-                modifier = Modifier.fillMaxSize().testTag("CommentsLoadingIndicator"),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("CommentsLoadingIndicator"),
                 contentAlignment = Alignment.Center) {
                   CircularProgressIndicator()
                 }
@@ -292,38 +360,45 @@ fun CommentSection(
           is CommentsUiState.Success -> {
             val comments = (commentsState as CommentsUiState.Success).comments
 
-            LazyColumn(modifier = Modifier.weight(1f).testTag("CommentsList")) {
+            LazyColumn(modifier = Modifier
+                .weight(1f)
+                .testTag("CommentsList")) {
               items(comments) { comment ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier =
-                        Modifier.padding(vertical = 4.dp)
-                            .fillMaxWidth()
-                            .testTag("CommentItem_${comment.id}")) {
+                    Modifier
+                        .padding(vertical = 4.dp)
+                        .fillMaxWidth()
+                        .testTag("CommentItem_${comment.id}")) {
                       // Display the profile image
                       if (!comment.profile?.profileImageUrl.isNullOrBlank()) {
                         SubcomposeAsyncImage(
                             model = comment.profile?.profileImageUrl,
                             contentDescription = "Profile Image",
                             modifier =
-                                Modifier.size(32.dp)
-                                    .clip(CircleShape)
-                                    .testTag("ProfileImage_${comment.id}"))
+                            Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .testTag("ProfileImage_${comment.id}"))
                       } else {
                         // Placeholder for users without a profile image
                         Box(
                             modifier =
-                                Modifier.size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.Gray)
-                                    .testTag("ProfileImagePlaceholder_${comment.id}"))
+                            Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.Gray)
+                                .testTag("ProfileImagePlaceholder_${comment.id}"))
                       }
 
                       Spacer(modifier = Modifier.width(8.dp))
 
                       // Display the username and comment
                       Column(
-                          modifier = Modifier.weight(1f).testTag("CommentContent_${comment.id}")) {
+                          modifier = Modifier
+                              .weight(1f)
+                              .testTag("CommentContent_${comment.id}")) {
                             Text(
                                 text = comment.profile?.username ?: "Unknown",
                                 style = MaterialTheme.typography.subtitle2,
@@ -340,16 +415,18 @@ fun CommentSection(
                       Column(
                           horizontalAlignment = Alignment.CenterHorizontally,
                           modifier =
-                              Modifier.padding(end = 8.dp)
-                                  .testTag("LikeCommentSection_${comment.id}")) {
+                          Modifier
+                              .padding(end = 8.dp)
+                              .testTag("LikeCommentSection_${comment.id}")) {
                             IconButton(
                                 onClick = {
                                   commentsViewModel.likeComment(
                                       publicationId, comment.id, currentUserId)
                                 },
                                 modifier =
-                                    Modifier.size(24.dp)
-                                        .testTag("LikeCommentButton_${comment.id}")) {
+                                Modifier
+                                    .size(24.dp)
+                                    .testTag("LikeCommentButton_${comment.id}")) {
                                   Icon(
                                       imageVector = Icons.Default.Favorite,
                                       contentDescription = "Like",
@@ -372,7 +449,9 @@ fun CommentSection(
                               commentsViewModel.deleteComment(publicationId, comment.id)
                             },
                             modifier =
-                                Modifier.size(24.dp).testTag("DeleteCommentButton_${comment.id}")) {
+                            Modifier
+                                .size(24.dp)
+                                .testTag("DeleteCommentButton_${comment.id}")) {
                               Icon(
                                   imageVector = Icons.Default.Delete,
                                   contentDescription = "Delete",
@@ -388,7 +467,9 @@ fun CommentSection(
             val errorMessage = (commentsState as CommentsUiState.Error).message
             // Display the error message
             Box(
-                modifier = Modifier.fillMaxSize().testTag("CommentsErrorIndicator"),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("CommentsErrorIndicator"),
                 contentAlignment = Alignment.Center) {
                   Text(text = errorMessage, color = Color.Red)
                 }
@@ -404,7 +485,9 @@ fun CommentSection(
               TextField(
                   value = newCommentText,
                   onValueChange = { newCommentText = it },
-                  modifier = Modifier.weight(1f).testTag("NewCommentTextField"),
+                  modifier = Modifier
+                      .weight(1f)
+                      .testTag("NewCommentTextField"),
                   placeholder = { Text("Write a comment...") })
               Spacer(modifier = Modifier.width(8.dp))
               Button(
@@ -454,7 +537,9 @@ fun VideoItem(
           resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         }
       },
-      modifier = modifier.fillMaxSize().background(Color.Black))
+      modifier = modifier
+          .fillMaxSize()
+          .background(Color.Black))
 }
 
 @Composable
@@ -462,7 +547,9 @@ fun PhotoItem(
     thumbnailUrl: String,
     modifier: Modifier = Modifier.testTag("PhotoItem") // Ajout du paramètre Modifier
 ) {
-  Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
+  Box(modifier = modifier
+      .fillMaxSize()
+      .background(Color.Black)) {
     SubcomposeAsyncImage(
         model = thumbnailUrl,
         contentDescription = "Publication photo",
