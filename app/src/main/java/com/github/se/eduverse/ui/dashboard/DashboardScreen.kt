@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -142,34 +143,23 @@ fun DashboardScreen(
                             .size(56.dp)
                             .shadow(
                                 elevation = 6.dp,
+                                shape = RoundedCornerShape(16.dp),
+                                spotColor = MaterialTheme.colorScheme.primary
+                            )
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
                                 shape = RoundedCornerShape(16.dp)
                             )
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.primary)
                             .clickable { showAddWidgetDialog = true }
                             .testTag("add_widget_button"),
                         contentAlignment = Alignment.Center
                     ) {
-                        val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
-                        Canvas(modifier = Modifier.size(24.dp)) {
-                            val strokeWidth = 2.dp.toPx()
-
-                            // Draw horizontal line
-                            drawLine(
-                                color = onPrimaryColor,
-                                start = Offset(0f, size.height / 2),
-                                end = Offset(size.width, size.height / 2),
-                                strokeWidth = strokeWidth
-                            )
-
-                            // Draw vertical line
-                            drawLine(
-                                color = onPrimaryColor,
-                                start = Offset(size.width / 2, 0f),
-                                end = Offset(size.width / 2, size.height),
-                                strokeWidth = strokeWidth
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Widget",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.White
+                        )
                     }
                 }
 
