@@ -519,8 +519,17 @@ open class ProfileRepositoryImpl(
     }
   }
 
+  /**
+   * Adds a publication to a user's favorites collection in Firestore.
+   *
+   * @param userId The ID of the user adding the favorite
+   * @param publicationId The ID of the publication to be favorited
+   * @throws Exception if the Firestore operation fails
+   */
   override suspend fun addToFavorites(userId: String, publicationId: String) {
     try {
+      // Create a document in the user's favoritePublications collection
+      // Document ID is the publication ID for easy retrieval
       firestore
           .collection("users")
           .document(userId)
@@ -528,16 +537,26 @@ open class ProfileRepositoryImpl(
           .document(publicationId)
           .set(
               hashMapOf(
-                  "publicationId" to publicationId, "timestamp" to System.currentTimeMillis()))
+                  "publicationId" to publicationId,
+                  "timestamp" to System.currentTimeMillis() // Store when it was favorited
+                  ))
           .await()
     } catch (e: Exception) {
       Log.e("ADD_TO_FAVORITES", "Failed to add to favorites: ${e.message}")
-      throw e
+      throw e // Propagate error to caller for handling
     }
   }
 
+  /**
+   * Removes a publication from a user's favorites collection.
+   *
+   * @param userId The ID of the user removing the favorite
+   * @param publicationId The ID of the publication to be unfavorited
+   * @throws Exception if the Firestore operation fails
+   */
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
     try {
+      // Delete the document from the user's favoritePublications collection
       firestore
           .collection("users")
           .document(userId)
@@ -551,8 +570,15 @@ open class ProfileRepositoryImpl(
     }
   }
 
+  /**
+   * Retrieves all publication IDs that a user has favorited.
+   *
+   * @param userId The ID of the user whose favorites are being retrieved
+   * @return List of publication IDs that the user has favorited
+   */
   override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
     return try {
+      // Query the user's favoritePublications collection and map to list of IDs
       firestore
           .collection("users")
           .document(userId)
@@ -563,12 +589,20 @@ open class ProfileRepositoryImpl(
           .mapNotNull { it.getString("publicationId") }
     } catch (e: Exception) {
       Log.e("GET_FAVORITES", "Failed to get favorites: ${e.message}")
-      emptyList()
+      emptyList() // Return empty list on error rather than throwing
     }
   }
 
+  /**
+   * Checks if a specific publication is in a user's favorites.
+   *
+   * @param userId The ID of the user to check
+   * @param publicationId The ID of the publication to check
+   * @return true if the publication is favorited, false otherwise
+   */
   override suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean {
     return try {
+      // Check if the document exists in the user's favoritePublications collection
       val doc =
           firestore
               .collection("users")
@@ -580,7 +614,7 @@ open class ProfileRepositoryImpl(
       doc.exists()
     } catch (e: Exception) {
       Log.e("CHECK_FAVORITE", "Failed to check favorite status: ${e.message}")
-      false
+      false // Return false on error rather than throwing
     }
   }
 }
