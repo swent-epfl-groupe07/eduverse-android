@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -32,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.theme.COLOR_CORRECT
+import com.github.se.eduverse.ui.theme.COLOR_INCORRECT
 import kotlinx.coroutines.delay
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -148,7 +151,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically) {
                       val barColor =
-                          if (result == "Undefined") Color(0xFFD51F1F) else Color(0xFF07A92D)
+                          if (result == "Undefined") COLOR_INCORRECT else COLOR_CORRECT
                       Box(
                           modifier =
                               Modifier.width(5.dp)
@@ -361,7 +364,7 @@ fun MenuButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
       modifier =
           Modifier.padding(4.dp)
               .background(
-                  color = if (isSelected) Color.Black else Color.Gray,
+                  color = if (isSelected) MaterialTheme.colorScheme.secondary else Color.Gray,
                   shape = RoundedCornerShape(16.dp))
               .clickable { onClick() }
               .padding(vertical = 8.dp, horizontal = 16.dp),

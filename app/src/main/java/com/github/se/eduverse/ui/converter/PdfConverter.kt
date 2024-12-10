@@ -335,7 +335,7 @@ fun OptionCard(
               .testTag(testTag),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.primaryContainer,
+              containerColor = MaterialTheme.colorScheme.primary,
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(8.dp),
