@@ -86,6 +86,16 @@ class ProfileRepositoryImplTest {
           override suspend fun removePublication(publicationId: String) {}
 
           override suspend fun removeFromFavorites(userId: String, publicationId: String) {}
+          override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun isPublicationFavorited(
+            userId: String,
+            publicationId: String
+          ): Boolean {
+            TODO("Not yet implemented")
+          }
 
           override suspend fun followUser(followerId: String, followedId: String) {}
 
@@ -168,6 +178,10 @@ class ProfileRepositoryImplTest {
           }
 
           override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun addToFavorites(userId: String, publicationId: String) {
             TODO("Not yet implemented")
           }
         }
@@ -255,24 +269,6 @@ class ProfileRepositoryImplTest {
     verify(mockDocumentRef).delete()
   }
 
-  @Test
-  fun `removeFromFavorites removes favorite document`() = runTest {
-    val userId = "testUser"
-    val pubId = "pub123"
-    val mockQuery = mock(Query::class.java)
-    val mockDocRef = mock(DocumentReference::class.java)
-
-    whenever(mockCollectionRef.whereEqualTo("userId", userId)).thenReturn(mockQuery)
-    whenever(mockQuery.whereEqualTo("publicationId", pubId)).thenReturn(mockQuery)
-    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
-    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
-    whenever(mockSnapshot.reference).thenReturn(mockDocRef)
-    whenever(mockDocRef.delete()).thenReturn(Tasks.forResult(null))
-
-    repository.removeFromFavorites(userId, pubId)
-
-    verify(mockDocRef).delete()
-  }
 
   @Test
   fun `followUser creates follower document`() = runTest {
@@ -1100,6 +1096,107 @@ class ProfileRepositoryImplTest {
     val result = repository.deletePublication(publicationId, userId)
 
     assertFalse(result)
+  }
+
+  @Test
+  fun `addToFavorites successfully adds publication to favorites`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val mockUsersCollectionRef = mock(CollectionReference::class.java)
+    val mockUserDocumentRef = mock(DocumentReference::class.java)
+    val mockFavoritePublicationsCollectionRef = mock(CollectionReference::class.java)
+    val mockPublicationDocumentRef = mock(DocumentReference::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollectionRef)
+    whenever(mockUsersCollectionRef.document(userId)).thenReturn(mockUserDocumentRef)
+    whenever(mockUserDocumentRef.collection("favoritePublications"))
+      .thenReturn(mockFavoritePublicationsCollectionRef)
+    whenever(mockFavoritePublicationsCollectionRef.document(publicationId))
+      .thenReturn(mockPublicationDocumentRef)
+    whenever(mockPublicationDocumentRef.set(any())).thenReturn(Tasks.forResult(null))
+
+    repository.addToFavorites(userId, publicationId)
+
+    verify(mockPublicationDocumentRef).set(
+      argThat { map: Map<String, Any> ->
+        map["publicationId"] == publicationId && map.containsKey("timestamp")
+      }
+    )
+  }
+
+  @Test
+  fun `getFavoritePublicationsIds returns list of favorited publication IDs`() = runTest {
+    val userId = "testUser"
+    val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+    val mockDocumentSnapshot1 = mock(DocumentSnapshot::class.java)
+    val mockDocumentSnapshot2 = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents)
+      .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+    whenever(mockDocumentSnapshot1.getString("publicationId")).thenReturn("pub1")
+    whenever(mockDocumentSnapshot2.getString("publicationId")).thenReturn("pub2")
+
+    val result = repository.getFavoritePublicationsIds(userId)
+
+    assertEquals(listOf("pub1", "pub2"), result)
+    verify(mockCollectionRef).get()
+  }
+
+  @Test
+  fun `isPublicationFavorited returns true when publication is favorited`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val mockDocSnapshot = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(publicationId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.get()).thenReturn(Tasks.forResult(mockDocSnapshot))
+    whenever(mockDocSnapshot.exists()).thenReturn(true)
+
+    val result = repository.isPublicationFavorited(userId, publicationId)
+
+    assertTrue(result)
+    verify(mockDocumentRef).get()
+  }
+
+  @Test
+  fun `isPublicationFavorited returns false when publication is not favorited`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val mockDocSnapshot = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(publicationId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.get()).thenReturn(Tasks.forResult(mockDocSnapshot))
+    whenever(mockDocSnapshot.exists()).thenReturn(false)
+
+    val result = repository.isPublicationFavorited(userId, publicationId)
+
+    assertFalse(result)
+    verify(mockDocumentRef).get()
+  }
+
+  @Test
+  fun `getFavoritePublicationsIds returns empty list on error`() = runTest {
+    val userId = "testUser"
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenThrow(RuntimeException("Firestore error"))
+
+    val result = repository.getFavoritePublicationsIds(userId)
+
+    assertTrue(result.isEmpty())
+    verify(mockCollectionRef).get()
   }
 
   @After
