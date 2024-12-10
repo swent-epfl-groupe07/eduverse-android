@@ -820,9 +820,8 @@ class DashboardScreenUiTest {
     composeTestRule.onNodeWithTag("add_widget_button").assertDoesNotExist()
     composeTestRule.onNodeWithText("Welcome to Eduverse!").assertIsDisplayed()
     composeTestRule
-        .onNodeWithText(
-            "Your dashboard is empty. Start by adding widgets using the + button below to customize your learning experience.")
-        .assertIsDisplayed()
+      .onNodeWithText("Your dashboard is empty. Start by adding widgets to customize your learning experience.")
+      .assertIsDisplayed()
   }
 
   @Test
