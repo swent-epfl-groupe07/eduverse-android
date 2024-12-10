@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
@@ -22,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
@@ -86,17 +84,14 @@ fun DashboardScreen(
             elevation = 4.dp)
       },
       floatingActionButton = {
-        // Only show FAB when we have widgets
-        if (widgets.isNotEmpty()) {
-          FloatingActionButton(
-              onClick = { showAddWidgetDialog = true },
-              modifier = Modifier.testTag("add_widget_button"),
-              backgroundColor = MaterialTheme.colorScheme.primary,
-              contentColor = MaterialTheme.colorScheme.onPrimary,
-              elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
-                Icon(Icons.Default.Add, "Add Widget")
-              }
-        }
+        FloatingActionButton(
+            onClick = { showAddWidgetDialog = true },
+            modifier = Modifier.testTag("add_widget_button"),
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
+              Icon(Icons.Default.Add, "Add Widget")
+            }
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -134,8 +129,7 @@ fun DashboardScreen(
 
                 viewModel.removeWidgetAndUpdateOrder(widgetId, remainingWidgets)
               },
-              navigationActions = navigationActions,
-              onAddWidget = { showAddWidgetDialog = true })
+              navigationActions = navigationActions)
 
           if (showAddWidgetDialog) {
             AddWidgetDialog(
@@ -152,8 +146,7 @@ private fun ReorderableWidgetList(
     items: List<Widget>,
     onReorder: (List<Widget>) -> Unit,
     onDelete: (String) -> Unit,
-    navigationActions: NavigationActions,
-    onAddWidget: () -> Unit
+    navigationActions: NavigationActions // Add navigation actions parameter
 ) {
   val listState = rememberLazyListState()
   val scope = rememberCoroutineScope()
@@ -174,146 +167,101 @@ private fun ReorderableWidgetList(
     }
   }
 
-  if (items.isEmpty()) {
-    // Empty state guidance message
-    Box(
-        modifier = Modifier.fillMaxSize().testTag("empty_dashboard_message"),
-        contentAlignment = Alignment.Center) {
-          Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier.padding(32.dp)) {
-                Icon(
-                    imageVector = Icons.Default.Widgets,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.primary)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Welcome to Eduverse!",
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center)
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text =
-                        "Your dashboard is empty. Start by adding widgets using the + button below to customize your learning experience.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Add a direct action button
-                FilledTonalButton(
-                    onClick = onAddWidget, modifier = Modifier.testTag("empty_state_add_button")) {
-                      Icon(
-                          Icons.Default.Add,
-                          contentDescription = null,
-                          modifier = Modifier.size(18.dp))
-                      Spacer(modifier = Modifier.width(8.dp))
-                      Text("Add Your First Widget")
-                    }
-              }
-        }
-  } else {
-    LazyColumn(
-        state = listState,
-        modifier =
-            Modifier.fillMaxSize().testTag("widget_list").pointerInput(items) {
-              detectDragGesturesAfterLongPress(
-                  onDragStart = { offset ->
-                    listState.layoutInfo.visibleItemsInfo
-                        .firstOrNull { item ->
-                          offset.y.toInt() in item.offset..(item.offset + item.size)
-                        }
-                        ?.let { item ->
-                          draggingItemIndex = item.index
-                          draggingItem = items.getOrNull(item.index)
-                          initialTouchY = offset.y
-                          itemHeight = item.size.toFloat()
-                        }
-                  },
-                  onDragCancel = {
-                    draggingItemIndex = null
-                    dragOffset = 0f
-                    draggingItem = null
-                  },
-                  onDragEnd = {
-                    draggingItem?.let { currentItem ->
-                      draggingItemIndex?.let { currentIndex ->
-                        // Calculate final position based on drag offset
-                        val totalDragOffset = dragOffset
-                        val targetPosition =
-                            ((totalDragOffset / itemHeight).roundToInt() + currentIndex).coerceIn(
-                                0, items.lastIndex)
-
-                        if (targetPosition != currentIndex) {
-                          val reorderedList =
-                              items.toMutableList().apply {
-                                removeAt(currentIndex)
-                                add(targetPosition, currentItem)
-                              }
-                          onReorder(reorderedList)
-                        }
+  LazyColumn(
+      state = listState,
+      modifier =
+          Modifier.fillMaxSize().testTag("widget_list").pointerInput(items) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { offset ->
+                  listState.layoutInfo.visibleItemsInfo
+                      .firstOrNull { item ->
+                        offset.y.toInt() in item.offset..(item.offset + item.size)
                       }
-                    }
-                    draggingItemIndex = null
-                    dragOffset = 0f
-                    draggingItem = null
-                  },
-                  onDrag = { change, dragAmount ->
-                    change.consume()
+                      ?.let { item ->
+                        draggingItemIndex = item.index
+                        draggingItem = items.getOrNull(item.index)
+                        initialTouchY = offset.y
+                        itemHeight = item.size.toFloat()
+                      }
+                },
+                onDragCancel = {
+                  draggingItemIndex = null
+                  dragOffset = 0f
+                  draggingItem = null
+                },
+                onDragEnd = {
+                  draggingItem?.let { currentItem ->
+                    draggingItemIndex?.let { currentIndex ->
+                      // Calculate final position based on drag offset
+                      val totalDragOffset = dragOffset
+                      val targetPosition =
+                          ((totalDragOffset / itemHeight).roundToInt() + currentIndex).coerceIn(
+                              0, items.lastIndex)
 
-                    val draggingIdx = draggingItemIndex ?: return@detectDragGesturesAfterLongPress
-                    val currentItem = draggingItem ?: return@detectDragGesturesAfterLongPress
-
-                    // Update the cumulative drag offset
-                    dragOffset += dragAmount.y
-
-                    // Calculate the threshold for item movement (50% of item height)
-                    val moveThreshold = itemHeight * 0.5f
-
-                    // Calculate potential new index based on drag offset
-                    val rawNewIndex =
-                        (draggingIdx + (dragOffset / itemHeight).roundToInt()).coerceIn(
-                            0, items.lastIndex)
-
-                    // Only reorder if we've moved past the threshold
-                    if (abs(dragOffset) >= moveThreshold) {
-                      if (rawNewIndex != draggingIdx) {
-                        val newList =
+                      if (targetPosition != currentIndex) {
+                        val reorderedList =
                             items.toMutableList().apply {
-                              removeAt(draggingIdx)
-                              add(rawNewIndex, currentItem)
+                              removeAt(currentIndex)
+                              add(targetPosition, currentItem)
                             }
-                        onReorder(newList)
-                        draggingItemIndex = rawNewIndex
-                        // Reset dragOffset to remainder to maintain smooth movement
-                        dragOffset = dragOffset % moveThreshold
+                        onReorder(reorderedList)
                       }
                     }
+                  }
+                  draggingItemIndex = null
+                  dragOffset = 0f
+                  draggingItem = null
+                },
+                onDrag = { change, dragAmount ->
+                  change.consume()
 
-                    // Handle auto-scroll near edges
-                    val scrollThreshold = 100f // pixels from edge to trigger scroll
-                    listState.layoutInfo.visibleItemsInfo.firstOrNull()?.let { firstVisible ->
-                      val dragPos = firstVisible.offset + dragOffset
-                      when {
-                        dragPos < scrollThreshold -> {
-                          scope.launch { dragChannel.send(-10f) }
-                        }
-                        dragPos > size.height - scrollThreshold -> {
-                          scope.launch { dragChannel.send(10f) }
-                        }
+                  val draggingIdx = draggingItemIndex ?: return@detectDragGesturesAfterLongPress
+                  val currentItem = draggingItem ?: return@detectDragGesturesAfterLongPress
+
+                  // Update the cumulative drag offset
+                  dragOffset += dragAmount.y
+
+                  // Calculate the threshold for item movement (50% of item height)
+                  val moveThreshold = itemHeight * 0.5f
+
+                  // Calculate potential new index based on drag offset
+                  val rawNewIndex =
+                      (draggingIdx + (dragOffset / itemHeight).roundToInt()).coerceIn(
+                          0, items.lastIndex)
+
+                  // Only reorder if we've moved past the threshold
+                  if (abs(dragOffset) >= moveThreshold) {
+                    if (rawNewIndex != draggingIdx) {
+                      val newList =
+                          items.toMutableList().apply {
+                            removeAt(draggingIdx)
+                            add(rawNewIndex, currentItem)
+                          }
+                      onReorder(newList)
+                      draggingItemIndex = rawNewIndex
+                      // Reset dragOffset to remainder to maintain smooth movement
+                      dragOffset = dragOffset % moveThreshold
+                    }
+                  }
+
+                  // Handle auto-scroll near edges
+                  val scrollThreshold = 100f // pixels from edge to trigger scroll
+                  listState.layoutInfo.visibleItemsInfo.firstOrNull()?.let { firstVisible ->
+                    val dragPos = firstVisible.offset + dragOffset
+                    when {
+                      dragPos < scrollThreshold -> {
+                        scope.launch { dragChannel.send(-10f) }
+                      }
+                      dragPos > size.height - scrollThreshold -> {
+                        scope.launch { dragChannel.send(10f) }
                       }
                     }
-                  })
-            }) {
-          itemsIndexed(items = items, key = { _, item -> item.widgetId }) { index, item ->
-            val isDragging = index == draggingItemIndex
-            val elevation by animateFloatAsState(if (isDragging) 8f else 1f)
+                  }
+                })
+          }) {
+        itemsIndexed(items = items, key = { _, item -> item.widgetId }) { index, item ->
+          val isDragging = index == draggingItemIndex
+          val elevation by animateFloatAsState(if (isDragging) 8f else 1f)
 
           Card(
               modifier =
@@ -366,61 +314,20 @@ private fun ReorderableWidgetList(
                               text = item.widgetContent,
                               style = MaterialTheme.typography.bodyMedium)
                         }
-                        .zIndex(if (isDragging) 1f else 0f)
-                        .testTag("widget_card")
-                        .clickable {
-                          val route =
-                              CommonWidgetType.entries.find { it.name == item.widgetType }?.route
 
-                          // Navigate if route exists
-                          route?.let { navigationActions.navigateTo(it) }
-                        },
-                elevation = elevation.dp,
-                shape = RoundedCornerShape(8.dp)) {
-                  Box(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically) {
-                          Icon(
-                              imageVector =
-                                  when (item.widgetType) {
-                                    "TIMER" -> Icons.Default.Timer
-                                    "CALCULATOR" -> Icons.Default.Calculate
-                                    "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
-                                    "FOLDERS" -> Icons.Default.FolderOpen
-                                    "TODO_LIST" -> Icons.Default.Checklist
-                                    "TIME_TABLE" -> Icons.Default.DateRange
-                                    "QUIZZ" -> Icons.Default.Book
-                                    else -> Icons.Default.Widgets
-                                  },
-                              contentDescription = null,
-                              tint = MaterialTheme.colorScheme.primary)
-
-                          Spacer(modifier = Modifier.width(16.dp))
-
-                          Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = item.widgetTitle,
-                                style = MaterialTheme.typography.titleLarge)
-                            Text(
-                                text = item.widgetContent,
-                                style = MaterialTheme.typography.bodyMedium)
-                          }
-
-                          IconButton(
-                              onClick = { onDelete(item.widgetId) },
-                              modifier = Modifier.size(24.dp).testTag("delete_icon")) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Delete",
-                                    tint = MaterialTheme.colorScheme.error)
-                              }
-                        }
-                  }
+                        IconButton(
+                            onClick = { onDelete(item.widgetId) },
+                            modifier = Modifier.size(24.dp).testTag("delete_icon")) {
+                              Icon(
+                                  Icons.Default.Close,
+                                  contentDescription = "Delete",
+                                  tint = MaterialTheme.colorScheme.error)
+                            }
+                      }
                 }
-          }
+              }
         }
-  }
+      }
 }
 
 @Composable

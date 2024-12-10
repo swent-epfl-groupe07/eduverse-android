@@ -253,7 +253,7 @@ fun EduverseApp(
 
   val pdfGeneratorViewModel: PdfGeneratorViewModel =
       viewModel(factory = PdfGeneratorViewModel.Factory)
-      
+
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
 
