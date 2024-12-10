@@ -33,6 +33,12 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open val deletePublicationState: StateFlow<DeletePublicationState> =
       _deletePublicationState.asStateFlow()
 
+  private val _favoritePublications = MutableStateFlow<List<Publication>>(emptyList())
+  val favoritePublications: StateFlow<List<Publication>> = _favoritePublications.asStateFlow()
+
+  private val _favoriteActionState = MutableStateFlow<FavoriteActionState>(FavoriteActionState.Idle)
+  val favoriteActionState: StateFlow<FavoriteActionState> = _favoriteActionState.asStateFlow()
+
   private var searchJob: Job? = null
 
   private val _error = MutableStateFlow<String?>(null)
@@ -279,7 +285,39 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   open fun resetDeleteState() {
     _deletePublicationState.value = DeletePublicationState.Idle
   }
+
+  fun loadFavoritePublications(userId: String) {
+    viewModelScope.launch {
+      try {
+        val favoriteIds = repository.getFavoritePublicationsIds(userId)
+        val allPublications = repository.getAllPublications()
+        val favoritePublicationsList = allPublications.filter { it.id in favoriteIds }
+        _favoritePublications.value = favoritePublicationsList
+      } catch (e: Exception) {
+        _error.value = "Failed to load favorite publications: ${e.message}"
+      }
+    }
+  }
+
+  fun toggleFavorite(userId: String, publicationId: String) {
+    viewModelScope.launch {
+      _favoriteActionState.value = FavoriteActionState.Loading
+      try {
+        val isFavorited = repository.isPublicationFavorited(userId, publicationId)
+        if (isFavorited) {
+          repository.removeFromFavorites(userId, publicationId)
+        } else {
+          repository.addToFavorites(userId, publicationId)
+        }
+        loadFavoritePublications(userId)
+        _favoriteActionState.value = FavoriteActionState.Success(!isFavorited)
+      } catch (e: Exception) {
+        _favoriteActionState.value = FavoriteActionState.Error(e.message ?: "Failed to update favorite status")
+      }
+    }
+  }
 }
+
 
 sealed class ProfileUiState {
   object Loading : ProfileUiState()
@@ -341,4 +379,11 @@ sealed class DeletePublicationState {
   object Success : DeletePublicationState()
 
   data class Error(val message: String) : DeletePublicationState()
+}
+
+sealed class FavoriteActionState {
+  object Idle : FavoriteActionState()
+  object Loading : FavoriteActionState()
+  data class Success(val isNowFavorited: Boolean) : FavoriteActionState()
+  data class Error(val message: String) : FavoriteActionState()
 }
