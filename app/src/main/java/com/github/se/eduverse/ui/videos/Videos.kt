@@ -87,13 +87,16 @@ fun VideoScreen(
   var isPublicationGlobal by remember { mutableStateOf(true) }
   var followedUsers = emptyList<String>()
 
+  val context = LocalContext.current
+
   val sheetState =
       rememberModalBottomSheetState(
           initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = true)
 
-  // Load the list of followed users
+  // Load the list of followed users and the associated initial publications
   LaunchedEffect(Unit) {
     followedUsers = profileViewModel.getFollowing(currentUserId).map { it.id }
+    publicationViewModel.loadFollowedPublications(followedUsers)
   }
 
   // Handle changes of feed
@@ -163,113 +166,114 @@ fun VideoScreen(
                       }
                 }
                 publications.isNotEmpty() -> {
-                  VerticalPager(
-                      count = publications.size,
-                      state = pagerState,
-                      modifier =
-                          Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")) {
-                          page ->
-                        val publication = publications[page]
+                  Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                    // Pager with scrollable videos
+                    VerticalPager(
+                        count = publications.size,
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize().testTag("VerticalPager")) { page ->
+                          val publication = publications[page]
 
-                        val isLiked = remember {
-                          mutableStateOf(publication.likedBy.contains(currentUserId))
+                          val isLiked = remember {
+                            mutableStateOf(publication.likedBy.contains(currentUserId))
+                          }
+
+                          Box(
+                              modifier =
+                                  Modifier.fillMaxSize()
+                                      .pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onDoubleTap = {
+                                              profileViewModel.likeAndAddToFavorites(
+                                                  currentUserId, publication.id)
+                                              isLiked.value = true
+                                            })
+                                      }
+                                      .testTag("PublicationItem_$page")) {
+                                if (publication.mediaType == MediaType.VIDEO) {
+                                  VideoItem(
+                                      context = LocalContext.current,
+                                      mediaUrl = publication.mediaUrl,
+                                      modifier = Modifier.testTag("VideoItem_$page"))
+                                } else {
+                                  PhotoItem(
+                                      thumbnailUrl = publication.thumbnailUrl,
+                                      modifier = Modifier.testTag("PhotoItem_$page"))
+                                }
+
+                                // Icon to like
+                                IconButton(
+                                    onClick = {
+                                      if (isLiked.value) {
+                                        profileViewModel.removeLike(currentUserId, publication.id)
+                                        isLiked.value = false
+                                      } else {
+                                        profileViewModel.likeAndAddToFavorites(
+                                            currentUserId, publication.id)
+                                        isLiked.value = true
+                                      }
+                                      Log.d(
+                                          "LIKE",
+                                          "Like button clicked for publication: ${publication.id}")
+                                    },
+                                    modifier =
+                                        Modifier.align(Alignment.CenterEnd)
+                                            .offset(y = 64.dp)
+                                            .padding(12.dp)
+                                            .testTag("LikeButton_$page")) {
+                                      Icon(
+                                          imageVector = Icons.Default.Favorite,
+                                          contentDescription = "Like",
+                                          tint = if (isLiked.value) Color.Red else Color.White,
+                                          modifier =
+                                              Modifier.size(48.dp)
+                                                  .testTag(
+                                                      if (isLiked.value) "LikedIcon_$page"
+                                                      else "UnlikedIcon_$page"))
+                                    }
+
+                                // Comment button
+                                IconButton(
+                                    onClick = {
+                                      selectedPublicationId = publication.id
+                                      isCommentsVisible = true
+                                      Log.d(
+                                          "COMMENT",
+                                          "Comment button clicked for publication: ${publication.id}")
+                                    },
+                                    modifier =
+                                        Modifier.align(Alignment.CenterEnd)
+                                            .offset(y = 128.dp)
+                                            .padding(12.dp)
+                                            .testTag("CommentButton_$page")) {
+                                      Icon(
+                                          imageVector = Icons.Default.Comment,
+                                          contentDescription = "Comment",
+                                          tint = Color.White,
+                                          modifier = Modifier.size(48.dp))
+                                    }
+                              }
                         }
 
-                        Box(
-                            modifier =
-                                Modifier.fillMaxSize()
-                                    .pointerInput(Unit) {
-                                      detectTapGestures(
-                                          onDoubleTap = {
-                                            profileViewModel.likeAndAddToFavorites(
-                                                currentUserId, publication.id)
-                                            isLiked.value = true
-                                          })
-                                    }
-                                    .testTag("PublicationItem_$page")) {
-                              if (publication.mediaType == MediaType.VIDEO) {
-                                VideoItem(
-                                    context = LocalContext.current,
-                                    mediaUrl = publication.mediaUrl,
-                                    modifier = Modifier.testTag("VideoItem_$page"))
-                              } else {
-                                PhotoItem(
-                                    thumbnailUrl = publication.thumbnailUrl,
-                                    modifier = Modifier.testTag("PhotoItem_$page"))
-                              }
-
-                              // Tab to switch between global feed and followed feed
-                              TabRow(
-                                  selectedTabIndex = if (isPublicationGlobal) 0 else 1,
-                                  modifier =
-                                      Modifier.align(Alignment.TopCenter).offset(y = 128.dp)) {
-                                    Tab(
-                                        selected = isPublicationGlobal,
-                                        onClick = { isPublicationGlobal = true },
-                                        modifier = Modifier.testTag("globalFeed"),
-                                        text = { Text("Global") },
-                                        selectedContentColor = Color.White)
-                                    Tab(
-                                        selected = !isPublicationGlobal,
-                                        onClick = { isPublicationGlobal = false },
-                                        modifier = Modifier.testTag("followedFeed"),
-                                        text = { Text("Followed") },
-                                        selectedContentColor = Color.White)
-                                  }
-
-                              // Icon to like
-                              IconButton(
-                                  onClick = {
-                                    if (isLiked.value) {
-                                      profileViewModel.removeLike(currentUserId, publication.id)
-                                      isLiked.value = false
-                                    } else {
-                                      profileViewModel.likeAndAddToFavorites(
-                                          currentUserId, publication.id)
-                                      isLiked.value = true
-                                    }
-                                    Log.d(
-                                        "LIKE",
-                                        "Like button clicked for publication: ${publication.id}")
-                                  },
-                                  modifier =
-                                      Modifier.align(Alignment.CenterEnd)
-                                          .offset(y = 64.dp)
-                                          .padding(12.dp)
-                                          .testTag("LikeButton_$page")) {
-                                    Icon(
-                                        imageVector = Icons.Default.Favorite,
-                                        contentDescription = "Like",
-                                        tint = if (isLiked.value) Color.Red else Color.White,
-                                        modifier =
-                                            Modifier.size(48.dp)
-                                                .testTag(
-                                                    if (isLiked.value) "LikedIcon_$page"
-                                                    else "UnlikedIcon_$page"))
-                                  }
-
-                              // Comment button
-                              IconButton(
-                                  onClick = {
-                                    selectedPublicationId = publication.id
-                                    isCommentsVisible = true
-                                    Log.d(
-                                        "COMMENT",
-                                        "Comment button clicked for publication: ${publication.id}")
-                                  },
-                                  modifier =
-                                      Modifier.align(Alignment.CenterEnd)
-                                          .offset(y = 128.dp)
-                                          .padding(12.dp)
-                                          .testTag("CommentButton_$page")) {
-                                    Icon(
-                                        imageVector = Icons.Default.Comment,
-                                        contentDescription = "Comment",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(48.dp))
-                                  }
-                            }
-                      }
+                    // Tab to switch between global feed and followed feed
+                    TabRow(
+                        selectedTabIndex = if (isPublicationGlobal) 0 else 1,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        backgroundColor = Color.Transparent) {
+                          Tab(
+                              selected = isPublicationGlobal,
+                              onClick = { isPublicationGlobal = true },
+                              modifier = Modifier.testTag("globalFeed"),
+                              text = { Text("Global") },
+                              selectedContentColor = Color.White)
+                          Tab(
+                              selected = !isPublicationGlobal,
+                              onClick = { isPublicationGlobal = false },
+                              modifier = Modifier.testTag("followedFeed"),
+                              text = { Text("Followed") },
+                              selectedContentColor = Color.White)
+                        }
+                  }
 
                   // Load more publications when the user reaches the last visible page
                   LaunchedEffect(pagerState.currentPage) {
@@ -277,7 +281,7 @@ fun VideoScreen(
                       if (isPublicationGlobal) {
                         publicationViewModel.loadMorePublications()
                       } else {
-                        publicationViewModel.loadFollowedPublications(userIds = followedUsers)
+                        publicationViewModel.loadFollowedPublications(followedUsers)
                       }
                     }
                   }
