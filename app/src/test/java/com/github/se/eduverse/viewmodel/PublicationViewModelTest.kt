@@ -59,7 +59,7 @@ class PublicationViewModelTest {
                 timestamp = System.currentTimeMillis()))
 
     // Setup MockK to return the list when calling the repository function
-    coEvery { mockRepository.loadRandomPublications(any()) } returns publications
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns publications
 
     // Load the publications in the view model
     viewModel.loadMorePublications()
@@ -83,7 +83,7 @@ class PublicationViewModelTest {
             Publication(
                 id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
 
-    coEvery { mockRepository.loadRandomPublications(any()) } returns
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
         initialPublications andThen
         morePublications
 
@@ -101,7 +101,7 @@ class PublicationViewModelTest {
 
   @Test
   fun `test error handling when loading publications fails`() = runTest {
-    coEvery { mockRepository.loadRandomPublications(any()) } throws Exception("Network Error")
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } throws Exception("Network Error")
 
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -111,7 +111,7 @@ class PublicationViewModelTest {
 
   @Test
   fun `test loading empty list of publications`() = runTest {
-    coEvery { mockRepository.loadRandomPublications(any()) } returns emptyList()
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns emptyList()
 
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -125,6 +125,54 @@ class PublicationViewModelTest {
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { mockRepository.loadRandomPublications(limit = 20) }
+    coVerify { mockRepository.loadRandomPublications(userId = null, limit = 20) }
   }
+
+    @Test
+    fun `test loadFollowedPublications with empty list`() = runTest {
+        val publications =
+            listOf(
+                Publication(
+                    id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+
+        coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
+                publications
+
+        viewModel.loadFollowedPublications("userId")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { mockRepository.loadRandomPublications(userId = "userId", limit = 20) }
+
+        val expectedIds = (publications).map { it.id }.toSet()
+        val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+
+        assertEquals(expectedIds, actualIds)
+    }
+
+    @Test
+    fun `test loadMorePublications with non empty list`() = runTest {
+        val initialPublications =
+            listOf(
+                Publication(
+                    id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+        val morePublications =
+            listOf(
+                Publication(
+                    id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
+
+        coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
+                initialPublications andThen
+                morePublications
+
+        viewModel.loadFollowedPublications("userId")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.loadFollowedPublications("userId")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
+        val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+
+        assertEquals(expectedIds, actualIds)
+    }
 }

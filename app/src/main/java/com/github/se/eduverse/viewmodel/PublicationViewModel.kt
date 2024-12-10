@@ -17,6 +17,10 @@ open class PublicationViewModel(
   open val publications: StateFlow<List<Publication>>
     get() = _publications
 
+  private val _followedPublications = MutableStateFlow<List<Publication>>(emptyList())
+  open val followedPublications: StateFlow<List<Publication>>
+    get() = _followedPublications
+
   private val _comments = MutableStateFlow<List<Comment>>(emptyList())
   val comments: StateFlow<List<Comment>> = _comments
 
@@ -51,6 +55,23 @@ open class PublicationViewModel(
         } else {
           val morePublications = repository.loadRandomPublications()
           _publications.value = (_publications.value + morePublications).shuffled()
+        }
+        _error.value = null
+      } catch (e: Exception) {
+        _error.value = "fail to load publications"
+      }
+    }
+  }
+
+  open suspend fun loadFollowedPublications(userId: String? = null) {
+    viewModelScope.launch {
+      try {
+        if (_followedPublications.value.isEmpty()) {
+          val newPublications = repository.loadRandomPublications(userId)
+          _followedPublications.value = newPublications
+        } else {
+          val morePublications = repository.loadRandomPublications(userId)
+          _followedPublications.value = (_followedPublications.value + morePublications).shuffled()
         }
         _error.value = null
       } catch (e: Exception) {
