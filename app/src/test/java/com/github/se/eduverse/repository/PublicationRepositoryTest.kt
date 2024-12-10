@@ -4,6 +4,7 @@ import com.github.se.eduverse.repository.PublicationRepository
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
@@ -14,6 +15,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.eq
 
 class PublicationRepositoryTest {
 
@@ -37,7 +39,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockCollection.whereNotEqualTo("mediaUrl", null)).thenReturn(mockQuery)
+        `when`(mockCollection.where(eq(Filter.notEqualTo("mediaUrl", null)))).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
         `when`(mockQuerySnapshot.documents).thenReturn(listOf())
 
@@ -59,7 +61,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockCollection.whereNotEqualTo("mediaUrl", null)).thenReturn(mockQuery)
+          `when`(mockCollection.where(eq(Filter.notEqualTo("mediaUrl", null)))).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
 
         // Créons des publications simulées sous forme de DocumentSnapshot
@@ -110,7 +112,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockCollection.whereNotEqualTo("mediaUrl", null)).thenReturn(mockQuery)
+          `when`(mockCollection.where(eq(Filter.notEqualTo("mediaUrl", null)))).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenThrow(RuntimeException("Firestore error"))
 
         // Act
@@ -119,4 +121,58 @@ class PublicationRepositoryTest {
         // Assert
         assertTrue(result.isEmpty())
       }
+
+    @Test(timeout = 3000)
+    fun `loadRandomPublications filter with userId if not null`() =
+        runBlocking(Dispatchers.IO) {
+            val mockCollection = mock(CollectionReference::class.java)
+            val mockQuery = mock(Query::class.java)
+            val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+            val userId = "userId"
+
+            `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
+            `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
+            `when`(mockQuery.limit(20)).thenReturn(mockQuery)
+            `when`(mockCollection.where(eq(Filter.and(
+                Filter.notEqualTo("mediaUrl", null),
+                Filter.equalTo("userId", userId)
+            )))).thenReturn(mockQuery)
+            `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+
+            val publicationList =
+                listOf(
+                    Publication(
+                        id = "id1",
+                        userId = "userId",
+                        title = "title1",
+                        thumbnailUrl = "thumbnail1",
+                        mediaUrl = "media1",
+                        mediaType = MediaType.PHOTO,
+                        timestamp = 123456L),
+                    Publication(
+                        id = "id2",
+                        userId = "userId",
+                        title = "title2",
+                        thumbnailUrl = "thumbnail2",
+                        mediaUrl = "media2",
+                        mediaType = MediaType.VIDEO,
+                        timestamp = 123457L))
+
+            val documentSnapshots =
+                publicationList.map { publication ->
+                    mock(com.google.firebase.firestore.DocumentSnapshot::class.java).apply {
+                        `when`(toObject(Publication::class.java)).thenReturn(publication)
+                    }
+                }
+
+            `when`(mockQuerySnapshot.documents).thenReturn(documentSnapshots)
+
+            // Act
+            val result = repository.loadRandomPublications(userId)
+
+            // Assert
+            assertTrue(result.size == 2)
+            assertTrue(result[0].title == "title1" || result[1].title == "title1")
+            assertTrue(result[0].title == "title2" || result[1].title == "title2")
+        }
 }
