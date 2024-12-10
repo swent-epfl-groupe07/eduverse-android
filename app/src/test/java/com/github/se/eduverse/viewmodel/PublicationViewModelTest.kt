@@ -101,7 +101,8 @@ class PublicationViewModelTest {
 
   @Test
   fun `test error handling when loading publications fails`() = runTest {
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } throws Exception("Network Error")
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } throws
+        Exception("Network Error")
 
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -128,51 +129,50 @@ class PublicationViewModelTest {
     coVerify { mockRepository.loadRandomPublications(followed = emptyList(), limit = 20) }
   }
 
-    @Test
-    fun `test loadFollowedPublications with empty list`() = runTest {
-        val publications =
-            listOf(
-                Publication(
-                    id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+  @Test
+  fun `test loadFollowedPublications with empty list`() = runTest {
+    val publications =
+        listOf(
+            Publication(
+                id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
 
-        coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
-                publications
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns publications
 
-        viewModel.loadFollowedPublications(listOf("userId"))
-        testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.loadFollowedPublications(listOf("userId"))
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { mockRepository.loadRandomPublications(followed = listOf("userId"), limit = 20) }
+    coVerify { mockRepository.loadRandomPublications(followed = listOf("userId"), limit = 20) }
 
-        val expectedIds = (publications).map { it.id }.toSet()
-        val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+    val expectedIds = (publications).map { it.id }.toSet()
+    val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
 
-        assertEquals(expectedIds, actualIds)
-    }
+    assertEquals(expectedIds, actualIds)
+  }
 
-    @Test
-    fun `test loadMorePublications with non empty list`() = runTest {
-        val initialPublications =
-            listOf(
-                Publication(
-                    id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
-        val morePublications =
-            listOf(
-                Publication(
-                    id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
+  @Test
+  fun `test loadMorePublications with non empty list`() = runTest {
+    val initialPublications =
+        listOf(
+            Publication(
+                id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+    val morePublications =
+        listOf(
+            Publication(
+                id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
 
-        coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
-                initialPublications andThen
-                morePublications
+    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
+        initialPublications andThen
+        morePublications
 
-        viewModel.loadFollowedPublications(listOf("userId"))
-        testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.loadFollowedPublications(listOf("userId"))
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.loadFollowedPublications(listOf("userId"))
-        testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.loadFollowedPublications(listOf("userId"))
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
-        val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+    val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
+    val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
 
-        assertEquals(expectedIds, actualIds)
-    }
+    assertEquals(expectedIds, actualIds)
+  }
 }
