@@ -128,14 +128,14 @@ class PublicationRepositoryTest {
             val mockCollection = mock(CollectionReference::class.java)
             val mockQuery = mock(Query::class.java)
             val mockQuerySnapshot = mock(QuerySnapshot::class.java)
-            val userId = "userId"
+            val userIds = listOf("userId")
 
             `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
             `when`(mockCollection.orderBy("timestamp")).thenReturn(mockQuery)
             `when`(mockQuery.limit(20)).thenReturn(mockQuery)
             `when`(mockCollection.where(eq(Filter.and(
                 Filter.notEqualTo("mediaUrl", null),
-                Filter.equalTo("userId", userId)
+                Filter.inArray("userId", userIds)
             )))).thenReturn(mockQuery)
             `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
 
@@ -168,7 +168,7 @@ class PublicationRepositoryTest {
             `when`(mockQuerySnapshot.documents).thenReturn(documentSnapshots)
 
             // Act
-            val result = repository.loadRandomPublications(userId)
+            val result = repository.loadRandomPublications(userIds)
 
             // Assert
             assertTrue(result.size == 2)

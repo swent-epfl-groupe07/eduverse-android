@@ -125,7 +125,7 @@ class PublicationViewModelTest {
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { mockRepository.loadRandomPublications(userId = null, limit = 20) }
+    coVerify { mockRepository.loadRandomPublications(followed = emptyList(), limit = 20) }
   }
 
     @Test
@@ -141,7 +141,7 @@ class PublicationViewModelTest {
         viewModel.loadFollowedPublications("userId")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        coVerify { mockRepository.loadRandomPublications(userId = "userId", limit = 20) }
+        coVerify { mockRepository.loadRandomPublications(followed = listOf("userId"), limit = 20) }
 
         val expectedIds = (publications).map { it.id }.toSet()
         val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()

@@ -7,14 +7,14 @@ import kotlinx.coroutines.tasks.await
 
 open class PublicationRepository(private val db: FirebaseFirestore) {
 
-  open suspend fun loadRandomPublications(userId: String? = null, limit: Long = 20): List<Publication> {
+  open suspend fun loadRandomPublications(followed: List<String> = emptyList(), limit: Long = 20): List<Publication> {
     return try {
-      val filter = if (userId == null) {
+      val filter = if (followed.isEmpty()) {
           Filter.notEqualTo("mediaUrl", null) // Only take publications and not comments
       } else {
           Filter.and(
               Filter.notEqualTo("mediaUrl", null),
-              Filter.equalTo("userId", userId)
+              Filter.inArray("userId", followed)
           )
       }
       db.collection("publications")

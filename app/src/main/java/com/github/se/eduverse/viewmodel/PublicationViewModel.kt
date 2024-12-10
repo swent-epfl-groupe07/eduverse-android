@@ -67,10 +67,10 @@ open class PublicationViewModel(
     viewModelScope.launch {
       try {
         if (_followedPublications.value.isEmpty()) {
-          val newPublications = repository.loadRandomPublications(userId)
+          val newPublications = repository.loadRandomPublications()
           _followedPublications.value = newPublications
         } else {
-          val morePublications = repository.loadRandomPublications(userId)
+          val morePublications = repository.loadRandomPublications()
           _followedPublications.value = (_followedPublications.value + morePublications).shuffled()
         }
         _error.value = null
