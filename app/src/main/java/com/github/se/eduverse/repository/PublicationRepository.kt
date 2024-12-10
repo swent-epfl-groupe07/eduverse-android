@@ -9,13 +9,13 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
   open suspend fun loadRandomPublications(limit: Long = 20): List<Publication> {
     return try {
       db.collection("publications")
-          .orderBy("timestamp")
-          .limit(limit)
+          .whereNotEqualTo("mediaUrl", null) // Only take publications and not comments
           .get()
           .await()
           .documents
-          .mapNotNull { it.toObject(Publication::class.java) }
           .shuffled()
+          .take(limit.toInt())
+          .mapNotNull { it.toObject(Publication::class.java) }
     } catch (e: Exception) {
       emptyList()
     }
