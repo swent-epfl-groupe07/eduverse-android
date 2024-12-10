@@ -63,14 +63,14 @@ open class PublicationViewModel(
     }
   }
 
-  open suspend fun loadFollowedPublications(userId: String? = null) {
+  open suspend fun loadFollowedPublications(userIds: List<String> = emptyList()) {
     viewModelScope.launch {
       try {
         if (_followedPublications.value.isEmpty()) {
-          val newPublications = repository.loadRandomPublications()
+          val newPublications = repository.loadRandomPublications(userIds)
           _followedPublications.value = newPublications
         } else {
-          val morePublications = repository.loadRandomPublications()
+          val morePublications = repository.loadRandomPublications(userIds)
           _followedPublications.value = (_followedPublications.value + morePublications).shuffled()
         }
         _error.value = null
