@@ -654,11 +654,11 @@ class ProfileViewModelTest {
   fun `loadFavoritePublications success updates state with favorited publications`() = runTest {
     val userId = "testUser"
     val favoritePublicationIds = listOf("pub1", "pub2")
-    val allPublications = listOf(
-      Publication(id = "pub1", userId = userId, title = "Publication 1"),
-      Publication(id = "pub2", userId = userId, title = "Publication 2"),
-      Publication(id = "pub3", userId = "otherUser", title = "Publication 3")
-    )
+    val allPublications =
+        listOf(
+            Publication(id = "pub1", userId = userId, title = "Publication 1"),
+            Publication(id = "pub2", userId = userId, title = "Publication 2"),
+            Publication(id = "pub3", userId = "otherUser", title = "Publication 3"))
     val expectedFavoritePublications = allPublications.filter { it.id in favoritePublicationIds }
 
     `when`(mockRepository.getFavoritePublicationsIds(userId)).thenReturn(favoritePublicationIds)
@@ -678,13 +678,14 @@ class ProfileViewModelTest {
   fun `loadFavoritePublications failure updates state with error`() = runTest {
     val userId = "testUser"
     `when`(mockRepository.getFavoritePublicationsIds(userId))
-      .thenThrow(RuntimeException("Failed to fetch favorite publications"))
+        .thenThrow(RuntimeException("Failed to fetch favorite publications"))
 
     profileViewModel.loadFavoritePublications(userId)
     advanceUntilIdle()
 
     val error = profileViewModel.error.first()
-    assertEquals("Failed to load favorite publications: Failed to fetch favorite publications", error)
+    assertEquals(
+        "Failed to load favorite publications: Failed to fetch favorite publications", error)
     verify(mockRepository).getFavoritePublicationsIds(userId)
     verify(mockRepository, never()).getAllPublications()
   }
@@ -732,7 +733,7 @@ class ProfileViewModelTest {
     val errorMessage = "Network error"
 
     `when`(mockRepository.isPublicationFavorited(userId, publicationId))
-      .thenThrow(RuntimeException(errorMessage))
+        .thenThrow(RuntimeException(errorMessage))
 
     profileViewModel.toggleFavorite(userId, publicationId)
     advanceUntilIdle()

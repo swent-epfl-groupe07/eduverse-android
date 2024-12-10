@@ -312,12 +312,12 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
         loadFavoritePublications(userId)
         _favoriteActionState.value = FavoriteActionState.Success(!isFavorited)
       } catch (e: Exception) {
-        _favoriteActionState.value = FavoriteActionState.Error(e.message ?: "Failed to update favorite status")
+        _favoriteActionState.value =
+            FavoriteActionState.Error(e.message ?: "Failed to update favorite status")
       }
     }
   }
 }
-
 
 sealed class ProfileUiState {
   object Loading : ProfileUiState()
@@ -383,7 +383,10 @@ sealed class DeletePublicationState {
 
 sealed class FavoriteActionState {
   object Idle : FavoriteActionState()
+
   object Loading : FavoriteActionState()
+
   data class Success(val isNowFavorited: Boolean) : FavoriteActionState()
+
   data class Error(val message: String) : FavoriteActionState()
 }

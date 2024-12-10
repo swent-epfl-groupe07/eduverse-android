@@ -86,13 +86,14 @@ class ProfileRepositoryImplTest {
           override suspend fun removePublication(publicationId: String) {}
 
           override suspend fun removeFromFavorites(userId: String, publicationId: String) {}
+
           override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
             TODO("Not yet implemented")
           }
 
           override suspend fun isPublicationFavorited(
-            userId: String,
-            publicationId: String
+              userId: String,
+              publicationId: String
           ): Boolean {
             TODO("Not yet implemented")
           }
@@ -268,7 +269,6 @@ class ProfileRepositoryImplTest {
 
     verify(mockDocumentRef).delete()
   }
-
 
   @Test
   fun `followUser creates follower document`() = runTest {
@@ -1110,18 +1110,18 @@ class ProfileRepositoryImplTest {
     whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollectionRef)
     whenever(mockUsersCollectionRef.document(userId)).thenReturn(mockUserDocumentRef)
     whenever(mockUserDocumentRef.collection("favoritePublications"))
-      .thenReturn(mockFavoritePublicationsCollectionRef)
+        .thenReturn(mockFavoritePublicationsCollectionRef)
     whenever(mockFavoritePublicationsCollectionRef.document(publicationId))
-      .thenReturn(mockPublicationDocumentRef)
+        .thenReturn(mockPublicationDocumentRef)
     whenever(mockPublicationDocumentRef.set(any())).thenReturn(Tasks.forResult(null))
 
     repository.addToFavorites(userId, publicationId)
 
-    verify(mockPublicationDocumentRef).set(
-      argThat { map: Map<String, Any> ->
-        map["publicationId"] == publicationId && map.containsKey("timestamp")
-      }
-    )
+    verify(mockPublicationDocumentRef)
+        .set(
+            argThat { map: Map<String, Any> ->
+              map["publicationId"] == publicationId && map.containsKey("timestamp")
+            })
   }
 
   @Test
@@ -1136,7 +1136,7 @@ class ProfileRepositoryImplTest {
     whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
     whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
     whenever(mockQuerySnapshot.documents)
-      .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
     whenever(mockDocumentSnapshot1.getString("publicationId")).thenReturn("pub1")
     whenever(mockDocumentSnapshot2.getString("publicationId")).thenReturn("pub2")
 
