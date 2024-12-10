@@ -650,6 +650,98 @@ class ProfileViewModelTest {
     assertTrue(state is DeletePublicationState.Idle)
   }
 
+  @Test
+  fun `loadFavoritePublications success updates state with favorited publications`() = runTest {
+    val userId = "testUser"
+    val favoritePublicationIds = listOf("pub1", "pub2")
+    val allPublications = listOf(
+      Publication(id = "pub1", userId = userId, title = "Publication 1"),
+      Publication(id = "pub2", userId = userId, title = "Publication 2"),
+      Publication(id = "pub3", userId = "otherUser", title = "Publication 3")
+    )
+    val expectedFavoritePublications = allPublications.filter { it.id in favoritePublicationIds }
+
+    `when`(mockRepository.getFavoritePublicationsIds(userId)).thenReturn(favoritePublicationIds)
+    `when`(mockRepository.getAllPublications()).thenReturn(allPublications)
+
+    profileViewModel.loadFavoritePublications(userId)
+    advanceUntilIdle()
+
+    val favoritePublications = profileViewModel.favoritePublications.first()
+    assertEquals(expectedFavoritePublications, favoritePublications)
+    assertNull(profileViewModel.error.value)
+    verify(mockRepository).getFavoritePublicationsIds(userId)
+    verify(mockRepository).getAllPublications()
+  }
+
+  @Test
+  fun `loadFavoritePublications failure updates state with error`() = runTest {
+    val userId = "testUser"
+    `when`(mockRepository.getFavoritePublicationsIds(userId))
+      .thenThrow(RuntimeException("Failed to fetch favorite publications"))
+
+    profileViewModel.loadFavoritePublications(userId)
+    advanceUntilIdle()
+
+    val error = profileViewModel.error.first()
+    assertEquals("Failed to load favorite publications: Failed to fetch favorite publications", error)
+    verify(mockRepository).getFavoritePublicationsIds(userId)
+    verify(mockRepository, never()).getAllPublications()
+  }
+
+  @Test
+  fun `toggleFavorite adds publication to favorites when not favorited`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    `when`(mockRepository.isPublicationFavorited(userId, publicationId)).thenReturn(false)
+
+    profileViewModel.toggleFavorite(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).addToFavorites(userId, publicationId)
+    verify(mockRepository, never()).removeFromFavorites(userId, publicationId)
+
+    val state = profileViewModel.favoriteActionState.first()
+    assertTrue(state is FavoriteActionState.Success)
+    assertTrue((state as FavoriteActionState.Success).isNowFavorited)
+  }
+
+  @Test
+  fun `toggleFavorite removes publication from favorites when already favorited`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+
+    `when`(mockRepository.isPublicationFavorited(userId, publicationId)).thenReturn(true)
+
+    profileViewModel.toggleFavorite(userId, publicationId)
+    advanceUntilIdle()
+
+    verify(mockRepository).removeFromFavorites(userId, publicationId)
+    verify(mockRepository, never()).addToFavorites(userId, publicationId)
+
+    val state = profileViewModel.favoriteActionState.first()
+    assertTrue(state is FavoriteActionState.Success)
+    assertFalse((state as FavoriteActionState.Success).isNowFavorited)
+  }
+
+  @Test
+  fun `toggleFavorite handles error gracefully`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val errorMessage = "Network error"
+
+    `when`(mockRepository.isPublicationFavorited(userId, publicationId))
+      .thenThrow(RuntimeException(errorMessage))
+
+    profileViewModel.toggleFavorite(userId, publicationId)
+    advanceUntilIdle()
+
+    val state = profileViewModel.favoriteActionState.first()
+    assertTrue(state is FavoriteActionState.Error)
+    assertEquals(errorMessage, (state as FavoriteActionState.Error).message)
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain()
