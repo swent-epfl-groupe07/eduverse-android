@@ -3,6 +3,7 @@ package com.github.se.eduverse.ui.setting
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,12 +22,14 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.theme.Theme
 import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun SettingsScreen(navigationActions: NavigationActions, settingsViewModel: SettingsViewModel) {
   val context = LocalContext.current
+  val systemTheme = if (isSystemInDarkTheme()) Theme.DARK else Theme.LIGHT
 
   val privacySettings by settingsViewModel.privacySettings.collectAsState()
   val selectedTheme by settingsViewModel.selectedTheme.collectAsState()
@@ -95,8 +98,14 @@ fun SettingsScreen(navigationActions: NavigationActions, settingsViewModel: Sett
           SettingsDropdown(
               label = "Theme",
               selectedOption = selectedTheme,
-              options = listOf("Light", "Dark", "System Default"),
-              onOptionSelected = { settingsViewModel.updateSelectedTheme(it) },
+              options = listOf(Theme.LIGHT, Theme.DARK, "System Default"),
+              onOptionSelected = {
+                if (it == "System Default") {
+                  settingsViewModel.updateSelectedTheme(systemTheme)
+                } else {
+                  settingsViewModel.updateSelectedTheme(it)
+                }
+              },
               isExpanded = isThemeDropdownExpanded,
               onExpandChange = { isThemeDropdownExpanded = it },
               modifier = Modifier.padding(horizontal = 16.dp).testTag("themeDropdown"))
