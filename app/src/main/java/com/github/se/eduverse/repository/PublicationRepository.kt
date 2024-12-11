@@ -1,7 +1,6 @@
 package com.github.se.eduverse.repository
 
 import com.github.se.eduverse.model.Publication
-import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
 import kotlinx.coroutines.tasks.await
