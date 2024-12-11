@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.folder
 
 //noinspection UsingMaterialAndMaterial3Libraries
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +22,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,16 +59,15 @@ import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(
     navigationActions: NavigationActions,
     folderViewModel: FolderViewModel,
-    fileViewModel: FileViewModel
+    fileViewModel: FileViewModel,
+    context: Context = LocalContext.current
 ) {
   val activeFolder by folderViewModel.activeFolder.collectAsState()
 
-  val context = LocalContext.current
   var sorting by remember { mutableStateOf(false) }
   var deleteDialogOpen by remember { mutableStateOf(false) }
   var renameDialogOpen by remember { mutableStateOf(false) }

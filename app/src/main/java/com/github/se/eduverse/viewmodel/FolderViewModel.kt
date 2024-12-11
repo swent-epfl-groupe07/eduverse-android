@@ -47,7 +47,7 @@ open class FolderViewModel(
 
   private var _activeFolder: MutableStateFlow<Folder?> =
       MutableStateFlow(savedStateHandle["activeFolder"])
-  val activeFolder: StateFlow<Folder?> = _activeFolder
+  open val activeFolder: StateFlow<Folder?> = _activeFolder
 
   init {
     try {
@@ -88,7 +88,7 @@ open class FolderViewModel(
   }
 
   /** Get the folders with owner id equivalent to the current user */
-  fun getUserFolders() {
+  open fun getUserFolders() {
     repository.getFolders(
         auth.currentUser!!.uid,
         false,
@@ -145,7 +145,7 @@ open class FolderViewModel(
    *
    * @param folder the folder to update
    */
-  fun updateFolder(folder: Folder) {
+  open fun updateFolder(folder: Folder) {
     repository.updateFolder(
         folder,
         {
