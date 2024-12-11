@@ -26,7 +26,7 @@ fun AiAssistantScreen(
     navigationActions: NavigationActions,
     assistantRepository: AiAssistantRepository
 ) {
-  // A list of pairs (question, answer) representing the conversation
+  // A list of (question, answer) pairs representing the conversation
   val conversation = remember { mutableStateListOf<Pair<String, String>>() }
 
   var userQuestion by remember { mutableStateOf("") }
@@ -45,12 +45,12 @@ fun AiAssistantScreen(
                     .background(MaterialTheme.colorScheme.background) // Use a nice background color
                     .padding(paddingValues)
                     .testTag("aiAssistantChatScreen")) {
-              // Display conversation in a LazyColumn that takes available vertical space
+              // Display the conversation in a LazyColumn
               LazyColumn(
                   modifier =
                       Modifier.fillMaxWidth()
                           .weight(1f)
-                          .padding(horizontal = 8.dp) // Some horizontal padding for nicer layout
+                          .padding(horizontal = 8.dp)
                           .testTag("aiAssistantMessageList"),
                   contentPadding = PaddingValues(vertical = 8.dp)) {
                     items(conversation) { (question, answer) ->
@@ -66,7 +66,7 @@ fun AiAssistantScreen(
                                   Surface(
                                       shape = MaterialTheme.shapes.medium,
                                       color = MaterialTheme.colorScheme.secondaryContainer,
-                                      tonalElevation = 1.dp, // slight elevation for a card effect
+                                      tonalElevation = 1.dp,
                                       modifier =
                                           Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
                                         Text(
@@ -150,10 +150,9 @@ fun AiAssistantScreen(
                               userQuestion = ""
                               try {
                                 val response = assistantRepository.askAssistant(currentQuestion)
-                                // Add the new Q&A to the conversation at the bottom
+                                // Add the new Q&A pair to the conversation
                                 conversation.add(currentQuestion to response)
                               } catch (e: Exception) {
-                                e.printStackTrace()
                                 errorMessage = "An error occurred. Please try again."
                               } finally {
                                 isLoading = false
