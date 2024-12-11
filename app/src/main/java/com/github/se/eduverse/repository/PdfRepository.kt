@@ -271,8 +271,7 @@ class PdfRepositoryImpl : PdfRepository {
     } catch (e: Exception) {
       Log.e("readTextFromPdfFile", "Failed to read text from pdf file with uri: $pdfUri", e)
       if (e.message == "Limit exceeded") {
-        throw Exception(
-            "The PDF file is too large to be processed, please try with a smaller file.")
+        throw Exception("The PDF file contains too much text (supported limit: $limit characters).")
       } else {
         throw Exception("Failed to read text from PDF file, please try with another file.")
       }
