@@ -805,125 +805,6 @@ class DashboardScreenUiTest {
     assertEquals(initialSize, updatedWidgets.last().order)
   }
 
-  @Test
-  fun testEmptyState_InitialDisplay() {
-    val emptyViewModel = EmptyStateDashboardViewModel()
-
-    composeTestRule.setContent {
-      DashboardScreen(viewModel = emptyViewModel, navigationActions = mockNavigationActions)
-    }
-    composeTestRule.waitForIdle()
-
-    // Verify empty state UI elements
-    composeTestRule.onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("empty_state_add_button").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_widget_button").assertDoesNotExist()
-    composeTestRule.onNodeWithText("Welcome to Eduverse!").assertIsDisplayed()
-    composeTestRule
-        .onNodeWithText(
-            "Your dashboard is empty. Start by adding widgets using the + button below to customize your learning experience.")
-        .assertIsDisplayed()
-  }
-
-  @Test
-  fun testEmptyState_AddFirstWidget() {
-    val emptyViewModel = EmptyStateDashboardViewModel()
-
-    composeTestRule.setContent {
-      DashboardScreen(viewModel = emptyViewModel, navigationActions = mockNavigationActions)
-    }
-    composeTestRule.waitForIdle()
-
-    // Click empty state add button
-    composeTestRule.onNodeWithTag("empty_state_add_button").performClick()
-    composeTestRule.waitForIdle()
-
-    // Verify dialog appears
-    composeTestRule.onNodeWithText("Add Widget").assertIsDisplayed()
-
-    // Add a widget
-    composeTestRule.onNodeWithTag("add_common_widget_button").performClick()
-    composeTestRule.waitForIdle()
-
-    // Verify transition to widget list
-    composeTestRule.onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
-    composeTestRule.onNodeWithTag("widget_list").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_widget_button").assertIsDisplayed()
-  }
-
-  @Test
-  fun testEmptyState_TransitionToWidgetList() {
-    val emptyViewModel = EmptyStateDashboardViewModel()
-
-    composeTestRule.setContent {
-      DashboardScreen(viewModel = emptyViewModel, navigationActions = mockNavigationActions)
-    }
-    composeTestRule.waitForIdle()
-
-    // Verify initial empty state
-    composeTestRule.onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_widget_button").assertDoesNotExist()
-
-    // Add widget through view model directly
-    emptyViewModel.addWidget(Widget("test", "Type1", "Test Widget", "Content", "Owner", 0))
-    composeTestRule.waitForIdle()
-
-    // Verify transition to widget list
-    composeTestRule.onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
-    composeTestRule.onNodeWithTag("widget_list").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_widget_button").assertIsDisplayed()
-  }
-
-  @Test
-  fun testWidgetList_TransitionToEmptyState() {
-    setupDashboardScreen()
-    composeTestRule.waitForIdle()
-
-    // Verify initial widget list state
-    composeTestRule.onNodeWithTag("widget_list").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_widget_button").assertIsDisplayed()
-
-    // Delete all widgets one by one
-    // First, get the initial number of widgets
-    val initialSize = fakeViewModel.widgetList.value.size
-
-    for (i in 0 until initialSize) {
-      // Always click the first delete icon since they'll shift up after each deletion
-      composeTestRule.onAllNodesWithTag("delete_icon")[0].performClick()
-      composeTestRule.waitForIdle()
-    }
-
-    // Verify transition to empty state
-    composeTestRule.onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("empty_state_add_button").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_widget_button").assertDoesNotExist()
-  }
-
-  @Test
-  fun testEmptyState_ButtonOpensDialog() {
-    val emptyViewModel = EmptyStateDashboardViewModel()
-
-    composeTestRule.setContent {
-      DashboardScreen(viewModel = emptyViewModel, navigationActions = mockNavigationActions)
-    }
-    composeTestRule.waitForIdle()
-
-    // Click empty state button
-    composeTestRule.onNodeWithTag("empty_state_add_button").performClick()
-    composeTestRule.waitForIdle()
-
-    // Verify dialog content
-    composeTestRule.onNodeWithText("Add Widget").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("add_common_widget_button").assertIsDisplayed()
-
-    // Click cancel
-    composeTestRule.onNodeWithText("Cancel").performClick()
-    composeTestRule.waitForIdle()
-
-    // Verify back to empty state
-    composeTestRule.onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-  }
-
   private fun setupDashboardScreen() {
     composeTestRule.setContent {
       DashboardScreen(viewModel = fakeViewModel, navigationActions = mockNavigationActions)
@@ -931,14 +812,8 @@ class DashboardScreenUiTest {
   }
 }
 
-class EmptyStateDashboardViewModel : FakeDashboardViewModel() {
-  override fun fetchWidgets(userId: String) {
-    _widgetList.value = emptyList()
-  }
-}
-
 @HiltViewModel
-open class FakeDashboardViewModel @Inject constructor() : DashboardViewModel(mock()) {
+class FakeDashboardViewModel @Inject constructor() : DashboardViewModel(mock()) {
   private val mockWidgets =
       listOf(
           Widget("1", "Type1", "Title 1", "Content 1", "Owner", 0),

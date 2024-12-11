@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.calculator
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,29 +23,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
-import kotlinx.coroutines.delay
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun CalculatorScreen(navigationActions: NavigationActions) {
   var display by remember { mutableStateOf("") }
-  var cursorPosition by remember { mutableStateOf(0) }
   var result by remember { mutableStateOf("") }
+  val context = LocalContext.current
 
   var selectedMenu by remember { mutableStateOf("Basic") }
-  var showHistoryDialog by remember { mutableStateOf(false) }
-
-  val history = remember { mutableStateListOf<Pair<String, String>>() }
 
   val basicButtons =
       listOf(
@@ -88,25 +83,8 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                   modifier = Modifier.fillMaxWidth(),
                   horizontalArrangement = Arrangement.SpaceBetween,
                   verticalAlignment = Alignment.CenterVertically) {
-                    // Blinking Cursor Implementation
-                    val cursorVisible = remember { mutableStateOf(true) }
-                    LaunchedEffect(Unit) {
-                      while (true) {
-                        cursorVisible.value = !cursorVisible.value
-                        delay(500)
-                      }
-                    }
-
-                    val displayWithCursor = buildAnnotatedString {
-                      append(display.substring(0, cursorPosition))
-                      if (cursorVisible.value) {
-                        withStyle(style = SpanStyle(color = Color.Gray)) { append("|") }
-                      }
-                      append(display.substring(cursorPosition))
-                    }
-
                     Text(
-                        text = displayWithCursor,
+                        text = display,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Start,
@@ -116,7 +94,6 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                     IconButton(
                         onClick = {
                           display = ""
-                          cursorPosition = 0
                           result = ""
                         },
                         modifier = Modifier.testTag("clearButton")) {
@@ -128,6 +105,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                   }
 
               if (result.isNotEmpty()) {
+
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Canvas(modifier = Modifier.fillMaxWidth().height(1.dp)) {
@@ -181,41 +159,64 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                   Row(
                       modifier = Modifier.fillMaxWidth(),
                       horizontalArrangement = Arrangement.SpaceEvenly) {
-                        IconButton(onClick = { showHistoryDialog = true }) {
-                          Icon(Icons.Default.History, contentDescription = "History")
-                        }
-
-                        IconButton(onClick = { if (cursorPosition > 0) cursorPosition -= 1 }) {
-                          Icon(Icons.Default.ArrowBack, contentDescription = "Left Arrow")
-                        }
+                        IconButton(
+                            onClick = {
+                              Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                  .show()
+                            },
+                            modifier =
+                                Modifier.background(
+                                    Color.White, shape = RoundedCornerShape(topStart = 16.dp))) {
+                              Text("abc", fontSize = 16.sp)
+                            }
 
                         IconButton(
                             onClick = {
-                              if (cursorPosition < display.length) cursorPosition += 1
+                              Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                  .show()
+                            }) {
+                              Icon(Icons.Default.History, contentDescription = "History")
+                            }
+
+                        IconButton(
+                            onClick = {
+                              Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                  .show()
+                            }) {
+                              Icon(Icons.Default.ArrowBack, contentDescription = "Left Arrow")
+                            }
+
+                        IconButton(
+                            onClick = {
+                              Toast.makeText(context, "Not yet implemented", Toast.LENGTH_SHORT)
+                                  .show()
                             }) {
                               Icon(Icons.Default.ArrowForward, contentDescription = "Right Arrow")
                             }
 
                         IconButton(
                             onClick = {
-                              if (result != "Undefined" && result.isNotEmpty()) {
-                                display = result
-                                cursorPosition = display.length
-                                result = ""
+                              if (result == "Undefined") {} else {
+                                result =
+                                    when {
+                                      display.isEmpty() -> "Undefined"
+                                      else -> {
+                                        try {
+                                          evaluateExpression(display)
+                                        } catch (e: Exception) {
+                                          "Undefined"
+                                        }
+                                      }
+                                    }
                               }
-                            },
-                            modifier = Modifier.testTag("Take Result")) {
-                              Icon(
-                                  Icons.Default.SubdirectoryArrowLeft,
-                                  contentDescription = "Take Result")
+                            }) {
+                              Icon(Icons.Default.SubdirectoryArrowLeft, contentDescription = "=")
                             }
 
                         IconButton(
                             onClick = {
-                              if (cursorPosition > 0) {
-                                display = display.removeRange(cursorPosition - 1, cursorPosition)
-                                cursorPosition -= 1
-                                result = ""
+                              if (display.isNotEmpty()) {
+                                display = display.dropLast(1)
                               }
                             },
                             modifier =
@@ -240,7 +241,6 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                                 "=" -> {}
                                 else -> {
                                   display = label
-                                  cursorPosition = display.length
                                   result = ""
                                 }
                               }
@@ -253,9 +253,6 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                                       } catch (e: Exception) {
                                         "Undefined"
                                       }
-                                  if (result != "Undefined") {
-                                    history.add(Pair(display, result))
-                                  }
                                 }
                                 "+",
                                 "-",
@@ -263,16 +260,11 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                                 "/",
                                 "×",
                                 "^" -> {
-                                  if (result.isNotEmpty() && display == result) {
+                                  if (result.isNotEmpty()) {
                                     display = result + label
-                                    cursorPosition = display.length
                                     result = ""
                                   } else {
-                                    display =
-                                        display.substring(0, cursorPosition) +
-                                            label +
-                                            display.substring(cursorPosition)
-                                    cursorPosition += label.length
+                                    display += label
                                   }
                                 }
                                 "√",
@@ -296,30 +288,19 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                                 "arcosh",
                                 "artanh",
                                 "arcoth" -> {
-                                  val functionText = "$label("
-                                  if (result.isNotEmpty() && display == result) {
-                                    display = functionText + result + ")"
-                                    cursorPosition = display.length
+                                  if (result.isNotEmpty()) {
+                                    display = "$label($result)"
                                     result = ""
                                   } else {
-                                    display =
-                                        display.substring(0, cursorPosition) +
-                                            functionText +
-                                            display.substring(cursorPosition)
-                                    cursorPosition += functionText.length
+                                    display += "$label("
                                   }
                                 }
                                 else -> {
-                                  if (result.isNotEmpty() && display == result) {
+                                  if (result.isNotEmpty()) {
                                     display = ""
-                                    cursorPosition = 0
                                     result = ""
                                   }
-                                  display =
-                                      display.substring(0, cursorPosition) +
-                                          label +
-                                          display.substring(cursorPosition)
-                                  cursorPosition += label.length
+                                  display += label
                                 }
                               }
                             }
@@ -330,27 +311,6 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                   }
             }
           }
-
-      // History Dialog
-      if (showHistoryDialog) {
-        AlertDialog(
-            onDismissRequest = { showHistoryDialog = false },
-            title = { Text("History") },
-            text = {
-              Column {
-                if (history.isEmpty()) {
-                  Text("No history available.")
-                } else {
-                  history.reversed().forEach { (expression, result) ->
-                    Text("$expression = $result")
-                  }
-                }
-              }
-            },
-            confirmButton = {
-              TextButton(onClick = { showHistoryDialog = false }) { Text("Close") }
-            })
-      }
     }
   }
 }
