@@ -15,13 +15,13 @@ import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FileViewModel(val fileRepository: FileRepository) {
+open class FileViewModel(val fileRepository: FileRepository) {
   private var _newFile: MutableStateFlow<MyFile?> = MutableStateFlow(null)
 
   private var _validNewFile: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
   /** A state flow containing the information if a new file was created or not */
-  val validNewFile: StateFlow<Boolean> = _validNewFile
+  open val validNewFile: StateFlow<Boolean> = _validNewFile
 
   /**
    * Access the new file and immediately reset the view model, so that it is ready to create another
