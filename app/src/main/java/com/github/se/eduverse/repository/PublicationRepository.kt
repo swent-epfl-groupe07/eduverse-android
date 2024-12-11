@@ -24,6 +24,7 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
           .mapNotNull { it.toObject(Publication::class.java) }
           .shuffled()
     } catch (e: Exception) {
+      val t = e
       emptyList()
     }
   }
