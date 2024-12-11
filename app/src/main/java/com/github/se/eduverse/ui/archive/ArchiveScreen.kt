@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.archive
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,9 +27,12 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
 @Composable
-fun ArchiveScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
+fun ArchiveScreen(
+    navigationActions: NavigationActions,
+    folderViewModel: FolderViewModel,
+    context: Context = LocalContext.current
+) {
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
-  val context = LocalContext.current
 
   LaunchedEffect(Unit) { folderViewModel.getArchivedUserFolders() }
 

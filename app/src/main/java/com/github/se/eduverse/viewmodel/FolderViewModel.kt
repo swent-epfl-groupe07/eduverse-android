@@ -97,7 +97,7 @@ open class FolderViewModel(
   }
 
   /** Get the archived folders with owner id equivalent to the current user */
-  fun getArchivedUserFolders() {
+  open fun getArchivedUserFolders() {
     repository.getFolders(
         auth.currentUser!!.uid,
         true,
@@ -106,7 +106,7 @@ open class FolderViewModel(
   }
 
   /** Show a toast indicating that the device is offline */
-  fun showOfflineMessage(context: Context) {
+  open fun showOfflineMessage(context: Context) {
     context.showToast(
         "Your device is offline. Please connect to the internet to manage your folders")
   }
