@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.pdfGenerator
+package com.github.se.eduverse.ui.converter
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -13,7 +13,7 @@ import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
-import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import java.io.File
 import junit.framework.TestCase
 import okhttp3.OkHttpClient
@@ -25,14 +25,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PdfGeneratorInstrumentationTest {
+class PdfConverterInstrumentationTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var pdfRepository: PdfRepository
   private lateinit var openAiRepository: OpenAiRepository
   private lateinit var context: Context
-  private lateinit var pdfGeneratorViewModel: PdfGeneratorViewModel
+  private lateinit var pdfConverterViewModel: PdfConverterViewModel
   private lateinit var convertApiRepository: ConvertApiRepository
 
   @Before
@@ -41,8 +41,8 @@ class PdfGeneratorInstrumentationTest {
     pdfRepository = PdfRepositoryImpl()
     openAiRepository = OpenAiRepository(OkHttpClient())
     convertApiRepository = ConvertApiRepository(OkHttpClient())
-    pdfGeneratorViewModel =
-        PdfGeneratorViewModel(pdfRepository, openAiRepository, convertApiRepository)
+    pdfConverterViewModel =
+        PdfConverterViewModel(pdfRepository, openAiRepository, convertApiRepository)
   }
 
   @Test

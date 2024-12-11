@@ -39,7 +39,6 @@ import com.github.se.eduverse.repository.PhotoRepository
 import com.github.se.eduverse.repository.ProfileRepositoryImpl
 import com.github.se.eduverse.repository.PublicationRepository
 import com.github.se.eduverse.repository.QuizzRepository
-import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.archive.ArchiveScreen
@@ -52,6 +51,7 @@ import com.github.se.eduverse.ui.camera.CropPhotoScreen
 import com.github.se.eduverse.ui.camera.NextScreen
 import com.github.se.eduverse.ui.camera.PermissionDeniedScreen
 import com.github.se.eduverse.ui.camera.PicTakenScreen
+import com.github.se.eduverse.ui.converter.PdfConverterScreen
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.folder.CreateFileScreen
 import com.github.se.eduverse.ui.folder.CreateFolderScreen
@@ -62,7 +62,6 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.notifications.NotificationsScreen
-import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
@@ -80,11 +79,10 @@ import com.github.se.eduverse.viewmodel.CommentsViewModel
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
-import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
+import com.github.se.eduverse.viewmodel.PdfConverterViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.PublicationViewModel
-import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TimerViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
@@ -245,20 +243,12 @@ fun EduverseApp(
   val timeTableRepo = TimeTableRepositoryImpl(firestore)
   val notifRepo = NotificationRepository(LocalContext.current, notifAuthorizations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
-
   val pdfConverterViewModel: PdfConverterViewModel =
       viewModel(factory = PdfConverterViewModel.Factory)
   val aiAssistantRepository =
       AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
-
-  val pdfGeneratorViewModel: PdfGeneratorViewModel =
-      viewModel(factory = PdfGeneratorViewModel.Factory)
-      
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
-
-  val settingsRepo = SettingsRepository(firestore)
-  val settingsViewModel = SettingsViewModel(settingsRepo, FirebaseAuth.getInstance())
 
   notificationData.viewModel =
       when (notificationData.notificationType) {
@@ -289,8 +279,8 @@ fun EduverseApp(
     ) {
       composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
       composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
-      composable(Screen.PDF_GENERATOR) {
-        PdfGeneratorScreen(navigationActions, pdfGeneratorViewModel)
+      composable(Screen.PDF_CONVERTER) {
+        PdfConverterScreen(navigationActions, pdfConverterViewModel)
       }
       composable(Screen.SEARCH) {
         SearchProfileScreen(navigationActions, viewModel = profileViewModel)
@@ -396,7 +386,7 @@ fun EduverseApp(
     ) {
       composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
-      composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
@@ -436,7 +426,7 @@ fun EduverseApp(
       composable(Screen.POMODORO) {
         PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
       }
-      composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
+      composable(Screen.SETTING) { SettingsScreen(navigationActions) }
     }
 
     // video
