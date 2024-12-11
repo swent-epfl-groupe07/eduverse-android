@@ -63,7 +63,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
         `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
-          `when`(mockQuery.whereIn(eq("userId"), any())).thenReturn(mockQuery)
+        `when`(mockQuery.whereIn(eq("userId"), any())).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
 
@@ -115,7 +115,7 @@ class PublicationRepositoryTest {
         `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
         `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
         `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
-          `when`(mockQuery.whereIn(eq("userId"), any())).thenReturn(mockQuery)
+        `when`(mockQuery.whereIn(eq("userId"), any())).thenReturn(mockQuery)
         `when`(mockQuery.limit(20)).thenReturn(mockQuery)
         `when`(mockQuery.get()).thenThrow(RuntimeException("Firestore error"))
 
