@@ -74,9 +74,10 @@ class PdfRepositoryImpl : PdfRepository {
     // Read the image bitmap from the URI
     val imageBitmap = getImageBitmap(imageUri, context)
 
+    // Create a new PDF document and add the image to it
+    val pdfDocument = PdfDocument()
+
     try {
-      // Create a new PDF document and add the image to it
-      val pdfDocument = PdfDocument()
       val pageInfo =
           PdfDocument.PageInfo.Builder(imageBitmap.width, imageBitmap.height, 1)
               .create() // The pdf page will have the same size as the input image
@@ -90,6 +91,12 @@ class PdfRepositoryImpl : PdfRepository {
       pdfDocument.finishPage(page)
       return pdfDocument
     } catch (e: Exception) {
+      // If an exception occurs during the conversion process, close the PdfDocument
+      try {
+        pdfDocument.close()
+      } catch (closeException: Exception) {
+        Log.e("writeTextFileToPdf", "Failed to close PdfDocument", closeException)
+      }
       // If an exception occurs during the conversion process, log the error and display a toast
       Log.e("convertImageToPdf", "Image conversion failed for uri: $imageUri", e)
       throw Exception("Image to PDF conversion failed, please try again.")
@@ -111,11 +118,16 @@ class PdfRepositoryImpl : PdfRepository {
     try {
       // Open the text file input stream and create a buffered reader on it. Make sure the input
       // stream is correctly closed.
-      val bufferedReader =
+      val pdf =
           context.contentResolver.openInputStream(fileUri!!).use { inputStream ->
-            inputStream?.bufferedReader()
-          } ?: throw FileNotFoundException("Failed to open text file, opened input stream is null")
-      return writeTextFileToPdf(bufferedReader)
+            if (inputStream != null) {
+              val bufferedReader = inputStream.bufferedReader()
+              writeTextFileToPdf(bufferedReader)
+            } else {
+              throw FileNotFoundException("Failed to open text file, opened input stream is null")
+            }
+          }
+      return pdf
     } catch (e: Exception) {
       // If an exception occurs during the conversion process, log the error and throw the exception
       Log.e("convertTextToPdf", "Text conversion failed for uri: $fileUri", e)
@@ -149,7 +161,7 @@ class PdfRepositoryImpl : PdfRepository {
       onSuccess(file)
     } catch (e: Exception) {
       deleteTempPdfFile(pdfFile)
-      Log.e("savePdf", "Failed to save pdf to {${destinationDirectory.name}}", e)
+      Log.e("savePdf", "Failed to save pdf to folder: ${destinationDirectory.name}", e)
       onFailure(e)
     }
   }
@@ -491,7 +503,12 @@ class PdfRepositoryImpl : PdfRepository {
 
       return pdfDocument
     } catch (e: Exception) {
-      pdfDocument.close()
+      // If an exception occurs during the writing process, close the PdfDocument
+      try {
+        pdfDocument.close()
+      } catch (closeException: Exception) {
+        Log.e("writeTextFileToPdf", "Failed to close PdfDocument", closeException)
+      }
       Log.e("writeTextFileToPdf", "Failed to write text file to pdf", e)
       throw e
     }
