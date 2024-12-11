@@ -53,6 +53,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.SubcomposeAsyncImage
 import com.github.se.eduverse.model.MediaType
+import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -75,17 +76,17 @@ fun VideoScreen(
     commentsViewModel: CommentsViewModel,
     currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
+  var isPublicationGlobal by remember { mutableStateOf(true) }
+  var followedUsers by remember { mutableStateOf(emptyList<String>()) }
+
   val globalPublications by publicationViewModel.publications.collectAsState()
   val followedPublications by publicationViewModel.followedPublications.collectAsState()
-  var publications by remember { mutableStateOf(globalPublications) }
+  val publications = if (isPublicationGlobal) globalPublications else followedPublications
   val publicationError by publicationViewModel.error.collectAsState()
   val pagerState = rememberPagerState()
 
   var isCommentsVisible by remember { mutableStateOf(false) }
   var selectedPublicationId by remember { mutableStateOf<String?>(null) }
-
-  var isPublicationGlobal by remember { mutableStateOf(true) }
-  var followedUsers = emptyList<String>()
 
   val context = LocalContext.current
 
@@ -97,16 +98,6 @@ fun VideoScreen(
   LaunchedEffect(Unit) {
     followedUsers = profileViewModel.getFollowing(currentUserId).map { it.id }
     publicationViewModel.loadFollowedPublications(followedUsers)
-  }
-
-  // Handle changes of feed
-  LaunchedEffect(isPublicationGlobal) {
-    publications =
-        if (isPublicationGlobal) {
-          globalPublications
-        } else {
-          followedPublications
-        }
   }
 
   // Handle opening and closing of the sheet
@@ -259,7 +250,8 @@ fun VideoScreen(
                     TabRow(
                         selectedTabIndex = if (isPublicationGlobal) 0 else 1,
                         modifier = Modifier.align(Alignment.TopCenter),
-                        backgroundColor = Color.Transparent) {
+                        backgroundColor = Color.Transparent,
+                        contentColor = Color.White) {
                           Tab(
                               selected = isPublicationGlobal,
                               onClick = { isPublicationGlobal = true },
@@ -268,7 +260,15 @@ fun VideoScreen(
                               selectedContentColor = Color.White)
                           Tab(
                               selected = !isPublicationGlobal,
-                              onClick = { isPublicationGlobal = false },
+                              onClick = {
+                                if (followedUsers.isEmpty()) {
+                                  context.showToast("You are not following anyone")
+                                } else if (followedPublications.isEmpty()) {
+                                  context.showToast("No one you follow has posted anything yet")
+                                } else {
+                                  isPublicationGlobal = false
+                                }
+                              },
                               modifier = Modifier.testTag("followedFeed"),
                               text = { Text("Followed") },
                               selectedContentColor = Color.White)
