@@ -291,7 +291,8 @@ class PdfGeneratorScreenTest {
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
     `when`(mockPdfRepository.convertImageToPdf(any(), any())).thenReturn(PdfDocument())
-    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any())).thenReturn(File("test.pdf"))
+    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any(), any()))
+        .thenReturn(File("test.pdf"))
     `when`(mockPdfRepository.savePdfToDevice(any(), any(), any(), any(), any())).then {
       assertEquals(
           pdfGeneratorViewModel.pdfGenerationState.value,
