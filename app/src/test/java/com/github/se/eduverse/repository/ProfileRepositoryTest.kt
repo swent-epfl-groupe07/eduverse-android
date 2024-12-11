@@ -16,7 +16,6 @@ import com.google.firebase.storage.UploadTask
 import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -1206,7 +1205,6 @@ class ProfileRepositoryImplTest {
     verify(mockCollectionRef).get()
   }
 
-
   @Test
   fun `incrementLikes handles empty query result`() = runTest {
     val publicationId = "pub123"
@@ -1223,10 +1221,6 @@ class ProfileRepositoryImplTest {
     verify(mockFirestore, never()).runTransaction<Any>(any())
   }
 
-
-
-
-
   @Test
   fun `getFavoritePublications handles invalid publication reference`() = runTest {
     val favoriteIds = listOf("pub1", "pub2")
@@ -1241,7 +1235,6 @@ class ProfileRepositoryImplTest {
     val result = repository.getFavoritePublications(favoriteIds)
     assertTrue(result.isEmpty())
   }
-
 
   @After
   fun tearDown() {
