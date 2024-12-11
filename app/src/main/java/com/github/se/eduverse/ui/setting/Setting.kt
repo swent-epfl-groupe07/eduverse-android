@@ -27,9 +27,12 @@ import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SettingsScreen(navigationActions: NavigationActions, settingsViewModel: SettingsViewModel) {
+fun SettingsScreen(
+    navigationActions: NavigationActions,
+    settingsViewModel: SettingsViewModel,
+    systemTheme: String = if (isSystemInDarkTheme()) Theme.DARK else Theme.LIGHT
+) {
   val context = LocalContext.current
-  val systemTheme = if (isSystemInDarkTheme()) Theme.DARK else Theme.LIGHT
 
   val privacySettings by settingsViewModel.privacySettings.collectAsState()
   val selectedTheme by settingsViewModel.selectedTheme.collectAsState()

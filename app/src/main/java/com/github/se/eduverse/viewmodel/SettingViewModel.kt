@@ -89,7 +89,7 @@ open class SettingsViewModel(
     }
   }
 
-  fun updateSelectedTheme(value: String) {
+  open fun updateSelectedTheme(value: String) {
     _selectedTheme.value = value
     setAppThemeIsDarkMode(value == Theme.DARK)
     val uid = userId
