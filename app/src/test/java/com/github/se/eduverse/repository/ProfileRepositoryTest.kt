@@ -98,7 +98,9 @@ class ProfileRepositoryImplTest {
             TODO("Not yet implemented")
           }
 
-          override suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication> {
+          override suspend fun getFavoritePublications(
+              favoriteIds: List<String>
+          ): List<Publication> {
             TODO("Not yet implemented")
           }
 

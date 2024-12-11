@@ -654,14 +654,15 @@ class ProfileViewModelTest {
   fun `loadFavoritePublications success updates state with favorited publications`() = runTest {
     val userId = "testUser"
     val favoritePublicationIds = listOf("pub1", "pub2")
-    val favoritePublications = listOf(
-      Publication(id = "pub1", userId = userId, title = "Publication 1"),
-      Publication(id = "pub2", userId = userId, title = "Publication 2")
-    )
+    val favoritePublications =
+        listOf(
+            Publication(id = "pub1", userId = userId, title = "Publication 1"),
+            Publication(id = "pub2", userId = userId, title = "Publication 2"))
 
     // Mock the new method calls
     `when`(mockRepository.getFavoritePublicationsIds(userId)).thenReturn(favoritePublicationIds)
-    `when`(mockRepository.getFavoritePublications(favoritePublicationIds)).thenReturn(favoritePublications)
+    `when`(mockRepository.getFavoritePublications(favoritePublicationIds))
+        .thenReturn(favoritePublications)
 
     profileViewModel.loadFavoritePublications(userId)
     advanceUntilIdle()
