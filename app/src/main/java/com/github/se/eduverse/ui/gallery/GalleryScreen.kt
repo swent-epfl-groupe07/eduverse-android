@@ -145,6 +145,7 @@ fun GalleryScreen(
   }
 
   val backgroundColor = MaterialTheme.colorScheme.background
+  val contentColor = MaterialTheme.colorScheme.onBackground
   selectedMedia?.let { media ->
     when (media) {
       is Photo -> {
@@ -153,7 +154,7 @@ fun GalleryScreen(
             onDismiss = { selectedMedia = null },
             onDownload = { downloadImage(media.path ?: "unknown") },
             onAddToFolder = {
-              showBottomMenu(context, folderViewModel, backgroundColor) { folder ->
+              showBottomMenu(context, folderViewModel, backgroundColor, contentColor) { folder ->
                 photoViewModel.makeFileFromPhoto(media) {
                   folderViewModel.createFileInFolder(it, it, folder)
                 }

@@ -331,12 +331,10 @@ fun CommentSection(
                             Text(
                                 text = comment.profile?.username ?: "Unknown",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Color.Black,
                                 modifier = Modifier.testTag("CommentUsername_${comment.id}"))
                             Text(
                                 text = comment.text,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Black,
                                 modifier = Modifier.testTag("CommentText_${comment.id}"))
                           }
 
@@ -365,7 +363,6 @@ fun CommentSection(
                             Text(
                                 text = comment.likes.toString(),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Black,
                                 modifier = Modifier.testTag("CommentLikes_${comment.id}"))
                           }
 

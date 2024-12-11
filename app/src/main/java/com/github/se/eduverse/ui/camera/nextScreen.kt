@@ -85,6 +85,7 @@ fun NextScreen(
 
   val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
   val backgroundColor = MaterialTheme.colorScheme.background
+  val onBackgroundColor = MaterialTheme.colorScheme.onBackground
 
   Box(modifier = Modifier.fillMaxSize().background(backgroundColor).padding(16.dp)) {
     if (bitmap != null) {
@@ -163,7 +164,7 @@ fun NextScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
               text = " Add to folder", iconRes = R.drawable.add, testTag = "addToFolderButton") {
-                showBottomMenu(context, folderViewModel, backgroundColor) {
+                showBottomMenu(context, folderViewModel, backgroundColor, onBackgroundColor) {
                   bitmap?.let { bmp ->
                     val byteArray = imageBitmapToByteArray(bmp)
                     val photo = Photo(ownerId, byteArray, path)
@@ -377,7 +378,7 @@ fun NextScreen(
           Icon(
               imageVector = Icons.Default.Close,
               contentDescription = "Close button",
-              tint = MaterialTheme.colorScheme.onBackground,
+              tint = onBackgroundColor,
               modifier = Modifier.size(32.dp).align(Alignment.Center))
         }
   }

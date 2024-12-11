@@ -49,6 +49,7 @@ import androidx.lifecycle.OnLifecycleEvent
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.annotations.concurrent.Background
 
 /**
  * Create a bottom menu with the list of the folders of the active user
@@ -61,7 +62,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 fun showBottomMenu(
     context: Context,
     folderViewModel: FolderViewModel,
-    color: Color,
+    backgroundColor: Color,
+    contentColor: Color,
     select: (Folder) -> Unit
 ) {
   // Create the BottomSheetDialog
@@ -74,7 +76,7 @@ fun showBottomMenu(
   // Set the inflated view as the content of the BottomSheetDialog
   bottomSheetDialog.setContentView(
       ComposeView(context).apply {
-        setBackgroundColor(color.toArgb())
+        setBackgroundColor(backgroundColor.toArgb())
         setContent {
           Column(modifier = Modifier.padding(16.dp).fillMaxWidth().testTag("button_container")) {
             folders.forEach { folder ->
@@ -87,12 +89,12 @@ fun showBottomMenu(
                             bottomSheetDialog.dismiss()
                           }
                           .testTag("folder_button${folder.id}"),
-                  backgroundColor = color,
+                  backgroundColor = backgroundColor,
+                  contentColor = contentColor,
                   elevation = 4.dp) {
                     Text(
                         text = folder.name,
                         modifier = Modifier.padding(16.dp),
-                        color = contentColorFor(color),
                         style = MaterialTheme.typography.h6)
                   }
             }
