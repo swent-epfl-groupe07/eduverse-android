@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,7 +92,8 @@ fun showBottomMenu(
                     Text(
                         text = folder.name,
                         modifier = Modifier.padding(16.dp),
-                        style = androidx.compose.material.MaterialTheme.typography.h6)
+                        color = contentColorFor(color),
+                        style = MaterialTheme.typography.h6)
                   }
             }
           }
