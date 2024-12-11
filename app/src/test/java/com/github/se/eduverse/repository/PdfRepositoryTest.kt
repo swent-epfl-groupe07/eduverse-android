@@ -82,9 +82,9 @@ class PdfRepositoryTest {
     pdfDocument.finishPage(page)
     val tempFileName = "testPdf"
 
-    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, tempFileName)
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, tempFileName, context)
 
-    assertTrue(tempFile.exists())
+    assertTrue(tempFile!!.exists())
     assertTrue(tempFile.name.startsWith(tempFileName))
     assertTrue(tempFile.extension == "pdf")
     tempFile.delete()
