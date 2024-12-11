@@ -654,24 +654,27 @@ class ProfileViewModelTest {
   fun `loadFavoritePublications success updates state with favorited publications`() = runTest {
     val userId = "testUser"
     val favoritePublicationIds = listOf("pub1", "pub2")
-    val allPublications =
-        listOf(
-            Publication(id = "pub1", userId = userId, title = "Publication 1"),
-            Publication(id = "pub2", userId = userId, title = "Publication 2"),
-            Publication(id = "pub3", userId = "otherUser", title = "Publication 3"))
-    val expectedFavoritePublications = allPublications.filter { it.id in favoritePublicationIds }
+    val favoritePublications = listOf(
+      Publication(id = "pub1", userId = userId, title = "Publication 1"),
+      Publication(id = "pub2", userId = userId, title = "Publication 2")
+    )
 
+    // Mock the new method calls
     `when`(mockRepository.getFavoritePublicationsIds(userId)).thenReturn(favoritePublicationIds)
-    `when`(mockRepository.getAllPublications()).thenReturn(allPublications)
+    `when`(mockRepository.getFavoritePublications(favoritePublicationIds)).thenReturn(favoritePublications)
 
     profileViewModel.loadFavoritePublications(userId)
     advanceUntilIdle()
 
-    val favoritePublications = profileViewModel.favoritePublications.first()
-    assertEquals(expectedFavoritePublications, favoritePublications)
+    // Verify results
+    val result = profileViewModel.favoritePublications.first()
+    assertEquals(favoritePublications, result)
     assertNull(profileViewModel.error.value)
+
+    // Verify the correct methods were called
     verify(mockRepository).getFavoritePublicationsIds(userId)
-    verify(mockRepository).getAllPublications()
+    verify(mockRepository).getFavoritePublications(favoritePublicationIds)
+    verify(mockRepository, never()).getAllPublications()
   }
 
   @Test
