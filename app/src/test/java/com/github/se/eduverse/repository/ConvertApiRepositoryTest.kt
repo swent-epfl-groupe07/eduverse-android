@@ -1,5 +1,6 @@
 package com.github.se.eduverse.repository
 
+import android.content.Context
 import com.github.se.eduverse.api.FileConversionException
 import com.github.se.eduverse.api.FileDownloadException
 import io.mockk.every
@@ -22,6 +23,7 @@ class ConvertApiRepositoryTest {
   private lateinit var mockDownloadCall: Call
   private lateinit var mockConversionResponse: Response
   private lateinit var mockDownloadResponse: Response
+  private lateinit var context: Context
 
   @Before
   fun setUp() {
@@ -30,6 +32,7 @@ class ConvertApiRepositoryTest {
     mockDownloadCall = mockk()
     mockConversionResponse = mockk()
     mockDownloadResponse = mockk()
+    context = mockk()
 
     convertApiRepository = ConvertApiRepository(mockClient)
 
@@ -40,6 +43,7 @@ class ConvertApiRepositoryTest {
         }
     every { mockConversionCall.execute() } returns mockConversionResponse
     every { mockDownloadCall.execute() } returns mockDownloadResponse
+    every { context.externalCacheDir } returns File(System.getProperty("java.io.tmpdir"))
   }
 
   @Test
@@ -47,7 +51,7 @@ class ConvertApiRepositoryTest {
     val file = File.createTempFile("test", ".pdf")
     val pdfName = "testPdf"
     assertThrows(IllegalArgumentException::class.java) {
-      convertApiRepository.convertToPdf(file, pdfName)
+      convertApiRepository.convertToPdf(file, pdfName, context)
     }
     file.delete()
   }
@@ -60,7 +64,7 @@ class ConvertApiRepositoryTest {
     every { mockConversionResponse.isSuccessful } returns false
 
     assertThrows(FileConversionException::class.java) {
-      convertApiRepository.convertToPdf(file, pdfName)
+      convertApiRepository.convertToPdf(file, pdfName, context)
     }
     file.delete()
   }
@@ -74,7 +78,7 @@ class ConvertApiRepositoryTest {
     every { mockConversionResponse.body } returns null
 
     assertThrows(FileConversionException::class.java) {
-      convertApiRepository.convertToPdf(file, pdfName)
+      convertApiRepository.convertToPdf(file, pdfName, context)
     }
     file.delete()
   }
@@ -88,7 +92,7 @@ class ConvertApiRepositoryTest {
     every { mockConversionResponse.isSuccessful } returns true
     every { mockConversionResponse.body } returns mockResponseBody
     assertThrows(FileConversionException::class.java) {
-      convertApiRepository.convertToPdf(file, pdfName)
+      convertApiRepository.convertToPdf(file, pdfName, context)
     }
     file.delete()
   }
@@ -108,7 +112,7 @@ class ConvertApiRepositoryTest {
     every { mockDownloadResponse.isSuccessful } returns false
 
     assertThrows(FileDownloadException::class.java) {
-      convertApiRepository.convertToPdf(file, pdfName)
+      convertApiRepository.convertToPdf(file, pdfName, context)
     }
     file.delete()
   }
@@ -129,7 +133,7 @@ class ConvertApiRepositoryTest {
     every { mockDownloadResponse.body } returns null
 
     assertThrows(FileDownloadException::class.java) {
-      convertApiRepository.convertToPdf(file, pdfName)
+      convertApiRepository.convertToPdf(file, pdfName, context)
     }
     file.delete()
   }
@@ -152,7 +156,7 @@ class ConvertApiRepositoryTest {
     every { mockDownloadResponse.isSuccessful } returns true
     every { mockDownloadResponse.body } returns mockDownloadResponseBody
 
-    val result = convertApiRepository.convertToPdf(file, pdfName)
+    val result = convertApiRepository.convertToPdf(file, pdfName, context)
 
     assertNotNull(result)
     assertTrue(result!!.exists())
