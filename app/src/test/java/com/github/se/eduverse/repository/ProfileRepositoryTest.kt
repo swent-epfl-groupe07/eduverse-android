@@ -16,6 +16,7 @@ import com.google.firebase.storage.UploadTask
 import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -1204,6 +1205,43 @@ class ProfileRepositoryImplTest {
     assertTrue(result.isEmpty())
     verify(mockCollectionRef).get()
   }
+
+
+  @Test
+  fun `incrementLikes handles empty query result`() = runTest {
+    val publicationId = "pub123"
+    val userId = "user456"
+
+    // Mock empty query result
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(true)
+
+    repository.incrementLikes(publicationId, userId)
+    // Verify no transaction was attempted
+    verify(mockFirestore, never()).runTransaction<Any>(any())
+  }
+
+
+
+
+
+  @Test
+  fun `getFavoritePublications handles invalid publication reference`() = runTest {
+    val favoriteIds = listOf("pub1", "pub2")
+    val mockPublication = mock(Publication::class.java)
+
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereIn("id", favoriteIds)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
+    whenever(mockSnapshot.toObject(Publication::class.java)).thenReturn(null)
+
+    val result = repository.getFavoritePublications(favoriteIds)
+    assertTrue(result.isEmpty())
+  }
+
 
   @After
   fun tearDown() {
