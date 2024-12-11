@@ -322,12 +322,13 @@ class PdfRepositoryImpl : PdfRepository {
    * @throws Exception If an error occurs during the process
    */
   override fun getTempFileFromUri(uri: Uri?, context: Context): File {
+    var tempFile: File? = null
     try {
       // Get file extension from uri, through the uri path if not null, otherwise by querying the
       // content resolver
       val documentType =
           uri?.path?.substringAfterLast(".") ?: getFileExtensionFromUri(context, uri!!)
-      val tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
+      tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
 
       // Make sure the input stream is correctly closed
       context.contentResolver.openInputStream(uri!!).use { inputStream ->
@@ -337,6 +338,7 @@ class PdfRepositoryImpl : PdfRepository {
               "Failed to open InputStream for the URI (openInputStream returned null).")
       return tempFile
     } catch (e: Exception) {
+      tempFile?.delete()
       Log.e("getTempFileFromUri", "Failed to get temp file from uri: $uri", e)
       throw Exception("Failed to open the selected file, please try with another file.")
     }
@@ -527,11 +529,13 @@ class PdfRepositoryImpl : PdfRepository {
    * @return The created temporary text file
    */
   private fun createTempTextFile(text: String, context: Context): File {
+    var tempFile: File? = null
     try {
-      val tempFile = File.createTempFile("temp_text", ".txt", context.externalCacheDir)
+      tempFile = File.createTempFile("temp_text", ".txt", context.externalCacheDir)
       tempFile.writeText(text)
       return tempFile
     } catch (e: Exception) {
+      tempFile?.delete()
       Log.e("createTempTextFile", "Failed to create temp text file", e)
       throw e
     }
