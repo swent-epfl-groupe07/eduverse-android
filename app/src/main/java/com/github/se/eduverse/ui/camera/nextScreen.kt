@@ -14,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -82,8 +84,9 @@ fun NextScreen(
       "$mediaType/$ownerId/${System.currentTimeMillis()}.${if (photoFile != null) "jpg" else "mp4"}"
 
   val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
+  val backgroundColor = MaterialTheme.colorScheme.background
 
-  Box(modifier = Modifier.fillMaxSize().background(Color(0xFFEBF1F4)).padding(16.dp)) {
+  Box(modifier = Modifier.fillMaxSize().background(backgroundColor).padding(16.dp)) {
     if (bitmap != null) {
       // Display image
       Image(
@@ -160,7 +163,7 @@ fun NextScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
               text = " Add to folder", iconRes = R.drawable.add, testTag = "addToFolderButton") {
-                showBottomMenu(context, folderViewModel) {
+                showBottomMenu(context, folderViewModel, backgroundColor) {
                   bitmap?.let { bmp ->
                     val byteArray = imageBitmapToByteArray(bmp)
                     val photo = Photo(ownerId, byteArray, path)
@@ -371,11 +374,11 @@ fun NextScreen(
                 .clickable { navigationActions.goBack() }
                 .padding(4.dp)
                 .testTag("closeButton")) {
-          Image(
-              painter = painterResource(id = R.drawable.close),
+          Icon(
+              imageVector = Icons.Default.Close,
               contentDescription = "Close button",
-              modifier = Modifier.fillMaxSize().padding(4.dp),
-              contentScale = ContentScale.Fit)
+              tint = MaterialTheme.colorScheme.onBackground,
+              modifier = Modifier.size(32.dp).align(Alignment.Center))
         }
   }
 }
@@ -412,7 +415,6 @@ fun StyledButton(text: String, iconRes: Int, testTag: String, onClick: () -> Uni
       modifier =
           Modifier.fillMaxWidth()
               .height(56.dp)
-              .background(Color(0xFFEBF1F4))
               .clickable { onClick() }
               .padding(horizontal = 16.dp)
               .testTag(testTag),

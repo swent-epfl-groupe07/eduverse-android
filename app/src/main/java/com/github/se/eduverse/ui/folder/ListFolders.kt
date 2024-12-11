@@ -86,6 +86,7 @@ fun ListFoldersScreen(
                           navigationActions.navigateTo(Screen.FOLDER)
                         }
                         .testTag("folderCard${it.id}"),
+                backgroundColor = MaterialTheme.colorScheme.surface,
                 elevation = 4.dp) {
                   Text(
                       text = it.name,

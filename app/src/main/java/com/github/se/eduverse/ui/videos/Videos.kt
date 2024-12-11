@@ -118,6 +118,7 @@ fun VideoScreen(
         }
       },
       sheetState = sheetState,
+      sheetBackgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
       scrimColor = Color.Black.copy(alpha = 0.32f)) {
         Scaffold(
             bottomBar = {

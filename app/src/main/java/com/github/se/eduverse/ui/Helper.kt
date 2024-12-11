@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -53,9 +54,15 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
  *
  * @param context the context in which the dialog must be opened
  * @param folderViewModel the folder view model of the app
+ * @param color the color of the menu
  * @param select the action to do when clicking on a folder
  */
-fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (Folder) -> Unit) {
+fun showBottomMenu(
+    context: Context,
+    folderViewModel: FolderViewModel,
+    color: Color,
+    select: (Folder) -> Unit
+) {
   // Create the BottomSheetDialog
   val bottomSheetDialog = BottomSheetDialog(context)
 
@@ -66,6 +73,7 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
   // Set the inflated view as the content of the BottomSheetDialog
   bottomSheetDialog.setContentView(
       ComposeView(context).apply {
+        setBackgroundColor(color.toArgb())
         setContent {
           Column(modifier = Modifier.padding(16.dp).fillMaxWidth().testTag("button_container")) {
             folders.forEach { folder ->
@@ -78,6 +86,7 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
                             bottomSheetDialog.dismiss()
                           }
                           .testTag("folder_button${folder.id}"),
+                  backgroundColor = color,
                   elevation = 4.dp) {
                     Text(
                         text = folder.name,

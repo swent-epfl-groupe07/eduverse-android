@@ -94,7 +94,7 @@ import java.io.File
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 
-var isAppInDarkMode by mutableStateOf(false)
+var isAppInDarkMode by mutableStateOf(true)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -198,7 +198,7 @@ class MainActivity : ComponentActivity() {
     if (permissionsToRequest.isEmpty()) {
       // All permissions are already granted, you can set the content
       setContent {
-        EduverseTheme {
+        EduverseTheme(darkTheme = isAppInDarkMode) {
           Surface(modifier = Modifier.fillMaxSize()) {
             EduverseApp(
                 cameraPermissionGranted = cameraPermissionGranted,
@@ -261,7 +261,7 @@ fun EduverseApp(
         null -> null
       }
 
-  NavHost(navController = navController, startDestination = Route.LOADING) {
+  NavHost(navController = navController, startDestination = Route.CAMERA) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
