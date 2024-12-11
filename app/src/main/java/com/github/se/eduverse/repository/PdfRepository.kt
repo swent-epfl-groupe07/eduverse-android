@@ -11,6 +11,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.lowagie.text.pdf.PdfReader
 import com.lowagie.text.pdf.parser.PdfTextExtractor
@@ -71,7 +72,7 @@ class PdfRepositoryImpl : PdfRepository {
    * @throws Exception If an error occurs during the conversion process
    */
   override fun convertImageToPdf(imageUri: Uri?, context: Context): PdfDocument {
-    // Read the image bitmap from the URI
+    // Read the image bitmap from the URI, throw an exception if getImageBitmap fails
     val imageBitmap = getImageBitmap(imageUri, context)
 
     // Create a new PDF document and add the image to it
@@ -322,11 +323,14 @@ class PdfRepositoryImpl : PdfRepository {
    */
   override fun getTempFileFromUri(uri: Uri?, context: Context): File {
     try {
-      val documentType = getFileExtensionFromUri(context, uri!!)
+      // Get file extension from uri, through the uri path if not null, otherwise by querying the
+      // content resolver
+      val documentType =
+          uri?.path?.substringAfterLast(".") ?: getFileExtensionFromUri(context, uri!!)
       val tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
 
       // Make sure the input stream is correctly closed
-      context.contentResolver.openInputStream(uri).use { inputStream ->
+      context.contentResolver.openInputStream(uri!!).use { inputStream ->
         tempFile.outputStream().use { outputStream -> inputStream?.copyTo(outputStream) }
       }
           ?: throw Exception(
@@ -353,12 +357,13 @@ class PdfRepositoryImpl : PdfRepository {
       onSuccess: (String) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    // Read the image bitmap from the URI
+    // Read the image bitmap from the URI, throws an exception if getImageBitmap fails
     val imageBitmap = getImageBitmap(imageUri, context)
 
-    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    var recognizer: TextRecognizer? = null
 
     try {
+      recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
       val image = InputImage.fromBitmap(imageBitmap, 0)
       recognizer
           .process(image)
@@ -370,12 +375,12 @@ class PdfRepositoryImpl : PdfRepository {
               onFailure(Exception("No text found on the selected image, please try with another."))
             }
           }
-          .addOnFailureListener { onFailure(it) }
+          .addOnFailureListener { throw it }
     } catch (e: Exception) {
       Log.e("extractTextFromImage", "Failed to extract text from image with uri: $imageUri", e)
       onFailure(Exception("Failed to extract text from image, please try again."))
     } finally {
-      recognizer.close() // Close the recognizer client when no longer needed
+      recognizer?.close() // Close the recognizer client when no longer needed
       imageBitmap.recycle() // Recycle the image bitmap to free up memory
     }
   }
