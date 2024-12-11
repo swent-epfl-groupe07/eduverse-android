@@ -34,6 +34,10 @@ class FakeProfileRepository : ProfileRepository {
     TODO("Not yet implemented")
   }
 
+  override suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication> {
+    TODO("Not yet implemented")
+  }
+
   override suspend fun followUser(followerId: String, followedId: String) {
     TODO("Not yet implemented")
   }

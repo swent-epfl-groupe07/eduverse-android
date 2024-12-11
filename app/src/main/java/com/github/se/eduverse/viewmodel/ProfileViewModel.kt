@@ -295,13 +295,9 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
   fun loadFavoritePublications(userId: String) {
     viewModelScope.launch {
       try {
-        // Get IDs of favorited publications
         val favoriteIds = repository.getFavoritePublicationsIds(userId)
-        // Get all publications to find the full details
-        val allPublications = repository.getAllPublications()
-        // Filter to only favorited publications
-        val favoritePublicationsList = allPublications.filter { it.id in favoriteIds }
-        _favoritePublications.value = favoritePublicationsList
+        val favoritePublications = repository.getFavoritePublications(favoriteIds)
+        _favoritePublications.value = favoritePublications
       } catch (e: Exception) {
         _error.value = "Failed to load favorite publications: ${e.message}"
       }

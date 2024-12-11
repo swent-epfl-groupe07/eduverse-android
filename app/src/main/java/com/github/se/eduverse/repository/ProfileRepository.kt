@@ -67,6 +67,7 @@ interface ProfileRepository {
   suspend fun getFavoritePublicationsIds(userId: String): List<String>
 
   suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean
+    suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication>
 }
 
 open class ProfileRepositoryImpl(
@@ -617,4 +618,23 @@ open class ProfileRepositoryImpl(
       false // Return false on error rather than throwing
     }
   }
+
+    override suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication> {
+        return try {
+            if (favoriteIds.isEmpty()) {
+                return emptyList()
+            }
+
+            firestore
+                .collection("publications")
+                .whereIn("id", favoriteIds)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(Publication::class.java) }
+        } catch (e: Exception) {
+            Log.e("GET_FAVORITE_PUBS", "Failed to get favorite publications: ${e.message}")
+            emptyList()
+        }
+    }
 }
