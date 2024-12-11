@@ -25,6 +25,7 @@ object Route {
   const val LIST_FOLDERS = "ListFolders"
   const val ARCHIVE = "Archive"
   const val QUIZZ = "Quizz"
+  const val ASSISTANT = "Assistant"
 }
 
 object Screen {
@@ -54,6 +55,7 @@ object Screen {
   const val DETAILS_TASKS = "DetailsTasks screen"
   const val NOTIFICATIONS = "Notifications screen"
   const val QUIZZ = "Quizz screen"
+  const val ASSISTANT = "Assistant screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
