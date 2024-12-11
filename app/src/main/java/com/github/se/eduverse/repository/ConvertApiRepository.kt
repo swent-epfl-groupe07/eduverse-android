@@ -109,8 +109,9 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
    * @throws FileDownloadException If the download fails
    */
   private fun downloadPdfFile(fileUrl: String, pdfName: String, context: Context): File? {
-    val pdfFile = File.createTempFile(pdfName, ".pdf", context.externalCacheDir)
+    var pdfFile: File? = null
     try {
+      pdfFile = File.createTempFile(pdfName, ".pdf", context.externalCacheDir)
       val request = Request.Builder().url(fileUrl).build()
 
       val response = client.newCall(request).execute()
@@ -123,7 +124,7 @@ open class ConvertApiRepository(private val client: OkHttpClient) {
       inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
       return pdfFile
     } catch (e: Exception) {
-      pdfFile.delete()
+      pdfFile?.delete()
       throw FileDownloadException("Failed to download PDF file", e)
     }
   }
