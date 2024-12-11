@@ -355,7 +355,7 @@ class PdfRepositoryImpl : PdfRepository {
             if (extractedText.isNotEmpty()) {
               onSuccess(extractedText)
             } else {
-              onFailure(Exception("No text found on the selected image"))
+              onFailure(Exception("No text found on the selected image, please try with another."))
             }
           }
           .addOnFailureListener { onFailure(it) }
