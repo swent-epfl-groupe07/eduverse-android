@@ -18,6 +18,7 @@ import java.io.File
 import junit.framework.TestCase
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -53,9 +54,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -73,9 +74,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -95,9 +96,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -122,9 +123,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -148,9 +149,9 @@ class PdfGeneratorInstrumentationTest {
       val pdfDocument: PdfDocument =
           pdfRepository.convertImageToPdf(Uri.fromFile(imageFile), context)
 
-      val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+      val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-      assertTrue(pdfFile.exists())
+      assertTrue(pdfFile!!.exists())
 
       assert(pdfDocument.pages.size == 1)
       assert(pdfDocument.pages[0].pageWidth == it.width)
@@ -162,11 +163,18 @@ class PdfGeneratorInstrumentationTest {
   }
 
   @Test
+  fun testConvertImageToPdf_onGetImageBitmapError() {
+    assertThrows(Exception::class.java) {
+      pdfRepository.convertImageToPdf(Uri.parse("invalid uri"), context)
+    }
+  }
+
+  @Test
   fun testWriteTextToPdf() {
     val text = "This is a test text."
-    val pdfDocument: PdfDocument = pdfRepository.writeTextToPdf(text)
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
-    assertTrue(pdfFile.exists())
+    val pdfDocument: PdfDocument = pdfRepository.writeTextToPdf(text, context)
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    assertTrue(pdfFile!!.exists())
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
     assertEquals(text.replace(" ", ""), extractedText.replace(" ", ""))
     pdfFile.delete()
@@ -183,6 +191,21 @@ class PdfGeneratorInstrumentationTest {
     TestCase.assertTrue(result.name.endsWith(".docx"))
     tempFile.delete()
     result.delete()
+  }
+
+  @Test
+  fun getTempFileFromUri_invalidUri_throwsException() {
+
+    val uri = Uri.parse("content://nonexistent/file.txt")
+
+    assertThrows(Exception::class.java) { pdfRepository.getTempFileFromUri(uri, context) }
+  }
+
+  @Test
+  fun getTempFileFromUri_invalidFileType_throwsException() {
+    val uri = Uri.parse("content://invalid/file.xy")
+
+    assertThrows(Exception::class.java) { pdfRepository.getTempFileFromUri(uri, context) }
   }
 
   @Test
@@ -221,10 +244,8 @@ class PdfGeneratorInstrumentationTest {
 
   @Test
   fun testExtractTextImage_onGetImageBitmapError() {
-    pdfRepository.extractTextFromImage(
-        Uri.parse("invalid uri"),
-        context,
-        {},
-        { assertEquals("Failed to get image bitmap", it.message) })
+    assertThrows(Exception::class.java) {
+      pdfRepository.extractTextFromImage(Uri.parse("invalid uri"), context, {}, {})
+    }
   }
 }
