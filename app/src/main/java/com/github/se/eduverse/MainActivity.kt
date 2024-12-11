@@ -246,6 +246,8 @@ fun EduverseApp(
   val notifRepo = NotificationRepository(LocalContext.current, notifAuthorizations)
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
 
+  val pdfConverterViewModel: PdfConverterViewModel =
+      viewModel(factory = PdfConverterViewModel.Factory)
   val aiAssistantRepository =
       AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
 
