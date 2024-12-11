@@ -15,6 +15,7 @@ import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,7 +29,8 @@ import okhttp3.OkHttpClient
 class PdfGeneratorViewModel(
     private val pdfRepository: PdfRepository,
     private val openAiRepository: OpenAiRepository,
-    private val convertApiRepository: ConvertApiRepository
+    private val convertApiRepository: ConvertApiRepository,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
   val DEFAULT_DESTINATION_DIRECTORY =
@@ -126,7 +128,7 @@ class PdfGeneratorViewModel(
               PdfGeneratorOption.DOCUMENT_TO_PDF -> {
                 val file = pdfRepository.getTempFileFromUri(uri, context)
                 val pdfFile =
-                    withContext(Dispatchers.IO) {
+                    withContext(dispatcher) {
                       try {
                         convertApiRepository.convertToPdf(file, newFileName.value, context)
                       } catch (e: Exception) {
@@ -211,19 +213,21 @@ class PdfGeneratorViewModel(
    * @param text The text to summarize
    */
   private fun getSummary(text: String, context: Context) {
-    openAiRepository.summarizeText(
-        text,
-        onSuccess = { summary ->
-          if (summary != null) {
-            val pdfFile = pdfRepository.writeTextToPdf(summary, context)
-            currentFile =
-                pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
-          } else throw Exception("Generated summary is null")
-        },
-        onFailure = {
-          Log.e("getSummary", "Failed to get summary from openAi api", it)
-          throw Exception("Summarization failed, please try again")
-        })
+    try {
+      openAiRepository.summarizeText(
+          text,
+          onSuccess = { summary ->
+            if (summary != null) {
+              val pdfFile = pdfRepository.writeTextToPdf(summary, context)
+              currentFile =
+                  pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
+            } else throw Exception("Generated summary is null")
+          },
+          onFailure = { throw it })
+    } catch (e: Exception) {
+      Log.e("getSummary", "Failed to get summary from openAi api", e)
+      throw Exception("Summarization failed, please try again")
+    }
   }
 
   /**
