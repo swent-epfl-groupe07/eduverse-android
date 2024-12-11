@@ -27,7 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +48,6 @@ import androidx.lifecycle.OnLifecycleEvent
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.firebase.annotations.concurrent.Background
 
 /**
  * Create a bottom menu with the list of the folders of the active user
