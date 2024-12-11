@@ -84,8 +84,10 @@ fun NextScreen(
       "$mediaType/$ownerId/${System.currentTimeMillis()}.${if (photoFile != null) "jpg" else "mp4"}"
 
   val bitmap = photoFile?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
+
   val backgroundColor = MaterialTheme.colorScheme.background
-  val onBackgroundColor = MaterialTheme.colorScheme.onBackground
+  val surfaceColor = MaterialTheme.colorScheme.surface
+  val onSurfaceColor = MaterialTheme.colorScheme.onSurface
 
   Box(modifier = Modifier.fillMaxSize().background(backgroundColor).padding(16.dp)) {
     if (bitmap != null) {
@@ -164,37 +166,38 @@ fun NextScreen(
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
           StyledButton(
               text = " Add to folder", iconRes = R.drawable.add, testTag = "addToFolderButton") {
-                showBottomMenu(context, folderViewModel, backgroundColor, onBackgroundColor) {
-                  bitmap?.let { bmp ->
-                    val byteArray = imageBitmapToByteArray(bmp)
-                    val photo = Photo(ownerId, byteArray, path)
-                    photoViewModel.savePhoto(
-                        photo, it, onSuccess = { mediaSavedToast(context, "Photo") }) {
-                            id,
-                            name,
-                            folder ->
-                          folderViewModel.createFileInFolder(id, name, folder)
-                        }
-                    navigationActions.goBack()
-                    navigationActions.goBack()
-                    navigationActions.goBack()
-                  }
+                showBottomMenu(
+                    context, folderViewModel, backgroundColor, surfaceColor, onSurfaceColor) {
+                      bitmap?.let { bmp ->
+                        val byteArray = imageBitmapToByteArray(bmp)
+                        val photo = Photo(ownerId, byteArray, path)
+                        photoViewModel.savePhoto(
+                            photo, it, onSuccess = { mediaSavedToast(context, "Photo") }) {
+                                id,
+                                name,
+                                folder ->
+                              folderViewModel.createFileInFolder(id, name, folder)
+                            }
+                        navigationActions.goBack()
+                        navigationActions.goBack()
+                        navigationActions.goBack()
+                      }
 
-                  videoFile?.let { file ->
-                    val videoByteArray = file.readBytes()
-                    val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
-                    videoViewModel.saveVideo(
-                        video, it, onSuccess = { mediaSavedToast(context, "Video") }) {
-                            id,
-                            name,
-                            folder ->
-                          folderViewModel.createFileInFolder(id, name, folder)
-                        }
-                    navigationActions.goBack()
-                    navigationActions.goBack()
-                    navigationActions.goBack()
-                  }
-                }
+                      videoFile?.let { file ->
+                        val videoByteArray = file.readBytes()
+                        val video = Video(ownerId, videoByteArray, path.replace(".jpg", ".mp4"))
+                        videoViewModel.saveVideo(
+                            video, it, onSuccess = { mediaSavedToast(context, "Video") }) {
+                                id,
+                                name,
+                                folder ->
+                              folderViewModel.createFileInFolder(id, name, folder)
+                            }
+                        navigationActions.goBack()
+                        navigationActions.goBack()
+                        navigationActions.goBack()
+                      }
+                    }
               }
           StyledButton(
               text = " More options",
@@ -378,7 +381,7 @@ fun NextScreen(
           Icon(
               imageVector = Icons.Default.Close,
               contentDescription = "Close button",
-              tint = onBackgroundColor,
+              tint = MaterialTheme.colorScheme.onBackground,
               modifier = Modifier.size(32.dp).align(Alignment.Center))
         }
   }

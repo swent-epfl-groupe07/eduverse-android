@@ -61,6 +61,7 @@ fun showBottomMenu(
     context: Context,
     folderViewModel: FolderViewModel,
     backgroundColor: Color,
+    surfaceColor: Color,
     contentColor: Color,
     select: (Folder) -> Unit
 ) {
@@ -87,7 +88,7 @@ fun showBottomMenu(
                             bottomSheetDialog.dismiss()
                           }
                           .testTag("folder_button${folder.id}"),
-                  backgroundColor = backgroundColor,
+                  backgroundColor = surfaceColor,
                   contentColor = contentColor,
                   elevation = 4.dp) {
                     Text(
