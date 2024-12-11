@@ -133,7 +133,7 @@ fun DeleteFileDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     Column(
         modifier =
             Modifier.clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFE0F7FA))
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
                 .padding(16.dp)
                 .testTag("confirm")) {
           Text("Are you sure you want to delete this file ?")
@@ -179,7 +179,8 @@ fun RenameFileDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
             modifier = Modifier.testTag("textField"),
             onValueChange = { name = it },
             label = { Text("Enter new name") })
-      })
+      },
+      backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background)
 }
 
 @Composable
