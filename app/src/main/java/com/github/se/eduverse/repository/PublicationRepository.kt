@@ -3,6 +3,7 @@ package com.github.se.eduverse.repository
 import com.github.se.eduverse.model.Publication
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.UUID
 import kotlinx.coroutines.tasks.await
 
 open class PublicationRepository(private val db: FirebaseFirestore) {
@@ -12,20 +13,17 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
       limit: Long = 20
   ): List<Publication> {
     return try {
-      val filter =
-          if (followed.isEmpty()) {
-            Filter.notEqualTo("mediaUrl", null) // Only take publications and not comments
-          } else {
-            Filter.and(Filter.notEqualTo("mediaUrl", null), Filter.inArray("userId", followed))
-          }
+      val random = UUID.randomUUID().toString()
       db.collection("publications")
-          .where(filter)
+          .orderBy("id")
+          .startAt(random)
+          .whereIn("userId", followed)
+          .limit(limit)
           .get()
           .await()
           .documents
-          .shuffled()
-          .take(limit.toInt())
           .mapNotNull { it.toObject(Publication::class.java) }
+          .shuffled()
     } catch (e: Exception) {
       emptyList()
     }
