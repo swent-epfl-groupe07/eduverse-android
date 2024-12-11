@@ -94,7 +94,7 @@ import java.io.File
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 
-var isAppInDarkMode by mutableStateOf(true)
+var isAppInDarkMode by mutableStateOf(false)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -261,7 +261,7 @@ fun EduverseApp(
         null -> null
       }
 
-  NavHost(navController = navController, startDestination = Route.CAMERA) {
+  NavHost(navController = navController, startDestination = Route.LOADING) {
     navigation(
         startDestination = Screen.LOADING,
         route = Route.LOADING,
