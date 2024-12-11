@@ -39,6 +39,7 @@ class PdfGeneratorViewModelTest {
   private lateinit var convertApiRepository: ConvertApiRepository
 
   private val testDispatcher = StandardTestDispatcher()
+  private val mockIoDispatcher = UnconfinedTestDispatcher()
 
   @Before
   fun setup() {
@@ -49,9 +50,11 @@ class PdfGeneratorViewModelTest {
     file = mock(File::class.java)
     openAiRepository = mock(OpenAiRepository::class.java)
     convertApiRepository = mock(ConvertApiRepository::class.java)
-    viewModel = PdfGeneratorViewModel(pdfRepository, openAiRepository, convertApiRepository)
+    viewModel =
+        PdfGeneratorViewModel(
+            pdfRepository, openAiRepository, convertApiRepository, mockIoDispatcher)
     pdfDocument = mock(PdfDocument::class.java)
-    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
+    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test", context)).thenReturn(file)
     `when`(pdfRepository.readTextFromPdfFile(uri, context, viewModel.MAX_SUMMARY_INPUT_SIZE))
         .thenReturn("This is a test text.")
   }
@@ -69,10 +72,14 @@ class PdfGeneratorViewModelTest {
 
   @Test
   fun `test generatePdf when conversion error`() = runTest {
-    `when`(pdfRepository.convertImageToPdf(uri, context)).then { throw Exception() }
+    `when`(pdfRepository.convertImageToPdf(uri, context)).then {
+      throw Exception("Image conversion failed")
+    }
     viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Image conversion failed"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -101,17 +108,36 @@ class PdfGeneratorViewModelTest {
   fun `test generatePdf with DOCUMENT_TO_PDF option`() = runTest {
     val document = mock(File::class.java)
     `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(document)
-    `when`(convertApiRepository.convertToPdf(any(), any())).thenReturn(file)
+    `when`(convertApiRepository.convertToPdf(any(), any(), any())).thenReturn(file)
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.DOCUMENT_TO_PDF)
     advanceUntilIdle()
-    verify(convertApiRepository).convertToPdf(eq(document), eq("test"))
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test generatePdf with DOCUMENT_TO_PDF option on conversion failure`() = runTest {
+    val tempFile = mock<File>()
+    `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(tempFile)
+    `when`(convertApiRepository.convertToPdf(tempFile, "test", context)).then {
+      throw (Exception("Conversion error"))
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.DOCUMENT_TO_PDF)
+    advanceUntilIdle()
+
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error(
+            "Document conversion failed, please try again"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test generatePdf with SUMMARIZE_FILE option`() = runTest {
     val summary = "This is a summarized text."
-    `when`(pdfRepository.writeTextToPdf(summary)).thenReturn(pdfDocument)
+    `when`(pdfRepository.writeTextToPdf(summary, context)).thenReturn(pdfDocument)
     `when`(openAiRepository.summarizeText(any(), any(), any())).then {
       it.getArgument<(String?) -> Unit>(1)(summary)
     }
@@ -131,7 +157,9 @@ class PdfGeneratorViewModelTest {
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Summarization failed, please try again"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -143,25 +171,29 @@ class PdfGeneratorViewModelTest {
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Summarization failed, please try again"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test generatePdf with EXTRACT_TEXT option on extraction failure`() = runTest {
     `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
-      it.getArgument<(Exception) -> Unit>(3)(Exception())
+      it.getArgument<(Exception) -> Unit>(3)(Exception("Text extraction failed"))
     }
 
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.EXTRACT_TEXT)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Text extraction failed"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test generatePdf with EXTRACT_TEXT option on extraction success`() = runTest {
     val extractedText = "Test extracted text."
-    `when`(pdfRepository.writeTextToPdf(extractedText)).thenReturn(pdfDocument)
+    `when`(pdfRepository.writeTextToPdf(extractedText, context)).thenReturn(pdfDocument)
     `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
       it.getArgument<(String) -> Unit>(2)(extractedText)
     }
@@ -183,7 +215,9 @@ class PdfGeneratorViewModelTest {
   fun `test generatePdf with NONE option throws exception`() = runTest {
     viewModel.generatePdf(uri, context, PdfGeneratorOption.NONE)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("No converter option selected"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
