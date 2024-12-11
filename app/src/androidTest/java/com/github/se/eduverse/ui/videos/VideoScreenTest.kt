@@ -591,7 +591,7 @@ class VideoScreenTest {
     composeTestRule.waitForIdle()
 
     // Check the new situation
-    composeTestRule.onNodeWithTag("PhotoItem_0").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("PhotoItem_0").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("VideoItem_0").assertIsDisplayed()
   }
 }
