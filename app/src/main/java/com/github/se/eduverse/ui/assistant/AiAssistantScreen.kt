@@ -16,23 +16,18 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.github.se.eduverse.repository.AiAssistantRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.viewmodel.AiAssistantViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun AiAssistantScreen(
-    navigationActions: NavigationActions,
-    assistantRepository: AiAssistantRepository
-) {
-  // A list of (question, answer) pairs representing the conversation
-  val conversation = remember { mutableStateListOf<Pair<String, String>>() }
+fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssistantViewModel) {
+  val conversation by viewModel.conversation.collectAsState()
+  val isLoading by viewModel.isLoading.collectAsState()
+  val errorMessage by viewModel.errorMessage.collectAsState()
 
   var userQuestion by remember { mutableStateOf("") }
-  var isLoading by remember { mutableStateOf(false) }
-  var errorMessage by remember { mutableStateOf<String?>(null) }
-
   val focusManager = LocalFocusManager.current
   val scope = rememberCoroutineScope()
 
@@ -42,10 +37,9 @@ fun AiAssistantScreen(
         Column(
             modifier =
                 Modifier.fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background) // Use a nice background color
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .testTag("aiAssistantChatScreen")) {
-              // Display the conversation in a LazyColumn
               LazyColumn(
                   modifier =
                       Modifier.fillMaxWidth()
@@ -59,7 +53,6 @@ fun AiAssistantScreen(
                               Modifier.fillMaxWidth()
                                   .padding(vertical = 8.dp)
                                   .testTag("messageItem")) {
-                            // User question bubble (aligned to the end - right)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End) {
@@ -79,7 +72,6 @@ fun AiAssistantScreen(
 
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            // Assistant answer bubble (aligned to the start - left)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Start) {
@@ -99,7 +91,6 @@ fun AiAssistantScreen(
                     }
                   }
 
-              // Display error message if any and not loading
               if (errorMessage != null && !isLoading) {
                 Text(
                     text = errorMessage!!,
@@ -108,7 +99,6 @@ fun AiAssistantScreen(
                     fontWeight = FontWeight.Bold)
               }
 
-              // Display loading indicator if needed
               if (isLoading) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(8.dp).testTag("assistantLoadingRow"),
@@ -119,7 +109,6 @@ fun AiAssistantScreen(
                     }
               }
 
-              // Input field and send button at the bottom
               Row(
                   modifier =
                       Modifier.fillMaxWidth()
@@ -144,19 +133,8 @@ fun AiAssistantScreen(
                           focusManager.clearFocus()
                           if (userQuestion.isNotBlank()) {
                             scope.launch {
-                              isLoading = true
-                              errorMessage = null
-                              val currentQuestion = userQuestion
+                              viewModel.sendQuestion(userQuestion)
                               userQuestion = ""
-                              try {
-                                val response = assistantRepository.askAssistant(currentQuestion)
-                                // Add the new Q&A pair to the conversation
-                                conversation.add(currentQuestion to response)
-                              } catch (e: Exception) {
-                                errorMessage = "An error occurred. Please try again."
-                              } finally {
-                                isLoading = false
-                              }
                             }
                           }
                         },

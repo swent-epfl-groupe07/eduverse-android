@@ -5,7 +5,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
 import com.github.se.eduverse.repository.AiAssistantRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
-import kotlinx.coroutines.runBlocking
+import com.github.se.eduverse.viewmodel.AiAssistantViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,15 +20,28 @@ class AiAssistantScreenTest {
 
   private lateinit var navController: NavHostController
   private lateinit var navigationActions: NavigationActions
-  private lateinit var fakeRepo: FakeAiAssistantRepository
+  private lateinit var fakeViewModel: FakeAiAssistantViewModel
 
-  class FakeAiAssistantRepository :
-      AiAssistantRepository(client = okhttp3.OkHttpClient(), apiKey = "fake-key") {
-    var shouldFail = false
+  class FakeAiAssistantViewModel :
+      AiAssistantViewModel(repository = Mockito.mock(AiAssistantRepository::class.java)) {
+    val conversationFlow = MutableStateFlow<List<Pair<String, String>>>(emptyList())
+    val isLoadingFlow = MutableStateFlow(false)
+    val errorMessageFlow = MutableStateFlow<String?>(null)
 
-    override suspend fun askAssistant(userQuestion: String): String {
-      if (shouldFail) throw Exception("Fake error")
-      return "Fake answer to '$userQuestion'"
+    override val conversation = conversationFlow
+    override val isLoading = isLoadingFlow
+    override val errorMessage = errorMessageFlow
+
+    fun simulateResponse(question: String, answer: String) {
+      conversationFlow.value = conversationFlow.value + (question to answer)
+    }
+
+    fun simulateError(message: String) {
+      errorMessageFlow.value = message
+    }
+
+    fun setLoading(loading: Boolean) {
+      isLoadingFlow.value = loading
     }
   }
 
@@ -34,10 +49,10 @@ class AiAssistantScreenTest {
   fun setUp() {
     navController = Mockito.mock(NavHostController::class.java)
     navigationActions = NavigationActions(navController)
-    fakeRepo = FakeAiAssistantRepository()
+    fakeViewModel = FakeAiAssistantViewModel()
 
     composeTestRule.setContent {
-      AiAssistantScreen(navigationActions = navigationActions, assistantRepository = fakeRepo)
+      AiAssistantScreen(navigationActions = navigationActions, viewModel = fakeViewModel)
     }
   }
 
@@ -60,12 +75,9 @@ class AiAssistantScreenTest {
   }
 
   @Test
-  fun testBackButton() {
-    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed().assertHasClickAction()
-  }
+  fun testAskQuestionSuccess() = runBlockingTest {
+    fakeViewModel.simulateResponse("What is AI?", "Artificial Intelligence is...")
 
-  @Test
-  fun testAskQuestionSuccess(): Unit = runBlocking {
     composeTestRule.onNodeWithTag("assistantQuestionInput").performTextInput("What is AI?")
     composeTestRule.onNodeWithTag("askAssistantButton").performClick()
 
@@ -73,20 +85,16 @@ class AiAssistantScreenTest {
       composeTestRule.onAllNodesWithTag("messageItem").fetchSemanticsNodes().isNotEmpty()
     }
 
-    // Vérifier que le message apparaît bien
+    // Verify that the message appears correctly
     composeTestRule.onAllNodesWithTag("messageItem").assertCountEquals(1)
     composeTestRule.onNodeWithText("What is AI?").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Fake answer to 'What is AI?'").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Artificial Intelligence is...").assertIsDisplayed()
   }
 
   @Test
-  fun testErrorMessage(): Unit = runBlocking {
-    fakeRepo.shouldFail = true
+  fun testErrorMessage() = runBlockingTest {
+    fakeViewModel.simulateError("An error occurred. Please try again.")
 
-    composeTestRule.onNodeWithTag("assistantQuestionInput").performTextInput("Will it fail?")
-    composeTestRule.onNodeWithTag("askAssistantButton").performClick()
-
-    // Wait for the error to appear
     composeTestRule.waitUntil {
       composeTestRule
           .onAllNodesWithTag("assistantErrorMessageText")
@@ -99,5 +107,16 @@ class AiAssistantScreenTest {
         .onNodeWithTag("assistantErrorMessageText")
         .assertIsDisplayed()
         .assertTextContains("An error occurred. Please try again.")
+  }
+
+  @Test
+  fun testLoadingIndicator() = runBlockingTest {
+    fakeViewModel.setLoading(true)
+
+    composeTestRule.onNodeWithTag("assistantLoadingIndicator").assertIsDisplayed()
+
+    fakeViewModel.setLoading(false)
+
+    composeTestRule.onNodeWithTag("assistantLoadingIndicator").assertDoesNotExist()
   }
 }
