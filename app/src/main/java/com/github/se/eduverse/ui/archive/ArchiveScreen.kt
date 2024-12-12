@@ -57,15 +57,15 @@ fun ArchiveScreen(
                               folderViewModel.showOfflineMessage(context)
                             }
                           }
-                        }
-                        .testTag("folderCard${it.id}"),
-                backgroundColor = MaterialTheme.colorScheme.surface,
-                elevation = 4.dp) {
-                  Text(
-                      text = it.name,
-                      modifier = Modifier.padding(16.dp),
-                      style = androidx.compose.material.MaterialTheme.typography.h6)
-                }
+                          .testTag("folderCard${it.id}"),
+                  backgroundColor = MaterialTheme.colorScheme.surface,
+                  elevation = 4.dp) {
+                    Text(
+                        text = it.name,
+                        modifier = Modifier.padding(16.dp),
+                        style = androidx.compose.material.MaterialTheme.typography.h6)
+                  }
+            }
           }
         }
       }
