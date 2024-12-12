@@ -65,218 +65,213 @@ fun FolderScreen(
     fileViewModel: FileViewModel,
     context: Context = LocalContext.current
 ) {
-    val activeFolder by folderViewModel.activeFolder.collectAsState()
+  val activeFolder by folderViewModel.activeFolder.collectAsState()
 
-    var sorting by remember { mutableStateOf(false) }
-    var deleteDialogOpen by remember { mutableStateOf(false) }
-    var renameDialogOpen by remember { mutableStateOf(false) }
-    var modifiedFile by remember { mutableStateOf<MyFile?>(null) }
-    val validNewFile by fileViewModel.validNewFile.collectAsState()
+  var sorting by remember { mutableStateOf(false) }
+  var deleteDialogOpen by remember { mutableStateOf(false) }
+  var renameDialogOpen by remember { mutableStateOf(false) }
+  var modifiedFile by remember { mutableStateOf<MyFile?>(null) }
+  val validNewFile by fileViewModel.validNewFile.collectAsState()
 
-    var trigger by remember { mutableIntStateOf(0) }
+  var trigger by remember { mutableIntStateOf(0) }
 
-    if (validNewFile) activeFolder!!.files.add(fileViewModel.getNewFile()!!)
+  if (validNewFile) activeFolder!!.files.add(fileViewModel.getNewFile()!!)
 
-    folderViewModel.updateFolder(activeFolder!!)
+  folderViewModel.updateFolder(activeFolder!!)
 
-    Scaffold(
-        modifier = Modifier.testTag("scaffold"),
-        topBar = {
-            TopNavigationBar(
-                navigationActions = navigationActions,
-                screenTitle = activeFolder!!.name,
-                actions = {
-                    IconButton(
-                        onClick = {
-                            if (context.isNetworkAvailable()) {
-                                folderViewModel.archiveFolder(activeFolder!!)
-                                navigationActions.goBack()
-                            } else {
-                                folderViewModel.showOfflineMessage(context)
-                            }
-                        },
-                        modifier = Modifier.testTag("archive")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Archive,
-                            contentDescription = "Archive"
-                        )
-                    }
-                }
-            )
-        },
-                bottomBar = {
-            BottomNavigationMenu(
-                { navigationActions.navigateTo(it) },
-                LIST_TOP_LEVEL_DESTINATION,
-                "") // No item is selected, as it is not one of the screens on the bottom bar
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
+  Scaffold(
+      modifier = Modifier.testTag("scaffold"),
+      topBar = {
+        TopNavigationBar(
+            navigationActions = navigationActions,
+            screenTitle = activeFolder!!.name,
+            actions = {
+              IconButton(
+                  onClick = {
                     if (context.isNetworkAvailable()) {
-                        navigationActions.navigateTo(Screen.CREATE_FILE)
+                      folderViewModel.archiveFolder(activeFolder!!)
+                      navigationActions.goBack()
                     } else {
-                        folderViewModel.showOfflineMessage(context)
+                      folderViewModel.showOfflineMessage(context)
                     }
-                },
-                modifier = Modifier.testTag("createFile"),
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
-                Icon(Icons.Default.Add, contentDescription = "Create File")
+                  },
+                  modifier = Modifier.testTag("archive")) {
+                    Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                  }
+            })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            { navigationActions.navigateTo(it) },
+            LIST_TOP_LEVEL_DESTINATION,
+            "") // No item is selected, as it is not one of the screens on the bottom bar
+      },
+      floatingActionButton = {
+        FloatingActionButton(
+            onClick = {
+              if (context.isNetworkAvailable()) {
+                navigationActions.navigateTo(Screen.CREATE_FILE)
+              } else {
+                folderViewModel.showOfflineMessage(context)
+              }
+            },
+            modifier = Modifier.testTag("createFile"),
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
+              Icon(Icons.Default.Add, contentDescription = "Create File")
             }
-        }) { padding ->
+      }) { padding ->
         if (deleteDialogOpen) {
-            DeleteFileDialog(
-                onDismiss = {
-                    modifiedFile = null
-                    deleteDialogOpen = false
-                },
-                onConfirm = {
-                    fileViewModel.deleteFile(modifiedFile!!.fileId) {
-                        folderViewModel.updateFolder(
-                            activeFolder!!.apply { files.remove(modifiedFile!!) })
-                        modifiedFile = null
+          DeleteFileDialog(
+              onDismiss = {
+                modifiedFile = null
+                deleteDialogOpen = false
+              },
+              onConfirm = {
+                fileViewModel.deleteFile(modifiedFile!!.fileId) {
+                  folderViewModel.updateFolder(
+                      activeFolder!!.apply { files.remove(modifiedFile!!) })
+                  modifiedFile = null
 
-                        // As the value of activeFolder is not modified but its content is,
-                        // we need to force recomposition. This is the point of trigger.
-                        trigger += 1
-                    }
-                    deleteDialogOpen = false
-                })
+                  // As the value of activeFolder is not modified but its content is,
+                  // we need to force recomposition. This is the point of trigger.
+                  trigger += 1
+                }
+                deleteDialogOpen = false
+              })
         }
 
         if (renameDialogOpen) {
-            RenameFileDialog(
-                onDismiss = {
-                    modifiedFile = null
-                    renameDialogOpen = false
-                },
-                onConfirm = { newName ->
-                    modifiedFile?.name = newName
-                    folderViewModel.updateFolder(activeFolder!!)
-                    modifiedFile = null
-                    renameDialogOpen = false
-                })
+          RenameFileDialog(
+              onDismiss = {
+                modifiedFile = null
+                renameDialogOpen = false
+              },
+              onConfirm = { newName ->
+                modifiedFile?.name = newName
+                folderViewModel.updateFolder(activeFolder!!)
+                modifiedFile = null
+                renameDialogOpen = false
+              })
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding).testTag("column"),
         ) {
-            item {
-                // The text saying Files and the button to sort
-                Row(
-                    modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Files",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
-                        modifier = Modifier.testTag("textFiles"))
-                    Box {
-                        Button(
-                            onClick = { sorting = true },
-                            modifier = Modifier.testTag("sortingButton"),
-                            colors = transparentButtonColor(MaterialTheme.colorScheme.onBackground),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)) {
-                            Icon(Icons.AutoMirrored.Filled.List, "Sort files")
-                        }
-                        DropdownMenu(
-                            expanded = sorting,
-                            modifier = Modifier.width(IntrinsicSize.Min),
-                            onDismissRequest = { sorting = false },
-                            properties = PopupProperties(focusable = false)) {
-                            DropdownMenuItem(
-                                text = { Text("Alphabetic", modifier = Modifier.fillMaxWidth()) },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode1"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.NAME)
-                                    sorting = false
-                                })
-                            DropdownMenuItem(
-                                text = { Text("Newest", modifier = Modifier.fillMaxWidth()) },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode2"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.CREATION_UP)
-                                    sorting = false
-                                })
-                            DropdownMenuItem(
-                                text = { Text("Oldest", modifier = Modifier.fillMaxWidth()) },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode3"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
-                                    sorting = false
-                                })
-                            DropdownMenuItem(
-                                text = {
-                                    Text("Recently accessed", modifier = Modifier.fillMaxWidth())
-                                },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode4"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
-                                    sorting = false
-                                })
-                            DropdownMenuItem(
-                                text = { Text("Oldest access", modifier = Modifier.fillMaxWidth()) },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode5"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
-                                    sorting = false
-                                })
-                            DropdownMenuItem(
-                                text = { Text("Most accessed", modifier = Modifier.fillMaxWidth()) },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode6"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
-                                    sorting = false
-                                })
-                            DropdownMenuItem(
-                                text = { Text("Least accessed", modifier = Modifier.fillMaxWidth()) },
-                                modifier = Modifier.fillMaxWidth().testTag("sortMode7"),
-                                onClick = {
-                                    folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
-                                    sorting = false
-                                })
-                        }
-                    }
-                }
-
-                // The files
-                activeFolder?.files?.forEach {
-                    @Suppress("UNUSED_EXPRESSION")
-                    trigger // Force recomposition by adding dependency on a state flow
-
+          item {
+            // The text saying Files and the button to sort
+            Row(
+                modifier = Modifier.padding(20.dp, 15.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                  Text(
+                      "Files",
+                      fontWeight = FontWeight.Bold,
+                      fontSize = 24.sp,
+                      modifier = Modifier.testTag("textFiles"))
+                  Box {
                     Button(
-                        onClick = {
-                            it.lastAccess = Calendar.getInstance()
-                            it.numberAccess += 1
-                            folderViewModel.updateFolder(activeFolder!!)
-                            fileViewModel.openFile(it.fileId, context)
-                        },
-                        modifier = Modifier.fillMaxWidth().padding(20.dp, 3.dp).testTag(it.name),
-                        colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary)) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.CenterStart) {
-                            Text(it.name)
-                            EditFileMenu(
-                                modifier = Modifier.align(Alignment.CenterEnd),
-                                onRename = {
-                                    modifiedFile = it
-                                    renameDialogOpen = true
-                                },
-                                onDelete = {
-                                    modifiedFile = it
-                                    deleteDialogOpen = true
-                                })
+                        onClick = { sorting = true },
+                        modifier = Modifier.testTag("sortingButton"),
+                        colors = transparentButtonColor(MaterialTheme.colorScheme.onBackground),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)) {
+                          Icon(Icons.AutoMirrored.Filled.List, "Sort files")
                         }
-                    }
+                    DropdownMenu(
+                        expanded = sorting,
+                        modifier = Modifier.width(IntrinsicSize.Min),
+                        onDismissRequest = { sorting = false },
+                        properties = PopupProperties(focusable = false)) {
+                          DropdownMenuItem(
+                              text = { Text("Alphabetic", modifier = Modifier.fillMaxWidth()) },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode1"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.NAME)
+                                sorting = false
+                              })
+                          DropdownMenuItem(
+                              text = { Text("Newest", modifier = Modifier.fillMaxWidth()) },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode2"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.CREATION_UP)
+                                sorting = false
+                              })
+                          DropdownMenuItem(
+                              text = { Text("Oldest", modifier = Modifier.fillMaxWidth()) },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode3"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.CREATION_DOWN)
+                                sorting = false
+                              })
+                          DropdownMenuItem(
+                              text = {
+                                Text("Recently accessed", modifier = Modifier.fillMaxWidth())
+                              },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode4"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.ACCESS_RECENT)
+                                sorting = false
+                              })
+                          DropdownMenuItem(
+                              text = { Text("Oldest access", modifier = Modifier.fillMaxWidth()) },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode5"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.ACCESS_OLD)
+                                sorting = false
+                              })
+                          DropdownMenuItem(
+                              text = { Text("Most accessed", modifier = Modifier.fillMaxWidth()) },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode6"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.ACCESS_MOST)
+                                sorting = false
+                              })
+                          DropdownMenuItem(
+                              text = { Text("Least accessed", modifier = Modifier.fillMaxWidth()) },
+                              modifier = Modifier.fillMaxWidth().testTag("sortMode7"),
+                              onClick = {
+                                folderViewModel.sortBy(FilterTypes.ACCESS_LEAST)
+                                sorting = false
+                              })
+                        }
+                  }
                 }
+
+            // The files
+            activeFolder?.files?.forEach {
+              @Suppress("UNUSED_EXPRESSION")
+              trigger // Force recomposition by adding dependency on a state flow
+
+              Button(
+                  onClick = {
+                    it.lastAccess = Calendar.getInstance()
+                    it.numberAccess += 1
+                    folderViewModel.updateFolder(activeFolder!!)
+                    fileViewModel.openFile(it.fileId, context)
+                  },
+                  modifier = Modifier.fillMaxWidth().padding(20.dp, 3.dp).testTag(it.name),
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = MaterialTheme.colorScheme.primary,
+                          contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterStart) {
+                          Text(it.name)
+                          EditFileMenu(
+                              modifier = Modifier.align(Alignment.CenterEnd),
+                              onRename = {
+                                modifiedFile = it
+                                renameDialogOpen = true
+                              },
+                              onDelete = {
+                                modifiedFile = it
+                                deleteDialogOpen = true
+                              })
+                        }
+                  }
             }
+          }
         }
-    }
+      }
 }
