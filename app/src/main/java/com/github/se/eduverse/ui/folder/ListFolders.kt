@@ -69,7 +69,13 @@ fun ListFoldersScreen(
         TopNavigationBar("My Courses", navigationActions) {
             if (isSelectMode) {
                 IconButton(
-                    onClick = { deleteDialogOpen = true },
+                    onClick = {
+                        if (context.isNetworkAvailable()) {
+                            deleteDialogOpen = true
+                        } else {
+                            folderViewModel.showOfflineMessage(context)
+                        }
+                    },
                     modifier = Modifier.testTag("delete")) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
                 }
