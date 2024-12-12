@@ -12,7 +12,7 @@ import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.showToast
-import com.github.se.eduverse.ui.converter.PdfConverterOption
+import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
-class PdfConverterViewModel(
+class PdfGeneratorViewModel(
     private val pdfRepository: PdfRepository,
     private val openAiRepository: OpenAiRepository,
     private val convertApiRepository: ConvertApiRepository
@@ -64,7 +64,7 @@ class PdfConverterViewModel(
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PdfConverterViewModel(
+            return PdfGeneratorViewModel(
                 PdfRepositoryImpl(),
                 OpenAiRepository(OkHttpClient()),
                 ConvertApiRepository(OkHttpClient()))
@@ -91,21 +91,21 @@ class PdfConverterViewModel(
    * @param context The context of the application
    * @param converterOption The option to use to convert the file to PDF
    */
-  fun generatePdf(uri: Uri?, context: Context, converterOption: PdfConverterOption) {
+  fun generatePdf(uri: Uri?, context: Context, converterOption: PdfGeneratorOption) {
     _pdfGenerationState.value = PdfGenerationState.InProgress
     pdfGenerationJob =
         viewModelScope.launch {
           try {
             when (converterOption) {
-              PdfConverterOption.IMAGE_TO_PDF -> {
+              PdfGeneratorOption.IMAGE_TO_PDF -> {
                 val pdfFile = pdfRepository.convertImageToPdf(uri, context)
                 currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
               }
-              PdfConverterOption.TEXT_TO_PDF -> {
+              PdfGeneratorOption.TEXT_TO_PDF -> {
                 val pdfFile = pdfRepository.convertTextToPdf(uri, context)
                 currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
               }
-              PdfConverterOption.DOCUMENT_TO_PDF -> {
+              PdfGeneratorOption.DOCUMENT_TO_PDF -> {
                 val file = pdfRepository.getTempFileFromUri(uri, context)
                 val pdfFile =
                     withContext(Dispatchers.IO) {
@@ -113,14 +113,14 @@ class PdfConverterViewModel(
                     }
                 currentFile = pdfFile
               }
-              PdfConverterOption.SUMMARIZE_FILE -> {
+              PdfGeneratorOption.SUMMARIZE_FILE -> {
                 val text = pdfRepository.readTextFromPdfFile(uri, context, MAX_SUMMARY_INPUT_SIZE)
                 getSummary(text)
               }
-              PdfConverterOption.EXTRACT_TEXT -> {
+              PdfGeneratorOption.EXTRACT_TEXT -> {
                 extractTextToPdf(uri, context)
               }
-              PdfConverterOption.NONE ->
+              PdfGeneratorOption.NONE ->
                   throw Exception("No converter option selected") // Should never happen
             }
             delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
