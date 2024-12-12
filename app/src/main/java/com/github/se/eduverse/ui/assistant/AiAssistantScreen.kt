@@ -21,16 +21,26 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.AiAssistantViewModel
 import kotlinx.coroutines.launch
 
+/**
+ * Composable function that represents the AI Assistant screen. This screen allows users to interact
+ * with an AI assistant by sending questions and receiving answers in a chat-like interface.
+ *
+ * @param navigationActions Object used for handling navigation actions.
+ * @param viewModel ViewModel instance that manages the state and logic for the AI assistant.
+ */
 @Composable
 fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssistantViewModel) {
+  // Collecting state from the ViewModel
   val conversation by viewModel.conversation.collectAsState()
   val isLoading by viewModel.isLoading.collectAsState()
   val errorMessage by viewModel.errorMessage.collectAsState()
 
+  // State for managing the user's question input
   var userQuestion by remember { mutableStateOf("") }
   val focusManager = LocalFocusManager.current
   val scope = rememberCoroutineScope()
 
+  // Scaffold for handling the screen layout
   Scaffold(
       topBar = { TopNavigationBar("AI Assistant", navigationActions) },
       modifier = Modifier.testTag("aiAssistantChatScreenScaffold")) { paddingValues ->
@@ -40,6 +50,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .testTag("aiAssistantChatScreen")) {
+              // LazyColumn to display the conversation (user questions and AI answers)
               LazyColumn(
                   modifier =
                       Modifier.fillMaxWidth()
@@ -53,6 +64,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                               Modifier.fillMaxWidth()
                                   .padding(vertical = 8.dp)
                                   .testTag("messageItem")) {
+                            // User's question bubble
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End) {
@@ -72,6 +84,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
 
                             Spacer(modifier = Modifier.height(4.dp))
 
+                            // AI's answer bubble
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Start) {
@@ -91,6 +104,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     }
                   }
 
+              // Display an error message if any, and loading state is not active
               if (errorMessage != null && !isLoading) {
                 Text(
                     text = errorMessage!!,
@@ -99,6 +113,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     fontWeight = FontWeight.Bold)
               }
 
+              // Display a loading indicator if loading is active
               if (isLoading) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(8.dp).testTag("assistantLoadingRow"),
@@ -109,6 +124,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     }
               }
 
+              // Input row for the user to type questions and send them
               Row(
                   modifier =
                       Modifier.fillMaxWidth()
@@ -128,6 +144,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
 
                     Spacer(modifier = Modifier.width(8.dp))
 
+                    // Button to send the question
                     Button(
                         onClick = {
                           focusManager.clearFocus()

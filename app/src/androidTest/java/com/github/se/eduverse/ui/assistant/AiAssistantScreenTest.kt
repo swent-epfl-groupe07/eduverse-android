@@ -13,17 +13,26 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
 
-// UI tests for AiAssistantScreen.
+/**
+ * UI tests for the AiAssistantScreen. These tests validate the visual and interactive components of
+ * the AI Assistant screen.
+ */
 class AiAssistantScreenTest {
 
+  /** Rule for managing Compose testing lifecycle. */
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var navController: NavHostController
   private lateinit var navigationActions: NavigationActions
   private lateinit var fakeViewModel: FakeAiAssistantViewModel
 
+  /**
+   * A fake ViewModel implementation for testing purposes. Allows the simulation of various
+   * ViewModel states.
+   */
   class FakeAiAssistantViewModel :
       AiAssistantViewModel(repository = Mockito.mock(AiAssistantRepository::class.java)) {
+
     val conversationFlow = MutableStateFlow<List<Pair<String, String>>>(emptyList())
     val isLoadingFlow = MutableStateFlow(false)
     val errorMessageFlow = MutableStateFlow<String?>(null)
@@ -32,19 +41,36 @@ class AiAssistantScreenTest {
     override val isLoading = isLoadingFlow
     override val errorMessage = errorMessageFlow
 
+    /**
+     * Simulates a new response from the AI assistant.
+     *
+     * @param question The user's question.
+     * @param answer The assistant's response.
+     */
     fun simulateResponse(question: String, answer: String) {
       conversationFlow.value = conversationFlow.value + (question to answer)
     }
 
+    /**
+     * Simulates an error state with a given message.
+     *
+     * @param message The error message to simulate.
+     */
     fun simulateError(message: String) {
       errorMessageFlow.value = message
     }
 
+    /**
+     * Simulates the loading state.
+     *
+     * @param loading Whether the screen should display a loading indicator.
+     */
     fun setLoading(loading: Boolean) {
       isLoadingFlow.value = loading
     }
   }
 
+  /** Sets up the test environment before each test. */
   @Before
   fun setUp() {
     navController = Mockito.mock(NavHostController::class.java)
@@ -56,24 +82,19 @@ class AiAssistantScreenTest {
     }
   }
 
+  /** Verifies the initial state and visibility of UI elements. */
   @Test
   fun testInitialUIElements() {
-    // Check main layout
     composeTestRule.onNodeWithTag("aiAssistantChatScreenScaffold").assertIsDisplayed()
     composeTestRule.onNodeWithTag("aiAssistantChatScreen").assertIsDisplayed()
-
-    // Message list
     composeTestRule.onNodeWithTag("aiAssistantMessageList").assertIsDisplayed()
-
-    // Input field and related tags
     composeTestRule.onNodeWithTag("assistantInputRow").assertIsDisplayed()
     composeTestRule.onNodeWithTag("assistantQuestionInput").assertIsDisplayed()
-
     composeTestRule.onNodeWithText("Ask a question").assertIsDisplayed()
-
     composeTestRule.onNodeWithTag("askAssistantButton").assertIsDisplayed().assertHasClickAction()
   }
 
+  /** Verifies the correct display of a question and answer in the conversation list. */
   @Test
   fun testAskQuestionSuccess() = runBlockingTest {
     fakeViewModel.simulateResponse("What is AI?", "Artificial Intelligence is...")
@@ -85,12 +106,12 @@ class AiAssistantScreenTest {
       composeTestRule.onAllNodesWithTag("messageItem").fetchSemanticsNodes().isNotEmpty()
     }
 
-    // Verify that the message appears correctly
     composeTestRule.onAllNodesWithTag("messageItem").assertCountEquals(1)
     composeTestRule.onNodeWithText("What is AI?").assertIsDisplayed()
     composeTestRule.onNodeWithText("Artificial Intelligence is...").assertIsDisplayed()
   }
 
+  /** Verifies that an error message is displayed when an error occurs. */
   @Test
   fun testErrorMessage() = runBlockingTest {
     fakeViewModel.simulateError("An error occurred. Please try again.")
@@ -102,21 +123,19 @@ class AiAssistantScreenTest {
           .isNotEmpty()
     }
 
-    // Check the error message
     composeTestRule
         .onNodeWithTag("assistantErrorMessageText")
         .assertIsDisplayed()
         .assertTextContains("An error occurred. Please try again.")
   }
 
+  /** Verifies that the loading indicator is displayed when loading and disappears after. */
   @Test
   fun testLoadingIndicator() = runBlockingTest {
     fakeViewModel.setLoading(true)
-
     composeTestRule.onNodeWithTag("assistantLoadingIndicator").assertIsDisplayed()
 
     fakeViewModel.setLoading(false)
-
     composeTestRule.onNodeWithTag("assistantLoadingIndicator").assertDoesNotExist()
   }
 }
