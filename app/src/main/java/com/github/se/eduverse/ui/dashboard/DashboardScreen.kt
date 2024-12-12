@@ -428,6 +428,7 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                   }
             }
 
+
             Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {

@@ -2,10 +2,10 @@ package com.github.se.eduverse.ui.archive
 
 import android.content.Context
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -42,18 +42,20 @@ fun ArchiveScreen(
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-          folders.forEach {
-            Card(
-                modifier =
-                    Modifier.padding(8.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                          if (context.isNetworkAvailable()) {
-                            folderViewModel.unarchiveFolder(it)
-                            navigationActions.navigateTo(Route.LIST_FOLDERS)
-                          } else {
-                            folderViewModel.showOfflineMessage(context)
+        LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
+          item {
+            folders.forEach {
+              Card(
+                  modifier =
+                      Modifier.padding(8.dp)
+                          .fillMaxWidth()
+                          .clickable {
+                            if (context.isNetworkAvailable()) {
+                              folderViewModel.unarchiveFolder(it)
+                              navigationActions.navigateTo(Route.LIST_FOLDERS)
+                            } else {
+                              folderViewModel.showOfflineMessage(context)
+                            }
                           }
                         }
                         .testTag("folderCard${it.id}"),
