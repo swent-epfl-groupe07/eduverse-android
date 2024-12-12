@@ -75,6 +75,11 @@ private val DarkColorScheme =
         scrim = md_theme_dark_scrim,
     )
 
+object Theme {
+  const val LIGHT = "Light"
+  const val DARK = "Dark"
+}
+
 @Composable
 fun EduverseTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -131,6 +131,7 @@ fun ArchiveScreen(
                               }
                             })
                         .testTag("folderCard${folders[it].id}"),
+                backgroundColor = MaterialTheme.colorScheme.surface,
                 elevation = 4.dp) {
                   Row(
                       modifier = Modifier.padding(16.dp).fillMaxWidth(),

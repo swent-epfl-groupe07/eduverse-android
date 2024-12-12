@@ -8,7 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.R
+import com.github.se.eduverse.isAppInDarkMode
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestinations
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -59,20 +59,23 @@ fun SignInScreen(navigationActions: NavigationActions) {
   val token = stringResource(R.string.default_web_client_id)
 
   Scaffold(
-      modifier = Modifier.fillMaxSize().background(color = Color.White),
+      modifier = Modifier.fillMaxSize(),
       content = { padding ->
         Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-                    .background(color = Color.White),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top) {
               Spacer(modifier = Modifier.height(130.dp))
 
               Image(
-                  painter = painterResource(id = R.drawable.eduverse_logo),
+                  painter =
+                      painterResource(
+                          id =
+                              if (isAppInDarkMode) {
+                                R.drawable.eduverse_logo_dark
+                              } else {
+                                R.drawable.eduverse_logo_light
+                              }),
                   contentDescription = "App Logo",
                   modifier = Modifier.size(330.dp))
 
