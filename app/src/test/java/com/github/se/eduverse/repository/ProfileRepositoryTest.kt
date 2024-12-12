@@ -1281,8 +1281,7 @@ class ProfileRepositoryImplTest {
     whenever(mockSnapshot.reference).thenReturn(documentRef)
 
     // Mock transaction to throw exception
-    whenever(mockFirestore.runTransaction<Void>(any()))
-      .thenThrow(RuntimeException(errorMessage))
+    whenever(mockFirestore.runTransaction<Void>(any())).thenThrow(RuntimeException(errorMessage))
 
     try {
       repository.decrementLikesAndRemoveUser(publicationId, userId)
