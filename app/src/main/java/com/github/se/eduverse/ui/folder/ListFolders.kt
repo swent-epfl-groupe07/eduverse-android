@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.folder
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,8 +22,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -33,7 +36,11 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
 @Composable
-fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: FolderViewModel) {
+fun ListFoldersScreen(
+    navigationActions: NavigationActions,
+    folderViewModel: FolderViewModel,
+    context: Context = LocalContext.current
+) {
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
 
   LaunchedEffect(Unit) { folderViewModel.getUserFolders() }
@@ -55,7 +62,13 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
       },
       floatingActionButton = {
         FloatingActionButton(
-            onClick = { navigationActions.navigateTo(Screen.CREATE_FOLDER) },
+            onClick = {
+              if (context.isNetworkAvailable()) {
+                navigationActions.navigateTo(Screen.CREATE_FOLDER)
+              } else {
+                folderViewModel.showOfflineMessage(context)
+              }
+            },
             modifier = Modifier.testTag("createFolder"),
             backgroundColor = MaterialTheme.colorScheme.primary,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {

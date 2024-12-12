@@ -822,7 +822,7 @@ class DashboardScreenUiTest {
     composeTestRule.onNodeWithText("Welcome to Eduverse!").assertIsDisplayed()
     composeTestRule
         .onNodeWithText(
-            "Your dashboard is empty. Start by adding widgets using the + button below to customize your learning experience.")
+            "Your dashboard is empty. Start by adding widgets to customize your learning experience.")
         .assertIsDisplayed()
   }
 

@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.folder
 
 //noinspection UsingMaterialAndMaterial3Libraries
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +22,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.ui.DeleteFileDialog
@@ -58,16 +59,15 @@ import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(
     navigationActions: NavigationActions,
     folderViewModel: FolderViewModel,
-    fileViewModel: FileViewModel
+    fileViewModel: FileViewModel,
+    context: Context = LocalContext.current
 ) {
   val activeFolder by folderViewModel.activeFolder.collectAsState()
 
-  val context = LocalContext.current
   var sorting by remember { mutableStateOf(false) }
   var deleteDialogOpen by remember { mutableStateOf(false) }
   var renameDialogOpen by remember { mutableStateOf(false) }
@@ -86,8 +86,12 @@ fun FolderScreen(
         TopNavigationBar(navigationActions) {
           IconButton(
               onClick = {
-                folderViewModel.archiveFolder(activeFolder!!)
-                navigationActions.goBack()
+                if (context.isNetworkAvailable()) {
+                  folderViewModel.archiveFolder(activeFolder!!)
+                  navigationActions.goBack()
+                } else {
+                  folderViewModel.showOfflineMessage(context)
+                }
               },
               modifier = Modifier.testTag("archive")) {
                 Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
@@ -102,7 +106,13 @@ fun FolderScreen(
       },
       floatingActionButton = {
         FloatingActionButton(
-            onClick = { navigationActions.navigateTo(Screen.CREATE_FILE) },
+            onClick = {
+              if (context.isNetworkAvailable()) {
+                navigationActions.navigateTo(Screen.CREATE_FILE)
+              } else {
+                folderViewModel.showOfflineMessage(context)
+              }
+            },
             modifier = Modifier.testTag("createFile"),
             backgroundColor = MaterialTheme.colorScheme.primary,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {

@@ -21,15 +21,17 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SettingsScreen(navigationActions: NavigationActions) {
+fun SettingsScreen(navigationActions: NavigationActions, settingsViewModel: SettingsViewModel) {
   val context = LocalContext.current
 
-  var privacySettings by remember { mutableStateOf(true) }
-  var selectedTheme by remember { mutableStateOf("Light") }
-  var selectedLanguage by remember { mutableStateOf("English") }
+  val privacySettings by settingsViewModel.privacySettings.collectAsState()
+  val selectedTheme by settingsViewModel.selectedTheme.collectAsState()
+  val selectedLanguage by settingsViewModel.selectedLanguage.collectAsState()
+
   var isThemeDropdownExpanded by remember { mutableStateOf(false) }
   var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -57,7 +59,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                       color = MaterialTheme.colorScheme.primary)
                   Switch(
                       checked = privacySettings,
-                      onCheckedChange = { privacySettings = it },
+                      onCheckedChange = { settingsViewModel.updatePrivacySettings(it) },
                       colors =
                           SwitchDefaults.colors(
                               checkedThumbColor = MaterialTheme.colorScheme.primary,
@@ -94,7 +96,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
               label = "Theme",
               selectedOption = selectedTheme,
               options = listOf("Light", "Dark", "System Default"),
-              onOptionSelected = { selectedTheme = it },
+              onOptionSelected = { settingsViewModel.updateSelectedTheme(it) },
               isExpanded = isThemeDropdownExpanded,
               onExpandChange = { isThemeDropdownExpanded = it },
               modifier = Modifier.padding(horizontal = 16.dp).testTag("themeDropdown"))
@@ -105,7 +107,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
               label = "Language",
               selectedOption = selectedLanguage,
               options = listOf("Français", "English"),
-              onOptionSelected = { selectedLanguage = it },
+              onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
               isExpanded = isLanguageDropdownExpanded,
               onExpandChange = { isLanguageDropdownExpanded = it },
               modifier = Modifier.padding(horizontal = 16.dp).testTag("languageDropdown"))
@@ -219,9 +221,9 @@ fun SettingsDropdown(
   }
 }
 
-private fun logout(navigationActions: NavigationActions) {
+fun logout(navigationActions: NavigationActions) {
   FirebaseAuth.getInstance().signOut()
-  navigationActions.navigateTo(Screen.AUTH) // Replace "LoginScreen" with your login screen route
+  navigationActions.navigateTo(Screen.AUTH)
 }
 
 // Helper function to show a toast
