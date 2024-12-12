@@ -91,8 +91,8 @@ fun UserProfileScreen(
               }
             },
             colors =
-            TopAppBarDefaults.smallTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary),
+                TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary),
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() },
@@ -195,16 +195,18 @@ fun UserProfileScreen(
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
                     icon = { Icon(Icons.Default.Article, contentDescription = null) },
-                    selectedContentColor =  if (selectedTab == 0) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface)
+                    selectedContentColor =
+                        if (selectedTab == 0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    selectedContentColor =  if (selectedTab == 1) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface)
+                    selectedContentColor =
+                        if (selectedTab == 1) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface)
               }
 
               // Content based on state

@@ -70,17 +70,20 @@ fun DashboardScreen(
         topBar = {
           TopAppBar(
               modifier =
-              Modifier.fillMaxWidth()
-                  .background(
-                      Brush.horizontalGradient(
-                          colors = listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.primary))),
+                  Modifier.fillMaxWidth()
+                      .background(
+                          Brush.horizontalGradient(
+                              colors =
+                                  listOf(
+                                      MaterialTheme.colorScheme.secondary,
+                                      MaterialTheme.colorScheme.primary))),
               title = {
-                  Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                      Image(
-                          painter = painterResource(id = R.drawable.eduverse_logo_png),
-                          contentDescription = "Logo",
-                          modifier = Modifier.size(140.dp).testTag("centerImage"))
-                  }
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                  Image(
+                      painter = painterResource(id = R.drawable.eduverse_logo_png),
+                      contentDescription = "Logo",
+                      modifier = Modifier.size(140.dp).testTag("centerImage"))
+                }
               },
               actions = {
                 IconButton(
