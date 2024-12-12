@@ -1236,6 +1236,66 @@ class ProfileRepositoryImplTest {
     assertTrue(result.isEmpty())
   }
 
+  @Test
+  fun `removeFromLikedPublications throws exception with error message on failure`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub123"
+
+    // Mock the collections and document references
+    val mockUsersCollection = mock(CollectionReference::class.java)
+    val mockUserDoc = mock(DocumentReference::class.java)
+    val mockLikedPubsCollection = mock(CollectionReference::class.java)
+    val mockPubDoc = mock(DocumentReference::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollection)
+    whenever(mockUsersCollection.document(userId)).thenReturn(mockUserDoc)
+    whenever(mockUserDoc.collection("likedPublications")).thenReturn(mockLikedPubsCollection)
+    whenever(mockLikedPubsCollection.document(publicationId)).thenReturn(mockPubDoc)
+
+    // Mock the delete operation to throw an exception
+    val errorMessage = "Network error during delete"
+    whenever(mockPubDoc.delete()).thenThrow(RuntimeException(errorMessage))
+
+    try {
+      repository.removeFromLikedPublications(userId, publicationId)
+      fail("Expected an exception to be thrown")
+    } catch (e: Exception) {
+      // Verify only the actual exception message
+      assertEquals(errorMessage, e.message)
+    }
+  }
+
+  @Test
+  fun `decrementLikesAndRemoveUser handles transaction failure and throws exception`() = runTest {
+    val publicationId = "pub123"
+    val userId = "user456"
+    val documentRef = mock(DocumentReference::class.java)
+    val errorMessage = "Transaction failed due to network error"
+
+    // Mock the publication query
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(false)
+    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
+    whenever(mockSnapshot.reference).thenReturn(documentRef)
+
+    // Mock transaction to throw exception
+    whenever(mockFirestore.runTransaction<Void>(any()))
+      .thenThrow(RuntimeException(errorMessage))
+
+    try {
+      repository.decrementLikesAndRemoveUser(publicationId, userId)
+      fail("Expected an exception to be thrown")
+    } catch (e: Exception) {
+      // Verify only the actual exception message
+      assertEquals(errorMessage, e.message)
+    }
+
+    // Verify that the transaction was attempted
+    verify(mockFirestore).runTransaction<Void>(any())
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain() // Reset main dispatcher after the test
