@@ -867,12 +867,8 @@ class ProfileRepositoryImplTest {
     val mockProfileDoc = mock(DocumentReference::class.java)
     val mockProfileSnapshot = mock(DocumentSnapshot::class.java)
 
-    val followerProfile = Profile(
-      id = "follower1",
-      username = "Follower1",
-      followers = 10,
-      following = 5
-    )
+    val followerProfile =
+        Profile(id = "follower1", username = "Follower1", followers = 10, following = 5)
 
     // Set up followers collection mocks
     whenever(mockFirestore.collection("followers")).thenReturn(mockCollectionRef)
@@ -1324,7 +1320,7 @@ class ProfileRepositoryImplTest {
     whenever(mockCollectionRef.document(favoritePublicationId)).thenReturn(favPubDoc)
     whenever(favPubDoc.get()).thenReturn(Tasks.forResult(favPubSnapshot))
     whenever(favPubSnapshot.toObject(Publication::class.java))
-      .thenReturn(Publication(id = favoritePublicationId, title = "Favorite Publication"))
+        .thenReturn(Publication(id = favoritePublicationId, title = "Favorite Publication"))
 
     // Mock favorites query
     val favQuery = mock(Query::class.java)
