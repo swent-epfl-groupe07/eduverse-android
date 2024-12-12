@@ -38,6 +38,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
+import java.io.File
 
 // Enum class to list the different options available in the PDF converter tool
 enum class PdfGeneratorOption {
@@ -72,6 +73,8 @@ fun PdfGeneratorScreen(
   var showDestinationDialog by remember { mutableStateOf(false) }
   var showSelectFolderDialog by remember { mutableStateOf(false) }
   val folders by folderViewModel.folders.collectAsState()
+  var showInputNewFolderNameDialog by remember { mutableStateOf(false) }
+  var generatedPdf by remember { mutableStateOf<File?>(null) }
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
@@ -266,6 +269,9 @@ fun PdfGeneratorScreen(
     }
     is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
     is PdfGeneratorViewModel.PdfGenerationState.Success -> {
+      generatedPdf =
+          (pdfConversionState.value as PdfGeneratorViewModel.PdfGenerationState.Success).pdfFile
+      converterViewModel.setPdfGenerationStateToReady()
       showDestinationDialog = true
     }
   }
@@ -280,12 +286,8 @@ fun PdfGeneratorScreen(
         },
         onDeviceStorageClick = {
           showDestinationDialog = false
-          val pdf =
-              (converterViewModel.pdfGenerationState.value
-                      as PdfGeneratorViewModel.PdfGenerationState.Success)
-                  .pdfFile
           converterViewModel.setPdfGenerationStateToReady()
-          converterViewModel.savePdfToDevice(pdf, context)
+          converterViewModel.savePdfToDevice(generatedPdf!!, context)
         },
         onFoldersClick = {
           if (!context.isNetworkAvailable()) {
@@ -309,13 +311,31 @@ fun PdfGeneratorScreen(
         },
         onSelect = { folder ->
           showSelectFolderDialog = false
+          converterViewModel.savePdfToFolder(folder, generatedPdf!!, context)
           converterViewModel.deleteGeneratedPdf()
-          converterViewModel.setPdfGenerationStateToReady()
         },
         onCreate = {
           showSelectFolderDialog = false
-          converterViewModel.deleteGeneratedPdf()
-          converterViewModel.setPdfGenerationStateToReady()
+          showInputNewFolderNameDialog = true
+        })
+  }
+
+  // Show the dialog to input the name of the new folder
+  if (showInputNewFolderNameDialog) {
+    InputNewFolderNameDialog(
+        onDismiss = {
+          showInputNewFolderNameDialog = false
+          showSelectFolderDialog = true
+        },
+        onConfirm = { name ->
+          showInputNewFolderNameDialog = false
+          folderViewModel.createNewFolderFromName(
+              name,
+              {
+                converterViewModel.savePdfToFolder(it, generatedPdf!!, context)
+                converterViewModel.deleteGeneratedPdf()
+              },
+              { context.showToast(it) })
         })
   }
 }
@@ -569,6 +589,47 @@ fun SelectFolderDialog(
             }
       },
       modifier = Modifier.testTag("selectFolderDialog"))
+}
+
+/**
+ * Composable for displaying a dialog to input the name of the new folder on folder creation
+ *
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onConfirm Action to be performed when the dialog is confirmed
+ */
+@Composable
+fun InputNewFolderNameDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+  var inputText by remember { mutableStateOf("") }
+
+  AlertDialog(
+      modifier = Modifier.testTag("inputNewFolderNameDialog"),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            "Enter a name for the new folder",
+            modifier = Modifier.fillMaxWidth().testTag("inputNewFolderNameDialogTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        OutlinedTextField(
+            value = inputText,
+            onValueChange = { inputText = it },
+            label = { Text("Folder name") },
+            modifier = Modifier.fillMaxWidth().testTag("inputNewFolderNameField"))
+      },
+      confirmButton = {
+        Button(
+            enabled = inputText.isNotEmpty(),
+            onClick = { onConfirm(inputText) },
+            modifier = Modifier.testTag("confirmCreateFolderButton")) {
+              Text("Create Folder")
+            }
+      },
+      dismissButton = {
+        Button(onClick = onDismiss, modifier = Modifier.testTag("cancelCreateFolderButton")) {
+          Text("Cancel")
+        }
+      })
 }
 
 /**
