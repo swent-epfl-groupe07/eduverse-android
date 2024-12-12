@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
+import com.github.se.eduverse.ui.theme.Theme
 import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -16,6 +17,7 @@ import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -76,6 +78,10 @@ class SettingsScreenTest {
     // Method to set selected theme state
     fun setSelectedTheme(theme: String) {
       _selectedThemeState.value = theme
+    }
+
+    override fun updateSelectedTheme(value: String) {
+      setSelectedTheme(value)
     }
   }
 
@@ -206,5 +212,33 @@ class SettingsScreenTest {
       composeTestRule.onNodeWithTag("settingsOption_$option").performClick()
       assertTrue(fakeNavigationActions.lastNavigatedRoute == route)
     }
+  }
+
+  @Test
+  fun themeOptions_optionsCallsViewModelWithCorrectArguments() {
+    // Arrange: Set to light mode
+    fakeViewModel.setSelectedTheme(Theme.LIGHT)
+
+    // Act: Set the content
+    composeTestRule.setContent {
+      SettingsScreen(
+          navigationActions = fakeNavigationActions,
+          settingsViewModel = fakeViewModel,
+          systemTheme = Theme.LIGHT)
+    }
+
+    // Act: Change to dark mode
+    composeTestRule.onNodeWithText("Theme: Light").performClick()
+    composeTestRule.onNodeWithTag("dropdownOption_ThemeDark").performClick()
+
+    // Assert: The theme is Dark
+    assertEquals(Theme.DARK, fakeViewModel.selectedTheme.value)
+
+    // Act: Change to default mode
+    composeTestRule.onNodeWithText("Theme: Dark").performClick()
+    composeTestRule.onNodeWithTag("dropdownOption_ThemeSystem Default").performClick()
+
+    // Assert: The theme is Dark
+    assertEquals(Theme.LIGHT, fakeViewModel.selectedTheme.value)
   }
 }
