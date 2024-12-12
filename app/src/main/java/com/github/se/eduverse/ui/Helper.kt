@@ -116,6 +116,36 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
 }
 
 @Composable
+fun DeleteFoldersDialog(number: Int, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier =
+            Modifier.clip(RoundedCornerShape(8.dp))
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
+                .padding(16.dp)
+                .testTag("confirm")) {
+            Text("Are you sure you want to delete $number folder(s) ?")
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.testTag("yes"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                    Text("Yes")
+                }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.testTag("no"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                    Text("No")
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun DeleteFileDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
   Dialog(onDismissRequest = onDismiss) {
     Column(

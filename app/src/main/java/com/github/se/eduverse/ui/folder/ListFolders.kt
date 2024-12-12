@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.ui.DeleteFoldersDialog
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
@@ -57,6 +58,7 @@ fun ListFoldersScreen(
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
     var isSelectMode by remember { mutableStateOf(false) }
     var selected = emptyList<Int>()
+    var deleteDialogOpen by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { folderViewModel.getUserFolders() }
 
@@ -65,13 +67,7 @@ fun ListFoldersScreen(
         TopNavigationBar("My Courses", navigationActions) {
             if (isSelectMode) {
                 IconButton(
-                    onClick = {
-                        isSelectMode = false
-                        selected.forEach {
-                            folderViewModel.deleteFolder(folders[it])
-                        }
-                        selected = emptyList()
-                    },
+                    onClick = { deleteDialogOpen = true },
                     modifier = Modifier.testTag("delete")) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
                 }
@@ -103,6 +99,21 @@ fun ListFoldersScreen(
               Icon(Icons.Default.Add, contentDescription = "Create Folder")
             }
       }) { padding ->
+        if (deleteDialogOpen) {
+            DeleteFoldersDialog(
+                number = selected.size,
+                onDismiss = { deleteDialogOpen = false },
+                onConfirm = {
+                    deleteDialogOpen = false
+                    isSelectMode = false
+                    selected.forEach {
+                        folderViewModel.deleteFolder(folders[it])
+                    }
+                    selected = emptyList()
+                }
+            )
+        }
+
         LazyColumn(modifier = Modifier
             .padding(padding)
             .fillMaxSize()) {
