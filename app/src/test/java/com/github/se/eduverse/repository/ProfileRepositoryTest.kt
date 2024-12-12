@@ -16,6 +16,7 @@ import com.google.firebase.storage.UploadTask
 import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.MockedStatic
 import org.mockito.Mockito.*
 import org.mockito.kotlin.whenever
 
@@ -43,10 +45,21 @@ class ProfileRepositoryImplTest {
   private val mockQuerySnapshot: QuerySnapshot = mock(QuerySnapshot::class.java)
   private val mockTransaction: Transaction = mock(Transaction::class.java)
   private val mockQuery = mock(Query::class.java)
+  private lateinit var firebaseAuthMock: MockedStatic<FirebaseAuth>
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher) // Set up test dispatcher
+
+    // Setup Firebase Auth mock
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
+    whenever(mockUser.uid).thenReturn("currentUser")
+    whenever(mockAuth.currentUser).thenReturn(mockUser)
+    firebaseAuthMock = mockStatic(FirebaseAuth::class.java)
+    firebaseAuthMock.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(mockAuth)
 
     whenever(mockFirestore.collection(any())).thenReturn(mockCollectionRef)
     whenever(mockStorage.reference).thenReturn(mockStorageRef)
@@ -848,24 +861,18 @@ class ProfileRepositoryImplTest {
     val userId = "testUser"
     val currentUserId = "currentUser"
 
-    // Mock FirebaseAuth
-    val mockAuth = mock(FirebaseAuth::class.java)
-    val mockUser = mock(FirebaseUser::class.java)
-    whenever(mockAuth.currentUser).thenReturn(mockUser)
-    whenever(mockUser.uid).thenReturn(currentUserId)
-
-    // Mock static FirebaseAuth.getInstance()
-    val firebaseAuthMock = mockStatic(FirebaseAuth::class.java)
-    firebaseAuthMock.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(mockAuth)
-
     // Mock followers collection query
     val mockQuery = mock(Query::class.java)
     val mockFollowerDoc = mock(DocumentSnapshot::class.java)
     val mockProfileDoc = mock(DocumentReference::class.java)
     val mockProfileSnapshot = mock(DocumentSnapshot::class.java)
 
-    val followerProfile =
-        Profile(id = "follower1", username = "Follower1", followers = 10, following = 5)
+    val followerProfile = Profile(
+      id = "follower1",
+      username = "Follower1",
+      followers = 10,
+      following = 5
+    )
 
     // Set up followers collection mocks
     whenever(mockFirestore.collection("followers")).thenReturn(mockCollectionRef)
@@ -890,9 +897,6 @@ class ProfileRepositoryImplTest {
     assertEquals("Follower1", followers[0].username)
     assertTrue(followers[0].isFollowedByCurrentUser)
     verify(mockQuery).get()
-
-    // Clean up static mock
-    firebaseAuthMock.close()
   }
 
   @Test
@@ -1295,10 +1299,81 @@ class ProfileRepositoryImplTest {
     verify(mockFirestore).runTransaction<Void>(any())
   }
 
+  @Test
+  fun `getProfile handles favorites retrieval correctly`() = runTest {
+    val userId = "testUser"
+    val favoritePublicationId = "favPub1"
+
+    // Mock base profile document
+    val profileSnapshot = mock(DocumentSnapshot::class.java)
+    val initialProfile = Profile(id = userId, username = "testUser")
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.get()).thenReturn(Tasks.forResult(profileSnapshot))
+    whenever(profileSnapshot.toObject(Profile::class.java)).thenReturn(initialProfile)
+
+    // Mock publications query
+    val pubQuery = mock(Query::class.java)
+    val pubSnapshot = mock(QuerySnapshot::class.java)
+    whenever(mockCollectionRef.whereEqualTo("userId", userId)).thenReturn(pubQuery)
+    whenever(pubQuery.get()).thenReturn(Tasks.forResult(pubSnapshot))
+    whenever(pubSnapshot.documents).thenReturn(emptyList())
+
+    // Mock publication document for favorite
+    val favPubSnapshot = mock(DocumentSnapshot::class.java)
+    val favPubDoc = mock(DocumentReference::class.java)
+    whenever(mockCollectionRef.document(favoritePublicationId)).thenReturn(favPubDoc)
+    whenever(favPubDoc.get()).thenReturn(Tasks.forResult(favPubSnapshot))
+    whenever(favPubSnapshot.toObject(Publication::class.java))
+      .thenReturn(Publication(id = favoritePublicationId, title = "Favorite Publication"))
+
+    // Mock favorites query
+    val favQuery = mock(Query::class.java)
+    val favSnapshot = mock(QuerySnapshot::class.java)
+    val favDoc = mock(DocumentSnapshot::class.java)
+    whenever(mockCollectionRef.whereEqualTo("userId", userId)).thenReturn(favQuery)
+    whenever(favQuery.get()).thenReturn(Tasks.forResult(favSnapshot))
+    whenever(favSnapshot.documents).thenReturn(listOf(favDoc))
+    whenever(favDoc.getString("publicationId")).thenReturn(favoritePublicationId)
+
+    // Mock followers/following queries
+    val followersQuery = mock(Query::class.java)
+    val followingQuery = mock(Query::class.java)
+    val followersSnapshot = mock(QuerySnapshot::class.java)
+    val followingSnapshot = mock(QuerySnapshot::class.java)
+    whenever(mockCollectionRef.whereEqualTo("followedId", userId)).thenReturn(followersQuery)
+    whenever(mockCollectionRef.whereEqualTo("followerId", userId)).thenReturn(followingQuery)
+    whenever(followersQuery.get()).thenReturn(Tasks.forResult(followersSnapshot))
+    whenever(followingQuery.get()).thenReturn(Tasks.forResult(followingSnapshot))
+    whenever(followersSnapshot.size()).thenReturn(5)
+    whenever(followingSnapshot.size()).thenReturn(3)
+
+    // Override the collection returns for different collections
+    whenever(mockFirestore.collection("profiles")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("favorites")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("followers")).thenReturn(mockCollectionRef)
+
+    // Mock isFollowing check
+    doReturn(true).`when`(repository).isFollowing("currentUser", userId)
+
+    // Execute getProfile
+    val result = repository.getProfile(userId)
+
+    // Verify result
+    assertNotNull(result)
+    assertEquals(1, result?.favoritePublications?.size)
+    assertEquals(favoritePublicationId, result?.favoritePublications?.first()?.id)
+    assertEquals("Favorite Publication", result?.favoritePublications?.first()?.title)
+    assertEquals(5, result?.followers)
+    assertEquals(3, result?.following)
+    assertTrue(result?.isFollowedByCurrentUser ?: false)
+  }
+
   @After
   fun tearDown() {
-    Dispatchers.resetMain() // Reset main dispatcher after the test
+    Dispatchers.resetMain()
     unmockkAll()
+    firebaseAuthMock.close()
   }
 }
 
