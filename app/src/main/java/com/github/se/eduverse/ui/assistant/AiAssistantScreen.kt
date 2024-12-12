@@ -11,7 +11,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +38,10 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
   var userQuestion by remember { mutableStateOf("") }
   val focusManager = LocalFocusManager.current
   val scope = rememberCoroutineScope()
+  var showDialog by remember { mutableStateOf(false) }
+
+  // Show dialog if an error occurs
+  LaunchedEffect(errorMessage) { if (errorMessage != null) showDialog = true }
 
   // Scaffold for handling the screen layout
   Scaffold(
@@ -104,15 +107,6 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     }
                   }
 
-              // Display an error message if any, and loading state is not active
-              if (errorMessage != null && !isLoading) {
-                Text(
-                    text = errorMessage!!,
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp).testTag("assistantErrorMessageText"),
-                    fontWeight = FontWeight.Bold)
-              }
-
               // Display a loading indicator if loading is active
               if (isLoading) {
                 Row(
@@ -162,6 +156,15 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                           Text("Send", color = MaterialTheme.colorScheme.onPrimary)
                         }
                   }
+
+              // AlertDialog for error messages
+              if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("Error") },
+                    text = { Text(errorMessage ?: "An unknown error occurred.") },
+                    confirmButton = { Button(onClick = { showDialog = false }) { Text("OK") } })
+              }
             }
       }
 }

@@ -111,22 +111,28 @@ class AiAssistantScreenTest {
     composeTestRule.onNodeWithText("Artificial Intelligence is...").assertIsDisplayed()
   }
 
-  /** Verifies that an error message is displayed when an error occurs. */
+  /** Verifies that an error message is displayed in an AlertDialog when an error occurs. */
   @Test
   fun testErrorMessage() = runBlockingTest {
     fakeViewModel.simulateError("An error occurred. Please try again.")
 
+    // Wait for the AlertDialog to appear
     composeTestRule.waitUntil {
       composeTestRule
-          .onAllNodesWithTag("assistantErrorMessageText")
+          .onAllNodesWithText("An error occurred. Please try again.")
           .fetchSemanticsNodes()
           .isNotEmpty()
     }
 
-    composeTestRule
-        .onNodeWithTag("assistantErrorMessageText")
-        .assertIsDisplayed()
-        .assertTextContains("An error occurred. Please try again.")
+    // Verify the AlertDialog is displayed with the correct error message
+    composeTestRule.onNodeWithText("Error").assertIsDisplayed()
+    composeTestRule.onNodeWithText("An error occurred. Please try again.").assertIsDisplayed()
+
+    // Verify the confirm button is displayed and can dismiss the dialog
+    composeTestRule.onNodeWithText("OK").assertIsDisplayed().performClick()
+
+    // Verify that the dialog is dismissed after clicking the button
+    composeTestRule.onNodeWithText("An error occurred. Please try again.").assertDoesNotExist()
   }
 
   /** Verifies that the loading indicator is displayed when loading and disappears after. */
