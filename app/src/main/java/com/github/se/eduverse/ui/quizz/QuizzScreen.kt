@@ -42,7 +42,7 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  Scaffold(topBar = { TopNavigationBar("Quiz Generator", navigationActions) }) {
+  Scaffold(topBar = { TopNavigationBar(navigationActions) }) {
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp).testTag("quizScreen"),
         horizontalAlignment = Alignment.CenterHorizontally,
