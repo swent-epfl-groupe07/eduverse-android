@@ -2,10 +2,10 @@ package com.github.se.eduverse.ui.folder
 
 import android.content.Context
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Card
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
@@ -75,23 +75,25 @@ fun ListFoldersScreen(
               Icon(Icons.Default.Add, contentDescription = "Create Folder")
             }
       }) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-          folders.forEach {
-            Card(
-                modifier =
-                    Modifier.padding(8.dp)
-                        .fillMaxWidth()
-                        .clickable {
-                          folderViewModel.selectFolder(it)
-                          navigationActions.navigateTo(Screen.FOLDER)
-                        }
-                        .testTag("folderCard${it.id}"),
-                elevation = 4.dp) {
-                  Text(
-                      text = it.name,
-                      modifier = Modifier.padding(16.dp),
-                      style = androidx.compose.material.MaterialTheme.typography.h6)
-                }
+        LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
+          item {
+            folders.forEach {
+              Card(
+                  modifier =
+                      Modifier.padding(8.dp)
+                          .fillMaxWidth()
+                          .clickable {
+                            folderViewModel.selectFolder(it)
+                            navigationActions.navigateTo(Screen.FOLDER)
+                          }
+                          .testTag("folderCard${it.id}"),
+                  elevation = 4.dp) {
+                    Text(
+                        text = it.name,
+                        modifier = Modifier.padding(16.dp),
+                        style = androidx.compose.material.MaterialTheme.typography.h6)
+                  }
+            }
           }
         }
       }
