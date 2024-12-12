@@ -144,6 +144,9 @@ fun GalleryScreen(
     }
   }
 
+  val backgroundColor = MaterialTheme.colorScheme.background
+  val surfaceColor = MaterialTheme.colorScheme.surface
+  val contentColor = MaterialTheme.colorScheme.onSurface
   selectedMedia?.let { media ->
     when (media) {
       is Photo -> {
@@ -152,11 +155,12 @@ fun GalleryScreen(
             onDismiss = { selectedMedia = null },
             onDownload = { downloadImage(media.path ?: "unknown") },
             onAddToFolder = {
-              showBottomMenu(context, folderViewModel) { folder ->
-                photoViewModel.makeFileFromPhoto(media) {
-                  folderViewModel.createFileInFolder(it, it, folder)
-                }
-              }
+              showBottomMenu(
+                  context, folderViewModel, backgroundColor, surfaceColor, contentColor) { folder ->
+                    photoViewModel.makeFileFromPhoto(media) {
+                      folderViewModel.createFileInFolder(it, it, folder)
+                    }
+                  }
             })
       }
       is Video -> {

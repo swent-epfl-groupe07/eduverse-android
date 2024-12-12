@@ -104,7 +104,8 @@ fun DashboardScreen(
               onTabSelect = { route -> navigationActions.navigateTo(route) },
               tabList = LIST_TOP_LEVEL_DESTINATION,
               selectedItem = Route.DASHBOARD)
-        }) { innerPadding ->
+        },
+        backgroundColor = MaterialTheme.colorScheme.background) { innerPadding ->
           Box(modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             val sortedWidgets = remember(widgets) { widgets.sortedBy { it.order } }
 
@@ -397,50 +398,56 @@ private fun ReorderableWidgetList(
 @Composable
 private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit, userId: String) {
   Dialog(onDismissRequest = onDismiss) {
-    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surface) {
-      Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
-        Text(
-            text = "Add Widget",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 16.dp))
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.primary) {
+          Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+            Text(
+                text = "Add Widget",
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 16.dp))
 
-        viewModel.getCommonWidgets().forEach { widget ->
-          TextButton(
-              onClick = {
-                viewModel.addWidget(widget.copy(ownerUid = userId))
-                onDismiss()
-              },
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(vertical = 4.dp)
-                      .testTag("add_common_widget_button")) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically) {
-                      Icon(
-                          imageVector =
-                              when (widget.widgetType) {
-                                "TIMER" -> Icons.Default.Timer
-                                "CALCULATOR" -> Icons.Default.Calculate
-                                "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
-                                "FOLDERS" -> Icons.Default.FolderOpen
-                                "TODO_LIST" -> Icons.Default.Checklist
-                                "TIME_TABLE" -> Icons.Default.DateRange
-                                "QUIZZ" -> Icons.Default.Book
-                                else -> Icons.Default.Widgets
-                              },
-                          contentDescription = null,
-                          tint = MaterialTheme.colorScheme.primary)
-                      Spacer(modifier = Modifier.width(8.dp))
-                      Text(text = widget.widgetTitle)
-                    }
-              }
+            viewModel.getCommonWidgets().forEach { widget ->
+              TextButton(
+                  onClick = {
+                    viewModel.addWidget(widget.copy(ownerUid = userId))
+                    onDismiss()
+                  },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(vertical = 4.dp)
+                          .testTag("add_common_widget_button")) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically) {
+                          Icon(
+                              imageVector =
+                                  when (widget.widgetType) {
+                                    "TIMER" -> Icons.Default.Timer
+                                    "CALCULATOR" -> Icons.Default.Calculate
+                                    "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
+                                    "FOLDERS" -> Icons.Default.FolderOpen
+                                    "TODO_LIST" -> Icons.Default.Checklist
+                                    "TIME_TABLE" -> Icons.Default.DateRange
+                                    "QUIZZ" -> Icons.Default.Book
+                                    else -> Icons.Default.Widgets
+                                  },
+                              contentDescription = null,
+                              tint = MaterialTheme.colorScheme.primary)
+                          Spacer(modifier = Modifier.width(8.dp))
+                          Text(text = widget.widgetTitle)
+                        }
+                  }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+              Text("Cancel")
+            }
+          }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text("Cancel") }
-      }
-    }
   }
 }

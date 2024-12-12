@@ -2,6 +2,7 @@ package com.github.se.eduverse.viewmodel
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.github.se.eduverse.repository.SettingsRepository
+import com.github.se.eduverse.ui.theme.Theme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.*
@@ -21,6 +22,7 @@ class SettingsViewModelTest {
   private lateinit var viewModel: SettingsViewModel
 
   private val testDispatcher = UnconfinedTestDispatcher()
+  private var isDarkTheme = true
 
   @Before
   fun setup() {
@@ -36,11 +38,11 @@ class SettingsViewModelTest {
     // Mock repository methods
     coEvery { repository.getPrivacySettings("user123") } returns true
     coEvery { repository.getSelectedLanguage("user123") } returns "English"
-    coEvery { repository.getSelectedTheme("user123") } returns "Light"
+    coEvery { repository.getSelectedTheme("user123") } returns Theme.LIGHT
 
     Dispatchers.setMain(testDispatcher)
 
-    viewModel = SettingsViewModel(repository, auth)
+    viewModel = SettingsViewModel(repository, auth) { isDarkTheme = it }
   }
 
   @After
@@ -64,7 +66,8 @@ class SettingsViewModelTest {
     // Verify StateFlow values
     assertEquals(true, viewModel.privacySettings.value)
     assertEquals("English", viewModel.selectedLanguage.value)
-    assertEquals("Light", viewModel.selectedTheme.value)
+    assertEquals(Theme.LIGHT, viewModel.selectedTheme.value)
+    assertEquals(false, isDarkTheme)
   }
 
   @Test
@@ -95,15 +98,17 @@ class SettingsViewModelTest {
 
   @Test
   fun updateSelectedTheme_updatesStateAndRepository() = runTest {
-    coEvery { repository.setSelectedTheme("user123", "Dark") } just Runs
+    isDarkTheme = false
+    coEvery { repository.setSelectedTheme("user123", Theme.DARK) } just Runs
 
-    viewModel.updateSelectedTheme("Dark")
+    viewModel.updateSelectedTheme(Theme.DARK)
 
     // Verify StateFlow is updated
-    assertEquals("Dark", viewModel.selectedTheme.value)
+    assertEquals(Theme.DARK, viewModel.selectedTheme.value)
+    assertEquals(true, isDarkTheme)
 
     // Verify repository is called
-    coVerify { repository.setSelectedTheme("user123", "Dark") }
+    coVerify { repository.setSelectedTheme("user123", Theme.DARK) }
   }
 
   @Test
@@ -122,7 +127,7 @@ class SettingsViewModelTest {
     // Verify StateFlow retains default values when exception occurs
     assertEquals(true, newViewModel.privacySettings.value)
     assertEquals("English", newViewModel.selectedLanguage.value)
-    assertEquals("Light", newViewModel.selectedTheme.value)
+    assertEquals(Theme.LIGHT, newViewModel.selectedTheme.value)
   }
 
   @Test
@@ -150,7 +155,7 @@ class SettingsViewModelTest {
     // Verify StateFlow retains default values
     assertEquals(true, newViewModel.privacySettings.value)
     assertEquals("English", newViewModel.selectedLanguage.value)
-    assertEquals("Light", newViewModel.selectedTheme.value)
+    assertEquals(Theme.LIGHT, newViewModel.selectedTheme.value)
   }
 
   @Test
@@ -186,16 +191,17 @@ class SettingsViewModelTest {
   @Test
   fun updateSelectedTheme_handlesException() = runTest {
     // Arrange
-    coEvery { repository.setSelectedTheme("user123", "Dark") } throws Exception("Firestore error")
+    coEvery { repository.setSelectedTheme("user123", Theme.DARK) } throws
+        Exception("Firestore error")
 
     // Act
-    viewModel.updateSelectedTheme("Dark")
+    viewModel.updateSelectedTheme(Theme.DARK)
 
     // Assert
     // StateFlow is updated even if repository fails
-    assertEquals("Dark", viewModel.selectedTheme.value)
+    assertEquals(Theme.DARK, viewModel.selectedTheme.value)
 
     // Verify repository is called
-    coVerify { repository.setSelectedTheme("user123", "Dark") }
+    coVerify { repository.setSelectedTheme("user123", Theme.DARK) }
   }
 }
