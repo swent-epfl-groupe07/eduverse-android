@@ -87,7 +87,7 @@ fun PicTakenScreen(
   Box(
       modifier =
           Modifier.fillMaxSize()
-              .background(Color(0xFFEBF1F4)) // Set background color to #EBF1F4
+              .background(MaterialTheme.colorScheme.background)
               .padding(8.dp)
               .testTag("picTakenScreenBox")) {
         if (bitmap != null) {
