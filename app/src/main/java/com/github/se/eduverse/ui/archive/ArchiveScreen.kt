@@ -41,7 +41,6 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
-import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.viewmodel.FolderViewModel
 
@@ -53,121 +52,111 @@ fun ArchiveScreen(
     context: Context = LocalContext.current
 ) {
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
-    var isSelectMode by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf(emptyList<Int>()) }
-    var deleteDialogOpen by remember { mutableStateOf(false) }
+  var isSelectMode by remember { mutableStateOf(false) }
+  var selected by remember { mutableStateOf(emptyList<Int>()) }
+  var deleteDialogOpen by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { folderViewModel.getArchivedUserFolders() }
 
   Scaffold(
       topBar = {
-          TopNavigationBar("Archived Courses", navigationActions) {
-              if (isSelectMode) {
-                  IconButton(
-                      onClick = {
-                          if (context.isNetworkAvailable()) {
-                              deleteDialogOpen = true
-                          } else {
-                              folderViewModel.showOfflineMessage(context)
-                          }
-                      },
-                      modifier = Modifier.testTag("delete")) {
-                      Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+        TopNavigationBar("Archived Courses", navigationActions) {
+          if (isSelectMode) {
+            IconButton(
+                onClick = {
+                  if (context.isNetworkAvailable()) {
+                    deleteDialogOpen = true
+                  } else {
+                    folderViewModel.showOfflineMessage(context)
                   }
-              }
+                },
+                modifier = Modifier.testTag("delete")) {
+                  Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                }
           }
+        }
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->
-      if (deleteDialogOpen) {
+        if (deleteDialogOpen) {
           DeleteFoldersDialog(
               number = selected.size,
               onDismiss = { deleteDialogOpen = false },
               onConfirm = {
-                  deleteDialogOpen = false
-                  isSelectMode = false
-                  selected.forEach {
-                      folderViewModel.deleteFolder(folders[it])
-                  }
-                  selected = emptyList()
-              }
-          )
-      }
+                deleteDialogOpen = false
+                isSelectMode = false
+                selected.forEach { folderViewModel.deleteFolder(folders[it]) }
+                selected = emptyList()
+              })
+        }
 
-      LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
+        LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
           if (isSelectMode) {
-              item {
-                  Row(
-                      modifier = Modifier.clickable {
-                          isSelectMode = false
-                          selected = emptyList()
-                      }.testTag("cancel"),
-                      verticalAlignment = Alignment.CenterVertically
-                  ) {
-                      Icon(Icons.Default.Cancel, contentDescription = "Cancel Selection")
-                      Text("Cancel selection", style = MaterialTheme.typography.titleLarge)
+            item {
+              Row(
+                  modifier =
+                      Modifier.clickable {
+                            isSelectMode = false
+                            selected = emptyList()
+                          }
+                          .testTag("cancel"),
+                  verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Cancel, contentDescription = "Cancel Selection")
+                    Text("Cancel selection", style = MaterialTheme.typography.titleLarge)
                   }
-              }
+            }
           }
 
           items(folders.size) {
-              Card(
-                  modifier =
-                  Modifier
-                      .padding(8.dp)
-                      .fillMaxWidth()
-                      .combinedClickable(
-                          onLongClick = {
+            Card(
+                modifier =
+                    Modifier.padding(8.dp)
+                        .fillMaxWidth()
+                        .combinedClickable(
+                            onLongClick = {
                               if (!isSelectMode) {
-                                  isSelectMode = true
-                                  if (!selected.contains(it)) {
-                                      selected = selected + it
-                                  }
+                                isSelectMode = true
+                                if (!selected.contains(it)) {
+                                  selected = selected + it
+                                }
                               }
-                          },
-                          onClick = {
+                            },
+                            onClick = {
                               if (context.isNetworkAvailable()) {
-                                  folderViewModel.unarchiveFolder(folders[it])
-                                  navigationActions.navigateTo(Route.LIST_FOLDERS)
+                                folderViewModel.unarchiveFolder(folders[it])
+                                navigationActions.navigateTo(Route.LIST_FOLDERS)
                               } else {
-                                  folderViewModel.showOfflineMessage(context)
+                                folderViewModel.showOfflineMessage(context)
                               }
-                          }
-                      )
-                      .testTag("folderCard${folders[it].id}"),
-                  elevation = 4.dp) {
+                            })
+                        .testTag("folderCard${folders[it].id}"),
+                elevation = 4.dp) {
                   Row(
-                      modifier = Modifier
-                          .padding(16.dp)
-                          .fillMaxWidth(),
+                      modifier = Modifier.padding(16.dp).fillMaxWidth(),
                       horizontalArrangement = Arrangement.SpaceBetween,
-                      verticalAlignment = Alignment.CenterVertically
-                  ) {
-                      Text(
-                          text = folders[it].name,
-                          style = MaterialTheme.typography.headlineSmall
-                      )
-                      if (isSelectMode) {
+                      verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = folders[it].name, style = MaterialTheme.typography.headlineSmall)
+                        if (isSelectMode) {
                           if (selected.contains(it)) {
-                              IconButton(
-                                  modifier = Modifier.size(25.dp).testTag("checked"),
-                                  onClick = { selected = selected - it }
-                              ) {
+                            IconButton(
+                                modifier = Modifier.size(25.dp).testTag("checked"),
+                                onClick = { selected = selected - it }) {
                                   Icon(Icons.Default.CheckBox, contentDescription = "Checked")
-                              }
-
+                                }
                           } else {
-                              IconButton(
-                                  modifier = Modifier.size(25.dp).testTag("unchecked"),
-                                  onClick = { selected = selected + it }
-                              ) {
-                                  Icon(Icons.Default.CheckBoxOutlineBlank, contentDescription = "Not Checked")
-                              }
+                            IconButton(
+                                modifier = Modifier.size(25.dp).testTag("unchecked"),
+                                onClick = { selected = selected + it }) {
+                                  Icon(
+                                      Icons.Default.CheckBoxOutlineBlank,
+                                      contentDescription = "Not Checked")
+                                }
                           }
+                        }
                       }
-                  }
-              }
+                }
           }
         }
       }

@@ -6,7 +6,6 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -199,7 +198,7 @@ class ListFoldersTest {
     composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
 
-    verify(0) {folderRepository.deleteFolder(any(), any(), any())}
+    verify(0) { folderRepository.deleteFolder(any(), any(), any()) }
 
     composeTestRule.onNodeWithTag("delete").performClick()
     composeTestRule.waitForIdle()
@@ -211,6 +210,6 @@ class ListFoldersTest {
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
     composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
 
-    verify(1) {folderRepository.deleteFolder(any(), any(), any())}
+    verify(1) { folderRepository.deleteFolder(any(), any(), any()) }
   }
 }
