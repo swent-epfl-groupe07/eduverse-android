@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Card
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -57,7 +59,7 @@ fun ListFoldersScreen(
 ) {
   val folders: List<Folder> by folderViewModel.folders.collectAsState()
     var isSelectMode by remember { mutableStateOf(false) }
-    var selected = emptyList<Int>()
+    var selected by remember { mutableStateOf(emptyList<Int>()) }
     var deleteDialogOpen by remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { folderViewModel.getUserFolders() }
@@ -123,10 +125,11 @@ fun ListFoldersScreen(
                         modifier = Modifier.clickable {
                             isSelectMode = false
                             selected = emptyList()
-                        }
+                        }.testTag("cancel"),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.Cancel, contentDescription = "Cancel Selection")
-                        Text("Cancel selection")
+                        Text("Cancel selection", style = MaterialTheme.typography.titleLarge)
                     }
                 }
             }
@@ -156,15 +159,17 @@ fun ListFoldersScreen(
                         modifier = Modifier
                             .padding(16.dp)
                             .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = folders[it].name,
-                            style = androidx.compose.material.MaterialTheme.typography.h6
+                            style = MaterialTheme.typography.headlineSmall
                         )
                         if (isSelectMode) {
                             if (selected.contains(it)) {
                                 IconButton(
+                                    modifier = Modifier.size(25.dp).testTag("checked"),
                                     onClick = { selected = selected - it }
                                 ) {
                                     Icon(Icons.Default.CheckBox, contentDescription = "Checked")
@@ -172,6 +177,7 @@ fun ListFoldersScreen(
 
                             } else {
                                 IconButton(
+                                    modifier = Modifier.size(25.dp).testTag("unchecked"),
                                     onClick = { selected = selected + it }
                                 ) {
                                     Icon(Icons.Default.CheckBoxOutlineBlank, contentDescription = "Not Checked")
