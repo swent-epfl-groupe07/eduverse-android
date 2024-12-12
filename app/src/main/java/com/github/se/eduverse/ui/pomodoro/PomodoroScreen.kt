@@ -102,7 +102,7 @@ fun PomodoroScreen(
   }
 
   Scaffold(
-      topBar = { TopNavigationBar(navigationActions) },
+      topBar = { TopNavigationBar(navigationActions, screenTitle = null) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { paddingValues ->

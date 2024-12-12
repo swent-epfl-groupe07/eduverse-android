@@ -83,16 +83,19 @@ fun FolderScreen(
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
       topBar = {
-        TopNavigationBar(navigationActions) {
-          IconButton(
-              onClick = {
-                folderViewModel.archiveFolder(activeFolder!!)
-                navigationActions.goBack()
-              },
-              modifier = Modifier.testTag("archive")) {
-                Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-              }
-        }
+        TopNavigationBar(
+            navigationActions,
+            {
+              IconButton(
+                  onClick = {
+                    folderViewModel.archiveFolder(activeFolder!!)
+                    navigationActions.goBack()
+                  },
+                  modifier = Modifier.testTag("archive")) {
+                    Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                  }
+            },
+            screenTitle = activeFolder!!.name)
       },
       bottomBar = {
         BottomNavigationMenu(

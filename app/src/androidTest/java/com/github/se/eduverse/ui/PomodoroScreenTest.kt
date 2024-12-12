@@ -90,7 +90,7 @@ class PomodoroScreenTest {
   fun testPomodoroScreenInitialState() {
     setupPomodoroScreen()
 
-    composeTestRule.onNodeWithTag("centerImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("timerDisplay").assertIsDisplayed()
     composeTestRule.onNodeWithTag("timerText").assertTextEquals("25:00")

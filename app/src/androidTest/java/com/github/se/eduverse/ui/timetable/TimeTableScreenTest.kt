@@ -136,7 +136,7 @@ class TimeTableScreenTest {
   @Test
   fun displayElements() {
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("centerImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
     composeTestRule.onNodeWithTag("addTaskButton").assertIsDisplayed()

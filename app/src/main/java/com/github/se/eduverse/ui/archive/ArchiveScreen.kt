@@ -30,7 +30,7 @@ fun ArchiveScreen(navigationActions: NavigationActions, folderViewModel: FolderV
   LaunchedEffect(Unit) { folderViewModel.getArchivedUserFolders() }
 
   Scaffold(
-      topBar = { TopNavigationBar(navigationActions) },
+      topBar = { TopNavigationBar(navigationActions, screenTitle = null) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { padding ->

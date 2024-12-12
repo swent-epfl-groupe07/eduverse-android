@@ -80,7 +80,7 @@ fun PdfConverterScreen(
       }
 
   Scaffold(
-      topBar = { TopNavigationBar(navigationActions = navigationActions) },
+      topBar = { TopNavigationBar(navigationActions = navigationActions, screenTitle = null) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { pd ->

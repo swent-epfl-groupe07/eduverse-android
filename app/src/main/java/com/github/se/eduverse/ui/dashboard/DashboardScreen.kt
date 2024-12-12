@@ -39,8 +39,6 @@ import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
-import com.github.se.eduverse.ui.theme.md_theme_light_primary
-import com.github.se.eduverse.ui.theme.md_theme_light_secondary
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.abs
@@ -76,13 +74,16 @@ fun DashboardScreen(
                 Modifier.fillMaxWidth()
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(md_theme_light_secondary, md_theme_light_primary))),
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary))),
             title = {
               Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.eduverse_logo_png),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(140.dp).testTag("centerImage"))
+                    modifier = Modifier.size(140.dp).testTag("screenTitle"))
               }
             },
             actions = {

@@ -45,7 +45,7 @@ class CreateFileTest {
   fun displayComponents() {
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("centerImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("fileNameTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("fileNameField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("uploadFileText").assertIsDisplayed()

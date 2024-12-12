@@ -9,7 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.SubdirectoryArrowLeft
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +69,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
         else -> functionButtons
       }
 
-  Scaffold(topBar = { TopNavigationBar(navigationActions) }) {
+  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         MenuButton("Basic", selectedMenu == "Basic") { selectedMenu = "Basic" }
@@ -150,8 +150,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically) {
-                      val barColor =
-                          if (result == "Undefined") COLOR_INCORRECT else COLOR_CORRECT
+                      val barColor = if (result == "Undefined") COLOR_INCORRECT else COLOR_CORRECT
                       Box(
                           modifier =
                               Modifier.width(5.dp)

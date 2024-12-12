@@ -71,7 +71,7 @@ class CreateFolderTest {
   fun displayComponents() {
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("centerImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("courseNameTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("courseNameField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()

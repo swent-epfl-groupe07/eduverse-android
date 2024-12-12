@@ -40,13 +40,17 @@ fun ListFoldersScreen(navigationActions: NavigationActions, folderViewModel: Fol
 
   Scaffold(
       topBar = {
-        TopNavigationBar(navigationActions) {
-          IconButton(
-              onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
-              modifier = Modifier.testTag("archive")) {
-                Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-              }
-        }
+        TopNavigationBar(
+            navigationActions,
+            {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
+                  modifier = Modifier.testTag("archive")) {
+                    Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                  }
+            },
+            screenTitle = "My Courses",
+        )
       },
       bottomBar = {
         BottomNavigationMenu(

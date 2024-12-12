@@ -12,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -23,13 +24,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.R
-import com.github.se.eduverse.ui.theme.md_theme_light_onTertiary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationBar(
     navigationActions: NavigationActions,
-    actions: @Composable() (RowScope.() -> Unit) = {}
+    actions: @Composable() (RowScope.() -> Unit) = {},
+    screenTitle: String?
 ) {
   TopAppBar(
       modifier =
@@ -39,13 +40,24 @@ fun TopNavigationBar(
                       colors =
                           listOf(
                               MaterialTheme.colorScheme.secondary,
-                              MaterialTheme.colorScheme.primary))),
+                              MaterialTheme.colorScheme.primary)))
+              .testTag("topNavigationBar"),
       title = {
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-          Image(
-              painter = painterResource(id = R.drawable.eduverse_logo_png),
-              contentDescription = "Logo",
-              modifier = Modifier.size(140.dp).testTag("centerImage"))
+          if (screenTitle == null) {
+            // Display the app logo if no title is provided
+            Image(
+                painter = painterResource(id = R.drawable.eduverse_logo_png),
+                contentDescription = "Logo",
+                modifier = Modifier.size(140.dp).testTag("screenTitle"))
+          } else {
+            // Display the screen title if provided
+            Text(
+                text = screenTitle,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.testTag("screenTitle"))
+          }
         }
       },
       navigationIcon = {
@@ -54,7 +66,7 @@ fun TopNavigationBar(
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                   contentDescription = null,
-                  tint = md_theme_light_onTertiary)
+                  tint = MaterialTheme.colorScheme.onTertiary)
             }
       },
       actions = actions,

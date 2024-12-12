@@ -33,7 +33,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
   var isThemeDropdownExpanded by remember { mutableStateOf(false) }
   var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
 
-  Scaffold(topBar = { TopNavigationBar(navigationActions) }) { padding ->
+  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) { padding ->
     Column(
         modifier =
             Modifier.fillMaxSize()

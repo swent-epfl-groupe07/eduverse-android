@@ -98,7 +98,7 @@ class DisplayFolderTest {
     composeTestRule.onNodeWithTag("textFiles").assertIsDisplayed()
     composeTestRule.onNodeWithTag("sortingButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("scaffold").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("centerImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("column").assertIsDisplayed()
     composeTestRule.onNodeWithTag("archive").assertIsDisplayed()
     composeTestRule.onNodeWithTag(file1.name).assertIsDisplayed()
