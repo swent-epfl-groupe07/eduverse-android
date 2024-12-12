@@ -72,6 +72,11 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
   Scaffold(
       topBar = { TopNavigationBar(navigationActions) },
       backgroundColor = MaterialTheme.colorScheme.background) {
+        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+          Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            MenuButton("Basic", selectedMenu == "Basic") { selectedMenu = "Basic" }
+            MenuButton("Functions", selectedMenu == "Functions") { selectedMenu = "Functions" }
+          }
 
           Spacer(modifier = Modifier.height(16.dp))
 
@@ -143,7 +148,8 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically) {
-                          val barColor = if (result == "Undefined") COLOR_INCORRECT else COLOR_CORRECT
+                          val barColor =
+                              if (result == "Undefined") COLOR_INCORRECT else COLOR_CORRECT
                           Box(
                               modifier =
                                   Modifier.width(5.dp)
