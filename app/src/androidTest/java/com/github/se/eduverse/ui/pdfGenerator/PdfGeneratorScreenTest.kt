@@ -564,6 +564,16 @@ class PdfGeneratorScreenTest {
   }
 
   @Test
+  fun testSelectFolderDialogIsCorrectlyDisplayed_whenNoFolderExists() {
+    composeTestRule.setContent { SelectFolderDialog(emptyList(), {}, {}, {}) }
+    composeTestRule.onNodeWithTag("selectFolderDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("noFoldersFoundText").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("noFoldersFoundText")
+        .assertTextEquals("No folders found. Create a new folder to save the generated PDF file.")
+  }
+
+  @Test
   fun testInputNewFolderNameDialogIsCorrectlyDisplayed() {
     composeTestRule.setContent { InputNewFolderNameDialog({}, {}) }
     composeTestRule.onNodeWithTag("inputNewFolderNameDialog").assertIsDisplayed()
