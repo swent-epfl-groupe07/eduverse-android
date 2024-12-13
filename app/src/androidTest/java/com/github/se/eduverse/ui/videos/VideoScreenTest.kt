@@ -525,4 +525,53 @@ class VideoScreenTest {
     // Verify that the comment has been deleted
     composeTestRule.onNodeWithTag("CommentItem_$commentId").assertDoesNotExist()
   }
+
+    @Test
+    fun testShareButtonIsDisplayedForEachPublication() {
+        val publications = listOf(
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()),
+            Publication(
+                id = "2",
+                userId = "user2",
+                title = "Test Photo",
+                mediaType = MediaType.PHOTO,
+                mediaUrl = "",
+                thumbnailUrl = "https://via.placeholder.com/150",
+                timestamp = System.currentTimeMillis())
+        )
+
+        fakePublicationRepository.setPublications(publications)
+        fakePublicationViewModel.setPublications(publications)
+
+        composeTestRule.setContent {
+            VideoScreen(
+                navigationActions = fakeNavigationActions,
+                publicationViewModel = fakePublicationViewModel,
+                profileViewModel = fakeProfileViewModel,
+                commentsViewModel = fakeCommentsViewModel,
+                "")
+        }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("ShareButton_0")
+            .assertExists()
+            .assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("ShareButton_1")
+            .assertExists()
+            .assertIsDisplayed()
+    }
+
 }

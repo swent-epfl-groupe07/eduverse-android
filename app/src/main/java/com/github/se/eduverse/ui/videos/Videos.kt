@@ -10,7 +10,18 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -31,7 +42,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,13 +81,14 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
-import okhttp3.Request
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -289,7 +308,9 @@ fun VideoScreen(
                     }
                 }
                 else -> {
-                    Box(modifier = Modifier.fillMaxSize().testTag("LoadingIndicator")) {
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("LoadingIndicator")) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     }
                 }
@@ -356,7 +377,9 @@ fun CommentSection(
             is CommentsUiState.Success -> {
                 val comments = (commentsState as CommentsUiState.Success).comments
 
-                LazyColumn(modifier = Modifier.weight(1f).testTag("CommentsList")) {
+                LazyColumn(modifier = Modifier
+                    .weight(1f)
+                    .testTag("CommentsList")) {
                     items(comments) { comment ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -487,7 +510,9 @@ fun CommentSection(
             TextField(
                 value = newCommentText,
                 onValueChange = { newCommentText = it },
-                modifier = Modifier.weight(1f).testTag("NewCommentTextField"),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("NewCommentTextField"),
                 placeholder = { Text("Write a comment...") }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -552,7 +577,9 @@ fun PhotoItem(
     thumbnailUrl: String,
     modifier: Modifier = Modifier.testTag("PhotoItem") // Ajout du paramètre Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(Color.Black)) {
         SubcomposeAsyncImage(
             model = thumbnailUrl,
             contentDescription = "Publication photo",
@@ -562,61 +589,90 @@ fun PhotoItem(
     }
 }
 
-fun handleShare(publication: Publication, context: Context) {
-    CoroutineScope(Dispatchers.IO).launch {
+// Sous-fonction 1 : Télécharger les octets depuis l'URL
+suspend fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
+    val request = Request.Builder().url(url).build()
+    val response = client.newCall(request).execute()
+    if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
+    return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
+}
+
+// Sous-fonction 2 : Déterminer l'extension de fichier en fonction du type de média
+fun getFileExtension(mediaType: MediaType): String {
+    return when (mediaType) {
+        MediaType.PHOTO -> ".jpg"
+        MediaType.VIDEO -> ".mp4"
+    }
+}
+
+// Sous-fonction 3 : Créer le fichier localement
+fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray): File {
+    val mediaDir = when (publication.mediaType) {
+        MediaType.PHOTO -> File(context.cacheDir, "shared_images")
+        MediaType.VIDEO -> File(context.filesDir, "shared_videos")
+    }
+    if (!mediaDir.exists()) mediaDir.mkdirs()
+
+    val fileExtension = getFileExtension(publication.mediaType)
+    val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
+
+    FileOutputStream(mediaFile).use { it.write(bytes) }
+    return mediaFile
+}
+
+// VideoScreen.kt
+fun createShareIntent(context: Context, publication: Publication, uri: Uri): Intent {
+    val mimeType = when (publication.mediaType) {
+        MediaType.PHOTO -> "image/jpeg"
+        MediaType.VIDEO -> "video/mp4"
+        else -> throw IllegalArgumentException("Unsupported media type: ${publication.mediaType}")
+    }
+
+    return Intent(Intent.ACTION_SEND).apply {
+        type = mimeType
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_TEXT, "")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+}
+
+
+
+
+// Nouveau handleShare qui utilise les sous-fonctions
+fun handleShare(
+    publication: Publication,
+    context: Context,
+    ioDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.IO,
+    mainDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Main,
+    client: OkHttpClient = OkHttpClient()
+) {
+    CoroutineScope(ioDispatcher).launch {
         try {
-            val client = OkHttpClient()
-            val request = Request.Builder().url(publication.mediaUrl).build()
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
+            // 1. Télécharger les octets
+            val bytes = downloadBytes(publication.mediaUrl, client)
 
-            val bytes = response.body?.bytes() ?: throw Exception("Corps de réponse vide")
+            // 2. Créer le fichier localement
+            val mediaFile = createMediaFile(context, publication, bytes)
 
-            val fileExtension = when (publication.mediaType) {
-                MediaType.PHOTO -> ".jpg"
-                MediaType.VIDEO -> ".mp4"
-            }
-
-            val mediaDir = when (publication.mediaType) {
-                MediaType.PHOTO -> File(context.cacheDir, "shared_images")
-                MediaType.VIDEO -> File(context.filesDir, "shared_videos")
-            }
-            if (!mediaDir.exists()) mediaDir.mkdirs()
-            val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
-
-            FileOutputStream(mediaFile).use { it.write(bytes) }
-
+            // 3. Obtenir l'URI via FileProvider
             val uri: Uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 mediaFile
             )
 
-            val shareIntent: Intent = Intent(Intent.ACTION_SEND).apply {
-                type = when (publication.mediaType) {
-                    MediaType.PHOTO -> "image/jpeg"
-                    MediaType.VIDEO -> "video/mp4"
-                }
-                putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_TEXT, when (publication.mediaType) {
-                    MediaType.PHOTO -> ""
-                    MediaType.VIDEO -> ""
-                })
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            // 4. Créer l'intent de partage
+            val shareIntent = createShareIntent(context, publication, uri)
 
-            CoroutineScope(Dispatchers.Main).launch {
-                context.startActivity(
-                    Intent.createChooser(
-                        shareIntent,
-                        if (publication.mediaType == MediaType.PHOTO) "Partager la photo via" else "Partager la vidéo via"
-                    )
-                )
+            // Sur le thread principal : lancer l'activité et afficher le toast
+            withContext(mainDispatcher) {
+                context.startActivity(Intent.createChooser(shareIntent, null))
                 Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            CoroutineScope(Dispatchers.Main).launch {
+            withContext(mainDispatcher) {
                 Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
