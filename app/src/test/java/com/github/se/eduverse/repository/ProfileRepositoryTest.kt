@@ -16,6 +16,7 @@ import com.google.firebase.storage.UploadTask
 import io.mockk.unmockkAll
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.MockedStatic
 import org.mockito.Mockito.*
 import org.mockito.kotlin.whenever
 
@@ -43,10 +45,21 @@ class ProfileRepositoryImplTest {
   private val mockQuerySnapshot: QuerySnapshot = mock(QuerySnapshot::class.java)
   private val mockTransaction: Transaction = mock(Transaction::class.java)
   private val mockQuery = mock(Query::class.java)
+  private lateinit var firebaseAuthMock: MockedStatic<FirebaseAuth>
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher) // Set up test dispatcher
+
+    // Setup Firebase Auth mock
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
+    whenever(mockUser.uid).thenReturn("currentUser")
+    whenever(mockAuth.currentUser).thenReturn(mockUser)
+    firebaseAuthMock = mockStatic(FirebaseAuth::class.java)
+    firebaseAuthMock.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(mockAuth)
 
     whenever(mockFirestore.collection(any())).thenReturn(mockCollectionRef)
     whenever(mockStorage.reference).thenReturn(mockStorageRef)
@@ -86,6 +99,23 @@ class ProfileRepositoryImplTest {
           override suspend fun removePublication(publicationId: String) {}
 
           override suspend fun removeFromFavorites(userId: String, publicationId: String) {}
+
+          override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun isPublicationFavorited(
+              userId: String,
+              publicationId: String
+          ): Boolean {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun getFavoritePublications(
+              favoriteIds: List<String>
+          ): List<Publication> {
+            TODO("Not yet implemented")
+          }
 
           override suspend fun followUser(followerId: String, followedId: String) {}
 
@@ -168,6 +198,10 @@ class ProfileRepositoryImplTest {
           }
 
           override suspend fun deletePublication(publicationId: String, userId: String): Boolean {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun addToFavorites(userId: String, publicationId: String) {
             TODO("Not yet implemented")
           }
         }
@@ -253,25 +287,6 @@ class ProfileRepositoryImplTest {
     repository.removePublication(publicationId)
 
     verify(mockDocumentRef).delete()
-  }
-
-  @Test
-  fun `removeFromFavorites removes favorite document`() = runTest {
-    val userId = "testUser"
-    val pubId = "pub123"
-    val mockQuery = mock(Query::class.java)
-    val mockDocRef = mock(DocumentReference::class.java)
-
-    whenever(mockCollectionRef.whereEqualTo("userId", userId)).thenReturn(mockQuery)
-    whenever(mockQuery.whereEqualTo("publicationId", pubId)).thenReturn(mockQuery)
-    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
-    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
-    whenever(mockSnapshot.reference).thenReturn(mockDocRef)
-    whenever(mockDocRef.delete()).thenReturn(Tasks.forResult(null))
-
-    repository.removeFromFavorites(userId, pubId)
-
-    verify(mockDocRef).delete()
   }
 
   @Test
@@ -846,16 +861,6 @@ class ProfileRepositoryImplTest {
     val userId = "testUser"
     val currentUserId = "currentUser"
 
-    // Mock FirebaseAuth
-    val mockAuth = mock(FirebaseAuth::class.java)
-    val mockUser = mock(FirebaseUser::class.java)
-    whenever(mockAuth.currentUser).thenReturn(mockUser)
-    whenever(mockUser.uid).thenReturn(currentUserId)
-
-    // Mock static FirebaseAuth.getInstance()
-    val firebaseAuthMock = mockStatic(FirebaseAuth::class.java)
-    firebaseAuthMock.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(mockAuth)
-
     // Mock followers collection query
     val mockQuery = mock(Query::class.java)
     val mockFollowerDoc = mock(DocumentSnapshot::class.java)
@@ -888,9 +893,6 @@ class ProfileRepositoryImplTest {
     assertEquals("Follower1", followers[0].username)
     assertTrue(followers[0].isFollowedByCurrentUser)
     verify(mockQuery).get()
-
-    // Clean up static mock
-    firebaseAuthMock.close()
   }
 
   @Test
@@ -1102,10 +1104,272 @@ class ProfileRepositoryImplTest {
     assertFalse(result)
   }
 
+  @Test
+  fun `addToFavorites successfully adds publication to favorites`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val mockUsersCollectionRef = mock(CollectionReference::class.java)
+    val mockUserDocumentRef = mock(DocumentReference::class.java)
+    val mockFavoritePublicationsCollectionRef = mock(CollectionReference::class.java)
+    val mockPublicationDocumentRef = mock(DocumentReference::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollectionRef)
+    whenever(mockUsersCollectionRef.document(userId)).thenReturn(mockUserDocumentRef)
+    whenever(mockUserDocumentRef.collection("favoritePublications"))
+        .thenReturn(mockFavoritePublicationsCollectionRef)
+    whenever(mockFavoritePublicationsCollectionRef.document(publicationId))
+        .thenReturn(mockPublicationDocumentRef)
+    whenever(mockPublicationDocumentRef.set(any())).thenReturn(Tasks.forResult(null))
+
+    repository.addToFavorites(userId, publicationId)
+
+    verify(mockPublicationDocumentRef)
+        .set(
+            argThat { map: Map<String, Any> ->
+              map["publicationId"] == publicationId && map.containsKey("timestamp")
+            })
+  }
+
+  @Test
+  fun `getFavoritePublicationsIds returns list of favorited publication IDs`() = runTest {
+    val userId = "testUser"
+    val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+    val mockDocumentSnapshot1 = mock(DocumentSnapshot::class.java)
+    val mockDocumentSnapshot2 = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents)
+        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+    whenever(mockDocumentSnapshot1.getString("publicationId")).thenReturn("pub1")
+    whenever(mockDocumentSnapshot2.getString("publicationId")).thenReturn("pub2")
+
+    val result = repository.getFavoritePublicationsIds(userId)
+
+    assertEquals(listOf("pub1", "pub2"), result)
+    verify(mockCollectionRef).get()
+  }
+
+  @Test
+  fun `isPublicationFavorited returns true when publication is favorited`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val mockDocSnapshot = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(publicationId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.get()).thenReturn(Tasks.forResult(mockDocSnapshot))
+    whenever(mockDocSnapshot.exists()).thenReturn(true)
+
+    val result = repository.isPublicationFavorited(userId, publicationId)
+
+    assertTrue(result)
+    verify(mockDocumentRef).get()
+  }
+
+  @Test
+  fun `isPublicationFavorited returns false when publication is not favorited`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub1"
+    val mockDocSnapshot = mock(DocumentSnapshot::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(publicationId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.get()).thenReturn(Tasks.forResult(mockDocSnapshot))
+    whenever(mockDocSnapshot.exists()).thenReturn(false)
+
+    val result = repository.isPublicationFavorited(userId, publicationId)
+
+    assertFalse(result)
+    verify(mockDocumentRef).get()
+  }
+
+  @Test
+  fun `getFavoritePublicationsIds returns empty list on error`() = runTest {
+    val userId = "testUser"
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("favoritePublications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.get()).thenThrow(RuntimeException("Firestore error"))
+
+    val result = repository.getFavoritePublicationsIds(userId)
+
+    assertTrue(result.isEmpty())
+    verify(mockCollectionRef).get()
+  }
+
+  @Test
+  fun `incrementLikes handles empty query result`() = runTest {
+    val publicationId = "pub123"
+    val userId = "user456"
+
+    // Mock empty query result
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(true)
+
+    repository.incrementLikes(publicationId, userId)
+    // Verify no transaction was attempted
+    verify(mockFirestore, never()).runTransaction<Any>(any())
+  }
+
+  @Test
+  fun `getFavoritePublications handles invalid publication reference`() = runTest {
+    val favoriteIds = listOf("pub1", "pub2")
+    val mockPublication = mock(Publication::class.java)
+
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereIn("id", favoriteIds)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
+    whenever(mockSnapshot.toObject(Publication::class.java)).thenReturn(null)
+
+    val result = repository.getFavoritePublications(favoriteIds)
+    assertTrue(result.isEmpty())
+  }
+
+  @Test
+  fun `removeFromLikedPublications throws exception with error message on failure`() = runTest {
+    val userId = "testUser"
+    val publicationId = "pub123"
+
+    // Mock the collections and document references
+    val mockUsersCollection = mock(CollectionReference::class.java)
+    val mockUserDoc = mock(DocumentReference::class.java)
+    val mockLikedPubsCollection = mock(CollectionReference::class.java)
+    val mockPubDoc = mock(DocumentReference::class.java)
+
+    whenever(mockFirestore.collection("users")).thenReturn(mockUsersCollection)
+    whenever(mockUsersCollection.document(userId)).thenReturn(mockUserDoc)
+    whenever(mockUserDoc.collection("likedPublications")).thenReturn(mockLikedPubsCollection)
+    whenever(mockLikedPubsCollection.document(publicationId)).thenReturn(mockPubDoc)
+
+    // Mock the delete operation to throw an exception
+    val errorMessage = "Network error during delete"
+    whenever(mockPubDoc.delete()).thenThrow(RuntimeException(errorMessage))
+
+    try {
+      repository.removeFromLikedPublications(userId, publicationId)
+      fail("Expected an exception to be thrown")
+    } catch (e: Exception) {
+      // Verify only the actual exception message
+      assertEquals(errorMessage, e.message)
+    }
+  }
+
+  @Test
+  fun `decrementLikesAndRemoveUser handles transaction failure and throws exception`() = runTest {
+    val publicationId = "pub123"
+    val userId = "user456"
+    val documentRef = mock(DocumentReference::class.java)
+    val errorMessage = "Transaction failed due to network error"
+
+    // Mock the publication query
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.whereEqualTo("id", publicationId)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.isEmpty).thenReturn(false)
+    whenever(mockQuerySnapshot.documents).thenReturn(listOf(mockSnapshot))
+    whenever(mockSnapshot.reference).thenReturn(documentRef)
+
+    // Mock transaction to throw exception
+    whenever(mockFirestore.runTransaction<Void>(any())).thenThrow(RuntimeException(errorMessage))
+
+    try {
+      repository.decrementLikesAndRemoveUser(publicationId, userId)
+      fail("Expected an exception to be thrown")
+    } catch (e: Exception) {
+      // Verify only the actual exception message
+      assertEquals(errorMessage, e.message)
+    }
+
+    // Verify that the transaction was attempted
+    verify(mockFirestore).runTransaction<Void>(any())
+  }
+
+  @Test
+  fun `getProfile handles favorites retrieval correctly`() = runTest {
+    val userId = "testUser"
+    val favoritePublicationId = "favPub1"
+
+    // Mock base profile document
+    val profileSnapshot = mock(DocumentSnapshot::class.java)
+    val initialProfile = Profile(id = userId, username = "testUser")
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.get()).thenReturn(Tasks.forResult(profileSnapshot))
+    whenever(profileSnapshot.toObject(Profile::class.java)).thenReturn(initialProfile)
+
+    // Mock publications query
+    val pubQuery = mock(Query::class.java)
+    val pubSnapshot = mock(QuerySnapshot::class.java)
+    whenever(mockCollectionRef.whereEqualTo("userId", userId)).thenReturn(pubQuery)
+    whenever(pubQuery.get()).thenReturn(Tasks.forResult(pubSnapshot))
+    whenever(pubSnapshot.documents).thenReturn(emptyList())
+
+    // Mock publication document for favorite
+    val favPubSnapshot = mock(DocumentSnapshot::class.java)
+    val favPubDoc = mock(DocumentReference::class.java)
+    whenever(mockCollectionRef.document(favoritePublicationId)).thenReturn(favPubDoc)
+    whenever(favPubDoc.get()).thenReturn(Tasks.forResult(favPubSnapshot))
+    whenever(favPubSnapshot.toObject(Publication::class.java))
+        .thenReturn(Publication(id = favoritePublicationId, title = "Favorite Publication"))
+
+    // Mock favorites query
+    val favQuery = mock(Query::class.java)
+    val favSnapshot = mock(QuerySnapshot::class.java)
+    val favDoc = mock(DocumentSnapshot::class.java)
+    whenever(mockCollectionRef.whereEqualTo("userId", userId)).thenReturn(favQuery)
+    whenever(favQuery.get()).thenReturn(Tasks.forResult(favSnapshot))
+    whenever(favSnapshot.documents).thenReturn(listOf(favDoc))
+    whenever(favDoc.getString("publicationId")).thenReturn(favoritePublicationId)
+
+    // Mock followers/following queries
+    val followersQuery = mock(Query::class.java)
+    val followingQuery = mock(Query::class.java)
+    val followersSnapshot = mock(QuerySnapshot::class.java)
+    val followingSnapshot = mock(QuerySnapshot::class.java)
+    whenever(mockCollectionRef.whereEqualTo("followedId", userId)).thenReturn(followersQuery)
+    whenever(mockCollectionRef.whereEqualTo("followerId", userId)).thenReturn(followingQuery)
+    whenever(followersQuery.get()).thenReturn(Tasks.forResult(followersSnapshot))
+    whenever(followingQuery.get()).thenReturn(Tasks.forResult(followingSnapshot))
+    whenever(followersSnapshot.size()).thenReturn(5)
+    whenever(followingSnapshot.size()).thenReturn(3)
+
+    // Override the collection returns for different collections
+    whenever(mockFirestore.collection("profiles")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("publications")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("favorites")).thenReturn(mockCollectionRef)
+    whenever(mockFirestore.collection("followers")).thenReturn(mockCollectionRef)
+
+    // Mock isFollowing check
+    doReturn(true).`when`(repository).isFollowing("currentUser", userId)
+
+    // Execute getProfile
+    val result = repository.getProfile(userId)
+
+    // Verify result
+    assertNotNull(result)
+    assertEquals(1, result?.favoritePublications?.size)
+    assertEquals(favoritePublicationId, result?.favoritePublications?.first()?.id)
+    assertEquals("Favorite Publication", result?.favoritePublications?.first()?.title)
+    assertEquals(5, result?.followers)
+    assertEquals(3, result?.following)
+    assertTrue(result?.isFollowedByCurrentUser ?: false)
+  }
+
   @After
   fun tearDown() {
-    Dispatchers.resetMain() // Reset main dispatcher after the test
+    Dispatchers.resetMain()
     unmockkAll()
+    firebaseAuthMock.close()
   }
 }
 
