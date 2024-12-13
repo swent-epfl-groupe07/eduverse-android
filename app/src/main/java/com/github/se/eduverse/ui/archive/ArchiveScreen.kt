@@ -78,7 +78,7 @@ fun ArchiveScreen(
                     }
               }
             },
-            screenTitle = "My Courses",
+            screenTitle = null,
         )
       },
       bottomBar = {
