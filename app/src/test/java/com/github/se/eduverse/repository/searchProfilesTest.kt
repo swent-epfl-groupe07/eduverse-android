@@ -80,7 +80,6 @@ class SearchProfilesTests {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList(),
                 profileImageUrl = "",
                 isFollowedByCurrentUser = false),
             Profile(
@@ -89,7 +88,6 @@ class SearchProfilesTests {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList(),
                 profileImageUrl = "",
                 isFollowedByCurrentUser = false),
             Profile(
@@ -98,7 +96,6 @@ class SearchProfilesTests {
                 followers = 0,
                 following = 0,
                 publications = emptyList(),
-                favoritePublications = emptyList(),
                 profileImageUrl = "",
                 isFollowedByCurrentUser = false))
 

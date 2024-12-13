@@ -29,6 +29,7 @@ import androidx.navigation.navigation
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.model.NotificationType
+import com.github.se.eduverse.repository.AiAssistantRepository
 import com.github.se.eduverse.repository.CommentsRepositoryImpl
 import com.github.se.eduverse.repository.DashboardRepositoryImpl
 import com.github.se.eduverse.repository.FileRepositoryImpl
@@ -41,6 +42,7 @@ import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.repository.TimeTableRepositoryImpl
 import com.github.se.eduverse.repository.VideoRepository
 import com.github.se.eduverse.ui.archive.ArchiveScreen
+import com.github.se.eduverse.ui.assistant.AiAssistantScreen
 import com.github.se.eduverse.ui.authentification.LoadingScreen
 import com.github.se.eduverse.ui.authentification.SignInScreen
 import com.github.se.eduverse.ui.calculator.CalculatorScreen
@@ -73,6 +75,7 @@ import com.github.se.eduverse.ui.timetable.DetailsTasksScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
 import com.github.se.eduverse.ui.videos.VideoScreen
+import com.github.se.eduverse.viewmodel.AiAssistantViewModel
 import com.github.se.eduverse.viewmodel.CommentsViewModel
 import com.github.se.eduverse.viewmodel.DashboardViewModel
 import com.github.se.eduverse.viewmodel.FileViewModel
@@ -246,6 +249,8 @@ fun EduverseApp(
   val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
   val pdfGeneratorViewModel: PdfGeneratorViewModel =
       viewModel(factory = PdfGeneratorViewModel.Factory)
+  val aiAssistantRepository =
+      AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
 
   val pubRepo = PublicationRepository(firestore)
   val publicationViewModel = PublicationViewModel(pubRepo)
@@ -319,6 +324,14 @@ fun EduverseApp(
             profileViewModel,
             CommentsViewModel,
         )
+      }
+    }
+
+    navigation(startDestination = Screen.ASSISTANT, route = Route.ASSISTANT) {
+      composable(Screen.ASSISTANT) {
+        AiAssistantScreen(
+            navigationActions = navigationActions,
+            viewModel = AiAssistantViewModel(aiAssistantRepository))
       }
     }
 
