@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
@@ -30,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -254,9 +254,13 @@ fun CommentsMenuContent(
     currentUserId: String,
     onDismiss: () -> Unit
 ) {
-  Box(modifier = Modifier.fillMaxWidth().background(Color.White).testTag("CommentsMenuContent")) {
-    CommentSection(publicationId, commentsViewModel, currentUserId)
-  }
+  Box(
+      modifier =
+          Modifier.fillMaxWidth()
+              .background(MaterialTheme.colorScheme.background)
+              .testTag("CommentsMenuContent")) {
+        CommentSection(publicationId, commentsViewModel, currentUserId)
+      }
 }
 
 @Composable
@@ -277,7 +281,7 @@ fun CommentSection(
           Modifier.fillMaxHeight(0.75f).fillMaxWidth().padding(16.dp).testTag("CommentsSection")) {
         Text(
             "Comments",
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 8.dp))
 
         when (commentsState) {
@@ -326,13 +330,11 @@ fun CommentSection(
                           modifier = Modifier.weight(1f).testTag("CommentContent_${comment.id}")) {
                             Text(
                                 text = comment.profile?.username ?: "Unknown",
-                                style = MaterialTheme.typography.subtitle2,
-                                color = Color.Black,
+                                style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.testTag("CommentUsername_${comment.id}"))
                             Text(
                                 text = comment.text,
-                                style = MaterialTheme.typography.body2,
-                                color = Color.Black,
+                                style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.testTag("CommentText_${comment.id}"))
                           }
 
@@ -360,8 +362,7 @@ fun CommentSection(
                                 }
                             Text(
                                 text = comment.likes.toString(),
-                                style = MaterialTheme.typography.caption,
-                                color = Color.Black,
+                                style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.testTag("CommentLikes_${comment.id}"))
                           }
 
