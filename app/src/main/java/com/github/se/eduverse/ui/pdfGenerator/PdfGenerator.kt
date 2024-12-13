@@ -581,15 +581,22 @@ fun SelectFolderDialog(
             textAlign = TextAlign.Center)
       },
       text = {
-        LazyColumn {
-          items(folders.size) { i ->
-            val folder = folders[i]
-            TextButton(
-                modifier = Modifier.testTag("folderButton_${folder.id}"),
-                onClick = { onSelect(folder) }) {
-                  Text(folder.name)
-                }
-            HorizontalDivider()
+        if (folders.isEmpty()) {
+          Text(
+              "No folders found. Create a new folder to save the generated PDF file.",
+              modifier = Modifier.fillMaxWidth().testTag("noFoldersFoundText"),
+              textAlign = TextAlign.Center)
+        } else {
+          LazyColumn {
+            items(folders.size) { i ->
+              val folder = folders[i]
+              TextButton(
+                  modifier = Modifier.testTag("folderButton_${folder.id}"),
+                  onClick = { onSelect(folder) }) {
+                    Text(folder.name)
+                  }
+              HorizontalDivider()
+            }
           }
         }
       },
