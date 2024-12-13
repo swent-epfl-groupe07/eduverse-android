@@ -1,5 +1,6 @@
 package com.github.se.eduverse.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
@@ -10,6 +11,7 @@ import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.repository.FolderRepositoryImpl
+import com.github.se.eduverse.showToast
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
@@ -45,7 +47,7 @@ open class FolderViewModel(
 
   private var _activeFolder: MutableStateFlow<Folder?> =
       MutableStateFlow(savedStateHandle["activeFolder"])
-  val activeFolder: StateFlow<Folder?> = _activeFolder
+  open val activeFolder: StateFlow<Folder?> = _activeFolder
 
   init {
     try {
@@ -86,7 +88,7 @@ open class FolderViewModel(
   }
 
   /** Get the folders with owner id equivalent to the current user */
-  fun getUserFolders() {
+  open fun getUserFolders() {
     repository.getFolders(
         auth.currentUser!!.uid,
         false,
@@ -95,12 +97,18 @@ open class FolderViewModel(
   }
 
   /** Get the archived folders with owner id equivalent to the current user */
-  fun getArchivedUserFolders() {
+  open fun getArchivedUserFolders() {
     repository.getFolders(
         auth.currentUser!!.uid,
         true,
         { _folders.value = it.toMutableList() },
         { Log.e("FolderViewModel", "Exception $it while trying to load the folders") })
+  }
+
+  /** Show a toast indicating that the device is offline */
+  open fun showOfflineMessage(context: Context) {
+    context.showToast(
+        "Your device is offline. Please connect to the internet to manage your folders")
   }
 
   /**
@@ -137,7 +145,7 @@ open class FolderViewModel(
    *
    * @param folder the folder to update
    */
-  fun updateFolder(folder: Folder) {
+  open fun updateFolder(folder: Folder) {
     repository.updateFolder(
         folder,
         {

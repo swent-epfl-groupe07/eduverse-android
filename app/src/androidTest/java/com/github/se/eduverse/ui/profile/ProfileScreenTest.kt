@@ -218,12 +218,7 @@ class ProfileScreenTest {
 
   @Test
   fun whenNoPublications_showsEmptyState() {
-    val testProfile =
-        Profile(
-            id = "test",
-            username = "TestUser",
-            publications = emptyList(),
-            favoritePublications = emptyList())
+    val testProfile = Profile(id = "test", username = "TestUser", publications = emptyList())
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {

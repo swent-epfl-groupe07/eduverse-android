@@ -42,163 +42,167 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  Scaffold(topBar = { TopNavigationBar("Quiz Generator", navigationActions) }) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).testTag("quizScreen"),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top) {
+  Scaffold(
+      topBar = { TopNavigationBar("Quiz Generator", navigationActions) },
+      backgroundColor = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(16.dp).testTag("quizScreen"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top) {
 
-          // Input field for quiz topic
-          BasicTextField(
-              value = topic,
-              onValueChange = { topic = it },
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(8.dp)
-                      .background(
-                          MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                          MaterialTheme.shapes.medium)
-                      .padding(16.dp)
-                      .testTag("topicInput"),
-              decorationBox = { innerTextField ->
-                Box(contentAlignment = Alignment.CenterStart) {
-                  if (topic.isEmpty()) {
-                    // Placeholder text for topic input
-                    Text("Enter a topic for the quiz", color = COLOR_TEXT_PLACEHOLDER)
-                  }
-                  innerTextField()
-                }
-              })
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Dropdowns for quiz difficulty and number of questions
-          Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween) {
-                DropdownMenuDemo(
-                    label = "Difficulty",
-                    value = difficulty,
-                    modifier = Modifier.testTag("difficultyDropdown")) { selected ->
-                      difficulty = selected
+              // Input field for quiz topic
+              BasicTextField(
+                  value = topic,
+                  onValueChange = { topic = it },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(8.dp)
+                          .background(
+                              MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                              MaterialTheme.shapes.medium)
+                          .padding(16.dp)
+                          .testTag("topicInput"),
+                  decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.CenterStart) {
+                      if (topic.isEmpty()) {
+                        // Placeholder text for topic input
+                        Text("Enter a topic for the quiz", color = COLOR_TEXT_PLACEHOLDER)
+                      }
+                      innerTextField()
                     }
-                DropdownMenuDemo(
-                    label = "Questions",
-                    value = numberOfQuestions.toString(),
-                    options = (1..20).map { it.toString() },
-                    modifier = Modifier.testTag("numberOfQuestionsDropdown")) { selected ->
-                      numberOfQuestions = selected.toInt()
-                    }
-              }
+                  })
 
-          Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(16.dp))
 
-          // Button to generate quiz questions
-          Button(
-              onClick = {
-                focusManager.clearFocus()
-                scope.launch {
-                  isLoading = true
-                  isQuizSubmitted = false
-                  selectedAnswers.clear()
-                  errorMessage = null
-                  try {
-                    val fetchedQuestions =
-                        quizzRepository.getQuestionsFromGPT(topic, difficulty, numberOfQuestions)
-                    if (fetchedQuestions.isNotEmpty()) {
-                      questions = fetchedQuestions
-                      errorMessage = null
-                    } else {
-                      errorMessage = "Ouchhh! the AI failed to generate the quiz. Try again."
-                    }
-                  } catch (e: Exception) {
-                    e.printStackTrace()
-                    errorMessage = "Ouchhh! the AI failed to generate the quiz. Try again."
-                  } finally {
-                    isLoading = false
-                  }
-                }
-              },
-              modifier = Modifier.padding(8.dp).testTag("generateQuizButton"),
-              colors =
-                  ButtonDefaults.buttonColors(
-                      backgroundColor = MaterialTheme.colorScheme.primary)) {
-                Text("Generate Quiz", color = MaterialTheme.colorScheme.onPrimary)
-              }
-
-          // Display error message if any
-          if (errorMessage != null && questions.isEmpty()) {
-            Text(
-                text = errorMessage!!,
-                color = COLOR_INCORRECT,
-                modifier = Modifier.padding(16.dp).testTag("errorMessageText"),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold)
-          }
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Show loading animation or questions list
-          if (isLoading) {
-            QuizLoadingAnimation(modifier = Modifier.fillMaxSize())
-          } else if (questions.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.weight(1f).testTag("questionsList")) {
-              itemsIndexed(questions) { index, question ->
-                QuestionItem(
-                    question = question,
-                    selectedAnswer = selectedAnswers[index],
-                    onAnswerSelected = { selectedAnswers[index] = it },
-                    onAnswerDeselected = { selectedAnswers.remove(index) },
-                    isQuizSubmitted = isQuizSubmitted,
-                    questionIndex = index)
-              }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Button to submit the quiz
-            if (!isQuizSubmitted) {
-              Button(
-                  onClick = {
-                    isQuizSubmitted = true
-                    score =
-                        questions.countIndexed { i, question ->
-                          selectedAnswers[i] == question.correctAnswer
+              // Dropdowns for quiz difficulty and number of questions
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween) {
+                    DropdownMenuDemo(
+                        label = "Difficulty",
+                        value = difficulty,
+                        modifier = Modifier.testTag("difficultyDropdown")) { selected ->
+                          difficulty = selected
                         }
-                  },
-                  modifier = Modifier.padding(8.dp).testTag("submitQuizButton"),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          backgroundColor = MaterialTheme.colorScheme.primary)) {
-                    Text("Submit Quiz", color = MaterialTheme.colorScheme.onPrimary)
+                    DropdownMenuDemo(
+                        label = "Questions",
+                        value = numberOfQuestions.toString(),
+                        options = (1..20).map { it.toString() },
+                        modifier = Modifier.testTag("numberOfQuestionsDropdown")) { selected ->
+                          numberOfQuestions = selected.toInt()
+                        }
                   }
-            } else {
-              // Display score after submission
-              Text(
-                  text = "Your Score: $score / ${questions.size}",
-                  style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                  modifier = Modifier.padding(8.dp).testTag("scoreText"),
-                  color = Color.Black)
-              // Button to reset quiz
+
+              Spacer(modifier = Modifier.height(16.dp))
+
+              // Button to generate quiz questions
               Button(
                   onClick = {
-                    topic = ""
-                    difficulty = "easy"
-                    numberOfQuestions = 5
-                    questions = emptyList()
-                    selectedAnswers.clear()
-                    isQuizSubmitted = false
+                    focusManager.clearFocus()
+                    scope.launch {
+                      isLoading = true
+                      isQuizSubmitted = false
+                      selectedAnswers.clear()
+                      errorMessage = null
+                      try {
+                        val fetchedQuestions =
+                            quizzRepository.getQuestionsFromGPT(
+                                topic, difficulty, numberOfQuestions)
+                        if (fetchedQuestions.isNotEmpty()) {
+                          questions = fetchedQuestions
+                          errorMessage = null
+                        } else {
+                          errorMessage = "Ouchhh! the AI failed to generate the quiz. Try again."
+                        }
+                      } catch (e: Exception) {
+                        e.printStackTrace()
+                        errorMessage = "Ouchhh! the AI failed to generate the quiz. Try again."
+                      } finally {
+                        isLoading = false
+                      }
+                    }
                   },
-                  modifier = Modifier.padding(8.dp).testTag("generateNewQuizButton"),
+                  modifier = Modifier.padding(8.dp).testTag("generateQuizButton"),
                   colors =
                       ButtonDefaults.buttonColors(
                           backgroundColor = MaterialTheme.colorScheme.primary)) {
-                    Text("Generate New Quiz", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Generate Quiz", color = MaterialTheme.colorScheme.onPrimary)
                   }
+
+              // Display error message if any
+              if (errorMessage != null && questions.isEmpty()) {
+                Text(
+                    text = errorMessage!!,
+                    color = COLOR_INCORRECT,
+                    modifier = Modifier.padding(16.dp).testTag("errorMessageText"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold)
+              }
+
+              Spacer(modifier = Modifier.height(16.dp))
+
+              // Show loading animation or questions list
+              if (isLoading) {
+                QuizLoadingAnimation(modifier = Modifier.fillMaxSize())
+              } else if (questions.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.weight(1f).testTag("questionsList")) {
+                  itemsIndexed(questions) { index, question ->
+                    QuestionItem(
+                        question = question,
+                        selectedAnswer = selectedAnswers[index],
+                        onAnswerSelected = { selectedAnswers[index] = it },
+                        onAnswerDeselected = { selectedAnswers.remove(index) },
+                        isQuizSubmitted = isQuizSubmitted,
+                        questionIndex = index)
+                  }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Button to submit the quiz
+                if (!isQuizSubmitted) {
+                  Button(
+                      onClick = {
+                        isQuizSubmitted = true
+                        score =
+                            questions.countIndexed { i, question ->
+                              selectedAnswers[i] == question.correctAnswer
+                            }
+                      },
+                      modifier = Modifier.padding(8.dp).testTag("submitQuizButton"),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              backgroundColor = MaterialTheme.colorScheme.primary)) {
+                        Text("Submit Quiz", color = MaterialTheme.colorScheme.onPrimary)
+                      }
+                } else {
+                  // Display score after submission
+                  Text(
+                      text = "Your Score: $score / ${questions.size}",
+                      style =
+                          MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                      modifier = Modifier.padding(8.dp).testTag("scoreText"),
+                      color = Color.Black)
+                  // Button to reset quiz
+                  Button(
+                      onClick = {
+                        topic = ""
+                        difficulty = "easy"
+                        numberOfQuestions = 5
+                        questions = emptyList()
+                        selectedAnswers.clear()
+                        isQuizSubmitted = false
+                      },
+                      modifier = Modifier.padding(8.dp).testTag("generateNewQuizButton"),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              backgroundColor = MaterialTheme.colorScheme.primary)) {
+                        Text("Generate New Quiz", color = MaterialTheme.colorScheme.onPrimary)
+                      }
+                }
+              }
             }
-          }
-        }
-  }
+      }
 }
 
 // Dropdown menu for quiz settings
