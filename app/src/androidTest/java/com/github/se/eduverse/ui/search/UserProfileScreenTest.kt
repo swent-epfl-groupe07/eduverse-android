@@ -164,8 +164,8 @@ class UserProfileScreenTest {
         Profile(
             id = testUserId,
             username = "TestUser",
-            publications = emptyList(),
-            favoritePublications = emptyList())
+            publications = emptyList()
+        )
     fakeViewModel.setState(ProfileUiState.Success(testProfile))
 
     composeTestRule.setContent {

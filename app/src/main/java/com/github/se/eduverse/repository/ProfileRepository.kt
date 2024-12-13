@@ -237,8 +237,8 @@ open class ProfileRepositoryImpl(
             profileImageUrl = photoUrl,
             followers = 0,
             following = 0,
-            publications = emptyList(),
-            favoritePublications = emptyList())
+            publications = emptyList()
+        )
 
     profilesCollection.document(userId).set(profile).await()
     return profile

@@ -83,8 +83,7 @@ class ProfileRepositoryImplTest {
                         title = "Test Pub",
                         thumbnailUrl = "",
                         timestamp = 123L)),
-            favoritePublications = emptyList(),
-            followers = 0,
+          followers = 0,
             following = 0)
 
     // Create manual mock repository
@@ -358,8 +357,7 @@ class ProfileRepositoryImplTest {
                   profile.profileImageUrl == photoUrl &&
                   profile.followers == 0 &&
                   profile.following == 0 &&
-                  profile.publications.isEmpty() &&
-                  profile.favoritePublications.isEmpty()
+                  profile.publications.isEmpty()
             })
 
     assertEquals(userId, result.id)
@@ -1357,9 +1355,6 @@ class ProfileRepositoryImplTest {
 
     // Verify result
     assertNotNull(result)
-    assertEquals(1, result?.favoritePublications?.size)
-    assertEquals(favoritePublicationId, result?.favoritePublications?.first()?.id)
-    assertEquals("Favorite Publication", result?.favoritePublications?.first()?.title)
     assertEquals(5, result?.followers)
     assertEquals(3, result?.following)
     assertTrue(result?.isFollowedByCurrentUser ?: false)
