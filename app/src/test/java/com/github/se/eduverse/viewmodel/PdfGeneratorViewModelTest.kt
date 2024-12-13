@@ -19,12 +19,14 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowToast
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
+@RunWith(RobolectricTestRunner::class)
 class PdfGeneratorViewModelTest {
 
   @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -232,14 +234,34 @@ class PdfGeneratorViewModelTest {
   }
 
   @Test
-  fun `test savePdfToDevice calls repository`() {
-    val pdfFile = mock(File::class.java)
-    val fileName = "test.pdf"
-
+  fun `test savePdfToDevice on success`() {
+    val mockContext = RuntimeEnvironment.getApplication()
+    val fileName = "test"
+    `when`(pdfRepository.savePdfToDevice(any(), any(), any(), any(), any())).then {
+      val pdfFile = File("${it.getArgument<String>(1)}.pdf")
+      it.getArgument<(File) -> Unit>(3)(pdfFile)
+    }
     viewModel.setNewFileName(fileName)
-    viewModel.savePdfToDevice(pdfFile, context, file)
+    viewModel.savePdfToDevice(file, mockContext, viewModel.DEFAULT_DESTINATION_DIRECTORY)
+    val latestToast = ShadowToast.getTextOfLatestToast()
+    assertEquals(
+        "$fileName.pdf saved to device folder: ${viewModel.DEFAULT_DESTINATION_DIRECTORY.name}",
+        latestToast)
+  }
 
-    verify(pdfRepository).savePdfToDevice(eq(pdfFile), eq(fileName), eq(file), any(), any())
+  @Test
+  fun `test savePdfToDevice on failure`() {
+    val mockContext = RuntimeEnvironment.getApplication()
+    val fileName = "test"
+    `when`(pdfRepository.savePdfToDevice(any(), any(), any(), any(), any())).then {
+      it.getArgument<(Exception) -> Unit>(4)(Exception())
+    }
+    viewModel.setNewFileName(fileName)
+    viewModel.savePdfToDevice(file, mockContext, viewModel.DEFAULT_DESTINATION_DIRECTORY)
+    val latestToast = ShadowToast.getTextOfLatestToast()
+    assertEquals(
+        "Failed to save generated PDF to device folder: ${viewModel.DEFAULT_DESTINATION_DIRECTORY.name}",
+        latestToast)
   }
 
   @Test
