@@ -83,7 +83,7 @@ class ProfileRepositoryImplTest {
                         title = "Test Pub",
                         thumbnailUrl = "",
                         timestamp = 123L)),
-          followers = 0,
+            followers = 0,
             following = 0)
 
     // Create manual mock repository

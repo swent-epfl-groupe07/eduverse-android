@@ -40,8 +40,7 @@ class ProfileViewModelTest {
             username = "testuser",
             followers = 10,
             following = 20,
-            publications = listOf()
-        )
+            publications = listOf())
 
     // Use specific value instead of matcher
     `when`(mockRepository.getProfile("testUser")).thenReturn(testProfile)
