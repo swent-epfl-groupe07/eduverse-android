@@ -59,7 +59,14 @@ fun SettingsScreen(navigationActions: NavigationActions, settingsViewModel: Sett
                       color = MaterialTheme.colorScheme.secondary)
                   Switch(
                       checked = privacySettings,
-                      onCheckedChange = { settingsViewModel.updatePrivacySettings(it) },
+                      onCheckedChange = {
+                        settingsViewModel.updatePrivacySettings(it)
+                        Toast.makeText(
+                                context,
+                                if (it) "Profile set to private" else "Profile set to public",
+                                Toast.LENGTH_SHORT)
+                            .show()
+                      },
                       colors =
                           SwitchDefaults.colors(
                               checkedThumbColor = MaterialTheme.colorScheme.primary,

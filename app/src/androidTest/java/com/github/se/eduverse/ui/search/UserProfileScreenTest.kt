@@ -11,6 +11,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.SettingsViewModel
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class UserProfileScreenTest {
@@ -29,11 +31,14 @@ class UserProfileScreenTest {
   private lateinit var fakeViewModel: FakeProfileViewModel
   private lateinit var fakeNavigationActions: FakeNavigationActions
   private val testUserId = "test_user_id"
+  private lateinit var settingsViewModel: SettingsViewModel
 
   @Before
   fun setup() {
     fakeViewModel = FakeProfileViewModel()
     fakeNavigationActions = FakeNavigationActions()
+    settingsViewModel = mock(SettingsViewModel::class.java)
+    `when`(settingsViewModel.privacySettings).thenReturn(MutableStateFlow(false))
   }
 
   class FakeProfileViewModel : ProfileViewModel(mock()) {
@@ -76,7 +81,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("loading_indicator").assertExists()
@@ -95,7 +103,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule
@@ -116,7 +127,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("error_message").assertExists().assertTextContains("Test error")
@@ -137,7 +151,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("publications_tab").performClick()
@@ -151,7 +168,10 @@ class UserProfileScreenTest {
   fun whenBackButtonClicked_callsNavigationGoBack() {
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("back_button").performClick()
@@ -170,7 +190,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule
@@ -186,7 +209,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("user_profile_username").assertTextContains("TestUser")
@@ -207,7 +233,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("video_play_icon_video1", useUnmergedTree = true).assertExists()
@@ -228,7 +257,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("publication_item_pub1").performClick()
@@ -248,7 +280,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("publication_item_pub1").assertExists()
@@ -271,6 +306,7 @@ class UserProfileScreenTest {
       UserProfileScreen(
           navigationActions = fakeNavigationActions,
           viewModel = fakeViewModel,
+          settingsViewModel,
           userId = "other_user_id",
           currentUserId = "current_user_id")
     }
@@ -311,6 +347,7 @@ class UserProfileScreenTest {
       UserProfileScreen(
           navigationActions = fakeNavigationActions,
           viewModel = fakeViewModel,
+          settingsViewModel,
           userId = "other_user_id",
           currentUserId = "current_user_id")
     }

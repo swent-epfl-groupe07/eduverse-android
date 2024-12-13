@@ -303,7 +303,10 @@ fun EduverseApp(
                   ?: return@composable // Handle missing userId
 
           UserProfileScreen(
-              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              settingsViewModel,
+              userId = userId)
         }
 
     navigation(

@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.search
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,8 +41,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.se.eduverse.R
@@ -54,6 +57,7 @@ import com.github.se.eduverse.ui.profile.PublicationItem
 import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,6 +65,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun UserProfileScreen(
     navigationActions: NavigationActions,
     viewModel: ProfileViewModel,
+    settingsViewModel: SettingsViewModel,
     userId: String,
     currentUserId: String? =
         FirebaseAuth.getInstance().currentUser?.uid // Default for production code
@@ -69,6 +74,8 @@ fun UserProfileScreen(
   val uiState by viewModel.profileState.collectAsState()
   val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
   val followActionState by viewModel.followActionState.collectAsState()
+  val context = LocalContext.current
+  val isPrivate by settingsViewModel.privacySettings.collectAsState()
 
   LaunchedEffect(userId) {
     viewModel.loadProfile(userId)
@@ -131,15 +138,35 @@ fun UserProfileScreen(
                       modifier = Modifier.testTag("stats_row").fillMaxWidth().padding(16.dp),
                       horizontalArrangement = Arrangement.SpaceEvenly) {
                         StatItem(
-                            "Followers",
-                            profile.followers,
-                            onClick = { navigationActions.navigateToFollowersList(profile.id) },
-                            Modifier.testTag("followers_stat"))
+                            label = "Followers",
+                            count = profile.followers,
+                            onClick = {
+                              if (isPrivate && currentUserId != profile.id) {
+                                Toast.makeText(
+                                        context,
+                                        "Cannot access followers. This profile is private.",
+                                        Toast.LENGTH_SHORT)
+                                    .show()
+                              } else {
+                                navigationActions.navigateToFollowersList(profile.id)
+                              }
+                            },
+                            modifier = Modifier.testTag("followers_stat"))
                         StatItem(
-                            "Following",
-                            profile.following,
-                            onClick = { navigationActions.navigateToFollowingList(profile.id) },
-                            Modifier.testTag("following_stat"))
+                            label = "Following",
+                            count = profile.following,
+                            onClick = {
+                              if (isPrivate && currentUserId != profile.id) {
+                                Toast.makeText(
+                                        context,
+                                        "Cannot access following. This profile is private.",
+                                        Toast.LENGTH_SHORT)
+                                    .show()
+                              } else {
+                                navigationActions.navigateToFollowingList(profile.id)
+                              }
+                            },
+                            modifier = Modifier.testTag("following_stat"))
                       }
 
                   // Follow/Unfollow Button
@@ -224,12 +251,33 @@ fun UserProfileScreen(
                         likedPublications
                       }
 
-                  PublicationsGrid(
-                      publications = publications,
-                      currentUserId = currentUserId ?: "",
-                      profileViewModel = viewModel,
-                      onPublicationClick = { /* Handle publication click */},
-                      modifier = Modifier.testTag("publications_grid"))
+                  // Check if profile is private and current user is not the owner
+                  if (isPrivate && currentUserId != profile.id) {
+                    Box(
+                        modifier =
+                            Modifier.fillMaxSize()
+                                .padding(top = 48.dp) // Top padding to position it towards the top
+                                .testTag("private_profile_message"),
+                        contentAlignment =
+                            Alignment.TopCenter // Horizontally centered, aligned at the top
+                        ) {
+                          Text(
+                              text =
+                                  "This profile is private. You cannot access publications or favorites.",
+                              style = MaterialTheme.typography.titleMedium, // Larger font size
+                              color = MaterialTheme.colorScheme.secondary,
+                              textAlign = TextAlign.Center // Center the text horizontally
+                              )
+                        }
+                  } else {
+                    // Show publications or favorites
+                    PublicationsGrid(
+                        publications = publications,
+                        currentUserId = currentUserId ?: "",
+                        profileViewModel = viewModel,
+                        onPublicationClick = { /* Handle publication click */},
+                        modifier = Modifier.testTag("publications_grid"))
+                  }
                 }
               }
             }

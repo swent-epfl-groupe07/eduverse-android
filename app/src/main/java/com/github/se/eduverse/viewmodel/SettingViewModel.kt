@@ -2,11 +2,9 @@ package com.github.se.eduverse.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.repository.SettingsRepository
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -60,6 +58,7 @@ open class SettingsViewModel(
       viewModelScope.launch {
         try {
           settingsRepository.setPrivacySettings(uid, value)
+          _privacySettings.value = value
         } catch (e: Exception) {
           Log.e("SettingsViewModel", "Exception $e while updating privacy settings")
         }
@@ -99,22 +98,5 @@ open class SettingsViewModel(
     } else {
       Log.e("SettingsViewModel", "User is not authenticated while updating selected theme")
     }
-  }
-
-  companion object {
-    fun provideFactory(
-        settingsRepository: SettingsRepository =
-            SettingsRepository(firestore = FirebaseFirestore.getInstance()),
-        auth: FirebaseAuth = FirebaseAuth.getInstance()
-    ): ViewModelProvider.Factory =
-        object : ViewModelProvider.Factory {
-          @Suppress("UNCHECKED_CAST")
-          override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-              return SettingsViewModel(settingsRepository, auth) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
-          }
-        }
   }
 }

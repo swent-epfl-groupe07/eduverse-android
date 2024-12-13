@@ -25,6 +25,7 @@ import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
+import com.github.se.eduverse.viewmodel.SettingsViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.mockk.mockk
 import io.mockk.unmockkAll
@@ -36,6 +37,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 class SocialInteractionE2ETest {
 
@@ -44,6 +46,7 @@ class SocialInteractionE2ETest {
   private lateinit var dashboardViewModel: FakeDashboardViewModel
   private lateinit var viewModel: FakeProfileViewModel
   private lateinit var navigationActions: FakeProfileNavigationActions
+  private var settingViewModel = mock(SettingsViewModel::class.java)
 
   @Before
   fun setup() {
@@ -52,11 +55,13 @@ class SocialInteractionE2ETest {
     dashboardViewModel = FakeDashboardViewModel()
     viewModel = FakeProfileViewModel()
     navigationActions = FakeProfileNavigationActions()
+    `when`(settingViewModel.privacySettings).thenReturn(MutableStateFlow(false))
 
     composeTestRule.setContent {
       TestNavigation2(
           dashboardViewModel = dashboardViewModel,
           viewModel = viewModel,
+          settingViewModel,
           navigationActions = navigationActions)
     }
   }
@@ -144,6 +149,7 @@ class SocialInteractionE2ETest {
 fun TestNavigation2(
     dashboardViewModel: FakeDashboardViewModel,
     viewModel: FakeProfileViewModel,
+    settingsViewModel: SettingsViewModel,
     navigationActions: FakeProfileNavigationActions
 ) {
   var currentScreen by remember { mutableStateOf("DASHBOARD") }
@@ -159,6 +165,7 @@ fun TestNavigation2(
         UserProfileScreen(
             navigationActions = navigationActions,
             viewModel = viewModel,
+            settingsViewModel = settingsViewModel,
             userId = "test_user_id",
             currentUserId = "current_user_id")
     else -> DashboardScreen(viewModel = dashboardViewModel, navigationActions = navigationActions)
