@@ -64,11 +64,19 @@ fun ArchiveScreen(
         TopNavigationBar(
             navigationActions,
             {
-              IconButton(
-                  onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
-                  modifier = Modifier.testTag("archive")) {
-                    Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-                  }
+              if (isSelectMode) {
+                IconButton(
+                    onClick = {
+                      if (context.isNetworkAvailable()) {
+                        deleteDialogOpen = true
+                      } else {
+                        folderViewModel.showOfflineMessage(context)
+                      }
+                    },
+                    modifier = Modifier.testTag("delete")) {
+                      Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                    }
+              }
             },
             screenTitle = "My Courses",
         )
