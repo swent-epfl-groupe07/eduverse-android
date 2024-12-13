@@ -7,13 +7,23 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.ConvertApiRepository
+import com.github.se.eduverse.repository.FileRepository
+import com.github.se.eduverse.repository.FileRepositoryImpl
+import com.github.se.eduverse.repository.FolderRepository
+import com.github.se.eduverse.repository.FolderRepositoryImpl
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import java.io.File
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +40,8 @@ class PdfGeneratorViewModel(
     private val pdfRepository: PdfRepository,
     private val openAiRepository: OpenAiRepository,
     private val convertApiRepository: ConvertApiRepository,
+    private val fileRepository: FileRepository,
+    private val folderRepository: FolderRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
@@ -85,7 +97,9 @@ class PdfGeneratorViewModel(
             return PdfGeneratorViewModel(
                 PdfRepositoryImpl(),
                 OpenAiRepository(OkHttpClient()),
-                ConvertApiRepository(conversionOkHttpClient))
+                ConvertApiRepository(conversionOkHttpClient),
+                FileRepositoryImpl(Firebase.firestore, Firebase.storage),
+                FolderRepositoryImpl(Firebase.firestore))
                 as T
           }
         }
@@ -119,6 +133,7 @@ class PdfGeneratorViewModel(
                 val pdfFile = pdfRepository.convertImageToPdf(uri, context)
                 currentFile =
                     pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
+                delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
               }
               PdfGeneratorOption.TEXT_TO_PDF -> {
                 val pdfFile = pdfRepository.convertTextToPdf(uri, context)
@@ -155,9 +170,6 @@ class PdfGeneratorViewModel(
               PdfGeneratorOption.NONE ->
                   throw Exception("No converter option selected") // Should never happen
             }
-
-            delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
-
             currentFile?.let { file ->
               _pdfGenerationState.value = PdfGenerationState.Success(file)
             } ?: { _pdfGenerationState.value = PdfGenerationState.Error() }
@@ -170,10 +182,6 @@ class PdfGeneratorViewModel(
   /** Set the PDF generation state to ready and reset the current file */
   fun setPdfGenerationStateToReady() {
     _pdfGenerationState.value = PdfGenerationState.Ready
-    if (currentFile != null) {
-      pdfRepository.deleteTempPdfFile(currentFile!!)
-      currentFile = null
-    }
   }
 
   /** Save the PDF file to the device */
@@ -203,11 +211,16 @@ class PdfGeneratorViewModel(
       if (pdfGenerationJob!!.isActive) {
         pdfGenerationJob!!.cancel()
       }
-      if (currentFile != null) {
-        pdfRepository.deleteTempPdfFile(currentFile!!)
-        currentFile = null
-      }
+      deleteGeneratedPdf()
       _pdfGenerationState.value = PdfGenerationState.Aborted
+    }
+  }
+
+  /** Delete the generated PDF file */
+  fun deleteGeneratedPdf() {
+    if (currentFile != null) {
+      pdfRepository.deleteTempPdfFile(currentFile!!)
+      currentFile = null
     }
   }
 
@@ -239,7 +252,6 @@ class PdfGeneratorViewModel(
    *
    * @param uri The URI of the image to extract text from
    * @param context The context of the application
-   * @throws Exception If the text extraction process fails
    */
   private fun extractTextToPdf(uri: Uri?, context: Context) {
     pdfRepository.extractTextFromImage(
@@ -261,5 +273,67 @@ class PdfGeneratorViewModel(
   private fun handleException(e: Exception) {
     Log.e("generatePdf", "PDF generation failed", e)
     _pdfGenerationState.value = PdfGenerationState.Error(e.message ?: "Failed to generate PDF file")
+  }
+
+  /**
+   * Save the PDF file to the selected app folder
+   *
+   * @param folder The folder to save the PDF file to
+   * @param uri The uri of the PDF file to save
+   * @param context The context of the application
+   */
+  fun savePdfToFolder(
+      folder: Folder,
+      uri: Uri,
+      context: Context,
+      onSuccess: () -> Unit,
+      onFailure: () -> Unit
+  ) {
+    val fileId = fileRepository.getNewUid()
+    fileRepository.savePdfFile(
+        uri,
+        fileId,
+        {
+          // Make sure that each file has a unique name in the folder
+          var newName = "${newFileName.value}.pdf"
+          var i = 1
+          while (folder.files.any { it.name == newName }) {
+            newName = "${newFileName.value}($i).pdf"
+            i++
+          }
+
+          val newFile =
+              MyFile(
+                  id = "",
+                  fileId = fileId,
+                  name = newName,
+                  creationTime = Calendar.getInstance(),
+                  lastAccess = Calendar.getInstance(),
+                  numberAccess = 0)
+
+          folderRepository.updateFolder(
+              folder.copy(files = (folder.files + newFile).toMutableList()),
+              {
+                context.showToast("$newName saved to app folder: ${folder.name}")
+                onSuccess()
+              },
+              {
+                context.showToast("Failed to add PDF to app folder: ${folder.name}")
+                onFailure()
+                Log.e("updateFolder", "Failed to to update folder in firestore", it)
+                // Rollback the file upload if the folder update fails
+                fileRepository.deleteFile(
+                    fileId,
+                    {},
+                    { e ->
+                      Log.e("savePdfToFolder", "Failed to delete pdf from firebase storage", e)
+                    })
+              })
+        },
+        {
+          onFailure()
+          context.showToast("Failed to upload PDF to cloud storage")
+          Log.e("savePdfToFolder", "Failed to upload pdf to firebase storage", it)
+        })
   }
 }

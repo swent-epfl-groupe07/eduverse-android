@@ -225,6 +225,13 @@ class FolderViewModelTest {
     assertEquals(folderViewModel.folders.value.size, 0)
     assertEquals(archivedFolder.archived, false)
   }
+
+  @Test
+  fun testCreateNewFolderFromName_onSuccess() {
+    val newFolder =
+        Folder("uid", emptyList<MyFile>().toMutableList(), "test", "id test", archived = false)
+    folderViewModel.createNewFolderFromName("test", { assertEquals(newFolder, it) }, {})
+  }
 }
 
 class MockFolderRepository(private val folder: Folder, private val archivedFolder: Folder) :
