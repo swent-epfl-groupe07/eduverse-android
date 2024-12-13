@@ -1,10 +1,17 @@
 package com.github.se.eduverse.ui.archive
 
+import android.content.Context
+import android.net.ConnectivityManager
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
@@ -16,9 +23,11 @@ import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -72,12 +81,16 @@ class ArchiveScreenTest {
     `when`(auth.currentUser).thenReturn(currentUser)
     `when`(currentUser.uid).thenReturn("uid")
     folderViewModel = FolderViewModel(folderRepository, auth)
+  }
 
+  private fun launch() {
     composeTestRule.setContent { ArchiveScreen(navigationActions, folderViewModel) }
   }
 
   @Test
   fun displayComponents() {
+    launch()
+
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
@@ -87,6 +100,8 @@ class ArchiveScreenTest {
 
   @Test
   fun goBackWorks() {
+    launch()
+
     var test = false
     `when`(navigationActions.goBack()).then {
       test = true
@@ -100,6 +115,8 @@ class ArchiveScreenTest {
 
   @Test
   fun bottomBarWorks() {
+    launch()
+
     var test: Boolean
     `when`(navigationActions.navigateTo(any<TopLevelDestination>())).then {
       test = true
@@ -117,9 +134,95 @@ class ArchiveScreenTest {
 
   @Test
   fun unarchiveFolderWorks() {
+    launch()
+
     composeTestRule.onNodeWithTag("folderCard1").performClick()
 
     assert(!folder1.archived)
     verify(navigationActions).navigateTo(eq(Route.LIST_FOLDERS))
+  }
+
+  @Test
+  fun unarchiveDisabledWhenOffline() {
+    val context = mock(Context::class.java)
+    val connectivityManager = mock(ConnectivityManager::class.java)
+
+    `when`(context.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager)
+    `when`(connectivityManager.activeNetwork).thenReturn(null)
+
+    val mFolderViewModel = mock(FolderViewModel::class.java)
+
+    `when`(mFolderViewModel.folders).thenReturn(MutableStateFlow(mutableListOf(folder1)))
+    `when`(mFolderViewModel.getArchivedUserFolders()).then {}
+    `when`(mFolderViewModel.showOfflineMessage(any())).then {}
+
+    composeTestRule.setContent { ArchiveScreen(navigationActions, mFolderViewModel, context) }
+
+    composeTestRule.onNodeWithTag("folderCard1").performClick()
+
+    verify(0) { navigationActions.navigateTo(anyString()) }
+  }
+
+  @Test
+  fun deleteDialogWorks() {
+    launch()
+
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("folderCard1").performTouchInput { longClick() }
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("checked").performClick()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(2)
+
+    composeTestRule.onNodeWithTag("cancel").performClick()
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("folderCard1").performTouchInput { longClick() }
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("unchecked").performClick()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("delete").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("no").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
+
+    verify(0) { folderRepository.deleteFolder(any(), any(), any()) }
+
+    composeTestRule.onNodeWithTag("delete").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("yes").performClick()
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    verify(1) { folderRepository.deleteFolder(any(), any(), any()) }
   }
 }

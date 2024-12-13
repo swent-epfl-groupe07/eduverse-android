@@ -82,8 +82,7 @@ class GetProfileTests {
               profileImageUrl = "test.jpg",
               followers = 0,
               following = 0,
-              publications = emptyList(),
-              favoritePublications = emptyList())
+              publications = emptyList())
 
       val testPublication =
           Publication(

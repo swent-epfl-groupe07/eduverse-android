@@ -4,11 +4,16 @@ import android.content.Context
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.ConvertApiRepository
+import com.github.se.eduverse.repository.FileRepository
+import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
-import com.github.se.eduverse.ui.converter.PdfConverterOption
+import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorOption
 import java.io.File
+import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -25,11 +30,11 @@ import org.mockito.kotlin.eq
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
-class PdfConverterViewModelTest {
+class PdfGeneratorViewModelTest {
 
   @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-  private lateinit var viewModel: PdfConverterViewModel
+  private lateinit var viewModel: PdfGeneratorViewModel
   private lateinit var pdfRepository: PdfRepository
   private lateinit var context: Context
   private lateinit var uri: Uri
@@ -37,6 +42,8 @@ class PdfConverterViewModelTest {
   private lateinit var openAiRepository: OpenAiRepository
   private lateinit var pdfDocument: PdfDocument
   private lateinit var convertApiRepository: ConvertApiRepository
+  private lateinit var fileRepository: FileRepository
+  private lateinit var folderRepository: FolderRepository
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -49,7 +56,11 @@ class PdfConverterViewModelTest {
     file = mock(File::class.java)
     openAiRepository = mock(OpenAiRepository::class.java)
     convertApiRepository = mock(ConvertApiRepository::class.java)
-    viewModel = PdfConverterViewModel(pdfRepository, openAiRepository, convertApiRepository)
+    fileRepository = mock(FileRepository::class.java)
+    folderRepository = mock(FolderRepository::class.java)
+    viewModel =
+        PdfGeneratorViewModel(
+            pdfRepository, openAiRepository, convertApiRepository, fileRepository, folderRepository)
     pdfDocument = mock(PdfDocument::class.java)
     `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
     `when`(pdfRepository.readTextFromPdfFile(uri, context, viewModel.MAX_SUMMARY_INPUT_SIZE))
@@ -70,9 +81,9 @@ class PdfConverterViewModelTest {
   @Test
   fun `test generatePdf when conversion error`() = runTest {
     `when`(pdfRepository.convertImageToPdf(uri, context)).then { throw Exception() }
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -80,10 +91,10 @@ class PdfConverterViewModelTest {
     `when`(pdfRepository.convertImageToPdf(uri, context)).thenReturn(pdfDocument)
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     advanceUntilIdle()
     assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
+        PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -91,21 +102,10 @@ class PdfConverterViewModelTest {
     `when`(pdfRepository.convertTextToPdf(uri, context)).thenReturn(pdfDocument)
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.TEXT_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.TEXT_TO_PDF)
     advanceUntilIdle()
     assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
-  }
-
-  @Test
-  fun `test generatePdf with DOCUMENT_TO_PDF option`() = runTest {
-    val document = mock(File::class.java)
-    `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(document)
-    `when`(convertApiRepository.convertToPdf(any(), any())).thenReturn(file)
-    viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.DOCUMENT_TO_PDF)
-    advanceUntilIdle()
-    verify(convertApiRepository).convertToPdf(eq(document), eq("test"))
+        PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -116,10 +116,10 @@ class PdfConverterViewModelTest {
       it.getArgument<(String?) -> Unit>(1)(summary)
     }
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
     assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
+        PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -129,9 +129,9 @@ class PdfConverterViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -141,9 +141,9 @@ class PdfConverterViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.SUMMARIZE_FILE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -153,9 +153,9 @@ class PdfConverterViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.EXTRACT_TEXT)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -167,10 +167,10 @@ class PdfConverterViewModelTest {
     }
 
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.EXTRACT_TEXT)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.EXTRACT_TEXT)
     advanceUntilIdle()
     assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
+        PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -181,20 +181,19 @@ class PdfConverterViewModelTest {
 
   @Test
   fun `test generatePdf with NONE option throws exception`() = runTest {
-    viewModel.generatePdf(uri, context, PdfConverterOption.NONE)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.NONE)
     advanceUntilIdle()
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test setPdfGenerationStateToReady resets state and deletes file`() {
     viewModel.currentFile = file
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     viewModel.setPdfGenerationStateToReady()
 
-    verify(pdfRepository).deleteTempPdfFile(any())
-    assertEquals(PdfConverterViewModel.PdfGenerationState.Ready, viewModel.pdfGenerationState.value)
+    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Ready, viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -211,20 +210,73 @@ class PdfConverterViewModelTest {
   @Test
   fun `test abortPdfGeneration cancels job and sets state`() = runTest {
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     viewModel.abortPdfGeneration()
 
     assertTrue(viewModel.pdfGenerationJob?.isCancelled == true)
     assertEquals(
-        PdfConverterViewModel.PdfGenerationState.Aborted, viewModel.pdfGenerationState.value)
+        PdfGeneratorViewModel.PdfGenerationState.Aborted, viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test abortPdfGeneration calls deleteTempPdfFile`() = runTest {
     viewModel.currentFile = file
     viewModel.setNewFileName("test")
-    viewModel.generatePdf(uri, context, PdfConverterOption.IMAGE_TO_PDF)
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     viewModel.abortPdfGeneration()
     verify(pdfRepository).deleteTempPdfFile(eq(file))
+  }
+
+  @Test
+  fun `test savePdfToFolder calls repository`() {
+    val folder = Folder("uid", mutableListOf(), "folder", "1", archived = false)
+    val fileId = "testFileId"
+    val newFileName = "test.pdf"
+
+    `when`(fileRepository.getNewUid()).thenReturn(fileId)
+    `when`(folderRepository.updateFolder(any(), any(), any())).then {
+      val newFolder = it.getArgument<Folder>(0)
+
+      assertEquals(folder.name, newFolder.name)
+      assertEquals(folder.ownerID, newFolder.ownerID)
+      assertEquals(folder.id, newFolder.id)
+      assertEquals(folder.archived, newFolder.archived)
+      assertEquals(1, newFolder.files.size)
+      assertEquals(newFileName, newFolder.files[0].name)
+      assertEquals(fileId, newFolder.files[0].fileId)
+    }
+    `when`(fileRepository.savePdfFile(any(), any(), any(), any())).then {
+      it.getArgument<() -> Unit>(2)()
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.savePdfToFolder(folder, uri, context, {}, {})
+  }
+
+  @Test
+  fun `test savePdfToFolder with existing file name`() {
+    val existingFile =
+        MyFile("", "existingFileId", "test.pdf", Calendar.getInstance(), Calendar.getInstance(), 0)
+    val folder = Folder("uid", mutableListOf(existingFile), "folder", "1", archived = false)
+    val newFileName = "test(1).pdf"
+    val fileId = "testFileId"
+
+    `when`(fileRepository.getNewUid()).thenReturn(fileId)
+    `when`(folderRepository.updateFolder(any(), any(), any())).then {
+      val newFolder = it.getArgument<Folder>(0)
+      assertEquals(folder.name, newFolder.name)
+      assertEquals(folder.ownerID, newFolder.ownerID)
+      assertEquals(folder.id, newFolder.id)
+      assertEquals(folder.archived, newFolder.archived)
+      assertEquals(2, newFolder.files.size)
+      assertEquals(newFileName, newFolder.files[1].name)
+      assertEquals(fileId, newFolder.files[1].fileId)
+    }
+    `when`(fileRepository.savePdfFile(any(), any(), any(), any())).then {
+      it.getArgument<() -> Unit>(2)()
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.savePdfToFolder(folder, uri, context, {}, {})
   }
 }
