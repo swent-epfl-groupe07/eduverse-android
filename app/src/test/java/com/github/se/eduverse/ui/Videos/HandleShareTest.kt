@@ -128,6 +128,6 @@ class HandleShareTest {
     every { mockResponse.code } returns 404
     every { mockResponse.body } returns null
 
-    downloadBytes(url, mockClient) // Doit lancer une exception
+    downloadBytes(url, mockClient)
   }
 }

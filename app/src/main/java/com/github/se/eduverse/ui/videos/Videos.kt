@@ -520,15 +520,13 @@ fun PhotoItem(
   }
 }
 
-// Sous-fonction 1 : Télécharger les octets depuis l'URL
-suspend fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
+fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
   val request = Request.Builder().url(url).build()
   val response = client.newCall(request).execute()
   if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
   return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
 }
 
-// Sous-fonction 2 : Déterminer l'extension de fichier en fonction du type de média
 fun getFileExtension(mediaType: MediaType): String {
   return when (mediaType) {
     MediaType.PHOTO -> ".jpg"
@@ -536,7 +534,6 @@ fun getFileExtension(mediaType: MediaType): String {
   }
 }
 
-// Sous-fonction 3 : Créer le fichier localement
 fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray): File {
   val mediaDir =
       when (publication.mediaType) {
@@ -552,7 +549,6 @@ fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray
   return mediaFile
 }
 
-// VideoScreen.kt
 fun createShareIntent(context: Context, publication: Publication, uri: Uri): Intent {
   val mimeType =
       when (publication.mediaType) {
@@ -569,7 +565,6 @@ fun createShareIntent(context: Context, publication: Publication, uri: Uri): Int
   }
 }
 
-// Nouveau handleShare qui utilise les sous-fonctions
 fun handleShare(
     publication: Publication,
     context: Context,
@@ -579,20 +574,15 @@ fun handleShare(
 ) {
   CoroutineScope(ioDispatcher).launch {
     try {
-      // 1. Télécharger les octets
       val bytes = downloadBytes(publication.mediaUrl, client)
 
-      // 2. Créer le fichier localement
       val mediaFile = createMediaFile(context, publication, bytes)
 
-      // 3. Obtenir l'URI via FileProvider
       val uri: Uri =
           FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", mediaFile)
 
-      // 4. Créer l'intent de partage
       val shareIntent = createShareIntent(context, publication, uri)
 
-      // Sur le thread principal : lancer l'activité et afficher le toast
       withContext(mainDispatcher) {
         context.startActivity(Intent.createChooser(shareIntent, null))
         Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
