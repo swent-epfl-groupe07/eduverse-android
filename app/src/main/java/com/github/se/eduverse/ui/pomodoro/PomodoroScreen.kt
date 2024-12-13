@@ -364,7 +364,8 @@ fun SettingsDialog(
           Text("Cancel")
         }
       },
-      modifier = Modifier.testTag("settingsDialog"))
+      modifier = Modifier.testTag("settingsDialog"),
+      backgroundColor = MaterialTheme.colorScheme.surface)
 }
 
 @Composable
@@ -423,7 +424,8 @@ fun SelectTodoDialog(todos: List<Todo>, onDismiss: () -> Unit, onSelect: (Todo) 
           Text("Cancel")
         }
       },
-      modifier = Modifier.testTag("selectTodoDialog"))
+      modifier = Modifier.testTag("selectTodoDialog"),
+      backgroundColor = MaterialTheme.colorScheme.surface)
 }
 
 /**
