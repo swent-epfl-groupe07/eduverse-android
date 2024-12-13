@@ -10,6 +10,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.se.eduverse.R
 import com.github.se.eduverse.repository.ConvertApiRepository
+import com.github.se.eduverse.repository.FileRepository
+import com.github.se.eduverse.repository.FolderRepository
 import com.github.se.eduverse.repository.OpenAiRepository
 import com.github.se.eduverse.repository.PdfRepository
 import com.github.se.eduverse.repository.PdfRepositoryImpl
@@ -23,6 +25,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 
 @RunWith(AndroidJUnit4::class)
 class PdfGeneratorInstrumentationTest {
@@ -34,6 +37,8 @@ class PdfGeneratorInstrumentationTest {
   private lateinit var context: Context
   private lateinit var pdfGeneratorViewModel: PdfGeneratorViewModel
   private lateinit var convertApiRepository: ConvertApiRepository
+  private lateinit var fileRepository: FileRepository
+  private lateinit var folderRepository: FolderRepository
 
   @Before
   fun setUp() {
@@ -41,8 +46,11 @@ class PdfGeneratorInstrumentationTest {
     pdfRepository = PdfRepositoryImpl()
     openAiRepository = OpenAiRepository(OkHttpClient())
     convertApiRepository = ConvertApiRepository(OkHttpClient())
+    fileRepository = mock(FileRepository::class.java)
+    folderRepository = mock(FolderRepository::class.java)
     pdfGeneratorViewModel =
-        PdfGeneratorViewModel(pdfRepository, openAiRepository, convertApiRepository)
+        PdfGeneratorViewModel(
+            pdfRepository, openAiRepository, convertApiRepository, fileRepository, folderRepository)
   }
 
   @Test

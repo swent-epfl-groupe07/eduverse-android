@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.Abc
@@ -28,12 +29,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.api.SUPPORTED_CONVERSION_TYPES
+import com.github.se.eduverse.isNetworkAvailable
+import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
+import java.io.File
 
 // Enum class to list the different options available in the PDF converter tool
 enum class PdfGeneratorOption {
@@ -54,17 +59,22 @@ enum class PdfGeneratorOption {
 @Composable
 fun PdfGeneratorScreen(
     navigationActions: NavigationActions,
-    converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory)
+    converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory),
+    folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory),
+    context: Context = LocalContext.current
 ) {
-  val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
   var showNameInputDialog by remember { mutableStateOf(false) }
   val pdfFileName = converterViewModel.newFileName.collectAsState()
   var currentPdfGeneratorOption by remember { mutableStateOf(PdfGeneratorOption.NONE) }
   val pdfConversionState = converterViewModel.pdfGenerationState.collectAsState()
   var showInfoWindow by remember { mutableStateOf(false) }
-  var showSelectSourceDialog by remember { mutableStateOf(false) }
   var inputFileMIMEType by remember { mutableStateOf("") }
+  var showDestinationDialog by remember { mutableStateOf(false) }
+  var showSelectFolderDialog by remember { mutableStateOf(false) }
+  val folders by folderViewModel.folders.collectAsState()
+  var showInputNewFolderNameDialog by remember { mutableStateOf(false) }
+  var generatedPdf by remember { mutableStateOf<File?>(null) }
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
@@ -128,9 +138,15 @@ fun PdfGeneratorScreen(
                         explanation = "Converts a document to PDF",
                         icon = Icons.Default.PictureAsPdf,
                         onClick = {
-                          currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
-                          inputFileMIMEType = "*/*"
-                          showInfoWindow = true
+                          // Since the conversion is done through convert API, it can't be done
+                          // offline
+                          if (!context.isNetworkAvailable()) {
+                            showOfflineToast(context)
+                          } else {
+                            currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
+                            inputFileMIMEType = "*/*"
+                            showInfoWindow = true
+                          }
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -141,9 +157,15 @@ fun PdfGeneratorScreen(
                         explanation = "Generates a summary of a file",
                         icon = Icons.Default.Summarize,
                         onClick = {
-                          currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
-                          inputFileMIMEType = "application/pdf"
-                          showInfoWindow = true
+                          // Since the summarization is done through openAI API, it can't be done
+                          // offline
+                          if (!context.isNetworkAvailable()) {
+                            showOfflineToast(context)
+                          } else {
+                            currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
+                            inputFileMIMEType = "application/pdf"
+                            showInfoWindow = true
+                          }
                         },
                         optionEnabled =
                             pdfConversionState.value ==
@@ -184,10 +206,10 @@ fun PdfGeneratorScreen(
         title = "Document to PDF converter"
         text =
             "Select a document to convert to PDF. Supported document types are: ${
-                    SUPPORTED_CONVERSION_TYPES.joinToString(
-                        ", "
-                    )
-                }"
+                        SUPPORTED_CONVERSION_TYPES.joinToString(
+                            ", "
+                        )
+                    }"
       }
       PdfGeneratorOption.SUMMARIZE_FILE -> {
         title = "Pdf file summarizer"
@@ -202,6 +224,7 @@ fun PdfGeneratorScreen(
         showInfoWindow = false
       }
     }
+
     // Show the info window
     InfoWindow(
         title = title,
@@ -209,22 +232,7 @@ fun PdfGeneratorScreen(
         onDismiss = { showInfoWindow = false },
         onConfirm = {
           showInfoWindow = false
-          showSelectSourceDialog = true
-        })
-  }
-
-  // Show a dialog that asks the user to choose from where to select the source file (device storage
-  // or app folders) after the info window has been displayed
-  if (showSelectSourceDialog) {
-    SelectSourceFileDialog(
-        onDismiss = { showSelectSourceDialog = false },
-        onDeviceStorageClick = {
-          showSelectSourceDialog = false
           filePickerLauncher.launch(arrayOf(inputFileMIMEType))
-        },
-        onFoldersClick = {
-          showSelectSourceDialog = false
-          /** logic for this option will be added later */
         })
   }
 
@@ -245,7 +253,7 @@ fun PdfGeneratorScreen(
   }
 
   // Handle the different states of the PDF generation process
-  when (val conversionState = pdfConversionState.value) {
+  when (pdfConversionState.value) {
     is PdfGeneratorViewModel.PdfGenerationState.InProgress -> {
       LoadingIndicator { converterViewModel.abortPdfGeneration() }
     }
@@ -259,10 +267,93 @@ fun PdfGeneratorScreen(
     }
     is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}
     is PdfGeneratorViewModel.PdfGenerationState.Success -> {
-      context.showToast("Pdf created successfully")
-      converterViewModel.savePdfToDevice(conversionState.pdfFile, context)
+      generatedPdf =
+          (pdfConversionState.value as PdfGeneratorViewModel.PdfGenerationState.Success).pdfFile
       converterViewModel.setPdfGenerationStateToReady()
+      showDestinationDialog = true
     }
+  }
+
+  // Ask the user to choose where to save the generated PDF file
+  if (showDestinationDialog) {
+    SelectDestinationDialog(
+        onDiscard = {
+          showDestinationDialog = false
+          converterViewModel.deleteGeneratedPdf()
+        },
+        onDeviceStorageClick = {
+          showDestinationDialog = false
+          converterViewModel.savePdfToDevice(generatedPdf!!, context)
+        },
+        onFoldersClick = {
+          if (!context.isNetworkAvailable()) {
+            // If the device is offline the file can't be uploaded to firebase storage
+            context.showToast(
+                "Your device is offline. Please connect to the internet to be able to save to folders")
+          } else {
+            showDestinationDialog = false
+            showSelectFolderDialog = true
+          }
+        })
+  }
+
+  // Show the dialog to select the destination folder from the app's folders
+  if (showSelectFolderDialog) {
+    SelectFolderDialog(
+        folders = folders,
+        onDismiss = {
+          showSelectFolderDialog = false
+          showDestinationDialog = true
+        },
+        onSelect = { folder ->
+          showSelectFolderDialog = false
+          converterViewModel.savePdfToFolder(
+              folder,
+              Uri.fromFile(generatedPdf),
+              context,
+              { converterViewModel.deleteGeneratedPdf() },
+              {
+                showDestinationDialog =
+                    true // Show the destination dialog to allow the user to still save the file to
+                // local storage if the upload fails
+              })
+        },
+        onCreate = {
+          showSelectFolderDialog = false
+          showInputNewFolderNameDialog = true
+        })
+  }
+
+  // Show the dialog to input the name of the new folder
+  if (showInputNewFolderNameDialog) {
+    InputNewFolderNameDialog(
+        onDismiss = {
+          showInputNewFolderNameDialog = false
+          showSelectFolderDialog = true
+        },
+        onConfirm = { name ->
+          showInputNewFolderNameDialog = false
+          folderViewModel.createNewFolderFromName(
+              name,
+              {
+                converterViewModel.savePdfToFolder(
+                    it,
+                    Uri.fromFile(generatedPdf),
+                    context,
+                    { converterViewModel.deleteGeneratedPdf() },
+                    {
+                      showDestinationDialog =
+                          true // Show the destination dialog to allow the user to still save the
+                      // file to local storage if the upload fails
+                    })
+              },
+              {
+                context.showToast(it)
+                // Show the destination dialog to allow the user to still save the file to local
+                // storage if the folder creation fails
+                showDestinationDialog = true
+              })
+        })
   }
 }
 
@@ -374,7 +465,7 @@ fun LoadingIndicator(onAbort: () -> Unit) {
 /**
  * Composable for displaying an info window which informs the user what type of file the selected
  * option accepts as input (and when necessary that the output is going to be in a pdf file) and
- * invites him to select an input or cancel the pdf generation
+ * invites him to select an input file or cancel the pdf generation
  *
  * @param title Title of the info window
  * @param text Text body of the info window
@@ -410,39 +501,46 @@ fun InfoWindow(title: String, text: String, onDismiss: () -> Unit, onConfirm: ()
 }
 
 /**
- * Composable for displaying a dialog for the user to choose if he wants to select the input file
- * from local device's files or from the app's folders
+ * Composable for displaying a dialog for the user to choose if he wants to save the generated PDF
+ * file in local device's storage or in one of the app's folders or discard the generated PDF
  *
- * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onDiscard Action to be performed when the discard PDF button is clicked
  * @param onDeviceStorageClick Action to be performed when the device storage button is clicked
  * @param onFoldersClick Action to be performed when the app folders button is clicked
  */
 @Composable
-fun SelectSourceFileDialog(
-    onDismiss: () -> Unit,
+fun SelectDestinationDialog(
+    onDiscard: () -> Unit,
     onDeviceStorageClick: () -> Unit,
     onFoldersClick: () -> Unit
 ) {
   AlertDialog(
-      modifier = Modifier.testTag("selectSourceFileDialog"),
-      onDismissRequest = onDismiss,
+      modifier = Modifier.testTag("selectDestinationDialog"),
+      onDismissRequest = {
+        /**
+         * Don't allow the user to dismiss the dialog by clicking outside of it, the user needs to
+         * explicitly take a decision regarding the generated file to avoid losing the file by
+         * mistake and having to restart the file generation.
+         */
+      },
       title = {
         Text(
-            text = "Choose from where to select the source file",
-            modifier = Modifier.fillMaxWidth(),
+            text = "PDF file generation is complete. Choose where to save it.",
+            modifier = Modifier.fillMaxWidth().testTag("selectDestinationDialogTitle"),
             textAlign = TextAlign.Center)
       },
       text = {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              // Button to proceed towards selecting a file from the app folders
+              // Button to proceed towards selecting the folder in which the user wants to save the
+              // PDF from the app folders
               Button(
                   onClick = { onFoldersClick() },
                   modifier = Modifier.fillMaxWidth().testTag("appFoldersButton")) {
                     Text("App folders")
                   }
-              // Button to launch the file picker
+              // Button to save the PDF in the device storage
               Button(
                   onClick = { onDeviceStorageClick() },
                   modifier = Modifier.fillMaxWidth().testTag("deviceStorageButton")) {
@@ -452,11 +550,109 @@ fun SelectSourceFileDialog(
       },
       confirmButton = {},
       dismissButton = {
+        Button(onClick = onDiscard, modifier = Modifier.fillMaxWidth().testTag("discardButton")) {
+          Text("Discard PDF", color = Color.Red)
+        }
+      })
+}
+
+/**
+ * Composable for displaying a dialog to select the destination folder from the app's folders
+ *
+ * @param folders List of folders to be displayed
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onSelect Action to be performed when a folder is selected
+ */
+@Composable
+fun SelectFolderDialog(
+    folders: List<Folder>,
+    onDismiss: () -> Unit,
+    onSelect: (Folder) -> Unit,
+    onCreate: () -> Unit
+) {
+  AlertDialog(
+      onDismissRequest = { onDismiss() },
+      title = {
+        Text(
+            "Select destination folder",
+            modifier = Modifier.fillMaxWidth().testTag("selectFolderDialogTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        if (folders.isEmpty()) {
+          Text(
+              "No folders found. Create a new folder to save the generated PDF file.",
+              modifier = Modifier.fillMaxWidth().testTag("noFoldersFoundText"),
+              textAlign = TextAlign.Center)
+        } else {
+          LazyColumn {
+            items(folders.size) { i ->
+              val folder = folders[i]
+              TextButton(
+                  modifier = Modifier.testTag("folderButton_${folder.id}"),
+                  onClick = { onSelect(folder) }) {
+                    Text(folder.name)
+                  }
+              HorizontalDivider()
+            }
+          }
+        }
+      },
+      confirmButton = {
+        // Allow the user to create a new folder in which to store the generated pdf
+        Button(
+            modifier = Modifier.fillMaxWidth().testTag("createFolderButton"), onClick = onCreate) {
+              Text("Create a new folder")
+            }
+      },
+      dismissButton = {
         Button(
             onClick = onDismiss,
-            modifier = Modifier.fillMaxWidth().testTag("selectSourceFileDismissButton")) {
+            modifier = Modifier.fillMaxWidth().testTag("cancelSelectFolderButton")) {
               Text("Cancel")
             }
+      },
+      modifier = Modifier.testTag("selectFolderDialog"))
+}
+
+/**
+ * Composable for displaying a dialog to input the name of the new folder on folder creation
+ *
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onConfirm Action to be performed when the dialog is confirmed
+ */
+@Composable
+fun InputNewFolderNameDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+  var inputText by remember { mutableStateOf("") }
+
+  AlertDialog(
+      modifier = Modifier.testTag("inputNewFolderNameDialog"),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            "Enter a name for the new folder",
+            modifier = Modifier.fillMaxWidth().testTag("inputNewFolderNameDialogTitle"),
+            textAlign = TextAlign.Center)
+      },
+      text = {
+        OutlinedTextField(
+            value = inputText,
+            onValueChange = { inputText = it },
+            label = { Text("Folder name") },
+            modifier = Modifier.fillMaxWidth().testTag("inputNewFolderNameField"))
+      },
+      confirmButton = {
+        Button(
+            enabled = inputText.isNotEmpty(),
+            onClick = { onConfirm(inputText) },
+            modifier = Modifier.testTag("confirmCreateFolderButton")) {
+              Text("Create folder")
+            }
+      },
+      dismissButton = {
+        Button(onClick = onDismiss, modifier = Modifier.testTag("dismissCreateFolderButton")) {
+          Text("Cancel")
+        }
       })
 }
 
@@ -476,4 +672,14 @@ private fun getFileNameFromUri(context: Context, uri: Uri): String {
     }
   }
   return fileName.substringBeforeLast(".") // Return the name without the file extension
+}
+
+/**
+ * Helper function used to show a toast message when the device is offline and the tool requires an
+ * internet connection
+ *
+ * @param context The context of the application
+ */
+private fun showOfflineToast(context: Context) {
+  context.showToast("Your device is offline. Please connect to the internet to use this tool.")
 }

@@ -249,4 +249,43 @@ open class FolderViewModel(
     folder.files.add(newFile)
     updateFolder(folder)
   }
+
+  /**
+   * Create a new folder with the given name.
+   *
+   * @param folderName the name of the folder to create
+   * @param onSuccess the code to execute if the folder is successfully created
+   * @param onFailure the code to execute if the folder can't be created
+   */
+  open fun createNewFolderFromName(
+      folderName: String,
+      onSuccess: (Folder) -> Unit,
+      onFailure: (String) -> Unit
+  ) {
+    auth.currentUser?.let { currentUser ->
+      val folder =
+          Folder(
+              ownerID = currentUser.uid,
+              files = mutableListOf(),
+              name = folderName,
+              id = getNewUid(),
+              archived = false)
+      repository.addFolder(
+          folder,
+          {
+            _folders.value.add(folder)
+            onSuccess(folder)
+          },
+          {
+            Log.e(
+                "FolderViewModel",
+                "Exception $it while trying to add folder ${folder.name} to firestore")
+            onFailure("Failed to create new folder.")
+          })
+    }
+        ?: run {
+          Log.e("FolderViewModel", "No user is logged in")
+          onFailure("No user logged in, cannot create folder.")
+        }
+  }
 }
