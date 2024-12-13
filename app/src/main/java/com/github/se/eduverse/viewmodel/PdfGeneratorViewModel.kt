@@ -186,10 +186,14 @@ class PdfGeneratorViewModel(
         pdfFile,
         newFileName.value,
         directory,
-        { context.showToast("${it.name} saved to ${DEFAULT_DESTINATION_DIRECTORY.name}") },
+        {
+          context.showToast(
+              "${it.name} saved to device folder: ${DEFAULT_DESTINATION_DIRECTORY.name}")
+        },
         {
           Log.e("savePdfToDevice", "Failed to save pdf to device", it)
-          context.showToast("Failed to save PDF to ${DEFAULT_DESTINATION_DIRECTORY.name}")
+          context.showToast(
+              "Failed to save generated PDF to device folder: ${DEFAULT_DESTINATION_DIRECTORY.name}")
         })
   }
 
