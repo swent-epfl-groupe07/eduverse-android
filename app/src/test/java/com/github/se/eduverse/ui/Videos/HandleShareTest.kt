@@ -222,7 +222,7 @@ class HandleShareTest {
     }
 
     verify {
-      Toast.makeText(mockContext, "Partage lancé", Toast.LENGTH_SHORT)
+      Toast.makeText(mockContext, "Share launched", Toast.LENGTH_SHORT)
       mockToast.show()
     }
   }
@@ -260,7 +260,7 @@ class HandleShareTest {
     verify(inverse = true) { mockContext.startActivity(any()) }
 
     verify {
-      Toast.makeText(mockContext, "Erreur lors du partage: 404 Not Found", Toast.LENGTH_SHORT)
+      Toast.makeText(mockContext, "Error while sharing: 404 Not Found", Toast.LENGTH_SHORT)
       mockToast.show()
     }
   }

@@ -509,10 +509,7 @@ fun VideoItem(
 }
 
 @Composable
-fun PhotoItem(
-    thumbnailUrl: String,
-    modifier: Modifier = Modifier.testTag("PhotoItem") // Ajout du paramètre Modifier
-) {
+fun PhotoItem(thumbnailUrl: String, modifier: Modifier = Modifier.testTag("PhotoItem")) {
   Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
     SubcomposeAsyncImage(
         model = thumbnailUrl,
@@ -526,8 +523,8 @@ object ShareUtils {
   fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
     val request = Request.Builder().url(url).build()
     val response = client.newCall(request).execute()
-    if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
-    return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
+    if (!response.isSuccessful) throw Exception("download failed: ${response.code}")
+    return response.body?.bytes() ?: throw Exception("empty response body")
   }
 
   fun getFileExtension(mediaType: MediaType): String {
@@ -583,12 +580,12 @@ object ShareUtils {
         val shareIntent = createShareIntent(context, publication, uri)
         withContext(mainDispatcher) {
           context.startActivity(Intent.createChooser(shareIntent, null))
-          Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, "Share launched", Toast.LENGTH_SHORT).show()
         }
       } catch (e: Exception) {
         e.printStackTrace()
         withContext(mainDispatcher) {
-          Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, "Error while sharing: ${e.message}", Toast.LENGTH_SHORT).show()
         }
       }
     }
