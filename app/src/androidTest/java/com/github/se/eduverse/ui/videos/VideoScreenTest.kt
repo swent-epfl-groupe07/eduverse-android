@@ -526,9 +526,10 @@ class VideoScreenTest {
     composeTestRule.onNodeWithTag("CommentItem_$commentId").assertDoesNotExist()
   }
 
-    @Test
-    fun testShareButtonIsDisplayedForEachPublication() {
-        val publications = listOf(
+  @Test
+  fun testShareButtonIsDisplayedForEachPublication() {
+    val publications =
+        listOf(
             Publication(
                 id = "1",
                 userId = "user1",
@@ -544,34 +545,28 @@ class VideoScreenTest {
                 mediaType = MediaType.PHOTO,
                 mediaUrl = "",
                 thumbnailUrl = "https://via.placeholder.com/150",
-                timestamp = System.currentTimeMillis())
-        )
+                timestamp = System.currentTimeMillis()))
 
-        fakePublicationRepository.setPublications(publications)
-        fakePublicationViewModel.setPublications(publications)
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
 
-        composeTestRule.setContent {
-            VideoScreen(
-                navigationActions = fakeNavigationActions,
-                publicationViewModel = fakePublicationViewModel,
-                profileViewModel = fakeProfileViewModel,
-                commentsViewModel = fakeCommentsViewModel,
-                "")
-        }
-
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithTag("ShareButton_0")
-            .assertExists()
-            .assertIsDisplayed()
-
-        composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
-
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithTag("ShareButton_1")
-            .assertExists()
-            .assertIsDisplayed()
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
     }
 
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("ShareButton_0").assertExists().assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("ShareButton_1").assertExists().assertIsDisplayed()
+  }
 }

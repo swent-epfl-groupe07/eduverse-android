@@ -81,14 +81,14 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.google.firebase.auth.FirebaseAuth
+import java.io.File
+import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.File
-import java.io.FileOutputStream
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -99,224 +99,200 @@ fun VideoScreen(
     commentsViewModel: CommentsViewModel,
     currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
-    val publications by publicationViewModel.publications.collectAsState()
-    val publicationError by publicationViewModel.error.collectAsState()
-    val pagerState = rememberPagerState()
+  val publications by publicationViewModel.publications.collectAsState()
+  val publicationError by publicationViewModel.error.collectAsState()
+  val pagerState = rememberPagerState()
 
-    var isCommentsVisible by remember { mutableStateOf(false) }
-    var selectedPublicationId by remember { mutableStateOf<String?>(null) }
+  var isCommentsVisible by remember { mutableStateOf(false) }
+  var selectedPublicationId by remember { mutableStateOf<String?>(null) }
 
-    val sheetState =
-        rememberModalBottomSheetState(
-            initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = true
-        )
+  val sheetState =
+      rememberModalBottomSheetState(
+          initialValue = ModalBottomSheetValue.Hidden, skipHalfExpanded = true)
 
-    val context = LocalContext.current
+  val context = LocalContext.current
 
+  // Handle opening and closing of the sheet
+  LaunchedEffect(isCommentsVisible) {
+    if (isCommentsVisible) {
+      sheetState.show()
+    } else {
+      sheetState.hide()
+    }
+  }
 
-    // Handle opening and closing of the sheet
-    LaunchedEffect(isCommentsVisible) {
-        if (isCommentsVisible) {
-            sheetState.show()
+  // Observe changes in the sheet's state to update isCommentsVisible
+  LaunchedEffect(sheetState.currentValue) {
+    if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
+      isCommentsVisible = false
+      selectedPublicationId = null
+    }
+  }
+
+  ModalBottomSheetLayout(
+      sheetContent = {
+        if (isCommentsVisible && selectedPublicationId != null) {
+          CommentsMenuContent(
+              publicationId = selectedPublicationId!!,
+              commentsViewModel = commentsViewModel,
+              currentUserId,
+              onDismiss = {
+                isCommentsVisible = false
+                selectedPublicationId = null
+                Log.d("COMMENT", "Comments menu dismissed")
+              })
         } else {
-            sheetState.hide()
+          Spacer(modifier = Modifier.height(1.dp))
         }
-    }
-
-    // Observe changes in the sheet's state to update isCommentsVisible
-    LaunchedEffect(sheetState.currentValue) {
-        if (sheetState.currentValue == ModalBottomSheetValue.Hidden) {
-            isCommentsVisible = false
-            selectedPublicationId = null
-        }
-    }
-
-    ModalBottomSheetLayout(
-        sheetContent = {
-            if (isCommentsVisible && selectedPublicationId != null) {
-                CommentsMenuContent(
-                    publicationId = selectedPublicationId!!,
-                    commentsViewModel = commentsViewModel,
-                    currentUserId,
-                    onDismiss = {
-                        isCommentsVisible = false
-                        selectedPublicationId = null
-                        Log.d("COMMENT", "Comments menu dismissed")
-                    })
-            } else {
-                Spacer(modifier = Modifier.height(1.dp))
-            }
-        },
-        sheetState = sheetState,
-        scrimColor = Color.Black.copy(alpha = 0.32f)
-    ) {
+      },
+      sheetState = sheetState,
+      scrimColor = Color.Black.copy(alpha = 0.32f)) {
         Scaffold(
             bottomBar = {
-                BottomNavigationMenu(
-                    onTabSelect = { route -> navigationActions.navigateTo(route) },
-                    tabList = LIST_TOP_LEVEL_DESTINATION,
-                    selectedItem = Route.VIDEOS
-                )
+              BottomNavigationMenu(
+                  onTabSelect = { route -> navigationActions.navigateTo(route) },
+                  tabList = LIST_TOP_LEVEL_DESTINATION,
+                  selectedItem = Route.VIDEOS)
             },
-            modifier = Modifier.testTag("VideoScreen")
-        ) { paddingValues ->
-            when {
+            modifier = Modifier.testTag("VideoScreen")) { paddingValues ->
+              when {
                 publicationError != null -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Red.copy(alpha = 0.2f))
-                            .testTag("ErrorIndicator")
-                    ) {
+                  Box(
+                      modifier =
+                          Modifier.fillMaxSize()
+                              .background(Color.Red.copy(alpha = 0.2f))
+                              .testTag("ErrorIndicator")) {
                         Text(
                             text = publicationError ?: "An error occurred",
                             color = Color.Red,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
+                            modifier = Modifier.align(Alignment.Center))
+                      }
                 }
                 publications.isNotEmpty() -> {
-                    VerticalPager(
-                        count = publications.size,
-                        state = pagerState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                            .testTag("VerticalPager")
-                    ) { page ->
+                  VerticalPager(
+                      count = publications.size,
+                      state = pagerState,
+                      modifier =
+                          Modifier.fillMaxSize().padding(paddingValues).testTag("VerticalPager")) {
+                          page ->
                         val publication = publications[page]
 
                         val isLiked = remember {
-                            mutableStateOf(publication.likedBy.contains(currentUserId))
+                          mutableStateOf(publication.likedBy.contains(currentUserId))
                         }
 
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onDoubleTap = {
+                            modifier =
+                                Modifier.fillMaxSize()
+                                    .pointerInput(Unit) {
+                                      detectTapGestures(
+                                          onDoubleTap = {
                                             profileViewModel.likeAndAddToFavorites(
-                                                currentUserId, publication.id
-                                            )
+                                                currentUserId, publication.id)
                                             isLiked.value = true
-                                        })
-                                }
-                                .testTag("PublicationItem_$page")
-                        ) {
-                            if (publication.mediaType == MediaType.VIDEO) {
+                                          })
+                                    }
+                                    .testTag("PublicationItem_$page")) {
+                              if (publication.mediaType == MediaType.VIDEO) {
                                 VideoItem(
                                     context = LocalContext.current,
                                     mediaUrl = publication.mediaUrl,
-                                    modifier = Modifier.testTag("VideoItem_$page")
-                                )
-                            } else {
+                                    modifier = Modifier.testTag("VideoItem_$page"))
+                              } else {
                                 PhotoItem(
                                     thumbnailUrl = publication.thumbnailUrl,
-                                    modifier = Modifier.testTag("PhotoItem_$page")
-                                )
-                            }
+                                    modifier = Modifier.testTag("PhotoItem_$page"))
+                              }
 
-                            // Icon to like
-                            IconButton(
-                                onClick = {
+                              // Icon to like
+                              IconButton(
+                                  onClick = {
                                     if (isLiked.value) {
-                                        profileViewModel.removeLike(currentUserId, publication.id)
-                                        isLiked.value = false
+                                      profileViewModel.removeLike(currentUserId, publication.id)
+                                      isLiked.value = false
                                     } else {
-                                        profileViewModel.likeAndAddToFavorites(
-                                            currentUserId, publication.id
-                                        )
-                                        isLiked.value = true
+                                      profileViewModel.likeAndAddToFavorites(
+                                          currentUserId, publication.id)
+                                      isLiked.value = true
                                     }
                                     Log.d(
                                         "LIKE",
-                                        "Like button clicked for publication: ${publication.id}"
-                                    )
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .offset(y = 64.dp)
-                                    .padding(12.dp)
-                                    .testTag("LikeButton_$page")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Favorite,
-                                    contentDescription = "Like",
-                                    tint = if (isLiked.value) Color.Red else Color.White,
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .testTag(
-                                            if (isLiked.value) "LikedIcon_$page"
-                                            else "UnlikedIcon_$page"
-                                        )
-                                )
-                            }
+                                        "Like button clicked for publication: ${publication.id}")
+                                  },
+                                  modifier =
+                                      Modifier.align(Alignment.CenterEnd)
+                                          .offset(y = 64.dp)
+                                          .padding(12.dp)
+                                          .testTag("LikeButton_$page")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Favorite,
+                                        contentDescription = "Like",
+                                        tint = if (isLiked.value) Color.Red else Color.White,
+                                        modifier =
+                                            Modifier.size(48.dp)
+                                                .testTag(
+                                                    if (isLiked.value) "LikedIcon_$page"
+                                                    else "UnlikedIcon_$page"))
+                                  }
 
-                            // Comment button
-                            IconButton(
-                                onClick = {
+                              // Comment button
+                              IconButton(
+                                  onClick = {
                                     selectedPublicationId = publication.id
                                     isCommentsVisible = true
                                     Log.d(
                                         "COMMENT",
-                                        "Comment button clicked for publication: ${publication.id}"
-                                    )
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .offset(y = 128.dp)
-                                    .padding(12.dp)
-                                    .testTag("CommentButton_$page")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Comment,
-                                    contentDescription = "Comment",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
+                                        "Comment button clicked for publication: ${publication.id}")
+                                  },
+                                  modifier =
+                                      Modifier.align(Alignment.CenterEnd)
+                                          .offset(y = 128.dp)
+                                          .padding(12.dp)
+                                          .testTag("CommentButton_$page")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Comment,
+                                        contentDescription = "Comment",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(48.dp))
+                                  }
 
-                            // Share button
-                            IconButton(
-                                onClick = {
+                              // Share button
+                              IconButton(
+                                  onClick = {
                                     handleShare(publication = publication, context = context)
-                                    Log.d("SHARE", "Share button clicked for publication: ${publication.id}")
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .offset(y = 192.dp)
-                                    .padding(12.dp)
-                                    .testTag("ShareButton_$page")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = "Share",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(48.dp)
-                                )
+                                    Log.d(
+                                        "SHARE",
+                                        "Share button clicked for publication: ${publication.id}")
+                                  },
+                                  modifier =
+                                      Modifier.align(Alignment.CenterEnd)
+                                          .offset(y = 192.dp)
+                                          .padding(12.dp)
+                                          .testTag("ShareButton_$page")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = "Share",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(48.dp))
+                                  }
                             }
+                      }
 
-                        }
+                  // Load more publications when the user reaches the last visible page
+                  LaunchedEffect(pagerState.currentPage) {
+                    if (pagerState.currentPage == publications.size - 1) {
+                      publicationViewModel.loadMorePublications()
                     }
-
-                    // Load more publications when the user reaches the last visible page
-                    LaunchedEffect(pagerState.currentPage) {
-                        if (pagerState.currentPage == publications.size - 1) {
-                            publicationViewModel.loadMorePublications()
-                        }
-                    }
+                  }
                 }
                 else -> {
-                    Box(modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("LoadingIndicator")) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
+                  Box(modifier = Modifier.fillMaxSize().testTag("LoadingIndicator")) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                  }
                 }
+              }
             }
-        }
-    }
+      }
 }
 
 @Composable
@@ -326,14 +302,9 @@ fun CommentsMenuContent(
     currentUserId: String,
     onDismiss: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .testTag("CommentsMenuContent")
-    ) {
-        CommentSection(publicationId, commentsViewModel, currentUserId)
-    }
+  Box(modifier = Modifier.fillMaxWidth().background(Color.White).testTag("CommentsMenuContent")) {
+    CommentSection(publicationId, commentsViewModel, currentUserId)
+  }
 }
 
 @Composable
@@ -342,162 +313,134 @@ fun CommentSection(
     commentsViewModel: CommentsViewModel,
     currentUserId: String
 ) {
-    val commentsState by commentsViewModel.commentsState.collectAsState()
-    val context = LocalContext.current
-    var newCommentText by remember { mutableStateOf("") }
+  val commentsState by commentsViewModel.commentsState.collectAsState()
+  val context = LocalContext.current
+  var newCommentText by remember { mutableStateOf("") }
 
-    // Load comments when the component is launched or when publicationId changes
-    LaunchedEffect(publicationId) { commentsViewModel.loadComments(publicationId) }
+  // Load comments when the component is launched or when publicationId changes
+  LaunchedEffect(publicationId) { commentsViewModel.loadComments(publicationId) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxHeight(0.75f)
-            .fillMaxWidth()
-            .padding(16.dp)
-            .testTag("CommentsSection")
-    ) {
+  Column(
+      modifier =
+          Modifier.fillMaxHeight(0.75f).fillMaxWidth().padding(16.dp).testTag("CommentsSection")) {
         Text(
             "Comments",
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+            modifier = Modifier.padding(bottom = 8.dp))
 
         when (commentsState) {
-            is CommentsUiState.Loading -> {
-                // Display a loading indicator only during initial loading
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("CommentsLoadingIndicator"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+          is CommentsUiState.Loading -> {
+            // Display a loading indicator only during initial loading
+            Box(
+                modifier = Modifier.fillMaxSize().testTag("CommentsLoadingIndicator"),
+                contentAlignment = Alignment.Center) {
+                  CircularProgressIndicator()
                 }
-            }
-            is CommentsUiState.Success -> {
-                val comments = (commentsState as CommentsUiState.Success).comments
+          }
+          is CommentsUiState.Success -> {
+            val comments = (commentsState as CommentsUiState.Success).comments
 
-                LazyColumn(modifier = Modifier
-                    .weight(1f)
-                    .testTag("CommentsList")) {
-                    items(comments) { comment ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(vertical = 4.dp)
-                                .fillMaxWidth()
-                                .testTag("CommentItem_${comment.id}")
-                        ) {
-                            // Display the profile image
-                            if (!comment.profile?.profileImageUrl.isNullOrBlank()) {
-                                SubcomposeAsyncImage(
-                                    model = comment.profile?.profileImageUrl,
-                                    contentDescription = "Profile Image",
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .testTag("ProfileImage_${comment.id}")
-                                )
-                            } else {
-                                // Placeholder for users without a profile image
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.Gray)
-                                        .testTag("ProfileImagePlaceholder_${comment.id}")
-                                )
-                            }
+            LazyColumn(modifier = Modifier.weight(1f).testTag("CommentsList")) {
+              items(comments) { comment ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier =
+                        Modifier.padding(vertical = 4.dp)
+                            .fillMaxWidth()
+                            .testTag("CommentItem_${comment.id}")) {
+                      // Display the profile image
+                      if (!comment.profile?.profileImageUrl.isNullOrBlank()) {
+                        SubcomposeAsyncImage(
+                            model = comment.profile?.profileImageUrl,
+                            contentDescription = "Profile Image",
+                            modifier =
+                                Modifier.size(32.dp)
+                                    .clip(CircleShape)
+                                    .testTag("ProfileImage_${comment.id}"))
+                      } else {
+                        // Placeholder for users without a profile image
+                        Box(
+                            modifier =
+                                Modifier.size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.Gray)
+                                    .testTag("ProfileImagePlaceholder_${comment.id}"))
+                      }
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                      Spacer(modifier = Modifier.width(8.dp))
 
-                            // Display the username and comment
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("CommentContent_${comment.id}")
-                            ) {
-                                Text(
-                                    text = comment.profile?.username ?: "Unknown",
-                                    style = MaterialTheme.typography.subtitle2,
-                                    color = Color.Black,
-                                    modifier = Modifier.testTag("CommentUsername_${comment.id}")
-                                )
-                                Text(
-                                    text = comment.text,
-                                    style = MaterialTheme.typography.body2,
-                                    color = Color.Black,
-                                    modifier = Modifier.testTag("CommentText_${comment.id}")
-                                )
-                            }
+                      // Display the username and comment
+                      Column(
+                          modifier = Modifier.weight(1f).testTag("CommentContent_${comment.id}")) {
+                            Text(
+                                text = comment.profile?.username ?: "Unknown",
+                                style = MaterialTheme.typography.subtitle2,
+                                color = Color.Black,
+                                modifier = Modifier.testTag("CommentUsername_${comment.id}"))
+                            Text(
+                                text = comment.text,
+                                style = MaterialTheme.typography.body2,
+                                color = Color.Black,
+                                modifier = Modifier.testTag("CommentText_${comment.id}"))
+                          }
 
-                            // Heart button to like the comment
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .testTag("LikeCommentSection_${comment.id}")
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        commentsViewModel.likeComment(
-                                            publicationId, comment.id, currentUserId
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .testTag("LikeCommentButton_${comment.id}")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Favorite,
-                                        contentDescription = "Like",
-                                        tint = if (comment.likedBy.contains(currentUserId)) Color.Red
-                                        else Color.Gray,
-                                        modifier = Modifier.testTag("LikeCommentIcon_${comment.id}")
-                                    )
+                      // Heart button to like the comment
+                      Column(
+                          horizontalAlignment = Alignment.CenterHorizontally,
+                          modifier =
+                              Modifier.padding(end = 8.dp)
+                                  .testTag("LikeCommentSection_${comment.id}")) {
+                            IconButton(
+                                onClick = {
+                                  commentsViewModel.likeComment(
+                                      publicationId, comment.id, currentUserId)
+                                },
+                                modifier =
+                                    Modifier.size(24.dp)
+                                        .testTag("LikeCommentButton_${comment.id}")) {
+                                  Icon(
+                                      imageVector = Icons.Default.Favorite,
+                                      contentDescription = "Like",
+                                      tint =
+                                          if (comment.likedBy.contains(currentUserId)) Color.Red
+                                          else Color.Gray,
+                                      modifier = Modifier.testTag("LikeCommentIcon_${comment.id}"))
                                 }
-                                Text(
-                                    text = comment.likes.toString(),
-                                    style = MaterialTheme.typography.caption,
-                                    color = Color.Black,
-                                    modifier = Modifier.testTag("CommentLikes_${comment.id}")
-                                )
-                            }
+                            Text(
+                                text = comment.likes.toString(),
+                                style = MaterialTheme.typography.caption,
+                                color = Color.Black,
+                                modifier = Modifier.testTag("CommentLikes_${comment.id}"))
+                          }
 
-                            // Trash button to delete the comment (visible only to the author)
-                            if (comment.ownerId == currentUserId) {
-                                IconButton(
-                                    onClick = {
-                                        commentsViewModel.deleteComment(publicationId, comment.id)
-                                    },
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .testTag("DeleteCommentButton_${comment.id}")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = Color.Gray,
-                                        modifier = Modifier.testTag("DeleteCommentIcon_${comment.id}")
-                                    )
-                                }
+                      // Trash button to delete the comment (visible only to the author)
+                      if (comment.ownerId == currentUserId) {
+                        IconButton(
+                            onClick = {
+                              commentsViewModel.deleteComment(publicationId, comment.id)
+                            },
+                            modifier =
+                                Modifier.size(24.dp).testTag("DeleteCommentButton_${comment.id}")) {
+                              Icon(
+                                  imageVector = Icons.Default.Delete,
+                                  contentDescription = "Delete",
+                                  tint = Color.Gray,
+                                  modifier = Modifier.testTag("DeleteCommentIcon_${comment.id}"))
                             }
-                        }
+                      }
                     }
-                }
+              }
             }
-            is CommentsUiState.Error -> {
-                val errorMessage = (commentsState as CommentsUiState.Error).message
-                // Display the error message
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("CommentsErrorIndicator"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = errorMessage, color = Color.Red)
+          }
+          is CommentsUiState.Error -> {
+            val errorMessage = (commentsState as CommentsUiState.Error).message
+            // Display the error message
+            Box(
+                modifier = Modifier.fillMaxSize().testTag("CommentsErrorIndicator"),
+                contentAlignment = Alignment.Center) {
+                  Text(text = errorMessage, color = Color.Red)
                 }
-            }
+          }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -505,33 +448,28 @@ fun CommentSection(
         // Input field and Post button
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.testTag("NewCommentSection")
-        ) {
-            TextField(
-                value = newCommentText,
-                onValueChange = { newCommentText = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("NewCommentTextField"),
-                placeholder = { Text("Write a comment...") }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
+            modifier = Modifier.testTag("NewCommentSection")) {
+              TextField(
+                  value = newCommentText,
+                  onValueChange = { newCommentText = it },
+                  modifier = Modifier.weight(1f).testTag("NewCommentTextField"),
+                  placeholder = { Text("Write a comment...") })
+              Spacer(modifier = Modifier.width(8.dp))
+              Button(
+                  onClick = {
                     if (newCommentText.isNotBlank()) {
-                        val ownerId = currentUserId.ifBlank { "anonymous" }
-                        commentsViewModel.addComment(publicationId, ownerId, newCommentText)
-                        newCommentText = "" // Clear the input field
+                      val ownerId = currentUserId.ifBlank { "anonymous" }
+                      commentsViewModel.addComment(publicationId, ownerId, newCommentText)
+                      newCommentText = "" // Clear the input field
                     } else {
-                        Toast.makeText(context, "Comment cannot be empty", Toast.LENGTH_SHORT).show()
+                      Toast.makeText(context, "Comment cannot be empty", Toast.LENGTH_SHORT).show()
                     }
-                },
-                modifier = Modifier.testTag("PostCommentButton")
-            ) {
-                Text("Post")
+                  },
+                  modifier = Modifier.testTag("PostCommentButton")) {
+                    Text("Post")
+                  }
             }
-        }
-    }
+      }
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -542,34 +480,30 @@ fun VideoItem(
     mediaUrl: String,
     modifier: Modifier = Modifier.testTag("VideoItem"),
     exoPlayerProvider: () -> ExoPlayer = {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(mediaUrl))
-            prepare()
-            playWhenReady = true
-            repeatMode = ExoPlayer.REPEAT_MODE_ONE
-        }
+      ExoPlayer.Builder(context).build().apply {
+        setMediaItem(MediaItem.fromUri(mediaUrl))
+        prepare()
+        playWhenReady = true
+        repeatMode = ExoPlayer.REPEAT_MODE_ONE
+      }
     }
 ) {
-    val exoPlayer = remember { exoPlayerProvider() }
+  val exoPlayer = remember { exoPlayerProvider() }
 
-    DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
+  DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
 
-    AndroidView(
-        factory = {
-            PlayerView(context).apply {
-                player = exoPlayer
-                useController = false
-                layoutParams =
-                    ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            }
-        },
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    )
+  AndroidView(
+      factory = {
+        PlayerView(context).apply {
+          player = exoPlayer
+          useController = false
+          layoutParams =
+              ViewGroup.LayoutParams(
+                  ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+          resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+        }
+      },
+      modifier = modifier.fillMaxSize().background(Color.Black))
 }
 
 @Composable
@@ -577,67 +511,63 @@ fun PhotoItem(
     thumbnailUrl: String,
     modifier: Modifier = Modifier.testTag("PhotoItem") // Ajout du paramètre Modifier
 ) {
-    Box(modifier = modifier
-        .fillMaxSize()
-        .background(Color.Black)) {
-        SubcomposeAsyncImage(
-            model = thumbnailUrl,
-            contentDescription = "Publication photo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+  Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
+    SubcomposeAsyncImage(
+        model = thumbnailUrl,
+        contentDescription = "Publication photo",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize())
+  }
 }
 
 // Sous-fonction 1 : Télécharger les octets depuis l'URL
 suspend fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
-    val request = Request.Builder().url(url).build()
-    val response = client.newCall(request).execute()
-    if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
-    return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
+  val request = Request.Builder().url(url).build()
+  val response = client.newCall(request).execute()
+  if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
+  return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
 }
 
 // Sous-fonction 2 : Déterminer l'extension de fichier en fonction du type de média
 fun getFileExtension(mediaType: MediaType): String {
-    return when (mediaType) {
-        MediaType.PHOTO -> ".jpg"
-        MediaType.VIDEO -> ".mp4"
-    }
+  return when (mediaType) {
+    MediaType.PHOTO -> ".jpg"
+    MediaType.VIDEO -> ".mp4"
+  }
 }
 
 // Sous-fonction 3 : Créer le fichier localement
 fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray): File {
-    val mediaDir = when (publication.mediaType) {
+  val mediaDir =
+      when (publication.mediaType) {
         MediaType.PHOTO -> File(context.cacheDir, "shared_images")
         MediaType.VIDEO -> File(context.filesDir, "shared_videos")
-    }
-    if (!mediaDir.exists()) mediaDir.mkdirs()
+      }
+  if (!mediaDir.exists()) mediaDir.mkdirs()
 
-    val fileExtension = getFileExtension(publication.mediaType)
-    val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
+  val fileExtension = getFileExtension(publication.mediaType)
+  val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
 
-    FileOutputStream(mediaFile).use { it.write(bytes) }
-    return mediaFile
+  FileOutputStream(mediaFile).use { it.write(bytes) }
+  return mediaFile
 }
 
 // VideoScreen.kt
 fun createShareIntent(context: Context, publication: Publication, uri: Uri): Intent {
-    val mimeType = when (publication.mediaType) {
+  val mimeType =
+      when (publication.mediaType) {
         MediaType.PHOTO -> "image/jpeg"
         MediaType.VIDEO -> "video/mp4"
         else -> throw IllegalArgumentException("Unsupported media type: ${publication.mediaType}")
-    }
+      }
 
-    return Intent(Intent.ACTION_SEND).apply {
-        type = mimeType
-        putExtra(Intent.EXTRA_STREAM, uri)
-        putExtra(Intent.EXTRA_TEXT, "")
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
+  return Intent(Intent.ACTION_SEND).apply {
+    type = mimeType
+    putExtra(Intent.EXTRA_STREAM, uri)
+    putExtra(Intent.EXTRA_TEXT, "")
+    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+  }
 }
-
-
-
 
 // Nouveau handleShare qui utilise les sous-fonctions
 fun handleShare(
@@ -647,35 +577,31 @@ fun handleShare(
     mainDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Main,
     client: OkHttpClient = OkHttpClient()
 ) {
-    CoroutineScope(ioDispatcher).launch {
-        try {
-            // 1. Télécharger les octets
-            val bytes = downloadBytes(publication.mediaUrl, client)
+  CoroutineScope(ioDispatcher).launch {
+    try {
+      // 1. Télécharger les octets
+      val bytes = downloadBytes(publication.mediaUrl, client)
 
-            // 2. Créer le fichier localement
-            val mediaFile = createMediaFile(context, publication, bytes)
+      // 2. Créer le fichier localement
+      val mediaFile = createMediaFile(context, publication, bytes)
 
-            // 3. Obtenir l'URI via FileProvider
-            val uri: Uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                mediaFile
-            )
+      // 3. Obtenir l'URI via FileProvider
+      val uri: Uri =
+          FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", mediaFile)
 
-            // 4. Créer l'intent de partage
-            val shareIntent = createShareIntent(context, publication, uri)
+      // 4. Créer l'intent de partage
+      val shareIntent = createShareIntent(context, publication, uri)
 
-            // Sur le thread principal : lancer l'activité et afficher le toast
-            withContext(mainDispatcher) {
-                context.startActivity(Intent.createChooser(shareIntent, null))
-                Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            withContext(mainDispatcher) {
-                Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+      // Sur le thread principal : lancer l'activité et afficher le toast
+      withContext(mainDispatcher) {
+        context.startActivity(Intent.createChooser(shareIntent, null))
+        Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      withContext(mainDispatcher) {
+        Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
+      }
     }
+  }
 }
-
