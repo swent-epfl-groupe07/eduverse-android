@@ -112,8 +112,7 @@ class FollowListScreenTest {
                 profileImageUrl = "",
                 followers = 0,
                 following = 0,
-                publications = emptyList(),
-                favoritePublications = emptyList()))
+                publications = emptyList()))
 
     fakeViewModel.setLoading(false)
     fakeViewModel.setProfiles(followers)
@@ -206,8 +205,7 @@ class FollowListScreenTest {
                 profileImageUrl = "",
                 followers = 0,
                 following = 0,
-                publications = emptyList(),
-                favoritePublications = emptyList()))
+                publications = emptyList()))
 
     fakeViewModel.setLoading(false)
     fakeViewModel.setProfiles(followers)
@@ -238,8 +236,7 @@ class FollowListScreenTest {
                 profileImageUrl = "",
                 followers = 0,
                 following = 0,
-                publications = emptyList(),
-                favoritePublications = emptyList()))
+                publications = emptyList()))
     fakeViewModel.setProfiles(initialFollowers)
 
     composeTestRule.setContent {
@@ -276,8 +273,7 @@ class FollowListScreenTest {
                 profileImageUrl = "",
                 followers = 0,
                 following = 0,
-                publications = emptyList(),
-                favoritePublications = emptyList()))
+                publications = emptyList()))
     fakeViewModel.setProfiles(followers)
 
     composeTestRule.setContent {
@@ -309,8 +305,7 @@ class FollowListScreenTest {
                 profileImageUrl = "",
                 followers = 0,
                 following = 0,
-                publications = emptyList(),
-                favoritePublications = emptyList()))
+                publications = emptyList()))
     fakeViewModel.setProfiles(following)
 
     composeTestRule.setContent {
@@ -344,8 +339,7 @@ class FollowListScreenTest {
                 profileImageUrl = "",
                 followers = 0,
                 following = 0,
-                publications = emptyList(),
-                favoritePublications = emptyList()))
+                publications = emptyList()))
     fakeViewModel.setProfiles(followers)
 
     composeTestRule.setContent {

@@ -78,7 +78,6 @@ class CommentsViewModelTest {
             followers = 100,
             following = 50,
             publications = emptyList(),
-            favoritePublications = emptyList(),
             profileImageUrl = "",
             isFollowedByCurrentUser = false)
 
@@ -121,7 +120,6 @@ class CommentsViewModelTest {
             followers = 100,
             following = 50,
             publications = emptyList(),
-            favoritePublications = emptyList(),
             profileImageUrl = "",
             isFollowedByCurrentUser = false)
 
@@ -166,7 +164,6 @@ class CommentsViewModelTest {
             followers = 100,
             following = 50,
             publications = emptyList(),
-            favoritePublications = emptyList(),
             profileImageUrl = "",
             isFollowedByCurrentUser = false)
     val newComment =
