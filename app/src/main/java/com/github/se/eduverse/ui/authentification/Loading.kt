@@ -1,7 +1,6 @@
 package com.github.se.eduverse.ui.authentification
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.R
+import com.github.se.eduverse.isAppInDarkMode
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
@@ -54,18 +53,21 @@ fun LoadingScreen(navigationActions: NavigationActions, notificationData: Notifi
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize().background(color = Color.White),
+      modifier = Modifier.fillMaxSize(),
       content = { padding ->
         Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-                    .background(color = Color.White),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
               Image(
-                  painter = painterResource(id = R.drawable.eduverse_logo),
+                  painter =
+                      painterResource(
+                          id =
+                              if (isAppInDarkMode) {
+                                R.drawable.eduverse_logo_dark
+                              } else {
+                                R.drawable.eduverse_logo_light
+                              }),
                   contentDescription = "App Logo alone",
                   modifier = Modifier.size(250.dp))
 

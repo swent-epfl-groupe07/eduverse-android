@@ -20,8 +20,6 @@ interface ProfileRepository {
 
   suspend fun removePublication(publicationId: String)
 
-  suspend fun removeFromFavorites(userId: String, publicationId: String)
-
   suspend fun followUser(followerId: String, followedId: String)
 
   suspend fun unfollowUser(followerId: String, followedId: String)
@@ -61,6 +59,16 @@ interface ProfileRepository {
   suspend fun getFollowing(userId: String): List<Profile>
 
   suspend fun deletePublication(publicationId: String, userId: String): Boolean
+
+  suspend fun addToFavorites(userId: String, publicationId: String)
+
+  suspend fun removeFromFavorites(userId: String, publicationId: String)
+
+  suspend fun getFavoritePublicationsIds(userId: String): List<String>
+
+  suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean
+
+  suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication>
 }
 
 open class ProfileRepositoryImpl(
@@ -113,16 +121,6 @@ open class ProfileRepositoryImpl(
           it.toObject(Publication::class.java)
         }
 
-    // Get favorites
-    val favorites =
-        favoritesCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
-          publicationsCollection
-              .document(it.getString("publicationId") ?: "")
-              .get()
-              .await()
-              .toObject(Publication::class.java)
-        }
-
     // Get followers/following count
     val followersCount = followersCollection.whereEqualTo("followedId", userId).get().await().size()
 
@@ -133,7 +131,6 @@ open class ProfileRepositoryImpl(
 
     return profile?.copy(
         publications = publications,
-        favoritePublications = favorites,
         followers = followersCount,
         following = followingCount,
         isFollowedByCurrentUser = isFollowedByCurrentUser)
@@ -149,16 +146,6 @@ open class ProfileRepositoryImpl(
 
   override suspend fun removePublication(publicationId: String) {
     publicationsCollection.document(publicationId).delete().await()
-  }
-
-  override suspend fun removeFromFavorites(userId: String, publicationId: String) {
-    favoritesCollection
-        .whereEqualTo("userId", userId)
-        .whereEqualTo("publicationId", publicationId)
-        .get()
-        .await()
-        .documents
-        .forEach { it.reference.delete().await() }
   }
 
   override suspend fun followUser(followerId: String, followedId: String) {
@@ -239,8 +226,7 @@ open class ProfileRepositoryImpl(
             profileImageUrl = photoUrl,
             followers = 0,
             following = 0,
-            publications = emptyList(),
-            favoritePublications = emptyList())
+            publications = emptyList())
 
     profilesCollection.document(userId).set(profile).await()
     return profile
@@ -520,6 +506,124 @@ open class ProfileRepositoryImpl(
     } catch (e: Exception) {
       Log.e("DELETE_PUBLICATION", "Failed to delete publication: ${e.message}")
       false
+    }
+  }
+
+  /**
+   * Adds a publication to a user's favorites collection in Firestore.
+   *
+   * @param userId The ID of the user adding the favorite
+   * @param publicationId The ID of the publication to be favorited
+   * @throws Exception if the Firestore operation fails
+   */
+  override suspend fun addToFavorites(userId: String, publicationId: String) {
+    try {
+      // Create a document in the user's favoritePublications collection
+      // Document ID is the publication ID for easy retrieval
+      firestore
+          .collection("users")
+          .document(userId)
+          .collection("favoritePublications")
+          .document(publicationId)
+          .set(
+              hashMapOf(
+                  "publicationId" to publicationId,
+                  "timestamp" to System.currentTimeMillis() // Store when it was favorited
+                  ))
+          .await()
+    } catch (e: Exception) {
+      Log.e("ADD_TO_FAVORITES", "Failed to add to favorites: ${e.message}")
+      throw e // Propagate error to caller for handling
+    }
+  }
+
+  /**
+   * Removes a publication from a user's favorites collection.
+   *
+   * @param userId The ID of the user removing the favorite
+   * @param publicationId The ID of the publication to be unfavorited
+   * @throws Exception if the Firestore operation fails
+   */
+  override suspend fun removeFromFavorites(userId: String, publicationId: String) {
+    try {
+      // Delete the document from the user's favoritePublications collection
+      firestore
+          .collection("users")
+          .document(userId)
+          .collection("favoritePublications")
+          .document(publicationId)
+          .delete()
+          .await()
+    } catch (e: Exception) {
+      Log.e("REMOVE_FROM_FAVORITES", "Failed to remove from favorites: ${e.message}")
+      throw e
+    }
+  }
+
+  /**
+   * Retrieves all publication IDs that a user has favorited.
+   *
+   * @param userId The ID of the user whose favorites are being retrieved
+   * @return List of publication IDs that the user has favorited
+   */
+  override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
+    return try {
+      // Query the user's favoritePublications collection and map to list of IDs
+      firestore
+          .collection("users")
+          .document(userId)
+          .collection("favoritePublications")
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.getString("publicationId") }
+    } catch (e: Exception) {
+      Log.e("GET_FAVORITES", "Failed to get favorites: ${e.message}")
+      emptyList() // Return empty list on error rather than throwing
+    }
+  }
+
+  /**
+   * Checks if a specific publication is in a user's favorites.
+   *
+   * @param userId The ID of the user to check
+   * @param publicationId The ID of the publication to check
+   * @return true if the publication is favorited, false otherwise
+   */
+  override suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean {
+    return try {
+      // Check if the document exists in the user's favoritePublications collection
+      val doc =
+          firestore
+              .collection("users")
+              .document(userId)
+              .collection("favoritePublications")
+              .document(publicationId)
+              .get()
+              .await()
+      doc.exists()
+    } catch (e: Exception) {
+      Log.e("CHECK_FAVORITE", "Failed to check favorite status: ${e.message}")
+      false // Return false on error rather than throwing
+    }
+  }
+
+  override suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication> {
+    return try {
+      if (favoriteIds.isEmpty()) {
+        return emptyList()
+      }
+
+      firestore
+          .collection("publications")
+          .whereIn("id", favoriteIds)
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.toObject(Publication::class.java) }
+    } catch (e: Exception) {
+      Log.e("GET_FAVORITE_PUBS", "Failed to get favorite publications: ${e.message}")
+      emptyList()
     }
   }
 }

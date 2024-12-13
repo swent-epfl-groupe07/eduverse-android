@@ -36,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -54,7 +53,7 @@ import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
-import com.github.se.eduverse.ui.theme.blackTransparentButton
+import com.github.se.eduverse.ui.theme.transparentButtonColor
 import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import java.util.Calendar
@@ -171,8 +170,8 @@ fun FolderScreen(
                     Button(
                         onClick = { sorting = true },
                         modifier = Modifier.testTag("sortingButton"),
-                        colors = blackTransparentButton,
-                        border = BorderStroke(1.dp, Color.Black)) {
+                        colors = transparentButtonColor(MaterialTheme.colorScheme.onBackground),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground)) {
                           Icon(Icons.AutoMirrored.Filled.List, "Sort files")
                         }
                     DropdownMenu(

@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -53,9 +54,17 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
  *
  * @param context the context in which the dialog must be opened
  * @param folderViewModel the folder view model of the app
+ * @param color the color of the menu
  * @param select the action to do when clicking on a folder
  */
-fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (Folder) -> Unit) {
+fun showBottomMenu(
+    context: Context,
+    folderViewModel: FolderViewModel,
+    backgroundColor: Color,
+    surfaceColor: Color,
+    contentColor: Color,
+    select: (Folder) -> Unit
+) {
   // Create the BottomSheetDialog
   val bottomSheetDialog = BottomSheetDialog(context)
 
@@ -66,6 +75,7 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
   // Set the inflated view as the content of the BottomSheetDialog
   bottomSheetDialog.setContentView(
       ComposeView(context).apply {
+        setBackgroundColor(backgroundColor.toArgb())
         setContent {
           Column(modifier = Modifier.padding(16.dp).fillMaxWidth().testTag("button_container")) {
             folders.forEach { folder ->
@@ -78,11 +88,13 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
                             bottomSheetDialog.dismiss()
                           }
                           .testTag("folder_button${folder.id}"),
+                  backgroundColor = surfaceColor,
+                  contentColor = contentColor,
                   elevation = 4.dp) {
                     Text(
                         text = folder.name,
                         modifier = Modifier.padding(16.dp),
-                        style = androidx.compose.material.MaterialTheme.typography.h6)
+                        style = MaterialTheme.typography.h6)
                   }
             }
           }
@@ -116,12 +128,42 @@ fun showBottomMenu(context: Context, folderViewModel: FolderViewModel, select: (
 }
 
 @Composable
+fun DeleteFoldersDialog(number: Int, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+  Dialog(onDismissRequest = onDismiss) {
+    Column(
+        modifier =
+            Modifier.clip(RoundedCornerShape(8.dp))
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
+                .padding(16.dp)
+                .testTag("confirm")) {
+          Text("Are you sure you want to delete $number folder(s) ?")
+          Row(
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.testTag("yes"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green)) {
+                      Text("Yes")
+                    }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.testTag("no"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                      Text("No")
+                    }
+              }
+        }
+  }
+}
+
+@Composable
 fun DeleteFileDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
   Dialog(onDismissRequest = onDismiss) {
     Column(
         modifier =
             Modifier.clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFE0F7FA))
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
                 .padding(16.dp)
                 .testTag("confirm")) {
           Text("Are you sure you want to delete this file ?")
@@ -167,7 +209,8 @@ fun RenameFileDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
             modifier = Modifier.testTag("textField"),
             onValueChange = { name = it },
             label = { Text("Enter new name") })
-      })
+      },
+      backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background)
 }
 
 @Composable
