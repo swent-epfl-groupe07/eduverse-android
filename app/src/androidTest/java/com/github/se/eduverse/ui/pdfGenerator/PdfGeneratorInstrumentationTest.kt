@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.core.graphics.drawable.toBitmap
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.github.se.eduverse.R
 import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.OpenAiRepository
@@ -22,6 +23,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -347,5 +349,18 @@ class PdfGeneratorInstrumentationTest {
         "The PDF file contains too much text (supported limit: 5 characters).", exception.message)
     tempFile?.delete()
     pdfDocument.close()
+  }
+
+  @Test
+  fun testConvertImageToPdf_whenIOExceptionIsThrown() {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    val invalidUri = Uri.parse("file://nonexistent.jpg")
+
+    try {
+      pdfRepository.convertImageToPdf(invalidUri, context)
+      fail("Expected an exception")
+    } catch (e: Exception) {
+      assertTrue(e.message!!.contains("Failed to read the image file, please try again."))
+    }
   }
 }
