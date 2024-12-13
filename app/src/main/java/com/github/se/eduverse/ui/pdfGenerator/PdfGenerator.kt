@@ -60,9 +60,9 @@ enum class PdfGeneratorOption {
 fun PdfGeneratorScreen(
     navigationActions: NavigationActions,
     converterViewModel: PdfGeneratorViewModel = viewModel(factory = PdfGeneratorViewModel.Factory),
-    folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
+    folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory),
+    context: Context = LocalContext.current
 ) {
-  val context = LocalContext.current
   var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
   var showNameInputDialog by remember { mutableStateOf(false) }
   val pdfFileName = converterViewModel.newFileName.collectAsState()
@@ -282,11 +282,9 @@ fun PdfGeneratorScreen(
         onDiscard = {
           showDestinationDialog = false
           converterViewModel.deleteGeneratedPdf()
-          converterViewModel.setPdfGenerationStateToReady()
         },
         onDeviceStorageClick = {
           showDestinationDialog = false
-          converterViewModel.setPdfGenerationStateToReady()
           converterViewModel.savePdfToDevice(generatedPdf!!, context)
         },
         onFoldersClick = {
@@ -311,8 +309,16 @@ fun PdfGeneratorScreen(
         },
         onSelect = { folder ->
           showSelectFolderDialog = false
-          converterViewModel.savePdfToFolder(folder, generatedPdf!!, context)
-          converterViewModel.deleteGeneratedPdf()
+          converterViewModel.savePdfToFolder(
+              folder,
+              Uri.fromFile(generatedPdf),
+              context,
+              { converterViewModel.deleteGeneratedPdf() },
+              {
+                showDestinationDialog =
+                    true // Show the destination dialog to allow the user to still save the file to
+                // local storage if the upload fails
+              })
         },
         onCreate = {
           showSelectFolderDialog = false
@@ -332,10 +338,23 @@ fun PdfGeneratorScreen(
           folderViewModel.createNewFolderFromName(
               name,
               {
-                converterViewModel.savePdfToFolder(it, generatedPdf!!, context)
-                converterViewModel.deleteGeneratedPdf()
+                converterViewModel.savePdfToFolder(
+                    it,
+                    Uri.fromFile(generatedPdf),
+                    context,
+                    { converterViewModel.deleteGeneratedPdf() },
+                    {
+                      showDestinationDialog =
+                          true // Show the destination dialog to allow the user to still save the
+                      // file to local storage if the upload fails
+                    })
               },
-              { context.showToast(it) })
+              {
+                context.showToast(it)
+                // Show the destination dialog to allow the user to still save the file to local
+                // storage if the folder creation fails
+                showDestinationDialog = true
+              })
         })
   }
 }
@@ -622,11 +641,11 @@ fun InputNewFolderNameDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit)
             enabled = inputText.isNotEmpty(),
             onClick = { onConfirm(inputText) },
             modifier = Modifier.testTag("confirmCreateFolderButton")) {
-              Text("Create Folder")
+              Text("Create folder")
             }
       },
       dismissButton = {
-        Button(onClick = onDismiss, modifier = Modifier.testTag("cancelCreateFolderButton")) {
+        Button(onClick = onDismiss, modifier = Modifier.testTag("dismissCreateFolderButton")) {
           Text("Cancel")
         }
       })
