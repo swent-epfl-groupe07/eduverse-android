@@ -82,7 +82,7 @@ fun DashboardScreen(
                   Image(
                       painter = painterResource(id = R.drawable.eduverse_logo_png),
                       contentDescription = "Logo",
-                      modifier = Modifier.size(140.dp).testTag("centerImage"))
+                      modifier = Modifier.size(140.dp).testTag("screenTitle"))
                 }
               },
               actions = {

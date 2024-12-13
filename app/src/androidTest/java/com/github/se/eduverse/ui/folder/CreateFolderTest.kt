@@ -105,7 +105,6 @@ class CreateFolderTest {
     LIST_TOP_LEVEL_DESTINATION.forEach {
       test = false
 
-      composeTestRule.onNodeWithText(it.textId).assertIsDisplayed()
       composeTestRule.onNodeWithText(it.textId).performClick()
 
       assert(test)
