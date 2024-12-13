@@ -12,7 +12,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.SpatialAudioOff
 import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +49,7 @@ enum class PdfGeneratorOption {
   DOCUMENT_TO_PDF,
   SUMMARIZE_FILE,
   EXTRACT_TEXT,
+  TRANSCRIBE_SPEECH,
   NONE
 }
 
@@ -75,6 +78,7 @@ fun PdfGeneratorScreen(
   val folders by folderViewModel.folders.collectAsState()
   var showInputNewFolderNameDialog by remember { mutableStateOf(false) }
   var generatedPdf by remember { mutableStateOf<File?>(null) }
+  var editText by remember { mutableStateOf("") }
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
@@ -153,6 +157,7 @@ fun PdfGeneratorScreen(
                         optionEnabled =
                             pdfConversionState.value ==
                                 PdfGeneratorViewModel.PdfGenerationState.Ready)
+
                     OptionCard(
                         testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
                         optionName = "Summarize file",
@@ -174,18 +179,33 @@ fun PdfGeneratorScreen(
                                 PdfGeneratorViewModel.PdfGenerationState.Ready)
                   }
 
-              OptionCard(
-                  testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
-                  optionName = "Extract text",
-                  explanation = "Extracts text from an image",
-                  icon = Icons.Default.Abc,
-                  onClick = {
-                    currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
-                    inputFileMIMEType = "image/*"
-                    showInfoWindow = true
-                  },
-                  optionEnabled =
-                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceEvenly) {
+                    OptionCard(
+                        testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
+                        optionName = "Extract text",
+                        explanation = "Extracts text from an image",
+                        icon = Icons.Default.Abc,
+                        onClick = {
+                          currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
+                          inputFileMIMEType = "image/*"
+                          showInfoWindow = true
+                        },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
+
+                    OptionCard(
+                        testTag = PdfGeneratorOption.TRANSCRIBE_SPEECH.name,
+                        optionName = "Speech to Text",
+                        explanation = "Transcribes speech to text",
+                        icon = Icons.Default.Mic,
+                        onClick = { showInfoWindow = true },
+                        optionEnabled =
+                            pdfConversionState.value ==
+                                PdfGeneratorViewModel.PdfGenerationState.Ready)
+                  }
             }
       }
 
@@ -221,6 +241,11 @@ fun PdfGeneratorScreen(
         title = "Text extractor"
         text =
             "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file"
+      }
+      PdfGeneratorOption.TRANSCRIBE_SPEECH -> {
+        title = "Speech to text transcriber"
+        text =
+            "Press the start button to begin recording and transcribing speech. The transcribed text will be generated in a PDF file."
       }
       PdfGeneratorOption.NONE -> {
         showInfoWindow = false
