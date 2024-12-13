@@ -121,16 +121,6 @@ open class ProfileRepositoryImpl(
           it.toObject(Publication::class.java)
         }
 
-    // Get favorites
-    val favorites =
-        favoritesCollection.whereEqualTo("userId", userId).get().await().documents.mapNotNull {
-          publicationsCollection
-              .document(it.getString("publicationId") ?: "")
-              .get()
-              .await()
-              .toObject(Publication::class.java)
-        }
-
     // Get followers/following count
     val followersCount = followersCollection.whereEqualTo("followedId", userId).get().await().size()
 
@@ -141,7 +131,6 @@ open class ProfileRepositoryImpl(
 
     return profile?.copy(
         publications = publications,
-        favoritePublications = favorites,
         followers = followersCount,
         following = followingCount,
         isFollowedByCurrentUser = isFollowedByCurrentUser)
@@ -237,8 +226,7 @@ open class ProfileRepositoryImpl(
             profileImageUrl = photoUrl,
             followers = 0,
             following = 0,
-            publications = emptyList(),
-            favoritePublications = emptyList())
+            publications = emptyList())
 
     profilesCollection.document(userId).set(profile).await()
     return profile
