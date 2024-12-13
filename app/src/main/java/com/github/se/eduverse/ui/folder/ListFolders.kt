@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.isNetworkAvailable
 import com.github.se.eduverse.model.Folder
+import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.DeleteFoldersDialog
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -112,10 +113,14 @@ fun ListFoldersScreen(
               number = selected.size,
               onDismiss = { deleteDialogOpen = false },
               onConfirm = {
-                deleteDialogOpen = false
-                isSelectMode = false
-                selected.forEach { folderViewModel.deleteFolder(folders[it]) }
-                selected = emptyList()
+                try {
+                  deleteDialogOpen = false
+                  isSelectMode = false
+                  selected.forEach { folderViewModel.deleteFolder(folders[it]) }
+                  selected = emptyList()
+                } catch (_: Exception) {
+                  context.showToast("Failed to delete some folders")
+                }
               })
         }
 
