@@ -73,6 +73,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
+import com.github.se.eduverse.ui.videos.ShareUtils.handleShare
 import com.github.se.eduverse.viewmodel.CommentsUiState
 import com.github.se.eduverse.viewmodel.CommentsViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
@@ -85,6 +86,7 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -520,77 +522,74 @@ fun PhotoItem(
   }
 }
 
-fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
-  val request = Request.Builder().url(url).build()
-  val response = client.newCall(request).execute()
-  if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
-  return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
-}
-
-fun getFileExtension(mediaType: MediaType): String {
-  return when (mediaType) {
-    MediaType.PHOTO -> ".jpg"
-    MediaType.VIDEO -> ".mp4"
+object ShareUtils {
+  fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
+    val request = Request.Builder().url(url).build()
+    val response = client.newCall(request).execute()
+    if (!response.isSuccessful) throw Exception("Échec du téléchargement: ${response.code}")
+    return response.body?.bytes() ?: throw Exception("Corps de réponse vide")
   }
-}
 
-fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray): File {
-  val mediaDir =
-      when (publication.mediaType) {
-        MediaType.PHOTO -> File(context.cacheDir, "shared_images")
-        MediaType.VIDEO -> File(context.filesDir, "shared_videos")
-      }
-  if (!mediaDir.exists()) mediaDir.mkdirs()
-
-  val fileExtension = getFileExtension(publication.mediaType)
-  val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
-
-  FileOutputStream(mediaFile).use { it.write(bytes) }
-  return mediaFile
-}
-
-fun createShareIntent(context: Context, publication: Publication, uri: Uri): Intent {
-  val mimeType =
-      when (publication.mediaType) {
-        MediaType.PHOTO -> "image/jpeg"
-        MediaType.VIDEO -> "video/mp4"
-        else -> throw IllegalArgumentException("Unsupported media type: ${publication.mediaType}")
-      }
-
-  return Intent(Intent.ACTION_SEND).apply {
-    type = mimeType
-    putExtra(Intent.EXTRA_STREAM, uri)
-    putExtra(Intent.EXTRA_TEXT, "")
-    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+  fun getFileExtension(mediaType: MediaType): String {
+    return when (mediaType) {
+      MediaType.PHOTO -> ".jpg"
+      MediaType.VIDEO -> ".mp4"
+    }
   }
-}
 
-fun handleShare(
-    publication: Publication,
-    context: Context,
-    ioDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.IO,
-    mainDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Main,
-    client: OkHttpClient = OkHttpClient()
-) {
-  CoroutineScope(ioDispatcher).launch {
-    try {
-      val bytes = downloadBytes(publication.mediaUrl, client)
+  fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray): File {
+    val mediaDir =
+        when (publication.mediaType) {
+          MediaType.PHOTO -> File(context.cacheDir, "shared_images")
+          MediaType.VIDEO -> File(context.filesDir, "shared_videos")
+        }
+    if (!mediaDir.exists()) mediaDir.mkdirs()
 
-      val mediaFile = createMediaFile(context, publication, bytes)
+    val fileExtension = getFileExtension(publication.mediaType)
+    val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
 
-      val uri: Uri =
-          FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", mediaFile)
+    FileOutputStream(mediaFile).use { it.write(bytes) }
+    return mediaFile
+  }
 
-      val shareIntent = createShareIntent(context, publication, uri)
+  fun createShareIntent(context: Context, publication: Publication, uri: Uri): Intent {
+    val mimeType =
+        when (publication.mediaType) {
+          MediaType.PHOTO -> "image/jpeg"
+          MediaType.VIDEO -> "video/mp4"
+        }
 
-      withContext(mainDispatcher) {
-        context.startActivity(Intent.createChooser(shareIntent, null))
-        Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      withContext(mainDispatcher) {
-        Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
+    return Intent(Intent.ACTION_SEND).apply {
+      type = mimeType
+      putExtra(Intent.EXTRA_STREAM, uri)
+      putExtra(Intent.EXTRA_TEXT, "")
+      addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+  }
+
+  fun handleShare(
+      publication: Publication,
+      context: Context,
+      ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+      mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+      client: OkHttpClient = OkHttpClient()
+  ) {
+    CoroutineScope(ioDispatcher).launch {
+      try {
+        val bytes = downloadBytes(publication.mediaUrl, client)
+        val mediaFile = createMediaFile(context, publication, bytes)
+        val uri: Uri =
+            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", mediaFile)
+        val shareIntent = createShareIntent(context, publication, uri)
+        withContext(mainDispatcher) {
+          context.startActivity(Intent.createChooser(shareIntent, null))
+          Toast.makeText(context, "Partage lancé", Toast.LENGTH_SHORT).show()
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        withContext(mainDispatcher) {
+          Toast.makeText(context, "Erreur lors du partage: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
       }
     }
   }
