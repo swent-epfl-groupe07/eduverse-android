@@ -1,6 +1,7 @@
 // VideoScreenTest.kt
 package com.github.se.eduverse.ui.videos
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -20,8 +21,14 @@ import com.github.se.eduverse.model.Comment
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
+import com.github.se.eduverse.ui.videos.ShareUtils.handleShare
+import io.mockk.Runs
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -505,5 +512,93 @@ class VideoScreenTest {
 
     // Verify that the comment has been deleted
     composeTestRule.onNodeWithTag("CommentItem_$commentId").assertDoesNotExist()
+  }
+
+  @Test
+  fun testShareButtonIsDisplayedForEachPublication() {
+    val publications =
+        listOf(
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()),
+            Publication(
+                id = "2",
+                userId = "user2",
+                title = "Test Photo",
+                mediaType = MediaType.PHOTO,
+                mediaUrl = "",
+                thumbnailUrl = "https://via.placeholder.com/150",
+                timestamp = System.currentTimeMillis()))
+
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
+
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("ShareButton_0").assertExists().assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("VerticalPager").performTouchInput { swipeUp() }
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("ShareButton_1").assertExists().assertIsDisplayed()
+  }
+
+  @Test
+  fun testShareButtonClickTriggersHandleShareAndLog() {
+    val publication =
+        Publication(
+            id = "1",
+            userId = "user1",
+            title = "Test Video",
+            mediaType = MediaType.VIDEO,
+            mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+            thumbnailUrl = "",
+            timestamp = System.currentTimeMillis())
+    val publications = listOf(publication)
+
+    fakePublicationRepository.setPublications(publications)
+    fakePublicationViewModel.setPublications(publications)
+
+    mockkStatic(::handleShare)
+    every { handleShare(publication = any(), context = any()) } just Runs
+
+    mockkStatic(Log::class)
+    every { Log.d(any(), any()) } returns 0
+
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("ShareButton_0").assertExists().assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("ShareButton_0").performClick()
+
+    composeTestRule.waitForIdle()
+
+    verify { handleShare(publication = publication, context = any()) }
+
+    verify { Log.d("SHARE", "Share button clicked for publication: ${publication.id}") }
   }
 }

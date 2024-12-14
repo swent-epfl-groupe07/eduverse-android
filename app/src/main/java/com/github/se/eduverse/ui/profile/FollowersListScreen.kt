@@ -66,11 +66,8 @@ fun FollowListScreen(
   }
 
   Scaffold(
-      topBar = {
-        TopNavigationBar(
-            screenTitle = if (isFollowersList) "Followers" else "Following",
-            navigationActions = navigationActions)
-      }) { padding ->
+      topBar = { TopNavigationBar(navigationActions = navigationActions, screenTitle = null) }) {
+          padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
           if (isLoading) {
             CircularProgressIndicator(

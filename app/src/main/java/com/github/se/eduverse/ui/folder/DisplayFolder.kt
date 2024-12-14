@@ -82,20 +82,23 @@ fun FolderScreen(
   Scaffold(
       modifier = Modifier.testTag("scaffold"),
       topBar = {
-        TopNavigationBar(activeFolder!!.name, navigationActions) {
-          IconButton(
-              onClick = {
-                if (context.isNetworkAvailable()) {
-                  folderViewModel.archiveFolder(activeFolder!!)
-                  navigationActions.goBack()
-                } else {
-                  folderViewModel.showOfflineMessage(context)
-                }
-              },
-              modifier = Modifier.testTag("archive")) {
-                Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
-              }
-        }
+        TopNavigationBar(
+            navigationActions = navigationActions,
+            screenTitle = activeFolder!!.name,
+            actions = {
+              IconButton(
+                  onClick = {
+                    if (context.isNetworkAvailable()) {
+                      folderViewModel.archiveFolder(activeFolder!!)
+                      navigationActions.goBack()
+                    } else {
+                      folderViewModel.showOfflineMessage(context)
+                    }
+                  },
+                  modifier = Modifier.testTag("archive")) {
+                    Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                  }
+            })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -113,7 +116,7 @@ fun FolderScreen(
               }
             },
             modifier = Modifier.testTag("createFile"),
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+            backgroundColor = MaterialTheme.colorScheme.primary,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, contentDescription = "Create File")
             }

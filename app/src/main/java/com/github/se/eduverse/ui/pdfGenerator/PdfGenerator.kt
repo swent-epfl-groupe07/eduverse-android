@@ -90,9 +90,7 @@ fun PdfGeneratorScreen(
       }
 
   Scaffold(
-      topBar = {
-        TopNavigationBar(screenTitle = "PDF Generator", navigationActions = navigationActions)
-      },
+      topBar = { TopNavigationBar(navigationActions = navigationActions, screenTitle = null) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { pd ->
@@ -428,7 +426,7 @@ fun OptionCard(
               .testTag(testTag),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.primaryContainer,
+              containerColor = MaterialTheme.colorScheme.primary,
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Column(
             modifier = Modifier.fillMaxSize().padding(8.dp),

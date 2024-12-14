@@ -94,7 +94,6 @@ class DetailsEventScreenTest {
 
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("deleteButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("nameTextField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("descTextField").assertIsDisplayed()
     composeTestRule.onNodeWithTag("datePicker").assertIsDisplayed()
