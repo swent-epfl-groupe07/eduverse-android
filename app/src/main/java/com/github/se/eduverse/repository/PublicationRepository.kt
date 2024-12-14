@@ -29,6 +29,7 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
           .await()
           .documents
           .mapNotNull { it.toObject(Publication::class.java) }
+          .distinctBy { it.id }
           .shuffled()
     } catch (e: Exception) {
       emptyList()
