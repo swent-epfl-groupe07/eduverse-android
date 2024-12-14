@@ -8,15 +8,22 @@ import kotlinx.coroutines.tasks.await
 open class PublicationRepository(private val db: FirebaseFirestore) {
 
   open suspend fun loadRandomPublications(
-      followed: List<String> = emptyList(),
+      followed: List<String>? = null,
       limit: Long = 20
   ): List<Publication> {
     return try {
       val random = UUID.randomUUID().toString()
-      db.collection("publications")
-          .orderBy("id")
-          .startAt(random)
-          .whereIn("userId", followed)
+
+      val orderedQuery = db.collection("publications").orderBy("id").startAt(random)
+
+      val filteredQuery =
+          if (followed == null) {
+            orderedQuery
+          } else {
+            orderedQuery.whereIn("userId", followed)
+          }
+
+      filteredQuery
           .limit(limit)
           .get()
           .await()
@@ -24,7 +31,6 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
           .mapNotNull { it.toObject(Publication::class.java) }
           .shuffled()
     } catch (e: Exception) {
-      val t = e
       emptyList()
     }
   }
