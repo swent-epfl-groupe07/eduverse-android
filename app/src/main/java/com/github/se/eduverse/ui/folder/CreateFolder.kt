@@ -183,7 +183,7 @@ fun CreateFolderScreen(
             Button(
                 onClick = {
                   // Because we have created the folder in db when calling getNewFolderUid :
-                  folderViewModel.deleteFolder(folder)
+                  folderViewModel.deleteFolders(listOf(folder))
 
                   // Because files and name are saveable :
                   files = emptyList()

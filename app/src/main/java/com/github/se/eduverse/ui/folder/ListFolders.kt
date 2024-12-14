@@ -116,7 +116,7 @@ fun ListFoldersScreen(
                 try {
                   deleteDialogOpen = false
                   isSelectMode = false
-                  selected.forEach { folderViewModel.deleteFolder(folders[it]) }
+                  folderViewModel.deleteFolders(selected.map { folders[it] })
                   selected = emptyList()
                 } catch (_: Exception) {
                   context.showToast("Failed to delete some folders")

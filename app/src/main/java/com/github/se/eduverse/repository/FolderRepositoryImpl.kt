@@ -113,6 +113,7 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
         .whereIn(FieldPath.documentId(), folders.map { it.id })
         .get()
         .await()
+        .documents
 
     documents.forEach {
         batch.delete(db.collection(collectionPath).document(it.id))

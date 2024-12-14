@@ -5,21 +5,26 @@ import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
+import com.google.android.gms.common.api.Batch
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.WriteBatch
 import java.util.Calendar
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.fail
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.anyString
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
@@ -36,6 +41,7 @@ class FolderRepositoryTest {
   @Mock private lateinit var mockCollectionReference: CollectionReference
   @Mock private lateinit var mockFolderQuerySnapshot: QuerySnapshot
   @Mock private lateinit var mockFolderDocumentSnapshot: DocumentSnapshot
+  @Mock private lateinit var mockBatch: WriteBatch
 
   private lateinit var folderRepositoryImpl: FolderRepositoryImpl
 
@@ -55,8 +61,10 @@ class FolderRepositoryTest {
     folderRepositoryImpl = FolderRepositoryImpl(mockFirestore)
 
     `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
+    `when`(mockFirestore.batch()).thenReturn(mockBatch)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
+    `when`(mockCollectionReference.whereIn(any<FieldPath>(), any())).thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.get()).thenReturn(Tasks.forResult(mockFolderQuerySnapshot))
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
         .thenReturn(mockCollectionReference)
@@ -71,14 +79,17 @@ class FolderRepositoryTest {
   }
 
   @Test
-  fun deleteFolder_shouldCallDocumentReferenceDelete() {
-    `when`(mockDocumentReference.delete()).thenReturn(Tasks.forResult(null))
+  fun deleteFolder_shouldCallDocumentReferenceDelete() = runBlocking {
+    `when`(mockBatch.commit()).thenReturn(Tasks.forResult(null))
+      `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf(mockFolderDocumentSnapshot))
+      `when`(mockFolderDocumentSnapshot.id).thenReturn(folder.id)
 
-    folderRepositoryImpl.deleteFolder(folder, onSuccess = {}, onFailure = {})
+    folderRepositoryImpl.deleteFolders(listOf(folder), onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 
-    verify(mockDocumentReference).delete()
+    verify(mockBatch).delete(any())
+    Unit // Tests must return a Unit
   }
 
   @Test
