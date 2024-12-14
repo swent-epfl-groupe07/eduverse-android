@@ -63,7 +63,7 @@ open class PublicationViewModel(
     }
   }
 
-  open suspend fun loadFollowedPublications(userIds: List<String> = emptyList()) {
+  open fun loadFollowedPublications(userIds: List<String> = emptyList()) {
     viewModelScope.launch {
       try {
         if (_followedPublications.value.isEmpty()) {
