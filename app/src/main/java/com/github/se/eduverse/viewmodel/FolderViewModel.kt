@@ -41,9 +41,9 @@ open class FolderViewModel(
         }
   }
 
-  private var _folders: MutableStateFlow<MutableList<Folder>> =
-      MutableStateFlow(emptyList<Folder>().toMutableList())
-  open val folders: StateFlow<MutableList<Folder>> = _folders
+  private var _folders: MutableStateFlow<List<Folder>> =
+      MutableStateFlow(emptyList())
+  open val folders: StateFlow<List<Folder>> = _folders
 
   private var _activeFolder: MutableStateFlow<Folder?> =
       MutableStateFlow(savedStateHandle["activeFolder"])
@@ -119,7 +119,7 @@ open class FolderViewModel(
   open fun addFolder(folder: Folder) {
     repository.addFolder(
         folder,
-        { _folders.value.add(folder) },
+        { _folders.value += folder },
         {
           Log.e(
               "FolderViewModel",
@@ -136,7 +136,7 @@ open class FolderViewModel(
     if (activeFolder.value == folder) selectFolder(null)
     repository.deleteFolder(
         folder,
-        { _folders.value.remove(folder) },
+        { _folders.value -= folder },
         { Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}") })
   }
 
@@ -150,8 +150,7 @@ open class FolderViewModel(
         folder,
         {
           try {
-
-            _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
+            _folders.value = _folders.value.map { if (it.id == folder.id) folder else it }
             if (activeFolder.value != null && activeFolder.value!!.id == folder.id)
                 selectFolder(folder)
           } catch (_: IndexOutOfBoundsException) {
@@ -173,11 +172,8 @@ open class FolderViewModel(
    */
   fun archiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are not archived, remove the archived folder
-    val index = _folders.value.indexOfFirst { it.id == folder.id }
-    if (index != -1 && !_folders.value[index].archived) {
-      _folders.value.removeAt(index)
-    }
     folder.archived = true
+    _folders.value = _folders.value.filter { !it.archived }
     updateFolder(folder)
   }
 
@@ -188,11 +184,8 @@ open class FolderViewModel(
    */
   fun unarchiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are archived, remove the unarchived folder
-    val index = _folders.value.indexOfFirst { it.id == folder.id }
-    if (_folders.value[index].archived) {
-      _folders.value.removeAt(index)
-    }
     folder.archived = false
+      _folders.value = _folders.value.filter { it.archived }
     updateFolder(folder)
   }
 
@@ -273,7 +266,7 @@ open class FolderViewModel(
       repository.addFolder(
           folder,
           {
-            _folders.value.add(folder)
+            _folders.value += folder
             onSuccess(folder)
           },
           {
