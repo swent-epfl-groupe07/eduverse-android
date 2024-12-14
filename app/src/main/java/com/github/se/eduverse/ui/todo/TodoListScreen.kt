@@ -41,7 +41,7 @@ fun TodoListScreen(navigationActions: NavigationActions, todoListViewModel: Todo
   var showCompleted by remember { mutableStateOf(false) }
 
   Scaffold(
-      topBar = { TopNavigationBar("Todo List", navigationActions = navigationActions) },
+      topBar = { TopNavigationBar(navigationActions, screenTitle = null) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       },
