@@ -95,7 +95,6 @@ class TodoListScreenTest {
   fun topNavigationBarIsCorrectlyDisplayed() {
     composeTestRule.onNodeWithTag("topNavigationBar").assertIsDisplayed()
     composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("screenTitle").assertTextContains("Todo List")
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
   }
 

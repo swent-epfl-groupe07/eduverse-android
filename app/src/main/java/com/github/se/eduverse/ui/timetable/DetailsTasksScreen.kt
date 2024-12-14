@@ -69,16 +69,19 @@ fun DetailsTasksScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar(task.name, navigationActions) {
-          IconButton(
-              onClick = {
-                timeTableViewModel.deleteScheduled(task)
-                navigationActions.goBack()
-              },
-              modifier = Modifier.testTag("deleteButton")) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
-              }
-        }
+        TopNavigationBar(
+            navigationActions = navigationActions,
+            screenTitle = task.name,
+            actions = {
+              IconButton(
+                  onClick = {
+                    timeTableViewModel.deleteScheduled(task)
+                    navigationActions.goBack()
+                  },
+                  modifier = Modifier.testTag("deleteButton")) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
+                  }
+            })
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")

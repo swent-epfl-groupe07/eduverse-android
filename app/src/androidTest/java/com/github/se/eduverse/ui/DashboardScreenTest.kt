@@ -55,6 +55,7 @@ class DashboardScreenUiTest {
     setupDashboardScreen()
     composeTestRule.waitForIdle()
 
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("add_widget_button").assertExists()
     composeTestRule.onNodeWithTag("widget_list").assertExists()
     composeTestRule.onAllNodesWithTag("widget_card").assertCountEquals(2)
