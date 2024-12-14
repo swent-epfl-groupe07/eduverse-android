@@ -41,8 +41,7 @@ open class FolderViewModel(
         }
   }
 
-  private var _folders: MutableStateFlow<List<Folder>> =
-      MutableStateFlow(emptyList())
+  private var _folders: MutableStateFlow<List<Folder>> = MutableStateFlow(emptyList())
   open val folders: StateFlow<List<Folder>> = _folders
 
   private var _activeFolder: MutableStateFlow<Folder?> =
@@ -185,7 +184,7 @@ open class FolderViewModel(
   fun unarchiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are archived, remove the unarchived folder
     folder.archived = false
-      _folders.value = _folders.value.filter { it.archived }
+    _folders.value = _folders.value.filter { it.archived }
     updateFolder(folder)
   }
 
