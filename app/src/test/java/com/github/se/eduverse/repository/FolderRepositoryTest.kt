@@ -5,7 +5,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
-import com.google.android.gms.common.api.Batch
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.CollectionReference
@@ -24,7 +23,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.anyString
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
@@ -64,7 +62,8 @@ class FolderRepositoryTest {
     `when`(mockFirestore.batch()).thenReturn(mockBatch)
     `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
     `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
-    `when`(mockCollectionReference.whereIn(any<FieldPath>(), any())).thenReturn(mockCollectionReference)
+    `when`(mockCollectionReference.whereIn(any<FieldPath>(), any()))
+        .thenReturn(mockCollectionReference)
     `when`(mockCollectionReference.get()).thenReturn(Tasks.forResult(mockFolderQuerySnapshot))
     `when`(mockCollectionReference.whereEqualTo(anyString(), any()))
         .thenReturn(mockCollectionReference)
@@ -81,8 +80,8 @@ class FolderRepositoryTest {
   @Test
   fun deleteFolder_shouldCallDocumentReferenceDelete() = runBlocking {
     `when`(mockBatch.commit()).thenReturn(Tasks.forResult(null))
-      `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf(mockFolderDocumentSnapshot))
-      `when`(mockFolderDocumentSnapshot.id).thenReturn(folder.id)
+    `when`(mockFolderQuerySnapshot.documents).thenReturn(listOf(mockFolderDocumentSnapshot))
+    `when`(mockFolderDocumentSnapshot.id).thenReturn(folder.id)
 
     folderRepositoryImpl.deleteFolders(listOf(folder), onSuccess = {}, onFailure = {})
 

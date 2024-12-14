@@ -20,8 +20,8 @@ import com.github.se.eduverse.ui.navigation.TopLevelDestination
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.runBlocking
 import java.util.Calendar
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Rule

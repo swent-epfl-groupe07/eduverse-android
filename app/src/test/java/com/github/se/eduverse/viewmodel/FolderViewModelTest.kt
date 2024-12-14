@@ -7,6 +7,7 @@ import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -15,7 +16,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import java.util.Calendar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -300,7 +300,11 @@ class MockFolderRepository(private val folder: Folder, private val archivedFolde
     onSuccess()
   }
 
-  override suspend fun deleteFolders(folders: List<Folder>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+  override suspend fun deleteFolders(
+      folders: List<Folder>,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
     onSuccess()
   }
 
