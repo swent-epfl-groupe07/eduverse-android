@@ -10,6 +10,12 @@ data class ConvertApiResponse(@Json(name = "Files") val files: List<ConvertedFil
 data class ConvertedFile(@Json(name = "Url") val url: String)
 
 // List of supported file types for conversion with the ConvertAPI service
+// And correspond to file extensions of:
+// Apple iWork suite: 'pages' for Pages documents, 'numbers' for Numbers spreadsheets, and 'key' for
+// Keynote presentations.
+// Microsoft Office suite: 'doc' and 'docx' for Word documents, 'ppt' and 'pptx' for PowerPoint
+// presentations, 'xls' and 'xlsx' for Excel spreadsheets.
+// csv: Comma-separated values files
 val SUPPORTED_CONVERSION_TYPES =
     listOf("docx", "doc", "pptx", "ppt", "xls", "xlsx", "pages", "numbers", "key", "csv")
 

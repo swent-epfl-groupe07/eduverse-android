@@ -2,18 +2,26 @@
 package com.github.se.eduverse.ui.videos
 
 // Android Imports
-// Accompanist Pager Imports
-// Coil Image Loading
-// Project-Specific Imports
-// Pager Imports
-// Firebase Import
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,7 +44,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +62,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.FileProvider
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -53,11 +70,13 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.SubcomposeAsyncImage
 import com.github.se.eduverse.model.MediaType
+import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
+import com.github.se.eduverse.ui.videos.ShareUtils.handleShare
 import com.github.se.eduverse.viewmodel.CommentsUiState
 import com.github.se.eduverse.viewmodel.CommentsViewModel
 import com.github.se.eduverse.viewmodel.ProfileViewModel
@@ -66,6 +85,15 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.VerticalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.google.firebase.auth.FirebaseAuth
+import java.io.File
+import java.io.FileOutputStream
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -240,6 +268,26 @@ fun VideoScreen(
                                       Icon(
                                           imageVector = Icons.Default.Comment,
                                           contentDescription = "Comment",
+                                          tint = Color.White,
+                                          modifier = Modifier.size(48.dp))
+                                    }
+
+                                // Share button
+                                IconButton(
+                                    onClick = {
+                                      handleShare(publication = publication, context = context)
+                                      Log.d(
+                                          "SHARE",
+                                          "Share button clicked for publication: ${publication.id}")
+                                    },
+                                    modifier =
+                                        Modifier.align(Alignment.CenterEnd)
+                                            .offset(y = 192.dp)
+                                            .padding(12.dp)
+                                            .testTag("ShareButton_$page")) {
+                                      Icon(
+                                          imageVector = Icons.Default.Share,
+                                          contentDescription = "Share",
                                           tint = Color.White,
                                           modifier = Modifier.size(48.dp))
                                     }
@@ -508,15 +556,85 @@ fun VideoItem(
 }
 
 @Composable
-fun PhotoItem(
-    thumbnailUrl: String,
-    modifier: Modifier = Modifier.testTag("PhotoItem") // Ajout du paramètre Modifier
-) {
+fun PhotoItem(thumbnailUrl: String, modifier: Modifier = Modifier.testTag("PhotoItem")) {
   Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
     SubcomposeAsyncImage(
         model = thumbnailUrl,
         contentDescription = "Publication photo",
         contentScale = ContentScale.Crop,
         modifier = Modifier.fillMaxSize())
+  }
+}
+
+object ShareUtils {
+  fun downloadBytes(url: String, client: OkHttpClient): ByteArray {
+    val request = Request.Builder().url(url).build()
+    val response = client.newCall(request).execute()
+    if (!response.isSuccessful) throw Exception("download failed: ${response.code}")
+    return response.body?.bytes() ?: throw Exception("empty response body")
+  }
+
+  fun getFileExtension(mediaType: MediaType): String {
+    return when (mediaType) {
+      MediaType.PHOTO -> ".jpg"
+      MediaType.VIDEO -> ".mp4"
+    }
+  }
+
+  fun createMediaFile(context: Context, publication: Publication, bytes: ByteArray): File {
+    val mediaDir =
+        when (publication.mediaType) {
+          MediaType.PHOTO -> File(context.cacheDir, "shared_images")
+          MediaType.VIDEO -> File(context.filesDir, "shared_videos")
+        }
+    if (!mediaDir.exists()) mediaDir.mkdirs()
+
+    val fileExtension = getFileExtension(publication.mediaType)
+    val mediaFile = File(mediaDir, "shared_${publication.id}$fileExtension")
+
+    FileOutputStream(mediaFile).use { it.write(bytes) }
+    return mediaFile
+  }
+
+  fun createShareIntent(context: Context, publication: Publication, uri: Uri): Intent {
+    val mimeType =
+        when (publication.mediaType) {
+          MediaType.PHOTO -> "image/jpeg"
+          MediaType.VIDEO -> "video/mp4"
+        }
+
+    return Intent(Intent.ACTION_SEND).apply {
+      type = mimeType
+      putExtra(Intent.EXTRA_STREAM, uri)
+      putExtra(Intent.EXTRA_TEXT, "")
+      addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+  }
+
+  fun handleShare(
+      publication: Publication,
+      context: Context,
+      ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+      mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+      client: OkHttpClient = OkHttpClient()
+  ) {
+    CoroutineScope(ioDispatcher).launch {
+      try {
+        val bytes = downloadBytes(publication.mediaUrl, client)
+        val mediaFile = createMediaFile(context, publication, bytes)
+        val uri: Uri =
+            FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", mediaFile)
+        val shareIntent = createShareIntent(context, publication, uri)
+        withContext(mainDispatcher) {
+          context.startActivity(Intent.createChooser(shareIntent, null))
+          Toast.makeText(context, "Share launched", Toast.LENGTH_SHORT).show()
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        withContext(mainDispatcher) {
+          Toast.makeText(context, "Error while sharing: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+      }
+    }
   }
 }
