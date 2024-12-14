@@ -126,7 +126,7 @@ class PublicationViewModelTest {
     viewModel.loadMorePublications()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { mockRepository.loadRandomPublications(followed = emptyList(), limit = 20) }
+    coVerify { mockRepository.loadRandomPublications(followed = null, limit = 20) }
   }
 
   @Test
