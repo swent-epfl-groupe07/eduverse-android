@@ -22,25 +22,29 @@ class PublicationRepositoryTest {
   private lateinit var firestoreMock: FirebaseFirestore
   private lateinit var repository: PublicationRepository
 
+  private lateinit var mockCollection: CollectionReference
+  private lateinit var mockQuery: Query
+  private lateinit var mockQuerySnapshot: QuerySnapshot
+
   @Before
   fun setUp() {
     firestoreMock = mock(FirebaseFirestore::class.java)
     repository = PublicationRepository(firestoreMock)
+
+    mockCollection = mock(CollectionReference::class.java)
+    mockQuery = mock(Query::class.java)
+    mockQuerySnapshot = mock(QuerySnapshot::class.java)
+
+    `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
+    `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
+    `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
+    `when`(mockQuery.limit(20)).thenReturn(mockQuery)
+    `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
   }
 
   @Test(timeout = 3000)
   fun `loadRandomPublications returns empty list on success`() =
       runBlocking(Dispatchers.IO) {
-        // Arrange
-        val mockCollection = mock(CollectionReference::class.java)
-        val mockQuery = mock(Query::class.java)
-        val mockQuerySnapshot = mock(QuerySnapshot::class.java)
-
-        `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
-        `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
-        `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
-        `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
         `when`(mockQuerySnapshot.documents).thenReturn(listOf())
 
         // Act
@@ -53,16 +57,6 @@ class PublicationRepositoryTest {
   @Test(timeout = 3000)
   fun `loadRandomPublications returns list of publications when documents are available`() =
       runBlocking(Dispatchers.IO) {
-        // Arrange
-        val mockCollection = mock(CollectionReference::class.java)
-        val mockQuery = mock(Query::class.java)
-        val mockQuerySnapshot = mock(QuerySnapshot::class.java)
-
-        `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
-        `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
-        `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
-        `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
 
         // Créons des publications simulées sous forme de DocumentSnapshot
         val publicationList =
@@ -105,15 +99,6 @@ class PublicationRepositoryTest {
   @Test(timeout = 3000)
   fun `loadRandomPublications returns empty list on exception`() =
       runBlocking(Dispatchers.IO) {
-        // Arrange
-        val mockCollection = mock(CollectionReference::class.java)
-        val mockQuery = mock(Query::class.java)
-
-        `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
-        `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
-        `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
-        `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockQuery.get()).thenThrow(RuntimeException("Firestore error"))
 
         // Act
         val result = repository.loadRandomPublications()
@@ -125,17 +110,8 @@ class PublicationRepositoryTest {
   @Test(timeout = 3000)
   fun `loadRandomPublications filter with userId if not null`() =
       runBlocking(Dispatchers.IO) {
-        val mockCollection = mock(CollectionReference::class.java)
-        val mockQuery = mock(Query::class.java)
-        val mockQuerySnapshot = mock(QuerySnapshot::class.java)
         val userIds = listOf("userId")
-
-        `when`(firestoreMock.collection("publications")).thenReturn(mockCollection)
-        `when`(mockCollection.orderBy("id")).thenReturn(mockQuery)
-        `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
         `when`(mockQuery.whereIn(eq("userId"), eq(userIds))).thenReturn(mockQuery)
-        `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
 
         val publicationList =
             listOf(
