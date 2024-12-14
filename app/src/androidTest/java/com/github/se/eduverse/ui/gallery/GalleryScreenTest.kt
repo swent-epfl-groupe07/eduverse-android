@@ -1,5 +1,7 @@
+// File: GalleryScreenTest.kt
 package com.github.se.eduverse.ui.gallery
 
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -24,17 +26,20 @@ import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
 class GalleryScreenTest {
@@ -43,14 +48,17 @@ class GalleryScreenTest {
 
   private lateinit var fakePhotoViewModel: FakePhotoViewModel
   private lateinit var fakeVideoViewModel: FakeVideoViewModel
-  private val mockNavigationActions = aliBouiri(navController = mock())
-
   private lateinit var fakeFolderViewModel: FolderViewModel
   private lateinit var folderRepository: FolderRepository
   private lateinit var auth: FirebaseAuth
 
-  val folder1 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1", archived = false)
-  val folder2 = Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
+  private val folder1 =
+      Folder("uid", emptyList<MyFile>().toMutableList(), "folder1", "1", archived = false)
+  private val folder2 =
+      Folder("uid", emptyList<MyFile>().toMutableList(), "folder2", "2", archived = false)
+
+  private lateinit var mockNavigationActions: aliBouiri
+  private lateinit var mockFileDownloader: FileDownloader
 
   @Before
   fun setup() {
@@ -61,7 +69,6 @@ class GalleryScreenTest {
     auth = mock(FirebaseAuth::class.java)
     val user = mock(FirebaseUser::class.java)
     `when`(auth.currentUser).thenReturn(user)
-
     `when`(user.uid).thenReturn("uid")
 
     `when`(
@@ -75,6 +82,9 @@ class GalleryScreenTest {
           callback(listOf(folder1, folder2))
         }
     fakeFolderViewModel = FolderViewModel(folderRepository, auth)
+
+    mockNavigationActions = aliBouiri(navController = mock())
+    mockFileDownloader = mock(FileDownloader::class.java)
   }
 
   @Test
@@ -89,7 +99,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     composeTestRule.waitForIdle()
@@ -118,7 +130,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     composeTestRule.onNodeWithTag("PhotoItem_testPhotoPath").assertExists()
@@ -136,7 +150,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     composeTestRule.onNodeWithTag("VideoItem_testVideoPath").performClick()
@@ -154,7 +170,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     composeTestRule.onNodeWithTag("VideoItem_testVideoPath").performClick()
@@ -175,7 +193,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     composeTestRule.onNodeWithTag("VideoItem_testVideoPath").performClick()
@@ -197,7 +217,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     // Simulates clicking on the photo item to open the dialog
@@ -219,8 +241,7 @@ class GalleryScreenTest {
     composeTestRule.onNodeWithTag("button_container").assertIsNotDisplayed()
 
     // Verifies that the `updateFolder` method is called on the repository
-    verify(folderRepository)
-        .updateFolder(org.mockito.kotlin.any(), org.mockito.kotlin.any(), org.mockito.kotlin.any())
+    verify(folderRepository).updateFolder(any(), any(), any())
 
     // Verifies that the photo was added to the folder `folder1`
     assertEquals(1, folder1.files.size)
@@ -236,18 +257,18 @@ class GalleryScreenTest {
           modifier = Modifier.testTag("VideoItem"))
     }
 
-    // Verifies that the PublicationItem component with the thumbnail is displayed
     composeTestRule.onNodeWithTag("VideoItem", useUnmergedTree = true).assertExists()
+
     composeTestRule
-        .onNodeWithTag("VideoThumbnail", useUnmergedTree = true)
+        .onNodeWithTag("MediaThumbnail", useUnmergedTree = true)
         .assertExists()
         .assertIsDisplayed()
 
-    // Verifies that the video overlay and play icon are displayed
     composeTestRule
         .onNodeWithTag("VideoOverlay", useUnmergedTree = true)
         .assertExists()
         .assertIsDisplayed()
+
     composeTestRule
         .onNodeWithTag("PlayIcon", useUnmergedTree = true)
         .assertExists()
@@ -279,7 +300,9 @@ class GalleryScreenTest {
           photoViewModel = fakePhotoViewModel,
           videoViewModel = fakeVideoViewModel,
           folderViewModel = fakeFolderViewModel,
-          navigationActions = mockNavigationActions)
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
     }
 
     // Verifies that the GoBackButton is displayed
@@ -291,11 +314,195 @@ class GalleryScreenTest {
     // Verifies that the `goBack()` navigation action was called
     assert(mockNavigationActions.backCalled)
   }
+
+  @Test
+  fun testPostLocalPhotoNavigatesCorrectly() {
+    // Arrange
+    val localPhotoFile = File("path/to/local/photo.jpg")
+    val photo =
+        Photo(ownerId = "testOwner", photo = ByteArray(0), path = localPhotoFile.absolutePath)
+    fakePhotoViewModel.setPhotos(listOf(photo))
+    fakeVideoViewModel.setVideos(emptyList())
+
+    // Configure mockFileDownloader to return the localPhotoFile when called with the local path
+    runBlocking {
+      `when`(mockFileDownloader.ensureLocalFile(any(), eq(localPhotoFile.absolutePath)))
+          .thenReturn(localPhotoFile)
+    }
+
+    composeTestRule.setContent {
+      GalleryScreen(
+          ownerId = "testOwner",
+          photoViewModel = fakePhotoViewModel,
+          videoViewModel = fakeVideoViewModel,
+          folderViewModel = fakeFolderViewModel,
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
+    }
+
+    // Act
+    // Simule le clic sur l'élément photo pour ouvrir le dialog
+    composeTestRule.onNodeWithTag("PhotoItem_${photo.path}").performClick()
+    // Vérifie que le dialog s'affiche
+    composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
+
+    // Clique sur le bouton "Post"
+    composeTestRule.onNodeWithTag("PostButton").performClick()
+
+    // Attendre que l'UI soit dans un état stable
+    composeTestRule.waitForIdle()
+
+    // Assert
+    val expectedRoute = "picTaken/${Uri.encode(localPhotoFile.absolutePath)}"
+    assertEquals(expectedRoute, mockNavigationActions.navigatedRoute)
+  }
+
+  @Test
+  fun testPostRemotePhotoNavigatesCorrectly() {
+    // Arrange
+    val remotePhotoUrl =
+        "https://firebasestorage.googleapis.com/v0/b/testBucket/o/testPhoto.jpg?alt=media&token=abcd1234"
+    val photo = Photo(ownerId = "testOwner", photo = ByteArray(0), path = remotePhotoUrl)
+    fakePhotoViewModel.setPhotos(listOf(photo))
+    fakeVideoViewModel.setVideos(emptyList())
+
+    val downloadedFile = File("path/to/downloaded/photo.jpg")
+
+    // Configure mockFileDownloader to return the downloadedFile when called with the remote URL
+    runBlocking {
+      `when`(mockFileDownloader.ensureLocalFile(any(), eq(remotePhotoUrl)))
+          .thenReturn(downloadedFile)
+    }
+
+    composeTestRule.setContent {
+      GalleryScreen(
+          ownerId = "testOwner",
+          photoViewModel = fakePhotoViewModel,
+          videoViewModel = fakeVideoViewModel,
+          folderViewModel = fakeFolderViewModel,
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
+    }
+
+    // Act
+    composeTestRule.onNodeWithTag("PhotoItem_${photo.path}").performClick()
+    composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
+
+    // Clique sur le bouton "Post"
+    composeTestRule.onNodeWithTag("PostButton").performClick()
+
+    // Attendre que l'UI soit dans un état stable
+    composeTestRule.waitForIdle()
+
+    // Assert
+    val expectedRoute = "picTaken/${Uri.encode(downloadedFile.absolutePath)}"
+    assertEquals(expectedRoute, mockNavigationActions.navigatedRoute)
+  }
+
+  @Test
+  fun testPostLocalVideoNavigatesCorrectly() {
+    // Arrange
+    val localVideoFile = File("path/to/local/video.mp4")
+    val video =
+        Video(ownerId = "testOwner", video = ByteArray(0), path = localVideoFile.absolutePath)
+    fakeVideoViewModel.setVideos(listOf(video))
+    fakePhotoViewModel.setPhotos(emptyList())
+
+    // Configure mockFileDownloader to return the localVideoFile when called with the local path
+    runBlocking {
+      `when`(mockFileDownloader.ensureLocalFile(any(), eq(localVideoFile.absolutePath)))
+          .thenReturn(localVideoFile)
+    }
+
+    composeTestRule.setContent {
+      GalleryScreen(
+          ownerId = "testOwner",
+          photoViewModel = fakePhotoViewModel,
+          videoViewModel = fakeVideoViewModel,
+          folderViewModel = fakeFolderViewModel,
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
+    }
+
+    // Act
+    composeTestRule.onNodeWithTag("VideoItem_${video.path}").performClick()
+    composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
+
+    // Clique sur le bouton "Post"
+    composeTestRule.onNodeWithTag("PostButton").performClick()
+
+    // Attendre que l'UI soit dans un état stable
+    composeTestRule.waitForIdle()
+
+    // Assert
+    val expectedRoute = "picTaken/null?videoPath=${Uri.encode(localVideoFile.absolutePath)}"
+    assertEquals(expectedRoute, mockNavigationActions.navigatedRoute)
+  }
+
+  @Test
+  fun testPostRemoteVideoNavigatesCorrectly() {
+    // Arrange
+    val remoteVideoUrl =
+        "https://firebasestorage.googleapis.com/v0/b/testBucket/o/testVideo.mp4?alt=media&token=efgh5678"
+    val video = Video(ownerId = "testOwner", video = ByteArray(0), path = remoteVideoUrl)
+    fakeVideoViewModel.setVideos(listOf(video))
+    fakePhotoViewModel.setPhotos(emptyList())
+
+    val downloadedFile = File("path/to/downloaded/video.mp4")
+
+    // Configure mockFileDownloader to return the downloadedFile when called with the remote URL
+    runBlocking {
+      `when`(mockFileDownloader.ensureLocalFile(any(), eq(remoteVideoUrl)))
+          .thenReturn(downloadedFile)
+    }
+
+    composeTestRule.setContent {
+      GalleryScreen(
+          ownerId = "testOwner",
+          photoViewModel = fakePhotoViewModel,
+          videoViewModel = fakeVideoViewModel,
+          folderViewModel = fakeFolderViewModel,
+          navigationActions = mockNavigationActions,
+          fileDownloader = mockFileDownloader // Inject mockFileDownloader
+          )
+    }
+
+    // Act
+    composeTestRule.onNodeWithTag("VideoItem_${video.path}").performClick()
+    composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
+
+    // Clique sur le bouton "Post"
+    composeTestRule.onNodeWithTag("PostButton").performClick()
+
+    // Attendre que l'UI soit dans un état stable
+    composeTestRule.waitForIdle()
+
+    // Assert
+    val expectedRoute = "picTaken/null?videoPath=${Uri.encode(downloadedFile.absolutePath)}"
+    assertEquals(expectedRoute, mockNavigationActions.navigatedRoute)
+  }
+
+  // Classe de MockNavigationActions
+  class aliBouiri(navController: NavHostController) : NavigationActions(navController) {
+    var navigatedRoute: String? = null
+    var backCalled: Boolean = false
+
+    override fun navigateTo(route: String) {
+      navigatedRoute = route
+    }
+
+    override fun goBack() {
+      backCalled = true
+    }
+  }
 }
 
+// FakePhotoViewModel and FakeVideoViewModel remain unchanged
 class FakePhotoViewModel : PhotoViewModel(mockRepository(), mock(FileRepository::class.java)) {
 
-  // Simulates a list of photos
   override val _photos =
       MutableStateFlow(
           listOf(
@@ -332,7 +539,6 @@ private fun mockRepository() =
 
 class FakeVideoViewModel : VideoViewModel(mockVideoRepository(), mock(FileRepository::class.java)) {
 
-  // Simulates a list of videos
   override val _videos =
       MutableStateFlow(
           listOf(
@@ -362,11 +568,3 @@ private fun mockVideoRepository() =
 
       override suspend fun getVideosByOwner(ownerId: String): List<Video> = emptyList()
     }
-
-class aliBouiri(navController: NavHostController) : NavigationActions(navController) {
-  var backCalled = false
-
-  override fun goBack() {
-    backCalled = true
-  }
-}
