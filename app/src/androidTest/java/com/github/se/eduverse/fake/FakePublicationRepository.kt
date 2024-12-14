@@ -20,10 +20,10 @@ class FakePublicationRepository : PublicationRepository(db = FirebaseFirestore.g
   }
 
   override suspend fun loadRandomPublications(
-      followed: List<String>,
+      followed: List<String>?,
       limit: Long
   ): List<Publication> {
-    return if (followed.isEmpty()) {
+    return if (followed == null) {
       fakePublications.take(limit.toInt())
     } else {
       fakeFollowedPublications.take(limit.toInt())
