@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.github.se.eduverse.model.MediaCacheManager
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.model.NotificationType
@@ -252,8 +253,9 @@ fun EduverseApp(
   val aiAssistantRepository =
       AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
 
+  val mediaCacheManager = MediaCacheManager(LocalContext.current)
   val pubRepo = PublicationRepository(firestore)
-  val publicationViewModel = PublicationViewModel(pubRepo)
+  val publicationViewModel = PublicationViewModel(pubRepo, mediaCacheManager)
 
   val settingsRepo = SettingsRepository(firestore)
   val settingsViewModel = SettingsViewModel(settingsRepo, FirebaseAuth.getInstance())

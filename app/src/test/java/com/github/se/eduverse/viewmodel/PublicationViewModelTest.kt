@@ -1,178 +1,500 @@
+// PublicationViewModelTest.kt
+package com.github.se.eduverse.viewmodel
+
+import com.github.se.eduverse.model.MediaCacheManager
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.PublicationRepository
-import com.github.se.eduverse.viewmodel.PublicationViewModel
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockkClass
+import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.*
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PublicationViewModelTest {
 
-  private val testDispatcher = StandardTestDispatcher()
-  private lateinit var viewModel: PublicationViewModel
-  private val mockRepository = mockkClass(PublicationRepository::class, relaxed = true)
+    // Set up a TestDispatcher for controlling coroutine execution
+    private val testDispatcher = StandardTestDispatcher()
 
-  @Before
-  fun setup() {
-    Dispatchers.setMain(testDispatcher)
-    viewModel = PublicationViewModel(mockRepository)
-  }
+    // The ViewModel under test
+    private lateinit var viewModel: PublicationViewModel
 
-  @After
-  fun tearDown() {
-    Dispatchers.resetMain()
-  }
+    // Mocked dependencies
+    private val mockRepository = mockk<PublicationRepository>(relaxed = true)
+    private val mockMediaCacheManager = mockk<MediaCacheManager>(relaxed = true)
 
-  @Test
-  fun test_initial_load_of_publications() = runTest {
-    val publications =
-        listOf(
-            Publication(
-                id = "1",
-                userId = "user1",
-                title = "Test Video",
-                mediaUrl = "https://...",
-                thumbnailUrl = "https://...",
-                mediaType = MediaType.VIDEO,
-                timestamp = System.currentTimeMillis()),
-            Publication(
-                id = "2",
-                userId = "user2",
-                title = "Test Photo",
-                mediaUrl = "https://...",
-                thumbnailUrl = "https://...",
-                mediaType = MediaType.PHOTO,
-                timestamp = System.currentTimeMillis()))
+    @Before
+    fun setup() {
+        // Override the main dispatcher with our TestDispatcher
+        Dispatchers.setMain(testDispatcher)
+        // Initialize the ViewModel with mocked dependencies
+        viewModel = PublicationViewModel(mockRepository, mockMediaCacheManager)
+    }
 
-    // Setup MockK to return the list when calling the repository function
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns publications
+    @After
+    fun tearDown() {
+        // Reset the main dispatcher to the original Main dispatcher
+        Dispatchers.resetMain()
+        // Clear all MockK mocks to ensure test isolation
+        clearAllMocks()
+    }
 
-    // Load the publications in the view model
-    viewModel.loadMorePublications()
-    testDispatcher.scheduler.advanceUntilIdle()
+    /** Test Case: Initial load of publications and caching process */
+    @Test
+    fun `test initial load of publications and caching`() = runTest {
+        // Arrange
+        val publications =
+            listOf(
+                Publication(
+                    id = "1",
+                    userId = "user1",
+                    title = "Test Video",
+                    mediaUrl = "https://video.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.VIDEO,
+                    timestamp = System.currentTimeMillis()),
+                Publication(
+                    id = "2",
+                    userId = "user2",
+                    title = "Test Photo",
+                    mediaUrl = "https://photo.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.PHOTO,
+                    timestamp = System.currentTimeMillis()))
 
-    // Instead of comparing lists, compare the content of individual elements
-    val result = viewModel.publications.value
-    assertEquals(publications.size, result.size)
-    assertEquals(publications[0].id, result[0].id)
-    assertEquals(publications[1].id, result[1].id)
-  }
+        // Mock repository to return publications on loadRandomPublications and loadCachePublications
+        coEvery { mockRepository.loadRandomPublications() } returns publications
+        coEvery { mockRepository.loadCachePublications(limit = 50) } returns publications
 
-  @Test
-  fun `test loading more publications when some are already present`() = runTest {
-    val initialPublications =
-        listOf(
-            Publication(
-                id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
-    val morePublications =
-        listOf(
-            Publication(
-                id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
+        // Mock MediaCacheManager methods
+        coEvery {
+            mockMediaCacheManager.savePublicationToCache<Publication>(
+                publication = any(), mediaUrl = any(), mediaFileName = any(), metadataFileName = any())
+        } returns true
 
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
-        initialPublications andThen
-        morePublications
+        coEvery { mockMediaCacheManager.cleanCache() } just Runs
+        coEvery { mockMediaCacheManager.hasCachedFiles() } returns false
 
-    viewModel.loadMorePublications()
-    testDispatcher.scheduler.advanceUntilIdle()
+        // Act
+        viewModel.initializePublications()
+        // Advance coroutine until all tasks are completed
+        testDispatcher.scheduler.advanceUntilIdle()
 
-    viewModel.loadMorePublications()
-    testDispatcher.scheduler.advanceUntilIdle()
+        // Assert
+        val result = viewModel.publications.value
+        assertEquals("Publications size should match", publications.size, result.size)
+        assertTrue("Publications should contain all expected items", result.containsAll(publications))
 
-    val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
-    val actualIds = viewModel.publications.first().map { it.id }.toSet()
+        // Verify that repository methods were called
+        coVerify(exactly = 1) { mockRepository.loadRandomPublications() }
+        coVerify(exactly = 1) { mockRepository.loadCachePublications(limit = 50) }
 
-    assertEquals(expectedIds, actualIds)
-  }
+        // Verify that MediaCacheManager methods were called appropriately
+        coVerify(exactly = 1) { mockMediaCacheManager.cleanCache() }
+        coVerify(exactly = 1) { mockMediaCacheManager.hasCachedFiles() }
+        publications.forEach { publication ->
+            val expectedMediaFileName =
+                "${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
+            val expectedMetadataFileName = "${publication.id}_metadata.json"
+            coVerify(exactly = 1) {
+                mockMediaCacheManager.savePublicationToCache<Publication>(
+                    publication = publication,
+                    mediaUrl = publication.mediaUrl,
+                    mediaFileName = expectedMediaFileName,
+                    metadataFileName = expectedMetadataFileName)
+            }
+        }
 
-  @Test
-  fun `test error handling when loading publications fails`() = runTest {
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } throws
-        Exception("Network Error")
+        // Verify no error is present
+        assertNull("Error should be null after successful load", viewModel.error.first())
+    }
 
-    viewModel.loadMorePublications()
-    testDispatcher.scheduler.advanceUntilIdle()
+    /** Test Case: Loading more publications when some are already present */
+    @Test
+    fun `test loading more publications when some are already present`() = runTest {
+        // Arrange
+        val initialPublications =
+            listOf(
+                Publication(
+                    id = "1",
+                    userId = "user1",
+                    title = "Initial Video",
+                    mediaUrl = "https://video.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.VIDEO,
+                    timestamp = System.currentTimeMillis()))
+        val morePublications =
+            listOf(
+                Publication(
+                    id = "2",
+                    userId = "user2",
+                    title = "More Photo",
+                    mediaUrl = "https://photo.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.PHOTO,
+                    timestamp = System.currentTimeMillis()))
 
-    assertEquals("fail to load publications", viewModel.error.first())
-  }
+        // Mock repository to return initial and more publications
+        coEvery { mockRepository.loadRandomPublications() } returnsMany
+                listOf(initialPublications, morePublications)
+        coEvery { mockRepository.loadCachePublications(limit = 50) } returns
+                initialPublications + morePublications
 
-  @Test
-  fun `test loading empty list of publications`() = runTest {
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns emptyList()
+        // Mock MediaCacheManager methods
+        coEvery {
+            mockMediaCacheManager.savePublicationToCache<Publication>(
+                publication = any(), mediaUrl = any(), mediaFileName = any(), metadataFileName = any())
+        } returns true
 
-    viewModel.loadMorePublications()
-    testDispatcher.scheduler.advanceUntilIdle()
+        coEvery { mockMediaCacheManager.cleanCache() } just Runs
+        coEvery { mockMediaCacheManager.hasCachedFiles() } returns false
 
-    assertEquals(emptyList<Publication>(), viewModel.publications.first())
-    assertNull(viewModel.error.first())
-  }
+        // Act: Load initial publications
+        viewModel.initializePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
 
-  @Test
-  fun `test loadPublications is called with correct limit`() = runTest {
-    viewModel.loadMorePublications()
-    testDispatcher.scheduler.advanceUntilIdle()
+        // Act: Load more publications
+        viewModel.loadMorePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { mockRepository.loadRandomPublications(followed = null, limit = 20) }
-  }
+        // Combine initial and more publications
+        val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
+        val actualIds = viewModel.publications.value.map { it.id }.toSet()
 
-  @Test
-  fun `test loadFollowedPublications with empty list`() = runTest {
-    val publications =
-        listOf(
-            Publication(
-                id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+        assertEquals("Total publications should match", expectedIds, actualIds)
 
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns publications
+        // Verify that repository methods were called
+        coVerify(exactly = 2) { mockRepository.loadRandomPublications() }
+        coVerify(exactly = 1) { mockRepository.loadCachePublications(limit = 50) }
 
-    viewModel.loadFollowedPublications(listOf("userId"))
-    testDispatcher.scheduler.advanceUntilIdle()
+        // Verify that MediaCacheManager methods were called appropriately
+        coVerify(exactly = 1) { mockMediaCacheManager.cleanCache() }
+        coVerify(exactly = 1) { mockMediaCacheManager.hasCachedFiles() }
+        (initialPublications + morePublications).forEach { publication ->
+            val expectedMediaFileName =
+                "${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
+            val expectedMetadataFileName = "${publication.id}_metadata.json"
+            coVerify(exactly = 1) {
+                mockMediaCacheManager.savePublicationToCache<Publication>(
+                    publication = publication,
+                    mediaUrl = publication.mediaUrl,
+                    mediaFileName = expectedMediaFileName,
+                    metadataFileName = expectedMetadataFileName)
+            }
+        }
 
-    coVerify { mockRepository.loadRandomPublications(followed = listOf("userId"), limit = 20) }
+        // Verify no error is present
+        assertNull("Error should be null after successful load", viewModel.error.first())
+    }
 
-    val expectedIds = (publications).map { it.id }.toSet()
-    val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+    /** Test Case: Handling exceptions when loading publications fails */
+    @Test
+    fun `test error handling when loading publications fails`() = runTest {
+        // Arrange: Mock repository to throw an exception
+        coEvery { mockRepository.loadRandomPublications() } throws Exception("Network Error")
 
-    assertEquals(expectedIds, actualIds)
-  }
+        // Act: Attempt to load publications
+        viewModel.loadMorePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
 
-  @Test
-  fun `test loadMorePublications with non empty list`() = runTest {
-    val initialPublications =
-        listOf(
-            Publication(
-                id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
-    val morePublications =
-        listOf(
-            Publication(
-                id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
+        // Assert: Verify that error state is updated
+        assertEquals("fail to load publications", viewModel.error.first())
 
-    coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
-        initialPublications andThen
-        morePublications
+        // Verify that repository methods were called
+        coVerify(exactly = 1) { mockRepository.loadRandomPublications() }
 
-    viewModel.loadFollowedPublications(listOf("userId"))
-    testDispatcher.scheduler.advanceUntilIdle()
+        // Since an exception occurs, loadCachePublications should not be called
+        coVerify(exactly = 0) { mockRepository.loadCachePublications(any()) }
 
-    viewModel.loadFollowedPublications(listOf("userId"))
-    testDispatcher.scheduler.advanceUntilIdle()
+        // Verify that MediaCacheManager methods were not called
+        coVerify(exactly = 0) { mockMediaCacheManager.cleanCache() }
+        coVerify(exactly = 0) { mockMediaCacheManager.hasCachedFiles() }
+        coVerify(exactly = 0) {
+            mockMediaCacheManager.savePublicationToCache<Publication>(any(), any(), any(), any())
+        }
+    }
 
-    val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
-    val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+    /** Test Case: Loading empty list of publications */
+    @Test
+    fun `test loading empty list of publications`() = runTest {
+        // Arrange: Mock repository to return empty list
+        coEvery { mockRepository.loadRandomPublications() } returns emptyList()
+        coEvery { mockRepository.loadCachePublications(limit = 50) } returns emptyList()
 
-    assertEquals(expectedIds, actualIds)
-  }
+        // Mock MediaCacheManager methods
+        coEvery {
+            mockMediaCacheManager.savePublicationToCache<Publication>(
+                publication = any(), mediaUrl = any(), mediaFileName = any(), metadataFileName = any())
+        } returns true
+
+        coEvery { mockMediaCacheManager.cleanCache() } just Runs
+        coEvery { mockMediaCacheManager.hasCachedFiles() } returns false
+
+        // Act: Initialize publications
+        viewModel.initializePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert
+        val result = viewModel.publications.value
+        assertTrue("Publications list should be empty", result.isEmpty())
+
+        // Verify that repository methods were called
+        coVerify(exactly = 1) { mockRepository.loadRandomPublications() }
+        coVerify(exactly = 1) { mockRepository.loadCachePublications(limit = 50) }
+
+        // Verify that MediaCacheManager methods were called appropriately
+        coVerify(exactly = 1) { mockMediaCacheManager.cleanCache() }
+        coVerify(exactly = 1) { mockMediaCacheManager.hasCachedFiles() }
+        // Since cachePublications is empty, savePublicationToCache should not be called
+        coVerify(exactly = 0) {
+            mockMediaCacheManager.savePublicationToCache<Publication>(any(), any(), any(), any())
+        }
+
+        // Verify no error is present
+        assertNull("Error should be null when loading empty list", viewModel.error.first())
+    }
+
+    /** Test Case: loadPublications is called with correct limit */
+    @Test
+    fun `test loadPublications is called with correct limit`() = runTest {
+        // Arrange: Assuming that loadRandomPublications has a default limit of 20
+        // (Note: The PublicationRepository's loadRandomPublications() method has a default parameter
+        // limit=20)
+
+        // Act: Load more publications
+        viewModel.loadMorePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert: Verify that loadRandomPublications was called
+        coVerify(exactly = 1) { mockRepository.loadRandomPublications() }
+    }
+
+    /** New Test: Verify that loadAndCachePublications saves publications to cache correctly */
+    @Test
+    fun `test loadAndCachePublications saves publications to cache`() = runTest {
+        // Arrange
+        val cachedPublications =
+            listOf(
+                Publication(
+                    id = "1",
+                    userId = "user1",
+                    title = "Cached Video",
+                    mediaUrl = "https://cachedvideo.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.VIDEO,
+                    timestamp = System.currentTimeMillis()),
+                Publication(
+                    id = "2",
+                    userId = "user2",
+                    title = "Cached Photo",
+                    mediaUrl = "https://cachedphoto.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.PHOTO,
+                    timestamp = System.currentTimeMillis()))
+
+        // Mock repository methods
+        coEvery { mockRepository.loadRandomPublications() } returns cachedPublications
+        coEvery { mockRepository.loadCachePublications(limit = 50) } returns cachedPublications
+
+        // Mock MediaCacheManager methods
+        coEvery {
+            mockMediaCacheManager.savePublicationToCache<Publication>(
+                publication = any(), mediaUrl = any(), mediaFileName = any(), metadataFileName = any())
+        } returns true
+
+        coEvery { mockMediaCacheManager.cleanCache() } just Runs
+        coEvery { mockMediaCacheManager.hasCachedFiles() } returns false
+
+        // Act: Initialize publications which triggers loadAndCachePublications
+        viewModel.initializePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert: Verify that savePublicationToCache is called with correct parameters
+        cachedPublications.forEach { publication ->
+            val expectedMediaFileName =
+                "${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
+            val expectedMetadataFileName = "${publication.id}_metadata.json"
+            coVerify(exactly = 1) {
+                mockMediaCacheManager.savePublicationToCache<Publication>(
+                    publication = publication,
+                    mediaUrl = publication.mediaUrl,
+                    mediaFileName = expectedMediaFileName,
+                    metadataFileName = expectedMetadataFileName)
+            }
+        }
+
+        // Verify that publications are loaded correctly
+        val result = viewModel.publications.value
+        assertEquals("Publications size should match", cachedPublications.size, result.size)
+        assertTrue(
+            "Publications should contain all cached publications",
+            result.containsAll(cachedPublications))
+
+        // Verify no error is present
+        assertNull("Error should be null after successful caching", viewModel.error.first())
+    }
+
+    /** New Test: Verify that loadAndCachePublications handles exceptions gracefully */
+    @Test
+    fun `test loadAndCachePublications handles exceptions gracefully`() = runTest {
+        // Arrange
+        // Mock repository to throw exception when loadCachePublications is called
+        coEvery { mockRepository.loadCachePublications(limit = 50) } throws Exception("Cache Error")
+
+        // Mock repository to return some publications on loadRandomPublications
+        val publicationsFromRandom =
+            listOf(
+                Publication(
+                    id = "3",
+                    userId = "user3",
+                    title = "Random Video",
+                    mediaUrl = "https://randomvideo.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.VIDEO,
+                    timestamp = System.currentTimeMillis()))
+        coEvery { mockRepository.loadRandomPublications() } returns publicationsFromRandom
+
+        // Mock MediaCacheManager methods
+        coEvery { mockMediaCacheManager.cleanCache() } just Runs
+        coEvery { mockMediaCacheManager.hasCachedFiles() } returns false
+        coEvery {
+            mockMediaCacheManager.savePublicationToCache<Publication>(
+                publication = any(), mediaUrl = any(), mediaFileName = any(), metadataFileName = any())
+        } returns true
+
+        // Act: Initialize publications which triggers loadAndCachePublications
+        viewModel.initializePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert:
+        // Since loadCachePublications throws an exception, savePublicationToCache should not be called
+        coVerify(exactly = 0) {
+            mockMediaCacheManager.savePublicationToCache<Publication>(any(), any(), any(), any())
+        }
+
+        // Verify that publications are loaded from loadRandomPublications
+        val result = viewModel.publications.value
+        assertEquals("Publications size should match", publicationsFromRandom.size, result.size)
+        assertTrue(
+            "Publications should contain all random publications",
+            result.containsAll(publicationsFromRandom))
+
+        // Verify that error remains null as exceptions in caching are logged but do not affect
+        // publications
+        assertNull("Error should be null even if caching fails", viewModel.error.first())
+    }
+
+    /** New Test: Verify that caching is skipped when cached files exist */
+    @Test
+    fun `test loadAndCachePublications skips caching when cached files exist`() = runTest {
+        // Arrange
+        val cachedPublications =
+            listOf(
+                Publication(
+                    id = "1",
+                    userId = "user1",
+                    title = "Cached Video",
+                    mediaUrl = "https://cachedvideo.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.VIDEO,
+                    timestamp = System.currentTimeMillis()),
+                Publication(
+                    id = "2",
+                    userId = "user2",
+                    title = "Cached Photo",
+                    mediaUrl = "https://cachedphoto.url",
+                    thumbnailUrl = "https://thumbnail.url",
+                    mediaType = MediaType.PHOTO,
+                    timestamp = System.currentTimeMillis()))
+
+        // Mock repository methods
+        coEvery { mockRepository.loadRandomPublications() } returns cachedPublications
+        coEvery { mockRepository.loadCachePublications(limit = 50) } returns cachedPublications
+
+        // Mock MediaCacheManager methods
+        coEvery { mockMediaCacheManager.cleanCache() } just Runs
+        coEvery { mockMediaCacheManager.hasCachedFiles() } returns true
+        // When hasCachedFiles is true, savePublicationToCache should not be called
+
+        // Act: Initialize publications which triggers loadAndCachePublications
+        viewModel.initializePublications()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Assert:
+        // Verify that savePublicationToCache is never called since cached files exist
+        coVerify(exactly = 0) {
+            mockMediaCacheManager.savePublicationToCache<Publication>(any(), any(), any(), any())
+        }
+
+        // Verify that publications are loaded correctly
+        val result = viewModel.publications.value
+        assertEquals("Publications size should match", cachedPublications.size, result.size)
+        assertTrue(
+            "Publications should contain all cached publications",
+            result.containsAll(cachedPublications))
+
+        // Verify that repository methods were called
+        coVerify(exactly = 1) { mockRepository.loadRandomPublications() }
+        coVerify(exactly = 0) { mockRepository.loadCachePublications(limit = 50) }
+
+        // Verify that MediaCacheManager methods were called appropriately
+        coVerify(exactly = 1) { mockMediaCacheManager.cleanCache() }
+        coVerify(exactly = 1) { mockMediaCacheManager.hasCachedFiles() }
+
+        // Verify no error is present
+        assertNull("Error should be null after successful load and caching", viewModel.error.first())
+        coVerify { mockRepository.loadRandomPublications(followed = null, limit = 20) }
+    }
+
+    @Test
+    fun `test loadFollowedPublications with empty list`() = runTest {
+        val publications =
+            listOf(
+                Publication(
+                    id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+
+        coEvery { mockRepository.loadRandomPublications(any(), any()) } returns publications
+
+        viewModel.loadFollowedPublications(listOf("userId"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { mockRepository.loadRandomPublications(followed = listOf("userId"), limit = 20) }
+
+        val expectedIds = (publications).map { it.id }.toSet()
+        val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+
+        assertEquals(expectedIds, actualIds)
+    }
+
+    @Test
+    fun `test loadMorePublications with non empty list`() = runTest {
+        val initialPublications =
+            listOf(
+                Publication(
+                    id = "1", userId = "user1", title = "Test Video", mediaType = MediaType.VIDEO))
+        val morePublications =
+            listOf(
+                Publication(
+                    id = "2", userId = "user2", title = "Test Photo", mediaType = MediaType.PHOTO))
+
+        coEvery { mockRepository.loadRandomPublications(any(), any()) } returns
+                initialPublications andThen
+                morePublications
+
+        viewModel.loadFollowedPublications(listOf("userId"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.loadFollowedPublications(listOf("userId"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val expectedIds = (initialPublications + morePublications).map { it.id }.toSet()
+        val actualIds = viewModel.followedPublications.first().map { it.id }.toSet()
+
+        assertEquals(expectedIds, actualIds)
+    }
 }
