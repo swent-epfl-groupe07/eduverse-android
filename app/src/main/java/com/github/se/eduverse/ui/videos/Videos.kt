@@ -106,17 +106,17 @@ fun VideoScreen(
 ) {
     LaunchedEffect(Unit) { publicationViewModel.initializePublications() }
 
-    var isPublicationGlobal by remember { mutableStateOf(true) }
-    var followedUsers by remember { mutableStateOf(emptyList<String>()) }
+  var isPublicationGlobal by remember { mutableStateOf(true) }
+  var followedUsers by remember { mutableStateOf(emptyList<String>()) }
 
-    val globalPublications by publicationViewModel.publications.collectAsState()
-    val followedPublications by publicationViewModel.followedPublications.collectAsState()
-    val publications = if (isPublicationGlobal) globalPublications else followedPublications
-    val publicationError by publicationViewModel.error.collectAsState()
-    val pagerState = rememberPagerState()
+  val globalPublications by publicationViewModel.publications.collectAsState()
+  val followedPublications by publicationViewModel.followedPublications.collectAsState()
+  val publications = if (isPublicationGlobal) globalPublications else followedPublications
+  val publicationError by publicationViewModel.error.collectAsState()
+  val pagerState = rememberPagerState()
 
-    var isCommentsVisible by remember { mutableStateOf(false) }
-    var selectedPublicationId by remember { mutableStateOf<String?>(null) }
+  var isCommentsVisible by remember { mutableStateOf(false) }
+  var selectedPublicationId by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
 
