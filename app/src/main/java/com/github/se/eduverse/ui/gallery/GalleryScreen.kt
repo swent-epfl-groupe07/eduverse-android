@@ -178,7 +178,7 @@ fun GalleryScreen(
 
   val mediaItems = photos.map { it as Any } + videos.map { it as Any }
 
-  Scaffold(topBar = { TopNavigationBar("Gallery", navigationActions) }) { contentPadding ->
+  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) { contentPadding ->
     if (mediaItems.isEmpty()) {
       Box(
           modifier = Modifier.fillMaxSize().padding(contentPadding).testTag("NoPhotosBox"),

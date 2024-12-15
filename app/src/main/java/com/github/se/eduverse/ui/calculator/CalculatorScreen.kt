@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.theme.COLOR_CORRECT
+import com.github.se.eduverse.ui.theme.COLOR_INCORRECT
 import kotlinx.coroutines.delay
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -68,7 +70,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
       }
 
   Scaffold(
-      topBar = { TopNavigationBar("Calculator", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions, screenTitle = null) },
       backgroundColor = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
           Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -147,7 +149,7 @@ fun CalculatorScreen(navigationActions: NavigationActions) {
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically) {
                           val barColor =
-                              if (result == "Undefined") Color(0xFFD51F1F) else Color(0xFF07A92D)
+                              if (result == "Undefined") COLOR_INCORRECT else COLOR_CORRECT
                           Box(
                               modifier =
                                   Modifier.width(5.dp)
@@ -375,7 +377,7 @@ fun MenuButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
       modifier =
           Modifier.padding(4.dp)
               .background(
-                  color = if (isSelected) Color.Black else Color.Gray,
+                  color = if (isSelected) MaterialTheme.colorScheme.secondary else Color.Gray,
                   shape = RoundedCornerShape(16.dp))
               .clickable { onClick() }
               .padding(vertical = 8.dp, horizontal = 16.dp),

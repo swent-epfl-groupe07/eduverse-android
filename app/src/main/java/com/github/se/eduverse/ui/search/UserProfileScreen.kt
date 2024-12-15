@@ -29,6 +29,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -89,6 +90,9 @@ fun UserProfileScreen(
                 else -> Text("Profile", modifier = Modifier.testTag("user_profile_title_default"))
               }
             },
+            colors =
+                TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary),
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() },
@@ -191,14 +195,18 @@ fun UserProfileScreen(
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
                     icon = { Icon(Icons.Default.Article, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.secondary)
+                    selectedContentColor =
+                        if (selectedTab == 0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.secondary)
+                    selectedContentColor =
+                        if (selectedTab == 1) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface)
               }
 
               // Content based on state
