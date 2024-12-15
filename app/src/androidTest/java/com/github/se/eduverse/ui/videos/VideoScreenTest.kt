@@ -4,6 +4,7 @@ package com.github.se.eduverse.ui.videos
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -512,6 +513,74 @@ class VideoScreenTest {
 
     // Verify that the comment has been deleted
     composeTestRule.onNodeWithTag("CommentItem_$commentId").assertDoesNotExist()
+  }
+
+  @Test
+  fun testTabAllowsGoingToTheFollowerFeedAndBack() {
+    // List of publications for the test
+    val globalPublications =
+        listOf(
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Video",
+                mediaType = MediaType.VIDEO,
+                mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()))
+    val followedPublications =
+        listOf(
+            Publication(
+                id = "2",
+                userId = "user2",
+                title = "Test Photo",
+                mediaType = MediaType.PHOTO,
+                mediaUrl = "https://via.placeholder.com/150",
+                thumbnailUrl = "",
+                timestamp = System.currentTimeMillis()))
+
+    // Set publications
+    fakePublicationRepository.setPublications(globalPublications)
+    fakePublicationRepository.setFollowedPublications(followedPublications)
+    fakePublicationViewModel.setPublications(globalPublications)
+
+    // Set the content for the test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Check the original situation
+    composeTestRule.onNodeWithTag("VideoItem_0").assertIsDisplayed()
+
+    // Change of feed
+    composeTestRule.onNodeWithTag("followedFeed").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("followedFeed").performClick()
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Check the new situation
+    composeTestRule.onNodeWithTag("VideoItem_0").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("PhotoItem_0").assertIsDisplayed()
+
+    // Change the feed back
+    composeTestRule.onNodeWithTag("globalFeed").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("globalFeed").performClick()
+
+    // Wait for the UI to stabilize
+    composeTestRule.waitForIdle()
+
+    // Check the new situation
+    composeTestRule.onNodeWithTag("PhotoItem_0").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("VideoItem_0").assertIsDisplayed()
   }
 
   @Test
