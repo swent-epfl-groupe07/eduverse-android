@@ -1,4 +1,3 @@
-// File: GalleryScreenTest.kt
 package com.github.se.eduverse.ui.gallery
 
 import android.net.Uri
@@ -342,15 +341,15 @@ class GalleryScreenTest {
     }
 
     // Act
-    // Simule le clic sur l'élément photo pour ouvrir le dialog
+    // Simulate clicking on the photo item to open the dialog
     composeTestRule.onNodeWithTag("PhotoItem_${photo.path}").performClick()
-    // Vérifie que le dialog s'affiche
+    // Verify that the dialog is displayed
     composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
 
-    // Clique sur le bouton "Post"
+    // Click on the "Post" button
     composeTestRule.onNodeWithTag("PostButton").performClick()
 
-    // Attendre que l'UI soit dans un état stable
+    // Wait for the UI to be in a stable state
     composeTestRule.waitForIdle()
 
     // Assert
@@ -390,10 +389,10 @@ class GalleryScreenTest {
     composeTestRule.onNodeWithTag("PhotoItem_${photo.path}").performClick()
     composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
 
-    // Clique sur le bouton "Post"
+    // Click on the "Post" button
     composeTestRule.onNodeWithTag("PostButton").performClick()
 
-    // Attendre que l'UI soit dans un état stable
+    // Wait for the UI to be in a stable state
     composeTestRule.waitForIdle()
 
     // Assert
@@ -431,10 +430,10 @@ class GalleryScreenTest {
     composeTestRule.onNodeWithTag("VideoItem_${video.path}").performClick()
     composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
 
-    // Clique sur le bouton "Post"
+    // Click on the "Post" button
     composeTestRule.onNodeWithTag("PostButton").performClick()
 
-    // Attendre que l'UI soit dans un état stable
+    // Wait for the UI to be in a stable state
     composeTestRule.waitForIdle()
 
     // Assert
@@ -474,10 +473,10 @@ class GalleryScreenTest {
     composeTestRule.onNodeWithTag("VideoItem_${video.path}").performClick()
     composeTestRule.onNodeWithTag("MediaDetailDialog").assertExists()
 
-    // Clique sur le bouton "Post"
+    // Click on the "Post" button
     composeTestRule.onNodeWithTag("PostButton").performClick()
 
-    // Attendre que l'UI soit dans un état stable
+    // Wait for the UI to be in a stable state
     composeTestRule.waitForIdle()
 
     // Assert
@@ -485,7 +484,7 @@ class GalleryScreenTest {
     assertEquals(expectedRoute, mockNavigationActions.navigatedRoute)
   }
 
-  // Classe de MockNavigationActions
+  // MockNavigationActions class
   class aliBouiri(navController: NavHostController) : NavigationActions(navController) {
     var navigatedRoute: String? = null
     var backCalled: Boolean = false

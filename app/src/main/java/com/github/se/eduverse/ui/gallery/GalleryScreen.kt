@@ -96,7 +96,7 @@ class DefaultFileDownloader(
           task.await()
 
           if (extension == "jpg") {
-            // Rotation de 90° pour s'adapter à picTakenScreen
+            // rotation of 90° to adapt to the picTakenScreen
             val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
             val rotatedBitmap = adjustImageRotationInverse(bitmap)
             FileOutputStream(localFile).use { out ->
@@ -363,7 +363,7 @@ fun MediaDetailDialog(
                         Text("Add to folder")
                       }
 
-                  // Ajout du bouton "Post"
+                  // Add the Post button
                   TextButton(
                       onClick = {
                         scope.launch {
