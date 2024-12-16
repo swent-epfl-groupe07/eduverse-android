@@ -82,7 +82,8 @@ fun SettingsScreen(
                                   colors =
                                       SwitchDefaults.colors(
                                           checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                          checkedTrackColor = MaterialTheme.colorScheme.secondary))
+                                          checkedTrackColor = MaterialTheme.colorScheme.secondary),
+                                  modifier = Modifier.testTag("confidentialityToggle"))
                             }
 
                         Text(
@@ -141,7 +142,7 @@ fun SettingsScreen(
                       },
                       isExpanded = isThemeDropdownExpanded,
                       onExpandChange = { isThemeDropdownExpanded = it },
-                      modifier = Modifier.padding(16.dp))
+                      modifier = Modifier.padding(16.dp).testTag("themeDropdown"))
 
                   SettingsDropdown(
                       label = "Language",
@@ -150,7 +151,7 @@ fun SettingsScreen(
                       onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
                       isExpanded = isLanguageDropdownExpanded,
                       onExpandChange = { isLanguageDropdownExpanded = it },
-                      modifier = Modifier.padding(16.dp))
+                      modifier = Modifier.padding(16.dp).testTag("languageDropdown"))
                 }
               }
 
@@ -162,7 +163,7 @@ fun SettingsScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                   Button(
                       onClick = { showNotImplementedToast(context) },
-                      modifier = Modifier.fillMaxWidth(),
+                      modifier = Modifier.fillMaxWidth().testTag("addAccountButton"),
                       colors =
                           ButtonDefaults.buttonColors(
                               containerColor = MaterialTheme.colorScheme.secondary)) {
@@ -176,7 +177,7 @@ fun SettingsScreen(
                   Spacer(modifier = Modifier.height(8.dp))
                   Button(
                       onClick = { logout(navigationActions) },
-                      modifier = Modifier.fillMaxWidth(),
+                      modifier = Modifier.fillMaxWidth().testTag("logoutButton"),
                       colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4DEE8))) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
