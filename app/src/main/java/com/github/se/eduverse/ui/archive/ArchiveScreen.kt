@@ -61,21 +61,25 @@ fun ArchiveScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar("Archived Courses", navigationActions) {
-          if (isSelectMode) {
-            IconButton(
-                onClick = {
-                  if (context.isNetworkAvailable()) {
-                    deleteDialogOpen = true
-                  } else {
-                    folderViewModel.showOfflineMessage(context)
-                  }
-                },
-                modifier = Modifier.testTag("delete")) {
-                  Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
-                }
-          }
-        }
+        TopNavigationBar(
+            navigationActions,
+            {
+              if (isSelectMode) {
+                IconButton(
+                    onClick = {
+                      if (context.isNetworkAvailable()) {
+                        deleteDialogOpen = true
+                      } else {
+                        folderViewModel.showOfflineMessage(context)
+                      }
+                    },
+                    modifier = Modifier.testTag("delete")) {
+                      Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                    }
+              }
+            },
+            screenTitle = null,
+        )
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")

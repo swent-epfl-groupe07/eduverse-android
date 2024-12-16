@@ -86,6 +86,8 @@ class AiAssistantScreenTest {
   @Test
   fun testInitialUIElements() {
     composeTestRule.onNodeWithTag("aiAssistantChatScreenScaffold").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed().assertHasClickAction()
+    composeTestRule.onNodeWithTag("screenTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("aiAssistantChatScreen").assertIsDisplayed()
     composeTestRule.onNodeWithTag("aiAssistantMessageList").assertIsDisplayed()
     composeTestRule.onNodeWithTag("assistantInputRow").assertIsDisplayed()

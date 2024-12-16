@@ -9,7 +9,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import com.github.se.eduverse.model.Folder
@@ -118,17 +117,17 @@ class ArchiveScreenTest {
   fun bottomBarWorks() {
     launch()
 
+    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
+
     var test: Boolean
     `when`(navigationActions.navigateTo(any<TopLevelDestination>())).then {
       test = true
       null
     }
-    LIST_TOP_LEVEL_DESTINATION.forEach {
+
+    LIST_TOP_LEVEL_DESTINATION.forEach { tab ->
       test = false
-
-      composeTestRule.onNodeWithText(it.textId).assertIsDisplayed()
-      composeTestRule.onNodeWithText(it.textId).performClick()
-
+      composeTestRule.onNodeWithTag(tab.textId).assertExists().performClick()
       assert(test)
     }
   }
