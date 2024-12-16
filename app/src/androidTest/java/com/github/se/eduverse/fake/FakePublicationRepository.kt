@@ -1,5 +1,6 @@
 package com.github.se.eduverse.fake
 
+import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.PublicationRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -28,5 +29,25 @@ class FakePublicationRepository : PublicationRepository(db = FirebaseFirestore.g
     } else {
       fakeFollowedPublications.take(limit.toInt())
     }
+  }
+
+  override suspend fun loadCachePublications(limit: Long): List<Publication> {
+    return listOf(
+        Publication(
+            id = "1",
+            userId = "user1",
+            title = "Test Video",
+            mediaType = MediaType.VIDEO,
+            mediaUrl = "https://sample-videos.com/video123/mp4/480/asdasdas.mp4",
+            thumbnailUrl = "",
+            timestamp = System.currentTimeMillis()),
+        Publication(
+            id = "2",
+            userId = "user2",
+            title = "Test Photo",
+            mediaType = MediaType.PHOTO,
+            mediaUrl = "",
+            thumbnailUrl = "https://via.placeholder.com/150",
+            timestamp = System.currentTimeMillis()))
   }
 }

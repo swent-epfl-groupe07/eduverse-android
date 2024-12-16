@@ -108,6 +108,8 @@ fun VideoScreen(
     commentsViewModel: CommentsViewModel,
     currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
+  LaunchedEffect(Unit) { publicationViewModel.initializePublications() }
+
   var isPublicationGlobal by remember { mutableStateOf(true) }
   var followedUsers by remember { mutableStateOf(emptyList<String>()) }
 
