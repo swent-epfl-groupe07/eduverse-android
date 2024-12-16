@@ -9,13 +9,13 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mock
+import org.mockito.Mockito.*
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.mockito.kotlin.eq
-import org.mockito.Mock
-import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.eq
 
 class PublicationRepositoryTest {
 
@@ -25,26 +25,26 @@ class PublicationRepositoryTest {
   private lateinit var mockCollectionReference: CollectionReference
   private lateinit var mockQuery: Query
   private lateinit var mockQuerySnapshot: QuerySnapshot
-    @Mock private lateinit var mockDocumentSnapshot1: DocumentSnapshot
+  @Mock private lateinit var mockDocumentSnapshot1: DocumentSnapshot
 
-    @Mock private lateinit var mockDocumentSnapshot2: DocumentSnapshot
+  @Mock private lateinit var mockDocumentSnapshot2: DocumentSnapshot
 
-    @Before
-    fun setUp() {
-        firestoreMock = mock(FirebaseFirestore::class.java)
-        repository = PublicationRepository(firestoreMock)
+  @Before
+  fun setUp() {
+    firestoreMock = mock(FirebaseFirestore::class.java)
+    repository = PublicationRepository(firestoreMock)
 
-        mockCollectionReference = mock(CollectionReference::class.java)
-        mockQuery = mock(Query::class.java)
-        mockQuerySnapshot = mock(QuerySnapshot::class.java)
+    mockCollectionReference = mock(CollectionReference::class.java)
+    mockQuery = mock(Query::class.java)
+    mockQuerySnapshot = mock(QuerySnapshot::class.java)
 
-        `when`(firestoreMock.collection("publications")).thenReturn(mockCollectionReference)
-        `when`(mockCollectionReference.orderBy("id")).thenReturn(mockQuery)
-        `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
-        `when`(mockQuery.limit(20)).thenReturn(mockQuery)
-        `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    `when`(firestoreMock.collection("publications")).thenReturn(mockCollectionReference)
+    `when`(mockCollectionReference.orderBy("id")).thenReturn(mockQuery)
+    `when`(mockQuery.startAt(anyString())).thenReturn(mockQuery)
+    `when`(mockQuery.limit(20)).thenReturn(mockQuery)
+    `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
     MockitoAnnotations.openMocks(this)
-    }
+  }
 
   /** Test Case 1: loadRandomPublications returns empty list on success */
   @Test(timeout = 3000)
