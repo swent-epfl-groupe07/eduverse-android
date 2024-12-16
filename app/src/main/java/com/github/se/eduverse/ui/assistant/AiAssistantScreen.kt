@@ -93,7 +93,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                                 horizontalArrangement = Arrangement.Start) {
                                   Surface(
                                       shape = MaterialTheme.shapes.medium,
-                                      color = MaterialTheme.colorScheme.primary ,
+                                      color = MaterialTheme.colorScheme.primary,
                                       tonalElevation = 1.dp,
                                       modifier =
                                           Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -129,8 +129,13 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     OutlinedTextField(
                         value = userQuestion,
                         onValueChange = { userQuestion = it },
-                        modifier = Modifier.weight(1f).background(MaterialTheme.colorScheme.background).testTag("assistantQuestionInput"),
-                        placeholder = { Text("Ask a question", color = MaterialTheme.colorScheme.onBackground) },
+                        modifier =
+                            Modifier.weight(1f)
+                                .background(MaterialTheme.colorScheme.background)
+                                .testTag("assistantQuestionInput"),
+                        placeholder = {
+                          Text("Ask a question", color = MaterialTheme.colorScheme.onBackground)
+                        },
                         colors =
                             TextFieldDefaults.outlinedTextFieldColors(
                                 textColor = MaterialTheme.colorScheme.onBackground,

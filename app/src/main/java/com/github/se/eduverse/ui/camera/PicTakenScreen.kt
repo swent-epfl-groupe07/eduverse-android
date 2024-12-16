@@ -104,7 +104,7 @@ fun PicTakenScreen(
                       .background(Color.LightGray)
                       .testTag("capturedImage"))
 
-            // Crop and settings icons
+          // Crop and settings icons
           Column(
               modifier = Modifier.align(Alignment.TopEnd),
               verticalArrangement = Arrangement.spacedBy(30.dp)) {

@@ -98,72 +98,59 @@ fun ProfileScreen(
 
   Scaffold(
       topBar = {
-          TopAppBar(
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .background(
-                      Brush.horizontalGradient(
-                          colors = listOf(
-                              MaterialTheme.colorScheme.secondary,
-                              MaterialTheme.colorScheme.primary
-                          )
-                      )
-                  )
-                  .testTag("topNavigationBar"),
-              title = {
-                  when (uiState) {
-                      is ProfileUiState.Success -> {
-                          Row(
-                              verticalAlignment = Alignment.CenterVertically,
-                              modifier = Modifier.clickable { showUsernameDialog = true }
-                          ) {
-                              Text(
-                                  text = (uiState as ProfileUiState.Success).profile.username,
-                                  style = MaterialTheme.typography.titleLarge,
-                                  color = MaterialTheme.colorScheme.onPrimary,
-                                  modifier = Modifier.testTag("profile_username")
-                              )
-                              IconButton(
-                                  onClick = { showUsernameDialog = true },
-                                  modifier = Modifier.testTag("edit_username_button")
-                              ) {
-                                  Icon(
-                                      imageVector = Icons.Default.Edit,
-                                      contentDescription = "Edit username",
-                                      tint = MaterialTheme.colorScheme.onPrimary
-                                  )
-                              }
-                          }
+        TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary)))
+                    .testTag("topNavigationBar"),
+            title = {
+              when (uiState) {
+                is ProfileUiState.Success -> {
+                  Row(
+                      verticalAlignment = Alignment.CenterVertically,
+                      modifier = Modifier.clickable { showUsernameDialog = true }) {
+                        Text(
+                            text = (uiState as ProfileUiState.Success).profile.username,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.testTag("profile_username"))
+                        IconButton(
+                            onClick = { showUsernameDialog = true },
+                            modifier = Modifier.testTag("edit_username_button")) {
+                              Icon(
+                                  imageVector = Icons.Default.Edit,
+                                  contentDescription = "Edit username",
+                                  tint = MaterialTheme.colorScheme.onPrimary)
+                            }
                       }
-                      else -> {
-                          Text(
-                              "Profile",
-                              style = MaterialTheme.typography.titleLarge,
-                              color = MaterialTheme.colorScheme.onPrimary,
-                              modifier = Modifier.testTag("profile_title_default")
-                          )
-                      }
-                  }
-              },
-              colors = TopAppBarDefaults.smallTopAppBarColors(
-                  containerColor = Color.Transparent
-              ),
-              actions = {
-                  IconButton(
-                      onClick = { navigationActions.navigateTo(Screen.SETTING) },
-                      modifier = Modifier.testTag("settings_button")
-                  ) {
-                      Icon(
-                          imageVector = Icons.Default.Settings,
-                          contentDescription = "Settings",
-                          tint = MaterialTheme.colorScheme.onPrimary
-                      )
-                  }
+                }
+                else -> {
+                  Text(
+                      "Profile",
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary,
+                      modifier = Modifier.testTag("profile_title_default"))
+                }
               }
-          )
+            },
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.SETTING) },
+                  modifier = Modifier.testTag("settings_button")) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onPrimary)
+                  }
+            })
       },
-
-              bottomBar = {
+      bottomBar = {
         BottomNavigationMenu(
             onTabSelect = { route -> navigationActions.navigateTo(route) },
             tabList = LIST_TOP_LEVEL_DESTINATION,

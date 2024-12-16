@@ -31,11 +31,9 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.TabRow
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -171,38 +169,35 @@ fun VideoScreen(
       scrimColor = Color.Black.copy(alpha = 0.32f)) {
         Scaffold(
             topBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                            colors =
-                            listOf(
-                                MaterialTheme.colorScheme.secondary,
-                                MaterialTheme.colorScheme.primary)))
-                        .height(56.dp)
-                ) {
+              Box(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .background(
+                              Brush.horizontalGradient(
+                                  colors =
+                                      listOf(
+                                          MaterialTheme.colorScheme.secondary,
+                                          MaterialTheme.colorScheme.primary)))
+                          .height(56.dp)) {
                     Text(
                         "For you",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge.copy(color = Color.White),
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 16.dp)
-                            .testTag("ForYouText")
-                    )
+                        modifier =
+                            Modifier.align(Alignment.TopCenter)
+                                .padding(top = 16.dp)
+                                .testTag("ForYouText"))
 
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
                         tint = Color.White,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 16.dp, end = 16.dp)
-                            .size(32.dp)
-                            .testTag("SearchIcon")
-                    )
-                }
+                        modifier =
+                            Modifier.align(Alignment.TopEnd)
+                                .padding(top = 16.dp, end = 16.dp)
+                                .size(32.dp)
+                                .testTag("SearchIcon"))
+                  }
             },
             bottomBar = {
               BottomNavigationMenu(
@@ -291,52 +286,46 @@ fun VideoScreen(
                                                       else "UnlikedIcon_$page"))
                                     }
 
-                              // Comment button
-                              IconButton(
-                                  onClick = {
+                                // Comment button
+                                IconButton(
+                                    onClick = {
                                       selectedPublicationId = publication.id
                                       isCommentsVisible = true
                                       Log.d(
                                           "COMMENT",
-                                          "Comment button clicked for publication: ${publication.id}"
-                                      )
-                                  },
-                                  modifier =
-                                  Modifier.align(Alignment.CenterEnd)
-                                      .offset(y = 128.dp)
-                                      .padding(12.dp)
-                                      .size(52.dp)
-                                      .testTag("CommentButton_$page")
-                              ) {
-                                  Image(
-                                      painter = painterResource(id = R.drawable.comment),
-                                      contentDescription = "Comment",
-                                      modifier = Modifier.size(52.dp)
-                                  )
-                              }
+                                          "Comment button clicked for publication: ${publication.id}")
+                                    },
+                                    modifier =
+                                        Modifier.align(Alignment.CenterEnd)
+                                            .offset(y = 128.dp)
+                                            .padding(12.dp)
+                                            .size(52.dp)
+                                            .testTag("CommentButton_$page")) {
+                                      Image(
+                                          painter = painterResource(id = R.drawable.comment),
+                                          contentDescription = "Comment",
+                                          modifier = Modifier.size(52.dp))
+                                    }
 
-                              // Share button
-                              IconButton(
-                                  onClick = {
+                                // Share button
+                                IconButton(
+                                    onClick = {
                                       handleShare(publication = publication, context = context)
                                       Log.d(
                                           "SHARE",
-                                          "Share button clicked for publication: ${publication.id}"
-                                      )
-                                  },
-                                  modifier =
-                                  Modifier.align(Alignment.CenterEnd)
-                                      .offset(y = 192.dp)
-                                      .padding(12.dp)
-                                      .size(48.dp)
-                                      .testTag("ShareButton_$page")
-                              ) {
-                                  Image(
-                                      painter = painterResource(id = R.drawable.share2),
-                                      contentDescription = "Share",
-                                      modifier = Modifier.size(48.dp)
-                                  )
-                              }
+                                          "Share button clicked for publication: ${publication.id}")
+                                    },
+                                    modifier =
+                                        Modifier.align(Alignment.CenterEnd)
+                                            .offset(y = 192.dp)
+                                            .padding(12.dp)
+                                            .size(48.dp)
+                                            .testTag("ShareButton_$page")) {
+                                      Image(
+                                          painter = painterResource(id = R.drawable.share2),
+                                          contentDescription = "Share",
+                                          modifier = Modifier.size(48.dp))
+                                    }
                               }
                         }
 

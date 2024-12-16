@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.se.eduverse.api.SUPPORTED_CONVERSION_TYPES
 import com.github.se.eduverse.isNetworkAvailable
@@ -93,98 +92,85 @@ fun PdfGeneratorScreen(
         }
       }
 
-    Scaffold(
-        topBar = { TopNavigationBar(navigationActions = navigationActions, screenTitle = null) },
-        bottomBar = {
-            BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
-        }
-    ) { pd ->
+  Scaffold(
+      topBar = { TopNavigationBar(navigationActions = navigationActions, screenTitle = null) },
+      bottomBar = {
+        BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
+      }) { pd ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(pd),
+            modifier = Modifier.fillMaxSize().padding(pd),
             verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            OptionCard(
-                testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
-                optionName = "Text to PDF",
-                explanation = "Converts a .txt file to PDF",
-                icon = Icons.AutoMirrored.Filled.TextSnippet,
-                onClick = {
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              OptionCard(
+                  testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
+                  optionName = "Text to PDF",
+                  explanation = "Converts a .txt file to PDF",
+                  icon = Icons.AutoMirrored.Filled.TextSnippet,
+                  onClick = {
                     currentPdfGeneratorOption = PdfGeneratorOption.TEXT_TO_PDF
                     inputFileMIMEType = "text/plain"
                     showInfoWindow = true
-                },
-                optionEnabled =
-                pdfConversionState.value ==
-                        PdfGeneratorViewModel.PdfGenerationState.Ready
-            )
-            OptionCard(
-                testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
-                optionName = "Image to PDF",
-                explanation = "Converts an image to PDF",
-                icon = Icons.Default.Image,
-                onClick = {
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              OptionCard(
+                  testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
+                  optionName = "Image to PDF",
+                  explanation = "Converts an image to PDF",
+                  icon = Icons.Default.Image,
+                  onClick = {
                     currentPdfGeneratorOption = PdfGeneratorOption.IMAGE_TO_PDF
                     inputFileMIMEType = "image/*"
                     showInfoWindow = true
-                },
-                optionEnabled =
-                pdfConversionState.value ==
-                        PdfGeneratorViewModel.PdfGenerationState.Ready
-            )
-            OptionCard(
-                testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
-                optionName = "Doc to PDF",
-                explanation = "Converts a document to PDF",
-                icon = Icons.Default.PictureAsPdf,
-                onClick = {
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              OptionCard(
+                  testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
+                  optionName = "Doc to PDF",
+                  explanation = "Converts a document to PDF",
+                  icon = Icons.Default.PictureAsPdf,
+                  onClick = {
                     if (!context.isNetworkAvailable()) {
-                        showOfflineToast(context)
+                      showOfflineToast(context)
                     } else {
-                        currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
-                        inputFileMIMEType = "*/*"
-                        showInfoWindow = true
+                      currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
+                      inputFileMIMEType = "*/*"
+                      showInfoWindow = true
                     }
-                },
-                optionEnabled =
-                pdfConversionState.value ==
-                        PdfGeneratorViewModel.PdfGenerationState.Ready
-            )
-            OptionCard(
-                testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
-                optionName = "Summarize file",
-                explanation = "Generates a summary of a file",
-                icon = Icons.Default.Summarize,
-                onClick = {
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              OptionCard(
+                  testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
+                  optionName = "Summarize file",
+                  explanation = "Generates a summary of a file",
+                  icon = Icons.Default.Summarize,
+                  onClick = {
                     if (!context.isNetworkAvailable()) {
-                        showOfflineToast(context)
+                      showOfflineToast(context)
                     } else {
-                        currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
-                        inputFileMIMEType = "application/pdf"
-                        showInfoWindow = true
+                      currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
+                      inputFileMIMEType = "application/pdf"
+                      showInfoWindow = true
                     }
-                },
-                optionEnabled =
-                pdfConversionState.value ==
-                        PdfGeneratorViewModel.PdfGenerationState.Ready
-            )
-            OptionCard(
-                testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
-                optionName = "Extract text",
-                explanation = "Extracts text from an image",
-                icon = Icons.Default.Abc,
-                onClick = {
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              OptionCard(
+                  testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
+                  optionName = "Extract text",
+                  explanation = "Extracts text from an image",
+                  icon = Icons.Default.Abc,
+                  onClick = {
                     currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
                     inputFileMIMEType = "image/*"
                     showInfoWindow = true
-                },
-                optionEnabled =
-                pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready
-            )
-        }
-    }
+                  },
+                  optionEnabled =
+                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+            }
+      }
 
   // Show the info window when an option is selected to inform the user what kind of file he needs
   // to select depending on the selected option
@@ -417,52 +403,47 @@ fun OptionCard(
     onClick: () -> Unit,
     optionEnabled: Boolean
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .height(130.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(12.dp),
-                clip = false
-            )
-            .background(
-                Brush.horizontalGradient(
-                    colors =
-                    listOf(
-                        MaterialTheme.colorScheme.secondary,
-                        MaterialTheme.colorScheme.primary)),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable(enabled = optionEnabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .testTag(testTag),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(8.dp)
+              .height(130.dp)
+              .shadow(elevation = 8.dp, shape = RoundedCornerShape(12.dp), clip = false)
+              .background(
+                  Brush.horizontalGradient(
+                      colors =
+                          listOf(
+                              MaterialTheme.colorScheme.secondary,
+                              MaterialTheme.colorScheme.primary)),
+                  shape = RoundedCornerShape(8.dp))
+              .clickable(enabled = optionEnabled, onClick = onClick)
+              .padding(horizontal = 16.dp, vertical = 12.dp)
+              .testTag(testTag),
+      verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = if (optionEnabled) MaterialTheme.colorScheme.onSecondary else Color.Gray,
-            modifier = Modifier.size(32.dp)
-        )
+            modifier = Modifier.size(32.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(
-                text = optionName,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = if (optionEnabled) MaterialTheme.colorScheme.onSecondary else Color.Gray
-                )
-            )
-            Text(
-                text = explanation,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = if (optionEnabled) MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f) else Color.Gray.copy(alpha = 0.7f)
-                )
-            )
+          Text(
+              text = optionName,
+              style =
+                  MaterialTheme.typography.bodyLarge.copy(
+                      fontWeight = FontWeight.Bold,
+                      color =
+                          if (optionEnabled) MaterialTheme.colorScheme.onSecondary else Color.Gray))
+          Text(
+              text = explanation,
+              style =
+                  MaterialTheme.typography.bodySmall.copy(
+                      color =
+                          if (optionEnabled)
+                              MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f)
+                          else Color.Gray.copy(alpha = 0.7f)))
         }
-    }
+      }
 }
 
 /**

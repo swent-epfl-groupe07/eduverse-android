@@ -67,7 +67,6 @@ import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.theme.blue
 import com.github.se.eduverse.ui.theme.blue_sky
 import com.github.se.eduverse.ui.theme.gray
-import com.github.se.eduverse.ui.theme.orange
 import com.github.se.eduverse.ui.theme.transparentButtonColor
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
@@ -203,9 +202,7 @@ fun TableColumn(width: Float, content: List<Scheduled>, navigate: (Scheduled) ->
           for (i in 0..23) {
             Row(
                 modifier =
-                    Modifier.border(width = 0.5.dp, color = gray)
-                        .height(50.dp)
-                        .fillMaxWidth()) {}
+                    Modifier.border(width = 0.5.dp, color = gray).height(50.dp).fillMaxWidth()) {}
           }
         }
     val openedButton = emptyList<Scheduled>().toMutableList()

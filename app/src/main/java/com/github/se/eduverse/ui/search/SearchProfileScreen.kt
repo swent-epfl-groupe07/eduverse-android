@@ -46,42 +46,33 @@ fun SearchProfileScreen(navigationActions: NavigationActions, viewModel: Profile
 
   Scaffold(
       topBar = {
-          TopAppBar(
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .background(
-                      Brush.horizontalGradient(
-                          colors = listOf(
-                              MaterialTheme.colorScheme.secondary,
-                              MaterialTheme.colorScheme.primary
-                          )
-                      )
-                  ),
-              title = {
-                  Text(
-                      "Search Users",
-                      style = MaterialTheme.typography.titleLarge,
-                      color = MaterialTheme.colorScheme.onPrimary
-                  )
-              },
-              navigationIcon = {
-                  IconButton(
-                      onClick = { navigationActions.goBack() },
-                      modifier = Modifier.testTag("search_back_button")
-                  ) {
-                      Icon(
-                          Icons.Default.ArrowBack,
-                          contentDescription = "Back",
-                          tint = MaterialTheme.colorScheme.onPrimary
-                      )
+        TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary))),
+            title = {
+              Text(
+                  "Search Users",
+                  style = MaterialTheme.typography.titleLarge,
+                  color = MaterialTheme.colorScheme.onPrimary)
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("search_back_button")) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary)
                   }
-              },
-              colors = TopAppBarDefaults.smallTopAppBarColors(
-                  containerColor = Color.Transparent
-              )
-          )
-      }
-  ) { paddingValues ->
+            },
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent))
+      }) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
           TextField(
               value = searchQuery,

@@ -82,54 +82,46 @@ fun UserProfileScreen(
   Scaffold(
       modifier = Modifier.testTag("user_profile_screen_container"),
       topBar = {
-          TopAppBar(
-              modifier = Modifier
-                  .fillMaxWidth()
-                  .background(
-                      Brush.horizontalGradient(
-                          colors = listOf(
-                              MaterialTheme.colorScheme.secondary,
-                              MaterialTheme.colorScheme.primary
-                          )
-                      )
-                  )
-                  .testTag("user_profile_top_bar"),
-              title = {
-                  when (uiState) {
-                      is ProfileUiState.Success -> {
-                          Text(
-                              text = (uiState as ProfileUiState.Success).profile.username,
-                              modifier = Modifier.testTag("user_profile_username"),
-                              style = MaterialTheme.typography.titleLarge,
-                              color = MaterialTheme.colorScheme.onPrimary
-                          )
-                      }
-                      else -> {
-                          Text(
-                              "Profile",
-                              modifier = Modifier.testTag("user_profile_title_default"),
-                              style = MaterialTheme.typography.titleLarge,
-                              color = MaterialTheme.colorScheme.onPrimary
-                          )
-                      }
+        TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary)))
+                    .testTag("user_profile_top_bar"),
+            title = {
+              when (uiState) {
+                is ProfileUiState.Success -> {
+                  Text(
+                      text = (uiState as ProfileUiState.Success).profile.username,
+                      modifier = Modifier.testTag("user_profile_username"),
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary)
+                }
+                else -> {
+                  Text(
+                      "Profile",
+                      modifier = Modifier.testTag("user_profile_title_default"),
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary)
+                }
+              }
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("back_button")) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary)
                   }
-              },
-              navigationIcon = {
-                  IconButton(
-                      onClick = { navigationActions.goBack() },
-                      modifier = Modifier.testTag("back_button")
-                  ) {
-                      Icon(
-                          imageVector = Icons.Default.ArrowBack,
-                          contentDescription = "Back",
-                          tint = MaterialTheme.colorScheme.onPrimary
-                      )
-                  }
-              },
-              colors = TopAppBarDefaults.smallTopAppBarColors(
-                  containerColor = Color.Transparent
-              ),
-          )
+            },
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
+        )
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
