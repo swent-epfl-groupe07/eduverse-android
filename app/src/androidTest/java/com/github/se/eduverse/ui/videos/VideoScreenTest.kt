@@ -80,6 +80,17 @@ class VideoScreenTest {
     composeTestRule.onNodeWithTag("LoadingIndicator").assertExists().assertIsDisplayed()
   }
 
+    @Test
+    fun testForYouTextAndSearchIconAreDisplayed() {
+        // Assert that the "For you" text element is displayed
+        composeTestRule.onNodeWithTag("ForYouText")
+            .assertIsDisplayed()
+
+        // Assert that the search icon element is displayed
+        composeTestRule.onNodeWithTag("SearchIcon")
+            .assertIsDisplayed()
+    }
+
   @Test
   fun testVerticalPagerIsDisplayedWhenPublicationsAreNotEmpty() {
     // Non-empty list of publications

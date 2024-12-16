@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +23,6 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.theme.COLOR_CORRECT
 import com.github.se.eduverse.ui.theme.COLOR_INCORRECT
-import com.github.se.eduverse.ui.theme.COLOR_TEXT_PLACEHOLDER
 import kotlinx.coroutines.launch
 
 /// Main composable for the quiz screen
@@ -42,35 +42,48 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) {
+  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }, backgroundColor = MaterialTheme.colorScheme.background) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).testTag("quizScreen"),
+        modifier = Modifier.fillMaxSize().padding(16.dp).background(
+            MaterialTheme.colorScheme.background,
+        ).testTag("quizScreen"),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top) {
 
           // Input field for quiz topic
-          BasicTextField(
-              value = topic,
-              onValueChange = { topic = it },
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(8.dp)
-                      .background(
-                          MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                          MaterialTheme.shapes.medium)
-                      .padding(16.dp)
-                      .testTag("topicInput"),
-              decorationBox = { innerTextField ->
+        BasicTextField(
+            value = topic,
+            onValueChange = { topic = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    MaterialTheme.shapes.medium
+                )
+                .padding(16.dp)
+                .testTag("topicInput"),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onBackground
+            ),
+            decorationBox = { innerTextField ->
+                // Box to manage layout for both the entered text and the placeholder
                 Box(contentAlignment = Alignment.CenterStart) {
-                  if (topic.isEmpty()) {
-                    // Placeholder text for topic input
-                    Text("Enter a topic for the quiz", color = COLOR_TEXT_PLACEHOLDER)
-                  }
-                  innerTextField()
-                }
-              })
+                    if (topic.isEmpty()) {
+                        // Placeholder text displayed when the input is empty
+                        Text(
+                            text = "Enter a topic for the quiz", // Placeholder text
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
 
-          Spacer(modifier = Modifier.height(16.dp))
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
           // Dropdowns for quiz difficulty and number of questions
           Row(
@@ -140,7 +153,9 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
 
           // Show loading animation or questions list
           if (isLoading) {
-            QuizLoadingAnimation(modifier = Modifier.fillMaxSize())
+            QuizLoadingAnimation(modifier = Modifier.background(
+                MaterialTheme.colorScheme.background,
+            ).fillMaxSize())
           } else if (questions.isNotEmpty()) {
             LazyColumn(modifier = Modifier.weight(1f).testTag("questionsList")) {
               itemsIndexed(questions) { index, question ->
@@ -178,7 +193,7 @@ fun QuizScreen(navigationActions: NavigationActions, quizzRepository: QuizzRepos
                   text = "Your Score: $score / ${questions.size}",
                   style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                   modifier = Modifier.padding(8.dp).testTag("scoreText"),
-                  color = Color.Black)
+                  color = MaterialTheme.colorScheme.onBackground)
               // Button to reset quiz
               Button(
                   onClick = {
@@ -223,7 +238,8 @@ fun DropdownMenuDemo(
         TextButton(
             onClick = { expanded = true },
             modifier = Modifier.testTag("${label.lowercase()}Button")) {
-              Text("$label: $value", color = COLOR_TEXT_PLACEHOLDER, fontWeight = FontWeight.Bold)
+              Text("$label: $value", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
+
             }
         // Dropdown menu with selectable options
         DropdownMenu(
@@ -237,7 +253,7 @@ fun DropdownMenuDemo(
                       expanded = false
                     },
                     modifier = Modifier.testTag("${label.lowercase()}Option_$option")) {
-                      Text(option)
+                      Text(option, color = Color.Black)
                     }
               }
             }
@@ -337,7 +353,7 @@ fun <T> List<T>.countIndexed(predicate: (Int, T) -> Boolean): Int {
 fun QuizLoadingAnimation(modifier: Modifier = Modifier) {
   Box(
       contentAlignment = Alignment.Center,
-      modifier = modifier.fillMaxSize().background(Color.White).testTag("loadingAnimation")) {
+      modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).testTag("loadingAnimation")) {
         CircularProgressIndicator(
             modifier = Modifier.size(64.dp),
             color = MaterialTheme.colorScheme.primary,

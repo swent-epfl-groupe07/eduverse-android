@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -103,15 +104,16 @@ fun PicTakenScreen(
                       .background(Color.LightGray)
                       .testTag("capturedImage"))
 
-          // Crop and settings icons
+            // Crop and settings icons
           Column(
-              modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 16.dp),
-              verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              modifier = Modifier.align(Alignment.TopEnd),
+              verticalArrangement = Arrangement.spacedBy(30.dp)) {
+                Spacer(modifier = Modifier.height(0.5.dp))
                 Image(
                     painter = painterResource(id = R.drawable.vector),
                     contentDescription = "Crop Photo",
                     modifier =
-                        Modifier.size(30.dp)
+                        Modifier.size(36.dp)
                             .clickable {
                               val encodedPath = Uri.encode(photoFile.absolutePath)
                               navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
@@ -120,7 +122,7 @@ fun PicTakenScreen(
                 Image(
                     painter = painterResource(id = R.drawable.settings),
                     contentDescription = "Filters",
-                    modifier = Modifier.size(40.dp).clickable {}.testTag("settingsIcon"))
+                    modifier = Modifier.size(36.dp).clickable {}.testTag("settingsIcon"))
               }
         } else if (videoFile != null) {
           // Use ExoPlayer to display the video in loop with ContentScale.Crop
@@ -232,11 +234,11 @@ fun PicTakenScreen(
                   }
             }
 
-        // Close button (unchanged)
+        // Close button
         Box(
             modifier =
                 Modifier.align(Alignment.TopStart)
-                    .size(40.dp)
+                    .size(56.dp)
                     .clickable { navigationActions.goBack() }
                     .padding(8.dp)
                     .testTag("closeButton")) {
@@ -244,7 +246,7 @@ fun PicTakenScreen(
                   imageVector = Icons.Default.Close,
                   contentDescription = "Close",
                   tint = Color.White,
-                  modifier = Modifier.size(32.dp).align(Alignment.Center))
+                  modifier = Modifier.size(50.dp).align(Alignment.Center))
             }
       }
 }

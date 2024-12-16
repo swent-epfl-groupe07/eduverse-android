@@ -73,14 +73,14 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                                 horizontalArrangement = Arrangement.End) {
                                   Surface(
                                       shape = MaterialTheme.shapes.medium,
-                                      color = MaterialTheme.colorScheme.secondaryContainer,
+                                      color = MaterialTheme.colorScheme.inversePrimary,
                                       tonalElevation = 1.dp,
                                       modifier =
                                           Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
                                         Text(
                                             text = question,
                                             modifier = Modifier.padding(12.dp),
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            color = MaterialTheme.colorScheme.onSecondary,
                                             fontWeight = FontWeight.SemiBold)
                                       }
                                 }
@@ -93,14 +93,14 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                                 horizontalArrangement = Arrangement.Start) {
                                   Surface(
                                       shape = MaterialTheme.shapes.medium,
-                                      color = MaterialTheme.colorScheme.surfaceVariant,
+                                      color = MaterialTheme.colorScheme.primary ,
                                       tonalElevation = 1.dp,
                                       modifier =
                                           Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
                                         Text(
                                             text = answer,
                                             modifier = Modifier.padding(12.dp),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            color = MaterialTheme.colorScheme.onPrimary)
                                       }
                                 }
                           }
@@ -129,10 +129,12 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     OutlinedTextField(
                         value = userQuestion,
                         onValueChange = { userQuestion = it },
-                        modifier = Modifier.weight(1f).testTag("assistantQuestionInput"),
-                        placeholder = { Text("Ask a question") },
+                        modifier = Modifier.weight(1f).background(MaterialTheme.colorScheme.background).testTag("assistantQuestionInput"),
+                        placeholder = { Text("Ask a question", color = MaterialTheme.colorScheme.onBackground) },
                         colors =
                             TextFieldDefaults.outlinedTextFieldColors(
+                                textColor = MaterialTheme.colorScheme.onBackground,
+                                cursorColor = MaterialTheme.colorScheme.onBackground,
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.outline))
 

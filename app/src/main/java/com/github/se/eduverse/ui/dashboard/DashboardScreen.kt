@@ -68,38 +68,47 @@ fun DashboardScreen(
   Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
-          TopAppBar(
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .background(
-                          Brush.horizontalGradient(
-                              colors =
-                                  listOf(
-                                      MaterialTheme.colorScheme.secondary,
-                                      MaterialTheme.colorScheme.primary))),
-              title = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                  Image(
-                      painter = painterResource(id = R.drawable.eduverse_logo_png),
-                      contentDescription = "Logo",
-                      modifier = Modifier.size(140.dp).testTag("screenTitle"))
-                }
-              },
-              actions = {
-                IconButton(
-                    onClick = { navigationActions.navigateTo(Screen.SEARCH) },
-                    modifier = Modifier.testTag("search_button")) {
-                      Icon(
-                          Icons.Default.Search,
-                          contentDescription = "Search profiles",
-                          tint = MaterialTheme.colorScheme.onPrimary)
+            TopAppBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.secondary,
+                                MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    ),
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.eduverse_logo_png),
+                            contentDescription = "Logo",
+                            modifier = Modifier.size(140.dp).testTag("screenTitle")
+                        )
                     }
-              },
-              backgroundColor = MaterialTheme.colorScheme.primary,
-              contentColor = MaterialTheme.colorScheme.onPrimary,
-              elevation = 4.dp)
+                },
+                actions = {
+                    IconButton(
+                        onClick = { navigationActions.navigateTo(Screen.SEARCH) },
+                        modifier = Modifier.testTag("search_button")
+                    ) {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Search profiles",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                backgroundColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = 0.dp
+            )
         },
-        bottomBar = {
+          bottomBar = {
           BottomNavigationMenu(
               onTabSelect = { route -> navigationActions.navigateTo(route) },
               tabList = LIST_TOP_LEVEL_DESTINATION,
