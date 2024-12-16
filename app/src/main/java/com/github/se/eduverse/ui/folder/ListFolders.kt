@@ -67,26 +67,29 @@ fun ListFoldersScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar("My Courses", navigationActions) {
-          if (isSelectMode) {
-            IconButton(
-                onClick = {
-                  if (context.isNetworkAvailable()) {
-                    deleteDialogOpen = true
-                  } else {
-                    folderViewModel.showOfflineMessage(context)
-                  }
-                },
-                modifier = Modifier.testTag("delete")) {
-                  Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
-                }
-          }
-          IconButton(
-              onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
-              modifier = Modifier.testTag("archive")) {
-                Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+        TopNavigationBar(
+            screenTitle = "My Courses",
+            navigationActions = navigationActions,
+            actions = {
+              if (isSelectMode) {
+                IconButton(
+                    onClick = {
+                      if (context.isNetworkAvailable()) {
+                        deleteDialogOpen = true
+                      } else {
+                        folderViewModel.showOfflineMessage(context)
+                      }
+                    },
+                    modifier = Modifier.testTag("delete")) {
+                      Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
+                    }
               }
-        }
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Route.ARCHIVE) },
+                  modifier = Modifier.testTag("archive")) {
+                    Icon(imageVector = Icons.Default.Archive, contentDescription = "Archive")
+                  }
+            })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -103,7 +106,7 @@ fun ListFoldersScreen(
               }
             },
             modifier = Modifier.testTag("createFolder"),
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+            backgroundColor = MaterialTheme.colorScheme.primary,
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)) {
               Icon(Icons.Default.Add, contentDescription = "Create Folder")
             }

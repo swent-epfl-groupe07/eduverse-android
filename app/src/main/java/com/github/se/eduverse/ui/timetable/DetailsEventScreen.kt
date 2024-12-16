@@ -64,16 +64,19 @@ fun DetailsEventScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationBar(event.name, navigationActions) {
-          IconButton(
-              onClick = {
-                timeTableViewModel.deleteScheduled(event)
-                navigationActions.goBack()
-              },
-              modifier = Modifier.testTag("deleteButton")) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
-              }
-        }
+        TopNavigationBar(
+            navigationActions = navigationActions,
+            screenTitle = event.name,
+            actions = {
+              IconButton(
+                  onClick = {
+                    timeTableViewModel.deleteScheduled(event)
+                    navigationActions.goBack()
+                  },
+                  modifier = Modifier.testTag("deleteButton")) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "delete")
+                  }
+            })
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")

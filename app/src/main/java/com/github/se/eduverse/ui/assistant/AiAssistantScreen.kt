@@ -45,7 +45,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
 
   // Scaffold for handling the screen layout
   Scaffold(
-      topBar = { TopNavigationBar("AI Assistant", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions, screenTitle = null) },
       modifier = Modifier.testTag("aiAssistantChatScreenScaffold")) { paddingValues ->
         Column(
             modifier =
