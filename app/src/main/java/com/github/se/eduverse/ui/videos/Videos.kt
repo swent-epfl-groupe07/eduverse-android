@@ -328,7 +328,11 @@ fun VideoScreen(
                   // Load more publications when the user reaches the last visible page
                   LaunchedEffect(pagerState.currentPage) {
                     if (pagerState.currentPage == publications.size - 1) {
-                      publicationViewModel.loadMorePublications()
+                      if (isPublicationGlobal) {
+                        publicationViewModel.loadMorePublications()
+                      } else {
+                        publicationViewModel.loadFollowedPublications(followedUsers)
+                      }
                     }
                   }
                 }
