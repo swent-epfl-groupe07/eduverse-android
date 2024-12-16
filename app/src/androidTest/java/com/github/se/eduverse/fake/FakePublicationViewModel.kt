@@ -1,12 +1,16 @@
 package com.github.se.eduverse.fake
 
+import com.github.se.eduverse.model.MediaCacheManager
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.viewmodel.PublicationViewModel
+import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FakePublicationViewModel(repository: FakePublicationRepository) :
-    PublicationViewModel(repository) {
+class FakePublicationViewModel(
+    repository: FakePublicationRepository,
+    mockMediaCacheManager: MediaCacheManager = mockk<MediaCacheManager>(relaxed = true)
+) : PublicationViewModel(repository, mockMediaCacheManager) {
 
   val _publications = MutableStateFlow<List<Publication>>(emptyList())
   override val publications: StateFlow<List<Publication>>
