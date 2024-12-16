@@ -2,11 +2,23 @@ package com.github.se.eduverse.ui.gallery
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -14,8 +26,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,18 +65,74 @@ import com.github.se.eduverse.ui.showBottomMenu
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PhotoViewModel
 import com.github.se.eduverse.viewmodel.VideoViewModel
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
-object VideoThumbnailUtil {
+interface FileDownloader {
+  suspend fun ensureLocalFile(context: Context, path: String?): File?
+}
 
+class DefaultFileDownloader(
+    private val firebaseStorage: FirebaseStorage = FirebaseStorage.getInstance()
+) : FileDownloader {
+
+  override suspend fun ensureLocalFile(context: Context, path: String?): File? {
+    if (path.isNullOrEmpty()) return null
+
+    return withContext(Dispatchers.IO) {
+      if (path.startsWith("http")) {
+        try {
+          val storageRef = firebaseStorage.getReferenceFromUrl(path)
+          val extension = if (path.contains(".mp4")) "mp4" else "jpg"
+          val localFile = File(context.cacheDir, "temp_${System.currentTimeMillis()}.$extension")
+          val task = storageRef.getFile(localFile)
+          task.await()
+
+          if (extension == "jpg") {
+            // rotation of 90° to adapt to the picTakenScreen
+            val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
+            val rotatedBitmap = adjustImageRotationInverse(bitmap)
+            FileOutputStream(localFile).use { out ->
+              rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+            }
+            rotatedBitmap.recycle()
+          }
+
+          localFile
+        } catch (e: Exception) {
+          e.printStackTrace()
+          null
+        }
+      } else {
+        val f = File(path)
+        if (f.exists()) f else null
+      }
+    }
+  }
+}
+
+interface MediaRetrieverFactory {
+  fun create(): MediaMetadataRetriever
+}
+
+class DefaultMediaRetrieverFactory : MediaRetrieverFactory {
+  override fun create(): MediaMetadataRetriever = MediaMetadataRetriever()
+}
+
+object VideoThumbnailUtil {
   fun generateThumbnail(
       context: Context,
       videoPath: String,
-      retriever: MediaMetadataRetriever = MediaMetadataRetriever()
+      retrieverFactory: MediaRetrieverFactory = DefaultMediaRetrieverFactory()
   ): String? {
+    val retriever = retrieverFactory.create()
     return try {
       retriever.setDataSource(videoPath)
       val bitmap = retriever.getFrameAtTime(0)
@@ -79,7 +162,8 @@ fun GalleryScreen(
     photoViewModel: PhotoViewModel,
     videoViewModel: VideoViewModel,
     folderViewModel: FolderViewModel,
-    navigationActions: NavigationActions
+    navigationActions: NavigationActions,
+    fileDownloader: FileDownloader = DefaultFileDownloader()
 ) {
   val context = LocalContext.current
   val photos by photoViewModel.photos.collectAsState()
@@ -147,6 +231,7 @@ fun GalleryScreen(
   val backgroundColor = MaterialTheme.colorScheme.background
   val surfaceColor = MaterialTheme.colorScheme.surface
   val contentColor = MaterialTheme.colorScheme.onSurface
+
   selectedMedia?.let { media ->
     when (media) {
       is Photo -> {
@@ -161,7 +246,9 @@ fun GalleryScreen(
                       folderViewModel.createFileInFolder(it, it, folder)
                     }
                   }
-            })
+            },
+            navigationActions = navigationActions,
+            fileDownloader = fileDownloader)
       }
       is Video -> {
         MediaDetailDialog(
@@ -169,8 +256,10 @@ fun GalleryScreen(
             onDismiss = { selectedMedia = null },
             onDownload = { downloadVideo(media.path ?: "unknown") },
             onAddToFolder = {
-              Log.d("GalleryScreen", "Add to folder clicked for video: ${media.path}")
-            })
+              Log.d("GalleryScreen", "Add to folder clicked for video: ${(media as Video).path}")
+            },
+            navigationActions = navigationActions,
+            fileDownloader = fileDownloader)
       }
     }
   }
@@ -215,13 +304,6 @@ fun PublicationItem(
                       modifier = Modifier.size(48.dp).align(Alignment.Center).testTag("PlayIcon"),
                       tint = Color.White)
                 }
-            AsyncImage(
-                model = thumbnailUrl,
-                contentDescription = "Video thumbnail",
-                modifier = Modifier.fillMaxSize().testTag("VideoThumbnail"),
-                contentScale = ContentScale.Crop,
-                error = painterResource(R.drawable.eduverse_logo_alone),
-                fallback = painterResource(R.drawable.eduverse_logo_alone))
           }
         }
       }
@@ -232,8 +314,13 @@ fun MediaDetailDialog(
     media: Any,
     onDismiss: () -> Unit,
     onDownload: (() -> Unit)? = null,
-    onAddToFolder: (() -> Unit)? = null
+    onAddToFolder: (() -> Unit)? = null,
+    navigationActions: NavigationActions,
+    fileDownloader: FileDownloader
 ) {
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
+
   Dialog(onDismissRequest = onDismiss) {
     Surface(
         shape = RoundedCornerShape(8.dp),
@@ -276,6 +363,29 @@ fun MediaDetailDialog(
                         Text("Add to folder")
                       }
 
+                  // Add the Post button
+                  TextButton(
+                      onClick = {
+                        scope.launch {
+                          if (media is Photo) {
+                            val localFile = fileDownloader.ensureLocalFile(context, media.path)
+                            localFile?.let {
+                              val encodedPath = Uri.encode(it.absolutePath)
+                              navigationActions.navigateTo("picTaken/$encodedPath")
+                            }
+                          } else if (media is Video) {
+                            val localFile = fileDownloader.ensureLocalFile(context, media.path)
+                            localFile?.let {
+                              val encodedPath = Uri.encode(it.absolutePath)
+                              navigationActions.navigateTo("picTaken/null?videoPath=$encodedPath")
+                            }
+                          }
+                        }
+                      },
+                      modifier = Modifier.testTag("PostButton")) {
+                        Text("Post")
+                      }
+
                   TextButton(onClick = onDismiss, modifier = Modifier.testTag("CloseButton")) {
                     Text("Close")
                   }
@@ -287,10 +397,22 @@ fun MediaDetailDialog(
 
 fun downloadImage(imagePath: String) {
   Log.d("GalleryScreen", "Downloading image from: $imagePath")
-  // Implement the actual download logic here
+  // Implémentez ici la logique de téléchargement
 }
 
 fun downloadVideo(videoPath: String) {
   Log.d("GalleryScreen", "Downloading video from: $videoPath")
-  // Implement the actual download logic here
+  // Implémentez ici la logique de téléchargement
 }
+
+fun adjustImageRotationInverse(bitmap: Bitmap): Bitmap {
+  val matrix = Matrix()
+  matrix.postRotate(-90f)
+  return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+}
+
+suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
+    suspendCancellableCoroutine { cont ->
+      addOnSuccessListener { cont.resume(it) }
+      addOnFailureListener { cont.resumeWithException(it) }
+    }
