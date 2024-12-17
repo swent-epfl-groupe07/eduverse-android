@@ -104,26 +104,34 @@ fun PicTakenScreen(
                       .background(Color.LightGray)
                       .testTag("capturedImage"))
 
-          // Crop and settings icons
-          Column(
-              modifier = Modifier.align(Alignment.TopEnd),
-              verticalArrangement = Arrangement.spacedBy(30.dp)) {
-                Spacer(modifier = Modifier.height(0.5.dp))
+            // Crop and settings icons
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(40.dp)
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.vector),
                     contentDescription = "Crop Photo",
                     modifier =
-                        Modifier.size(36.dp)
-                            .clickable {
-                              val encodedPath = Uri.encode(photoFile.absolutePath)
-                              navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
-                            }
-                            .testTag("cropIcon"))
+                    Modifier.size(36.dp)
+                        .clickable {
+                            val encodedPath = Uri.encode(photoFile.absolutePath)
+                            navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
+                        }
+                        .testTag("cropIcon")
+                )
                 Image(
                     painter = painterResource(id = R.drawable.settings),
                     contentDescription = "Filters",
-                    modifier = Modifier.size(36.dp).clickable {}.testTag("settingsIcon"))
-              }
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clickable {}
+                        .testTag("settingsIcon")
+                )
+            }
+
         } else if (videoFile != null) {
           // Use ExoPlayer to display the video in loop with ContentScale.Crop
           val videoUri = Uri.fromFile(videoFile)
