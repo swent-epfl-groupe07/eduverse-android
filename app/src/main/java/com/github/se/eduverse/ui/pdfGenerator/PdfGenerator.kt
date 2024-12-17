@@ -3,6 +3,7 @@ package com.github.se.eduverse.ui.pdfGenerator
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.speech.SpeechRecognizer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -14,7 +15,6 @@ import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.SpatialAudioOff
 import androidx.compose.material.icons.filled.Summarize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +38,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.speechRecognition.SpeechRecognizerInterface
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.github.se.eduverse.viewmodel.PdfGeneratorViewModel
 import java.io.File
@@ -78,7 +79,7 @@ fun PdfGeneratorScreen(
   val folders by folderViewModel.folders.collectAsState()
   var showInputNewFolderNameDialog by remember { mutableStateOf(false) }
   var generatedPdf by remember { mutableStateOf<File?>(null) }
-  var editText by remember { mutableStateOf("") }
+  var showTranscriptionDialog by remember { mutableStateOf(false) }
 
   // Launcher for opening the android file picker launcher
   val filePickerLauncher =
@@ -198,10 +199,19 @@ fun PdfGeneratorScreen(
 
                     OptionCard(
                         testTag = PdfGeneratorOption.TRANSCRIBE_SPEECH.name,
-                        optionName = "Speech to Text",
+                        optionName = "Speech to PDF",
                         explanation = "Transcribes speech to text",
                         icon = Icons.Default.Mic,
-                        onClick = { showInfoWindow = true },
+                        onClick = {
+                          if (SpeechRecognizer.isRecognitionAvailable(context)) {
+                            currentPdfGeneratorOption = PdfGeneratorOption.TRANSCRIBE_SPEECH
+                            showTranscriptionDialog = true
+                          } else {
+                            // Show toast if speech recognition is not provided by the device
+                            context.showToast(
+                                "Cannot use this tool. Speech recognition not supported by your device.")
+                          }
+                        },
                         optionEnabled =
                             pdfConversionState.value ==
                                 PdfGeneratorViewModel.PdfGenerationState.Ready)
@@ -242,12 +252,7 @@ fun PdfGeneratorScreen(
         text =
             "Select an image to extract text from. Make sure the selected image contains text. The extracted text will be generated in a PDF file"
       }
-      PdfGeneratorOption.TRANSCRIBE_SPEECH -> {
-        title = "Speech to text transcriber"
-        text =
-            "Press the start button to begin recording and transcribing speech. The transcribed text will be generated in a PDF file."
-      }
-      PdfGeneratorOption.NONE -> {
+      else -> {
         showInfoWindow = false
       }
     }
@@ -380,6 +385,28 @@ fun PdfGeneratorScreen(
                 // storage if the folder creation fails
                 showDestinationDialog = true
               })
+        })
+  }
+
+  // Show the transcription dialog when the user selects the speech to text option
+  if (showTranscriptionDialog) {
+    var transcriptionFile: File? = null
+    converterViewModel.createTranscriptionFile(context, { transcriptionFile = it }) {
+      showTranscriptionDialog = false
+      context.showToast("Error creating transcription file: $it")
+    }
+    LaunchTranscriptionDialog(
+        context = context,
+        textFile = transcriptionFile!!,
+        onDismiss = {
+          showTranscriptionDialog = false
+          context.showToast("Speech to text transcription cancelled")
+          converterViewModel.resetTranscriptionFile()
+        },
+        onFinish = {
+          showTranscriptionDialog = false
+          selectedFileUri = Uri.fromFile(transcriptionFile)
+          showNameInputDialog = true
         })
   }
 }
@@ -681,6 +708,48 @@ fun InputNewFolderNameDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit)
           Text("Cancel")
         }
       })
+}
+
+/**
+ * Composable for displaying a dialog to transcribe speech to text
+ *
+ * @param context Context of the application
+ * @param textFile Temporary file in which to store the transcribed text (used to generate the PDF
+ *   file later)
+ * @param onDismiss Action to be performed when the dialog is dismissed
+ * @param onFinish Action to be performed when the dialog is confirmed
+ */
+@Composable
+fun LaunchTranscriptionDialog(
+    context: Context,
+    textFile: File,
+    onDismiss: () -> Unit,
+    onFinish: () -> Unit
+) {
+  var canGeneratePdf by remember { mutableStateOf(false) }
+  SpeechRecognizerInterface(
+      context = context,
+      title = "Speech to PDF transcriber",
+      description =
+          "Use the bottom button to capture your speech. Each successful recording is transcribed as a new paragraph into a PDF file. Record as many times as needed in order to add multiple paragraphs. Press 'Generate PDF' to finish the transcription and generate the PDF file. \n⚠\uFE0F Pressing 'Cancel' discards all transcribed text.",
+      onDismiss = onDismiss,
+      onResult = { text ->
+        canGeneratePdf = true
+        textFile.appendText("\n$text")
+      }) { enabled ->
+        Button(
+            onClick = {
+              if (canGeneratePdf) {
+                onFinish()
+              } else {
+                context.showToast("Cannot generate PDF. No speech detected yet.")
+              }
+            },
+            enabled = enabled,
+            modifier = Modifier.testTag("transcriptionFinishButton")) {
+              Text("Generate PDF")
+            }
+      }
 }
 
 /**
