@@ -1,53 +1,47 @@
 # Eduverse
-**The Ultimate Social Network for Sharing Educational TikTok Style Videos**
+**The Ultimate Social Network for Educational TikTok-Style Videos and Productivity Tools**
 
 ## See the figma design [here](https://www.figma.com/team_invite/redeem/Afl7aNWvQYdQ7eYX3Ms4yy)
 
-## 🌟 Overview
+## 🌟 Description
 
-Eduverse is an innovative educational app that combines the excitement of **short-form educational TikToks** with the power of a **social network**. It’s a platform where users can not only learn but also **create**, **share**, and **connect** with a global community of learners and educators.
+Eduverse is a groundbreaking platform that redefines how we learn and connect. Combining the addictive charm of **TikTok-style videos** with the functionality of a **social network**, Eduverse creates a hub where education meets entertainment. Users can **create, share, and engage** in an interactive community while leveraging powerful tools designed to boost productivity and organization.
 
-With a personalized feed of educational content, AI-driven tools, and advanced productivity features, EduVerse makes learning engaging, collaborative, and accessible to everyone, anytime, anywhere.
+Whether you're a student, educator, or lifelong learner, Eduverse delivers a personalized, dynamic, and collaborative learning experience.
 
-### **Key Features:**
-- **TikTok-Style Learning:** Short, engaging educational videos tailored to your learning preferences.
-- **Social Features:** Follow your favorite creators, comment on content, and build a learning community.
-- **AI-Powered Support:** Get instant help with concepts, quizzes, Pdf Generators and study recommendations.
-- **Offline Access:** Learn on the go with downloadable resources and videos.
-- **Advanced Tools:** Organize your studies with schedules, reminders, and file management.
+## 🚀 Why Choose Eduverse?
 
-Whether you’re a student, teacher, or lifelong learner, Eduverse empowers you to learn and teach in a fun, dynamic, and interactive environment.
-
-## 🚀 Why Choose EduVerse?
-
-### 🎥 **Revolutionizing Learning with Educational TikToks**
-Experience learning like never before with **short, subject-focused videos**. Swipe through a personalized feed, and dive into educational content that's as engaging as it is effective.
+### 🎥 **Revolutionizing Learning with Educational TikTok Styled Videos**
+Experience learning like never before with short, subject-focused TikTok styled videos:
+- Swipe through **short, subject-focused videos** tailored to your interests and learning goals.
+- Engage with bite-sized lessons that make learning fun and accessible.
 
 ### 🌐 **A Social Network for Learners**
 Collaborate and connect with a vibrant community:
-- Follow creators, share your own videos, and engage with peers.
-- Build your personal network of learners and educators.
-- Comment, like, and save your favorite content for later review.
+- Follow creators, share your own content, and build connections with a global community.
+- Interact with peers by commenting, liking, and saving your favorite videos.
+- Create your personal learning network with ease.
 
 ### 🤖 **AI-Powered Learning Assistance**
 With EduVerse’s intelligent AI tools, learning becomes easier:
-- Solve equations, get explanations, and access study tips instantly.
-- Receive personalized recommendations based on your progress.
+- Solve equations, understand concepts, and get personalized study tips in real-time.
+- Use AI-generated quizzes to test your knowledge on various topics.
+- Access tools like the **AI assistant** to enhance your learning experience.
 
 ### 📚 **Comprehensive Learning Tools**
-Go beyond videos with powerful organizational and productivity features:
-- Manage your tasks with an integrated scheduler and timetable.
-- Access offline resources and seamlessly sync when reconnected.
-- Use advanced tools like OCR, a scientific calculator, and PDF creation.
+Go beyond videos with powerful practical, organizational and productivity features:
+- Organize your studies with features like the **To-Do List**, **Study Timer**, and **Timetable**.
+- Utilize advanced tools such as the **scientific calculator**, **PDF generator**, and **folders** for file management.
+- Download videos and resources for offline learning, ensuring access anytime, anywhere.
 
----
+## ✨ Features and Functionalities
 
-## ✨ Features and Functionalities 
-
-### 1. **Interactive Learning Videos**
+### 1. **Interactive TikTok-Styled Learning Videos**
 - **TikTok-Inspired Interface**: Short-form educational videos tailored to various subjects.
 - **Subject Categorization**: Organize videos by topics and difficulty for focused learning.
-- **Engagement Tracking**: Track progress and time spent on each video.
+- **Video Interactions**: You can Like, Comment, Share and Save any Post.
+- **Global and Followings feed**: You can scroll over the global and your followings feeds.
+- **Search Content**: You can search specific content through our global database.
 
 ### 2. **AI Powered Quiz System**
 - **Wide Choice of Quizzes**: Questions are generated following a topic, a number of questions and a difficulty that you choose.
@@ -60,115 +54,72 @@ Go beyond videos with powerful organizational and productivity features:
 - **Multilingual Support**: Understand and respond in multiple languages.
 
 ### 4. **Comprehensive Dashboard**
-- **Widgets Overview**: Support adding or retrieving from the dashboard the Calculator, the AI assistant, the AI generated Quizzes, the PDF.
+- **Widgets Overview**: Support adding or retrieving from the dashboard widgets like the Calculator, the AI assistant, the AI generated Quizzes, the PDF generator, the Folders, the ToDo List, The Study Timer and the TimeTable.
 
-### 6. **Scientific Calculator**
+### 5. **Scientific Calculator**
 - **Basic Computations**: Supports basic calculations and all elementary operations.
 - **Advanced Functions**: Supports all logarithmic, exponential and trigonometric operations.
 - **Unit Conversion**: Quick conversion of units across various fields.
 
-### 7. **PDF Generator**
+### 6. **PDF Generator**
 - **Content Conversion**: Transform texts, documents and images into PDFs.
 - **AI Powered Generation**: Uses AI to summarize files and to extract texts from images.
 
-### 8. **Camera Feature**
+### 7. **Camera Feature**
 - **Photos and Videos**: Ability to take Photos and Videos
 - **Photo Editing**: Crop, resize, and enhance images for clarity.
 - **Direct Upload in the video feed**: directly post photos or videos which will appear in the videos feed and on your profile.
 
-### 9. **Folder and File Management**
-- **Cloud Syncing**: Automatically back up and sync files across devices.
-- **Nested Folders**: Organize content into subfolders for easy access.
+### 8. **Course Folder and File Management**
+- **Nested Folders**: Organize content into subfolders for easy access to courses files.
+- **Upload Files**: Ability to upload and export files in your course folders.
 - **File Sharing**: Share files with classmates via integrated tools.
+- **Archived Folder**: You can archive previous course folders and find them in the Archive.
 
-### 19. **To-Do List**
-- **Add ToDo**: Offer the ability to add ToDo's
-- **Add ToDo**: Offer the ability to add ToDo's
+### 9. **To-Do List**
+- **Add ToDo**: Offer the ability to add ToDo's.
+- **See Completed and ongoing ToDo's**: You can see ongoing ToDos in a screen and your completed ones in another.
+- **Fetched with Study timer**: See how much time did you spend in a ToDo.
 
 ### 10. **Study Timer Productivity Tool**
-- **Session Tracking**: Keep track of completed focus sessions.
-- **Break Suggestions**: Timed breaks for better focus and reduced burnout.
-- **Goal Setting**: Set daily productivity goals and track completion.
+- **Session Tracking**: Keep track of how much time did you spend in a ToDo.
+- **Break Suggestions**: Timed short and long breaks for better focus and reduced burnout.
+- **Work Time Setting**: Set your work time and your break cycles as you want for each ToDo.
 
 ### 11. **Task Scheduler and Timetable**
 - **Visual Scheduler**: Drag-and-drop interface for easy scheduling.
 - **Conflict Alerts**: Warns of overlapping events or deadlines.
-- **Class Integration**: Syncs with course schedules for real-time updates.
+- **ToDo's Integration**: Syncs with ToDos for tasks scheduling.
 
-### 12. **Saved Content**
-- **Bookmarking**: Mark and organize important videos, documents, and quizzes.
-- **Favorites Page**: A dedicated section to manage saved resources.
-- **Cross-Platform Sync**: Access bookmarks across multiple devices.
+### 12. **Profile Management**
+- **User Profile Interface**: Presence of Tiktok inspired Profile interface with your name and your profile picture, your followers and your followings.
+- **Your Publications**: You can find your posted publications in the Videos feed.
+- **Follow System**: You can follow or unfollow users.
 
-### 13. **Profile Management**
-- **User Personalization**: Update profiles with school, courses, and academic goals.
-- **Achievements Section**: Showcase badges and learning milestones.
-- **Progress Metrics**: Weekly insights into engagement and activity.
+### 13. **Saved Content**
+- **Bookmarked publications Page**: A dedicated Screen to manage saved resources.
 
-### 14. **Social Interaction Tools**
-- **Follow System**: Connect with classmates or peers.
-- **Like and Comment**: Engage with shared content and discussions.
-- **Sharing Mechanism**: Share notes, tasks, or videos with others.
+### 14. **Gallery for Media Management**
+- **Save Photo or Videos**: You can save Photos or Videos in your Gallery
+- **Quick Upload and Export**: Quickly upload and export Pictures or Videos.
 
-### 16. **Push Notifications**
-- **Reminders**: Get alerts for approaching deadlines or pending tasks.
-- **Motivational Quotes**: Regular messages to inspire productivity.
-- **Quiz Alerts**: Notifications about new or missed quizzes.
+### 15. **ExoPlayer Integration**
+- **Advanced Playback**: Presence of a comprehensive playback system.
+- **Playback Flexibility**: Jump to any moment in the video to start playing.
 
-### 17. **Gallery for Media Management**
-- **Thumbnails**: Automatically generate image and video previews.
-- **Bulk Upload**: Quickly upload multiple files.
-- **Tagging System**: Add tags to media for better organization.
-
-### 18. **ExoPlayer Integration**
-- **Advanced Playback**: Buffer-free streaming and offline support.
-- **Customization Options**: Adjust playback speed, resolution, and more.
-- **Interactive Features**: In-video quizzes for instant knowledge testing.
-
-### 20. **Time Management Tools**
-- **Event Categorization**: Differentiate between personal, academic, and group tasks.
-- **Real-Time Syncing**: Updates schedules across all devices instantly.
-- **Color-Coded Events**: Visual indicators for better readability.
-
-### 21. **E2E and Unit Testing**
-- **Comprehensive Coverage**: Tests for all major user flows and functionalities.
-- **Error Logging**: Detailed logs for debugging and performance analysis.
-- **Continuous Integration**: Automated testing during build processes.
-
-### 22. **Firebase Features**
+### 16. **Firebase Features**
 - **User Authentication**: Secure login via Google and email.
 - **Real-Time Database**: Efficient data storage and retrieval.
 - **Analytics**: Track user engagement and behavior.
 
-### 23. **Notifications Center**
+### 17. **Notifications Center**
 - **Customizable Alerts**: Set preferences for notifications.
 - **Silent Mode**: Mute notifications during focus sessions.
 - **Activity Summary**: Weekly summaries of app usage and achievements.
 
-### 25. **Media Downloads**
-- **Format Selection**: Choose between video, audio, or text downloads.
-- **Download Queue**: Manage multiple downloads simultaneously.
-- **Auto-Resume**: Restart interrupted downloads automatically.
-
-### 26. **Custom Widgets**
-- **Calendar Widget**: Quick view of upcoming events and tasks.
-- **Progress Widget**: Displays weekly learning milestones.
-- **Quick Access**: Add frequently used tools like calculators or planners.
-
-### 27. **Notifications for Updates**
-- **Real-Time Content Updates**: Alerts for newly uploaded videos or quizzes.
-- **Community Notifications**: Stay informed about new followers or comments.
-- **Version Updates**: Prompt users to download the latest app version.
-
-### 28. **Advanced Media Search**
-- **Filters**: Search by subject, tags, or date uploaded.
-- **Recommendations**: AI-suggested media based on user preferences.
-- **Quick Preview**: Hover over thumbnails for a sneak peek.
-
-### 29. **Theme Customization**
+### 18. **Theme Customization**
 - **Dark and Light Modes**: Seamless switching for better visibility.
 - **Accent Colors**: Personalize the app’s appearance.
-- **Font Adjustments**: Select preferred typography for comfort.
 
 ## 🛠️ Technical Highlights
 
