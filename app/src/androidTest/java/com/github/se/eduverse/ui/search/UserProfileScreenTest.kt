@@ -30,16 +30,18 @@ class UserProfileScreenTest {
 
   private lateinit var fakeViewModel: FakeProfileViewModel
   private lateinit var fakeNavigationActions: FakeNavigationActions
-    private lateinit var fakeRepository: FakeProfileRepository
+  private lateinit var fakeRepository: FakeProfileRepository
   private val testUserId = "test_user_id"
 
   @Before
   fun setup() {
-      fakeRepository = FakeProfileRepository()
+    fakeRepository = FakeProfileRepository()
     fakeViewModel = FakeProfileViewModel(fakeRepository)
     fakeNavigationActions = FakeNavigationActions()
   }
-    class FakeProfileViewModel(override val repository: ProfileRepository) : ProfileViewModel(repository) {
+
+  class FakeProfileViewModel(override val repository: ProfileRepository) :
+      ProfileViewModel(repository) {
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 

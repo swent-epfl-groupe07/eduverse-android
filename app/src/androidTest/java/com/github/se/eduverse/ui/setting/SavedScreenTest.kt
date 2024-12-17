@@ -2,8 +2,6 @@ package com.github.se.eduverse.ui.saved
 
 import android.net.Uri
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -148,36 +146,36 @@ class SavedScreenTest {
     }
   }
 
-
-    @Test
-    fun whenScreenLoads_showsTopBar() {
-        composeTestRule.setContent {
-            SavedScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
-        }
-
-        // Verify the top bar exists
-        composeTestRule.onNodeWithTag("topNavigationBar", useUnmergedTree = true).assertExists()
-
-        // Verify the title exists and contains correct text
-        composeTestRule.onNodeWithTag("screenTitle", useUnmergedTree = true)
-            .assertExists()
-            .assertTextContains("Saved Posts")
-
-        // Verify back button exists
-        composeTestRule.onNodeWithTag("goBackButton", useUnmergedTree = true).assertExists()
+  @Test
+  fun whenScreenLoads_showsTopBar() {
+    composeTestRule.setContent {
+      SavedScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
 
-    @Test
-    fun whenBackButtonClicked_navigatesBack() {
-        composeTestRule.setContent {
-            SavedScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
-        }
+    // Verify the top bar exists
+    composeTestRule.onNodeWithTag("topNavigationBar", useUnmergedTree = true).assertExists()
 
-        // Use the correct test tag from TopNavigationBar
-        composeTestRule.onNodeWithTag("goBackButton", useUnmergedTree = true).performClick()
+    // Verify the title exists and contains correct text
+    composeTestRule
+        .onNodeWithTag("screenTitle", useUnmergedTree = true)
+        .assertExists()
+        .assertTextContains("Saved Posts")
 
-        assert(fakeNavigationActions.backClicked)
+    // Verify back button exists
+    composeTestRule.onNodeWithTag("goBackButton", useUnmergedTree = true).assertExists()
+  }
+
+  @Test
+  fun whenBackButtonClicked_navigatesBack() {
+    composeTestRule.setContent {
+      SavedScreen(navigationActions = fakeNavigationActions, viewModel = fakeViewModel)
     }
+
+    // Use the correct test tag from TopNavigationBar
+    composeTestRule.onNodeWithTag("goBackButton", useUnmergedTree = true).performClick()
+
+    assert(fakeNavigationActions.backClicked)
+  }
 
   @Test
   fun whenNoSavedPosts_showsEmptyState() {
