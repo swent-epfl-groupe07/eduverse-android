@@ -101,7 +101,7 @@ class FakeProfileRepository : ProfileRepository {
   override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {}
 
   override suspend fun getAllPublications(): List<Publication> {
-    TODO("Not yet implemented")
+    return listOf(Publication())
   }
 
   override suspend fun getUserLikedPublicationsIds(userId: String): List<String> {
