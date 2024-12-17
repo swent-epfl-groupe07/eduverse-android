@@ -1,8 +1,9 @@
+// File: VideoThumbnailUtilTest.kt
+package com.github.se.eduverse.ui.gallery
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
-import com.github.se.eduverse.ui.gallery.VideoThumbnailUtil
-import java.io.File
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -20,73 +21,78 @@ class VideoThumbnailUtilTest {
 
   @Mock private lateinit var mockBitmap: Bitmap
 
+  @Mock private lateinit var retriever: MediaMetadataRetriever
+
   @Rule @JvmField val tempFolder = TemporaryFolder()
+
+  private lateinit var retrieverFactory: MediaRetrieverFactory
 
   @Before
   fun setup() {
     `when`(context.cacheDir).thenReturn(tempFolder.root)
+    retrieverFactory = mock(MediaRetrieverFactory::class.java)
+    `when`(retrieverFactory.create()).thenReturn(retriever)
   }
 
   @Test
   fun generateThumbnail_withValidLocalVideoPath_shouldReturnThumbnailPath() {
     // Given
     val videoPath = "/storage/videos/test.mp4"
-    val retriever = mock(MediaMetadataRetriever::class.java)
     `when`(retriever.getFrameAtTime(0)).thenReturn(mockBitmap)
 
     // When
-    val result = VideoThumbnailUtil.generateThumbnail(context, videoPath, retriever)
+    val result = VideoThumbnailUtil.generateThumbnail(context, videoPath, retrieverFactory)
 
     // Then
     assertNotNull(result)
     assertTrue(result!!.contains("thumbnail_"))
     verify(mockBitmap).compress(eq(Bitmap.CompressFormat.JPEG), eq(90), any())
     verify(mockBitmap).recycle()
+    verify(retriever).release()
   }
 
   @Test
-  fun `generateThumbnail with valid http url should return thumbnail path`() {
+  fun generateThumbnail_withValidHttpUrl_shouldReturnThumbnailPath() {
     // Given
     val videoUrl = "http://example.com/video.mp4"
-    val retriever = mock(MediaMetadataRetriever::class.java)
-    val outputFile = File(tempFolder.root, "thumbnail_${videoUrl.hashCode()}.jpg")
     `when`(retriever.getFrameAtTime(0)).thenReturn(mockBitmap)
 
     // When
-    val result = VideoThumbnailUtil.generateThumbnail(context, videoUrl, retriever)
+    val result = VideoThumbnailUtil.generateThumbnail(context, videoUrl, retrieverFactory)
 
     // Then
     assertNotNull(result)
     assertTrue(result!!.contains("thumbnail_"))
     verify(mockBitmap).compress(eq(Bitmap.CompressFormat.JPEG), eq(90), any())
     verify(mockBitmap).recycle()
+    verify(retriever).release()
   }
 
   @Test
-  fun `generateThumbnail should return null when bitmap is null`() {
+  fun generateThumbnail_shouldReturnNull_whenBitmapIsNull() {
     // Given
     val videoPath = "/storage/videos/test.mp4"
-    val retriever = mock(MediaMetadataRetriever::class.java)
-    lenient().`when`(retriever.getFrameAtTime(0)).thenReturn(null)
+    `when`(retriever.getFrameAtTime(0)).thenReturn(null)
 
     // When
-    val result = VideoThumbnailUtil.generateThumbnail(context, videoPath, retriever)
+    val result = VideoThumbnailUtil.generateThumbnail(context, videoPath, retrieverFactory)
 
     // Then
     assertNull(result)
+    verify(retriever).release()
   }
 
   @Test
-  fun `generateThumbnail should return null when exception occurs`() {
+  fun generateThumbnail_shouldReturnNull_whenExceptionOccurs() {
     // Given
     val videoPath = "/storage/videos/test.mp4"
-    val retriever = mock(MediaMetadataRetriever::class.java)
-    lenient().`when`(retriever.getFrameAtTime(0)).thenThrow(RuntimeException("Error"))
+    `when`(retriever.setDataSource(videoPath)).thenThrow(RuntimeException("Error"))
 
     // When
-    val result = VideoThumbnailUtil.generateThumbnail(context, videoPath, retriever)
+    val result = VideoThumbnailUtil.generateThumbnail(context, videoPath, retrieverFactory)
 
     // Then
     assertNull(result)
+    verify(retriever).release()
   }
 }
