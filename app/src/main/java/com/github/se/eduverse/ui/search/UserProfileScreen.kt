@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.search
 
+import androidx.compose.foundation.background
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -87,23 +91,45 @@ fun UserProfileScreen(
       modifier = Modifier.testTag("user_profile_screen_container"),
       topBar = {
         TopAppBar(
-            modifier = Modifier.testTag("user_profile_top_bar"),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary)))
+                    .testTag("user_profile_top_bar"),
             title = {
               when (uiState) {
-                is ProfileUiState.Success ->
-                    Text(
-                        text = (uiState as ProfileUiState.Success).profile.username,
-                        modifier = Modifier.testTag("user_profile_username"))
-                else -> Text("Profile", modifier = Modifier.testTag("user_profile_title_default"))
+                is ProfileUiState.Success -> {
+                  Text(
+                      text = (uiState as ProfileUiState.Success).profile.username,
+                      modifier = Modifier.testTag("user_profile_username"),
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary)
+                }
+                else -> {
+                  Text(
+                      "Profile",
+                      modifier = Modifier.testTag("user_profile_title_default"),
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary)
+                }
               }
             },
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() },
                   modifier = Modifier.testTag("back_button")) {
-                    Icon(Icons.Default.ArrowBack, "Back")
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary)
                   }
-            })
+            },
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
+        )
       },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
@@ -219,14 +245,18 @@ fun UserProfileScreen(
                     modifier = Modifier.testTag("publications_tab"),
                     text = { Text("Publications") },
                     icon = { Icon(Icons.Default.Article, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.secondary)
+                    selectedContentColor =
+                        if (selectedTab == 0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface)
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     modifier = Modifier.testTag("favorites_tab"),
                     text = { Text("Favorites") },
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.secondary)
+                    selectedContentColor =
+                        if (selectedTab == 1) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface)
               }
 
               // Content based on state

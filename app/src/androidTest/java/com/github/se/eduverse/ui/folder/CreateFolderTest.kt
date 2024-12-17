@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.repository.FileRepository
@@ -21,6 +20,7 @@ import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -97,17 +97,17 @@ class CreateFolderTest {
 
   @Test
   fun bottomBarWorks() {
+    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
+
     var test: Boolean
     `when`(navigationActions.navigateTo(any<TopLevelDestination>())).then {
       test = true
       null
     }
-    LIST_TOP_LEVEL_DESTINATION.forEach {
+
+    LIST_TOP_LEVEL_DESTINATION.forEach { tab ->
       test = false
-
-      composeTestRule.onNodeWithText(it.textId).assertIsDisplayed()
-      composeTestRule.onNodeWithText(it.textId).performClick()
-
+      composeTestRule.onNodeWithTag(tab.textId).assertExists().performClick()
       assert(test)
     }
   }
@@ -145,11 +145,11 @@ class CreateFolderTest {
   }
 
   @Test
-  fun assertCancelWorks() {
+  fun assertCancelWorks() = runBlocking {
     var test_del = false
     var test_nav = false
 
-    `when`(folderRepository.deleteFolder(any(), any(), any())).then {
+    `when`(folderRepository.deleteFolders(any(), any(), any())).then {
       test_del = true
       null
     }

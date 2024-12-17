@@ -2,6 +2,7 @@ package com.github.se.eduverse.ui.dashboard
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -20,15 +21,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.github.se.eduverse.R
 import com.github.se.eduverse.model.CommonWidgetType
 import com.github.se.eduverse.model.Widget
 import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
@@ -65,11 +69,21 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
           TopAppBar(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .background(
+                          Brush.horizontalGradient(
+                              colors =
+                                  listOf(
+                                      MaterialTheme.colorScheme.secondary,
+                                      MaterialTheme.colorScheme.primary))),
               title = {
-                Text(
-                    "Eduverse",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.testTag("app_title"))
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                  Image(
+                      painter = painterResource(id = R.drawable.eduverse_logo_png),
+                      contentDescription = "Logo",
+                      modifier = Modifier.size(140.dp).testTag("screenTitle"))
+                }
               },
               actions = {
                 IconButton(
@@ -81,9 +95,9 @@ fun DashboardScreen(
                           tint = MaterialTheme.colorScheme.onPrimary)
                     }
               },
-              backgroundColor = MaterialTheme.colorScheme.primary,
+              backgroundColor = Color.Transparent,
               contentColor = MaterialTheme.colorScheme.onPrimary,
-              elevation = 4.dp)
+              elevation = 0.dp)
         },
         bottomBar = {
           BottomNavigationMenu(

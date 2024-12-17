@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -84,7 +85,6 @@ fun ProfileScreen(
     UsernameEditDialog(
         onDismiss = {
           showUsernameDialog = false
-          // Reset username state when dialog is dismissed
           viewModel.resetUsernameState()
         },
         onSubmit = { newUsername -> viewModel.updateUsername(userId, newUsername) },
@@ -92,15 +92,22 @@ fun ProfileScreen(
         usernameState = usernameState,
         onSuccess = {
           showUsernameDialog = false
-          // Reset username state after successful update
           viewModel.resetUsernameState()
         })
   }
 
   Scaffold(
-      modifier = Modifier.testTag("profile_screen_container"),
       topBar = {
         TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary)))
+                    .testTag("topNavigationBar"),
             title = {
               when (uiState) {
                 is ProfileUiState.Success -> {
@@ -109,6 +116,8 @@ fun ProfileScreen(
                       modifier = Modifier.clickable { showUsernameDialog = true }) {
                         Text(
                             text = (uiState as ProfileUiState.Success).profile.username,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.testTag("profile_username"))
                         IconButton(
                             onClick = { showUsernameDialog = true },
@@ -116,18 +125,28 @@ fun ProfileScreen(
                               Icon(
                                   imageVector = Icons.Default.Edit,
                                   contentDescription = "Edit username",
-                                  modifier = Modifier.size(16.dp))
+                                  tint = MaterialTheme.colorScheme.onPrimary)
                             }
                       }
                 }
-                else -> Text("Profile", modifier = Modifier.testTag("profile_title_default"))
+                else -> {
+                  Text(
+                      "Profile",
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary,
+                      modifier = Modifier.testTag("profile_title_default"))
+                }
               }
             },
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
             actions = {
               IconButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTING) },
                   modifier = Modifier.testTag("settings_button")) {
-                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onPrimary)
                   }
             })
       },
@@ -142,6 +161,8 @@ fun ProfileScreen(
                 Modifier.testTag("profile_content_container")
                     .fillMaxSize()
                     .padding(paddingValues)) {
+              Spacer(modifier = Modifier.height(12.dp))
+
               Box(
                   modifier =
                       Modifier.testTag("profile_image_container")
@@ -177,21 +198,48 @@ fun ProfileScreen(
                 }
                 else -> {}
               }
+
               TabRow(selectedTabIndex = selectedTab, modifier = Modifier.testTag("tabs_row")) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    modifier = Modifier.testTag("publications_tab"),
-                    text = { Text("Publications") },
-                    icon = { Icon(Icons.Default.Article, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.secondary)
+                    text = {
+                      Text(
+                          "Publications",
+                          style = MaterialTheme.typography.labelLarge,
+                          color =
+                              if (selectedTab == 0) MaterialTheme.colorScheme.primary
+                              else MaterialTheme.colorScheme.onSurface)
+                    },
+                    icon = {
+                      Icon(
+                          Icons.Default.Article,
+                          contentDescription = null,
+                          tint =
+                              if (selectedTab == 0) MaterialTheme.colorScheme.primary
+                              else MaterialTheme.colorScheme.onSurface)
+                    },
+                    modifier = Modifier.testTag("publications_tab"))
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    modifier = Modifier.testTag("favorites_tab"),
-                    text = { Text("Favorites") },
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    selectedContentColor = MaterialTheme.colorScheme.secondary)
+                    text = {
+                      Text(
+                          "Favorites",
+                          style = MaterialTheme.typography.labelLarge,
+                          color =
+                              if (selectedTab == 1) MaterialTheme.colorScheme.primary
+                              else MaterialTheme.colorScheme.onSurface)
+                    },
+                    icon = {
+                      Icon(
+                          Icons.Default.Favorite,
+                          contentDescription = null,
+                          tint =
+                              if (selectedTab == 1) MaterialTheme.colorScheme.primary
+                              else MaterialTheme.colorScheme.onSurface)
+                    },
+                    modifier = Modifier.testTag("favorites_tab"))
               }
 
               when (uiState) {
@@ -199,7 +247,9 @@ fun ProfileScreen(
                   Box(
                       modifier = Modifier.testTag("loading_container").fillMaxSize(),
                       contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.testTag("loading_indicator"))
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.testTag("loading_indicator"))
                       }
                 }
                 is ProfileUiState.Error ->
@@ -212,14 +262,14 @@ fun ProfileScreen(
                       if (selectedTab == 0) {
                         profile.publications
                       } else {
-                        likedPublications // Display of liked publications
+                        likedPublications
                       }
 
                   PublicationsGrid(
                       publications = publications,
                       currentUserId = userId,
                       profileViewModel = viewModel,
-                      onPublicationClick = { /* Handle publication click */},
+                      onPublicationClick = {},
                       modifier = Modifier.testTag("publications_grid"))
                 }
               }

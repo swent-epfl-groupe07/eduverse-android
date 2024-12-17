@@ -2,11 +2,15 @@ package com.github.se.eduverse.ui.archive
 
 import android.content.Context
 import android.net.ConnectivityManager
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FolderRepository
@@ -19,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -112,17 +117,17 @@ class ArchiveScreenTest {
   fun bottomBarWorks() {
     launch()
 
+    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
+
     var test: Boolean
     `when`(navigationActions.navigateTo(any<TopLevelDestination>())).then {
       test = true
       null
     }
-    LIST_TOP_LEVEL_DESTINATION.forEach {
+
+    LIST_TOP_LEVEL_DESTINATION.forEach { tab ->
       test = false
-
-      composeTestRule.onNodeWithText(it.textId).assertIsDisplayed()
-      composeTestRule.onNodeWithText(it.textId).performClick()
-
+      composeTestRule.onNodeWithTag(tab.textId).assertExists().performClick()
       assert(test)
     }
   }
@@ -156,5 +161,68 @@ class ArchiveScreenTest {
     composeTestRule.onNodeWithTag("folderCard1").performClick()
 
     verify(0) { navigationActions.navigateTo(anyString()) }
+  }
+
+  @Test
+  fun deleteDialogWorks() = runBlocking {
+    launch()
+
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("folderCard1").performTouchInput { longClick() }
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("checked").performClick()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(2)
+
+    composeTestRule.onNodeWithTag("cancel").performClick()
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("cancel").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("folderCard1").performTouchInput { longClick() }
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(1)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(1)
+
+    composeTestRule.onNodeWithTag("unchecked").performClick()
+    composeTestRule.onNodeWithTag("delete").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("delete").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("confirm").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("no").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
+
+    verify(0) { folderRepository.deleteFolders(any(), any(), any()) }
+
+    composeTestRule.onNodeWithTag("delete").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("yes").performClick()
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
+    composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
+
+    verify(1) { folderRepository.deleteFolders(any(), any(), any()) }
   }
 }

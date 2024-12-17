@@ -102,7 +102,7 @@ fun PomodoroScreen(
   }
 
   Scaffold(
-      topBar = { TopNavigationBar("Pomodoro Timer", navigationActions) },
+      topBar = { TopNavigationBar(navigationActions, screenTitle = null) },
       bottomBar = {
         BottomNavigationMenu({ navigationActions.navigateTo(it) }, LIST_TOP_LEVEL_DESTINATION, "")
       }) { paddingValues ->
@@ -173,7 +173,7 @@ fun PomodoroScreen(
                                 TimerType.LONG_BREAK -> timerState.longBreakTime
                               }
                         },
-                        strokeWidth = 12.dp)
+                        strokeWidth = 20.dp)
                     Text(
                         text =
                             "${timerState.remainingSeconds / 60}:${String.format("%02d", timerState.remainingSeconds % 60)}",
