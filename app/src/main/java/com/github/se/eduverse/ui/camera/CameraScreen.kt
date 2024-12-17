@@ -262,7 +262,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
         modifier =
             Modifier.align(Alignment.TopStart)
                 .padding(16.dp)
-                .size(32.dp)
+                .size(22.dp)
                 .clickable { navigationActions.goBack() }
                 .testTag("closeButton"))
 
@@ -273,7 +273,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
         modifier =
             Modifier.align(Alignment.TopEnd)
                 .padding(16.dp)
-                .size(32.dp)
+                .size(28.dp)
                 .clickable {
                   cameraSelector =
                       if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {

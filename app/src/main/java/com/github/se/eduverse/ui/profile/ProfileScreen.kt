@@ -25,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -98,6 +99,15 @@ fun ProfileScreen(
   Scaffold(
       topBar = {
         TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary)))
+                    .testTag("topNavigationBar"),
             title = {
               when (uiState) {
                 is ProfileUiState.Success -> {
@@ -119,17 +129,16 @@ fun ProfileScreen(
                             }
                       }
                 }
-                else ->
-                    Text(
-                        "Profile",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.testTag("profile_title_default"))
+                else -> {
+                  Text(
+                      "Profile",
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary,
+                      modifier = Modifier.testTag("profile_title_default"))
+                }
               }
             },
-            colors =
-                TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary),
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
             actions = {
               IconButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTING) },
