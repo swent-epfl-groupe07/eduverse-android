@@ -169,16 +169,14 @@ open class FileViewModel(val fileRepository: FileRepository) {
                             context.showToast("Successfully downloaded file $fileName")
                         }
                         .addOnFailureListener {
-                            Log.e("Open File", "Opening of file ${storageRef.name} failed: $it")
-                            context.showToast("Can't access file")
                             localFile.delete()
+                            context.showToast("Can't access file")
                         }
                 } catch (_: Exception) {
                     context.showToast("Failed to download file")
                 }
             },
             onFailure = {
-                Log.e("Access File", "Access of file at $fileId failed: $it")
                 context.showToast("Can't access file")
             })
     }
