@@ -20,6 +20,7 @@ import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -144,11 +145,11 @@ class CreateFolderTest {
   }
 
   @Test
-  fun assertCancelWorks() {
+  fun assertCancelWorks() = runBlocking {
     var test_del = false
     var test_nav = false
 
-    `when`(folderRepository.deleteFolder(any(), any(), any())).then {
+    `when`(folderRepository.deleteFolders(any(), any(), any())).then {
       test_del = true
       null
     }
