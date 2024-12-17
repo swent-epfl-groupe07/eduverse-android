@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -106,9 +105,8 @@ fun PicTakenScreen(
 
           // Crop and settings icons
           Column(
-              modifier = Modifier.align(Alignment.TopEnd),
-              verticalArrangement = Arrangement.spacedBy(30.dp)) {
-                Spacer(modifier = Modifier.height(0.5.dp))
+              modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp),
+              verticalArrangement = Arrangement.spacedBy(40.dp)) {
                 Image(
                     painter = painterResource(id = R.drawable.vector),
                     contentDescription = "Crop Photo",
