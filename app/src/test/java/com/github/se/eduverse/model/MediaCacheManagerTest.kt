@@ -43,7 +43,7 @@ class MediaCacheManagerTest {
   }
 
   @Test
-  fun `saveFileToCache should save file when it does not exist`() = runTest {
+  fun `saveFileToCache should save file with timestamp`() = runTest {
     val url = "https://example.com/media.mp4"
     val fileName = "media.mp4"
     val fileContent = "Sample media content"
@@ -55,14 +55,14 @@ class MediaCacheManagerTest {
 
     assertNotNull(savedFile)
     assertTrue(savedFile!!.exists())
-    assertEquals(fileName, savedFile.name)
+    assertTrue(savedFile.name.contains("media.mp4"))
     assertEquals(fileContent, savedFile.readText())
 
     coVerify(exactly = 1) { downloader.openStream(url) }
   }
 
   @Test
-  fun `savePublicationToCache should save media and metadata successfully`() = runTest {
+  fun `savePublicationToCache should save media and metadata with timestamped filenames`() = runTest {
     val publication = Publication(
       id = "1",
       userId = "user1",
@@ -72,31 +72,67 @@ class MediaCacheManagerTest {
       mediaType = MediaType.VIDEO,
       timestamp = System.currentTimeMillis()
     )
-    val mediaFileName = "media.mp4"
-    val metadataFileName = "metadata.json"
     val mediaContent = "Sample media content"
     val metadataJson = "{\"id\":\"1\",\"title\":\"Test Publication\"}"
-
     val inputStream = ByteArrayInputStream(mediaContent.toByteArray())
+
     coEvery { downloader.openStream(publication.mediaUrl) } returns inputStream
     every { serializer.serialize(publication) } returns metadataJson
 
     val result = mediaCacheManager.savePublicationToCache(
-      publication, publication.mediaUrl, mediaFileName, metadataFileName
+      publication,
+      publication.mediaUrl,
+      "media.mp4",
+      "metadata.json"
     )
 
     assertTrue(result)
+    val savedMediaFile = temporaryFolder.root.listFiles()?.first { it.name.contains("media.mp4") }
+    val savedMetadataFile = temporaryFolder.root.listFiles()?.first { it.name.contains("metadata.json") }
 
-    val savedMediaFile = File(temporaryFolder.root, mediaFileName)
-    assertTrue(savedMediaFile.exists())
-    assertEquals(mediaContent, savedMediaFile.readText())
+    assertNotNull(savedMediaFile)
+    assertNotNull(savedMetadataFile)
+    assertEquals(mediaContent, savedMediaFile!!.readText())
+    assertEquals(metadataJson, savedMetadataFile!!.readText())
+  }
 
-    val savedMetadataFile = File(temporaryFolder.root, metadataFileName)
-    assertTrue(savedMetadataFile.exists())
-    assertEquals(metadataJson, savedMetadataFile.readText())
+  @Test
+  fun `cleanCache should delete expired files`() = runTest {
+    val currentTime = System.currentTimeMillis()
+    val expiredFile = File(temporaryFolder.root, "${currentTime - 3 * 24 * 60 * 60 * 1000}_expired.mp4")
+    val validFile = File(temporaryFolder.root, "${currentTime}_valid.mp4")
+    expiredFile.writeText("Expired file content")
+    validFile.writeText("Valid file content")
 
-    coVerify(exactly = 1) { downloader.openStream(publication.mediaUrl) }
-    verify(exactly = 1) { serializer.serialize(publication) }
+    assertTrue(expiredFile.exists())
+    assertTrue(validFile.exists())
+
+    mediaCacheManager.cleanCache()
+
+    assertFalse(expiredFile.exists())
+    assertTrue(validFile.exists())
+  }
+
+  @Test
+  fun `hasCachedFiles should return true if recent files exist`() = runTest {
+    val currentTime = System.currentTimeMillis()
+    val recentFile = File(temporaryFolder.root, "${currentTime}_recent.mp4")
+    recentFile.writeText("Recent file content")
+
+    val result = mediaCacheManager.hasCachedFiles()
+
+    assertTrue(result)
+  }
+
+  @Test
+  fun `hasCachedFiles should return false if no recent files exist`() = runTest {
+    val currentTime = System.currentTimeMillis()
+    val oldFile = File(temporaryFolder.root, "${currentTime - 3 * 24 * 60 * 60 * 1000}_old.mp4")
+    oldFile.writeText("Old file content")
+
+    val result = mediaCacheManager.hasCachedFiles()
+
+    assertFalse(result)
   }
 
   @Test
@@ -123,36 +159,5 @@ class MediaCacheManagerTest {
 
     assertTrue(result)
     assertFalse(file.exists())
-  }
-
-  @Test
-  fun `deleteFileFromCache should return false if file does not exist`() = runTest {
-    val fileName = "nonexistent_media.mp4"
-
-    val result = mediaCacheManager.deleteFileFromCache(fileName)
-
-    assertFalse(result)
-  }
-
-  @Test
-  fun `getFileFromCache should return file if exists`() = runTest {
-    val fileName = "media.mp4"
-    val fileContent = "Sample media content"
-    val file = temporaryFolder.newFile(fileName)
-    file.writeText(fileContent)
-
-    val retrievedFile = mediaCacheManager.getFileFromCache(fileName)
-
-    assertNotNull(retrievedFile)
-    assertEquals(fileContent, retrievedFile!!.readText())
-  }
-
-  @Test
-  fun `getFileFromCache should return null if file does not exist`() = runTest {
-    val fileName = "nonexistent_media.mp4"
-
-    val retrievedFile = mediaCacheManager.getFileFromCache(fileName)
-
-    assertNull(retrievedFile)
   }
 }

@@ -86,33 +86,30 @@ class MediaCacheManager(
 
   @OptIn(UnstableApi::class)
   suspend fun saveFileToCache(url: String, fileName: String): File? = withContext(Dispatchers.IO) {
-    Log.d("CACHE_DEBUG", "Attempting to download URL: $url for file: $fileName")
-
+    Log.d("CACHE_DEBUG", "Attempting to download URL: $url")
     try {
       if (url.isEmpty()) throw IOException("Empty URL")
 
-      val file = File(context.cacheDir, fileName)
+      val timestamp = System.currentTimeMillis()
+      val timestampedFileName = "${timestamp}_$fileName"
+
+      val file = File(context.cacheDir, timestampedFileName)
       val inputStream: InputStream = downloader.openStream(url)
       val outputStream = FileOutputStream(file)
 
       inputStream.use { it.copyTo(outputStream) }
       outputStream.close()
-      Log.d("CACHE_DEBUG", "File saved: $fileName at ${file.absolutePath}")
+      Log.d("CACHE_DEBUG", "File saved: $timestampedFileName at ${file.absolutePath}")
       file
-    } catch (e: java.net.SocketTimeoutException) {
-      Log.e("CACHE_ERROR", "Network timeout while downloading $fileName from $url")
-      null
-    } catch (e: java.net.UnknownHostException) {
-      Log.e("CACHE_ERROR", "Failed to resolve host for $url")
-      null
     } catch (e: Exception) {
-      Log.e("CACHE_ERROR", "General error while saving file $fileName: ${e.message}")
+      Log.e("CACHE_ERROR", "Error saving file: ${e.message}")
       null
     }
   }
 
 
-    @OptIn(UnstableApi::class)
+
+  @OptIn(UnstableApi::class)
     suspend fun <T> savePublicationToCache(
     publication: T,
     mediaUrl: String,
@@ -163,33 +160,41 @@ class MediaCacheManager(
     fun cleanCache() {
       val currentTime = System.currentTimeMillis()
       val cacheDir = context.cacheDir
+
       cacheDir.listFiles()?.forEach { file ->
         val timestamp = file.name.split("_").firstOrNull()?.toLongOrNull()
         if (timestamp != null) {
           val age = currentTime - timestamp
+          Log.d("CACHE_CLEAN", "File: ${file.name}, Age: $age ms")
+
           if (age > CACHE_LIFETIME_MS) {
-            val deleted = file.delete()
-            if (deleted) {
+            if (file.delete()) {
               Log.d("CACHE_CLEAN", "Deleted expired file: ${file.name}")
             } else {
               Log.e("CACHE_CLEAN", "Failed to delete file: ${file.name}")
             }
           }
         } else {
-          Log.d("CACHE_CLEAN", "Skipping file without valid timestamp: ${file.name}")
+          Log.e("CACHE_CLEAN", "Invalid file name, cannot extract timestamp: ${file.name}")
         }
       }
     }
 
 
-
-  fun hasCachedFiles(): Boolean {
+    @OptIn(UnstableApi::class)
+    fun hasCachedFiles(): Boolean {
     val currentTime = System.currentTimeMillis()
     val cacheDir = context.cacheDir
-    return cacheDir.listFiles()?.any { file ->
+    val hasRecentFiles = cacheDir.listFiles()?.any { file ->
       val timestamp = file.name.split("_").firstOrNull()?.toLongOrNull()
-      timestamp != null && currentTime - timestamp <= CACHE_LIFETIME_MS
+      val isRecent = timestamp != null && currentTime - timestamp <= CACHE_LIFETIME_MS
+      Log.d("CACHE_CHECK", "File: ${file.name}, Is recent: $isRecent")
+      isRecent
     } ?: false
+
+    Log.d("CACHE_CHECK", "Has cached files: $hasRecentFiles")
+    return hasRecentFiles
   }
+
 
 }
