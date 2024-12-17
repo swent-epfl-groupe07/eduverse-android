@@ -6,6 +6,18 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
 
 class FakeProfileRepository : ProfileRepository {
+  private val favoritedPublications = mutableSetOf<String>()  // Set of publication IDs that are favorited
+  private val favoritePublications = mutableListOf<Publication>()
+  private val favoriteIds = mutableListOf<String>()
+
+  // Helper method for tests to set favorite status
+  fun setPublicationFavoriteStatus(publicationId: String, isFavorited: Boolean) {
+    if (isFavorited) {
+      favoritedPublications.add(publicationId)
+    } else {
+      favoritedPublications.remove(publicationId)
+    }
+  }
   override suspend fun getProfile(userId: String): Profile? {
     return null
   }
@@ -23,7 +35,7 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
-    TODO("Not yet implemented")
+    favoritedPublications.remove(publicationId)
   }
 
   override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
@@ -31,7 +43,7 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean {
-    TODO("Not yet implemented")
+    return favoritedPublications.contains(publicationId)
   }
 
   override suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication> {
@@ -131,6 +143,6 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun addToFavorites(userId: String, publicationId: String) {
-    TODO("Not yet implemented")
+    favoritedPublications.add(publicationId)
   }
 }
