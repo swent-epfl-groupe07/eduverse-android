@@ -145,6 +145,7 @@ fun CreateFolderScreen(
                                   modifiedFile = it
                                   deleteDialogOpen = true
                                 },
+                                onDownload = { fileViewModel.downloadFile(it.id, context) },
                                 onRename = {
                                   modifiedFile = it
                                   renameDialogOpen = true

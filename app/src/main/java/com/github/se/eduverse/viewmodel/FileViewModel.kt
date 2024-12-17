@@ -149,35 +149,34 @@ open class FileViewModel(val fileRepository: FileRepository) {
         onFailure = { Log.e("Delete File", "Can't delete file at $fileId: $it") })
   }
 
-    /**
-     * Download a file from firebase
-     *
-     * @param fileId the id of the file to download
-     * @param context the context in which we download
-     */
-    fun downloadFile(fileId: String, context: Context) {
-        fileRepository.accessFile(
-            fileId = fileId,
-            onSuccess = { storageRef, suffix ->
-                try {
-                    val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                    val fileName = fileId + suffix
-                    val localFile = File(directory, fileName)
-                    storageRef
-                        .getFile(localFile)
-                        .addOnSuccessListener {
-                            context.showToast("Successfully downloaded file $fileName")
-                        }
-                        .addOnFailureListener {
-                            localFile.delete()
-                            context.showToast("Can't access file")
-                        }
-                } catch (_: Exception) {
-                    context.showToast("Failed to download file")
+  /**
+   * Download a file from firebase
+   *
+   * @param fileId the id of the file to download
+   * @param context the context in which we download
+   */
+  fun downloadFile(fileId: String, context: Context) {
+    fileRepository.accessFile(
+        fileId = fileId,
+        onSuccess = { storageRef, suffix ->
+          try {
+            val directory =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val fileName = fileId + suffix
+            val localFile = File(directory, fileName)
+            storageRef
+                .getFile(localFile)
+                .addOnSuccessListener {
+                  context.showToast("Successfully downloaded file $fileName")
                 }
-            },
-            onFailure = {
-                context.showToast("Can't access file")
-            })
-    }
+                .addOnFailureListener {
+                  localFile.delete()
+                  context.showToast("Can't access file")
+                }
+          } catch (_: Exception) {
+            context.showToast("Failed to download file")
+          }
+        },
+        onFailure = { context.showToast("Can't access file") })
+  }
 }
