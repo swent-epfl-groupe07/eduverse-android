@@ -6,7 +6,8 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
 
 class FakeProfileRepository : ProfileRepository {
-  private val favoritedPublications = mutableSetOf<String>()  // Set of publication IDs that are favorited
+  private val favoritedPublications =
+      mutableSetOf<String>() // Set of publication IDs that are favorited
   private val favoritePublications = mutableListOf<Publication>()
   private val favoriteIds = mutableListOf<String>()
 
@@ -18,6 +19,7 @@ class FakeProfileRepository : ProfileRepository {
       favoritedPublications.remove(publicationId)
     }
   }
+
   override suspend fun getProfile(userId: String): Profile? {
     return null
   }
@@ -90,20 +92,13 @@ class FakeProfileRepository : ProfileRepository {
       userId: String,
       collectionName: String,
       publicationId: String
-  ) {
+  ) {}
 
-  }
+  override suspend fun incrementLikes(publicationId: String, userId: String) {}
 
-  override suspend fun incrementLikes(publicationId: String, userId: String) {
+  override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {}
 
-  }
-
-  override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {
-  }
-
-  override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
-
-  }
+  override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {}
 
   override suspend fun getAllPublications(): List<Publication> {
     TODO("Not yet implemented")

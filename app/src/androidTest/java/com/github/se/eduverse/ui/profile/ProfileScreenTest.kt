@@ -32,18 +32,19 @@ import org.mockito.Mockito.mock
 class ProfileScreenTest {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private lateinit var fakeProfileRepository: FakeProfileRepository
+  private lateinit var fakeProfileRepository: FakeProfileRepository
   private lateinit var fakeViewModel: FakeProfileViewModel
   private lateinit var fakeNavigationActions: FakeNavigationActions
 
   @Before
   fun setup() {
-      fakeProfileRepository = FakeProfileRepository()
+    fakeProfileRepository = FakeProfileRepository()
     fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
     fakeNavigationActions = FakeNavigationActions()
   }
 
-    class FakeProfileViewModel(fakeRepository: FakeProfileRepository) : ProfileViewModel(fakeRepository) {
+  class FakeProfileViewModel(fakeRepository: FakeProfileRepository) :
+      ProfileViewModel(fakeRepository) {
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
