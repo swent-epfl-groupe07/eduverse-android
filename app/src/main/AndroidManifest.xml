@@ -18,6 +18,13 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Needed interaction with a speech recognition service on Android 11 devices  -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
 
     <application
         android:name=".EduVerseApplication"
