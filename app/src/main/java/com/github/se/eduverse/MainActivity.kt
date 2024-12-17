@@ -501,11 +501,8 @@ fun EduverseApp(
               videoViewModel)
         }
 
-      composable(Screen.SAVED) {
-          SavedScreen(
-              navigationActions = navigationActions,
-              viewModel = profileViewModel
-          )
-      }
+    composable(Screen.SAVED) {
+      SavedScreen(navigationActions = navigationActions, viewModel = profileViewModel)
+    }
   }
 }

@@ -342,208 +342,188 @@ fun PublicationDetailDialog(
     currentUserId: String,
     onDismiss: () -> Unit
 ) {
-    val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
-    val likeCount = remember { mutableStateOf(publication.likes) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    val deleteState by profileViewModel.deletePublicationState.collectAsState()
-    val favoriteState by profileViewModel.favoriteActionState.collectAsState()
+  val isLiked = remember { mutableStateOf(publication.likedBy.contains(currentUserId)) }
+  val likeCount = remember { mutableStateOf(publication.likes) }
+  var showDeleteDialog by remember { mutableStateOf(false) }
+  val deleteState by profileViewModel.deletePublicationState.collectAsState()
+  val favoriteState by profileViewModel.favoriteActionState.collectAsState()
 
-    // Track if publication is favorited
-    var isFavorited by remember { mutableStateOf(false) }
+  // Track if publication is favorited
+  var isFavorited by remember { mutableStateOf(false) }
 
-    // Check if publication is favorited on initial load
-    LaunchedEffect(publication.id) {
-        isFavorited = profileViewModel.repository.isPublicationFavorited(currentUserId, publication.id)
+  // Check if publication is favorited on initial load
+  LaunchedEffect(publication.id) {
+    isFavorited = profileViewModel.repository.isPublicationFavorited(currentUserId, publication.id)
+  }
+
+  var errorMessage by remember { mutableStateOf<String?>(null) }
+
+  // Handle delete state changes
+  LaunchedEffect(deleteState) {
+    when (deleteState) {
+      is DeletePublicationState.Success -> {
+        errorMessage = null
+        onDismiss()
+        profileViewModel.resetDeleteState()
+      }
+      is DeletePublicationState.Error -> {
+        errorMessage = (deleteState as DeletePublicationState.Error).message
+        profileViewModel.resetDeleteState()
+      }
+      else -> {
+        errorMessage = null
+      }
     }
+  }
 
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+  // Confirmation dialog for delete action
+  if (showDeleteDialog) {
+    AlertDialog(
+        onDismissRequest = { showDeleteDialog = false },
+        title = { Text("Delete Publication") },
+        text = {
+          Text("Are you sure you want to delete this publication? This action cannot be undone.")
+        },
+        confirmButton = {
+          Button(
+              onClick = {
+                profileViewModel.deletePublication(publication.id, currentUserId)
+                showDeleteDialog = false
+              },
+              colors =
+                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                Text("Delete")
+              }
+        },
+        dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") } })
+  }
 
-    // Handle delete state changes
-    LaunchedEffect(deleteState) {
-        when (deleteState) {
-            is DeletePublicationState.Success -> {
-                errorMessage = null
-                onDismiss()
-                profileViewModel.resetDeleteState()
-            }
-            is DeletePublicationState.Error -> {
-                errorMessage = (deleteState as DeletePublicationState.Error).message
-                profileViewModel.resetDeleteState()
-            }
-            else -> {
-                errorMessage = null
-            }
-        }
-    }
-
-    // Confirmation dialog for delete action
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Publication") },
-            text = { Text("Are you sure you want to delete this publication? This action cannot be undone.") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        profileViewModel.deletePublication(publication.id, currentUserId)
-                        showDeleteDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
+  Dialog(
+      onDismissRequest = onDismiss,
+      properties =
+          DialogProperties(
+              usePlatformDefaultWidth = false,
+              dismissOnBackPress = true,
+              dismissOnClickOutside = false)) {
         Box(modifier = Modifier.fillMaxSize().testTag("publication_detail_dialog")) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        SmallTopAppBar(
-                            title = {
-                                Text(
-                                    publication.title,
-                                    color = Color.White,
-                                    modifier = Modifier.testTag("publication_title")
-                                )
-                            },
-                            navigationIcon = {
-                                IconButton(
-                                    onClick = onDismiss,
-                                    modifier = Modifier.testTag("close_button")
-                                ) {
-                                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
-                                }
-                            },
-                            actions = {
-                                if (publication.userId == currentUserId) {
-                                    IconButton(
-                                        onClick = { showDeleteDialog = true },
-                                        modifier = Modifier.testTag("delete_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Delete publication",
-                                            tint = Color.White
-                                        )
-                                    }
-                                }
-                            },
-                            colors = TopAppBarDefaults.smallTopAppBarColors(
-                                containerColor = Color.Black,
-                                titleContentColor = Color.White
-                            )
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .testTag("media_container"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            when (publication.mediaType) {
-                                MediaType.VIDEO -> {
-                                    ExoVideoPlayer(
-                                        videoUrl = publication.mediaUrl,
-                                        modifier = Modifier.fillMaxWidth().testTag("video_player")
-                                    )
-                                }
-                                MediaType.PHOTO -> {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(publication.mediaUrl)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "Publication media",
-                                        modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                }
+          Column(modifier = Modifier.fillMaxSize()) {
+            Surface(modifier = Modifier.fillMaxSize(), color = Color.Black) {
+              Column(modifier = Modifier.fillMaxSize()) {
+                SmallTopAppBar(
+                    title = {
+                      Text(
+                          publication.title,
+                          color = Color.White,
+                          modifier = Modifier.testTag("publication_title"))
+                    },
+                    navigationIcon = {
+                      IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_button")) {
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                      }
+                    },
+                    actions = {
+                      if (publication.userId == currentUserId) {
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.testTag("delete_button")) {
+                              Icon(
+                                  imageVector = Icons.Default.Delete,
+                                  contentDescription = "Delete publication",
+                                  tint = Color.White)
                             }
+                      }
+                    },
+                    colors =
+                        TopAppBarDefaults.smallTopAppBarColors(
+                            containerColor = Color.Black, titleContentColor = Color.White))
 
-                            // Action Buttons Column
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .padding(16.dp)
-                                    .testTag("action_buttons"),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // Like Button
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            if (isLiked.value) {
-                                                profileViewModel.removeLike(currentUserId, publication.id)
-                                                isLiked.value = false
-                                                likeCount.value -= 1
-                                            } else {
-                                                profileViewModel.likeAndAddToFavorites(currentUserId, publication.id)
-                                                isLiked.value = true
-                                                likeCount.value += 1
-                                            }
-                                        },
-                                        modifier = Modifier.testTag("like_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Favorite,
-                                            contentDescription = "Like",
-                                            tint = if (isLiked.value) Color.Red else Color.White,
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .testTag(if (isLiked.value) "liked_icon" else "unliked_icon")
-                                        )
-                                    }
-                                    Text(
-                                        text = likeCount.value.toString(),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White,
-                                        modifier = Modifier.testTag("like_count_${publication.id}")
-                                    )
-                                }
-
-                                // Favorite Button
-                                IconButton(
-                                    onClick = {
-                                        profileViewModel.toggleFavorite(currentUserId, publication.id)
-                                        isFavorited = !isFavorited
-                                    },
-                                    modifier = Modifier.testTag("favorite_button")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.BookmarkAdd,
-                                        contentDescription = "Favorite",
-                                        tint = if (isFavorited) Color.Yellow else Color.White,
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .testTag(if (isFavorited) "favorited_icon" else "unfavorited_icon")
-                                    )
-                                }
-                            }
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth().testTag("media_container"),
+                    contentAlignment = Alignment.Center) {
+                      when (publication.mediaType) {
+                        MediaType.VIDEO -> {
+                          ExoVideoPlayer(
+                              videoUrl = publication.mediaUrl,
+                              modifier = Modifier.fillMaxWidth().testTag("video_player"))
                         }
+                        MediaType.PHOTO -> {
+                          AsyncImage(
+                              model =
+                                  ImageRequest.Builder(LocalContext.current)
+                                      .data(publication.mediaUrl)
+                                      .crossfade(true)
+                                      .build(),
+                              contentDescription = "Publication media",
+                              modifier = Modifier.fillMaxSize().testTag("detail_photo_view"),
+                              contentScale = ContentScale.Fit)
+                        }
+                      }
+
+                      // Action Buttons Column
+                      Column(
+                          modifier =
+                              Modifier.align(Alignment.CenterEnd)
+                                  .padding(16.dp)
+                                  .testTag("action_buttons"),
+                          horizontalAlignment = Alignment.CenterHorizontally,
+                          verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // Like Button
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                              IconButton(
+                                  onClick = {
+                                    if (isLiked.value) {
+                                      profileViewModel.removeLike(currentUserId, publication.id)
+                                      isLiked.value = false
+                                      likeCount.value -= 1
+                                    } else {
+                                      profileViewModel.likeAndAddToFavorites(
+                                          currentUserId, publication.id)
+                                      isLiked.value = true
+                                      likeCount.value += 1
+                                    }
+                                  },
+                                  modifier = Modifier.testTag("like_button")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Favorite,
+                                        contentDescription = "Like",
+                                        tint = if (isLiked.value) Color.Red else Color.White,
+                                        modifier =
+                                            Modifier.size(48.dp)
+                                                .testTag(
+                                                    if (isLiked.value) "liked_icon"
+                                                    else "unliked_icon"))
+                                  }
+                              Text(
+                                  text = likeCount.value.toString(),
+                                  style = MaterialTheme.typography.bodyMedium,
+                                  color = Color.White,
+                                  modifier = Modifier.testTag("like_count_${publication.id}"))
+                            }
+
+                            // Favorite Button
+                            IconButton(
+                                onClick = {
+                                  profileViewModel.toggleFavorite(currentUserId, publication.id)
+                                  isFavorited = !isFavorited
+                                },
+                                modifier = Modifier.testTag("favorite_button")) {
+                                  Icon(
+                                      imageVector = Icons.Default.BookmarkAdd,
+                                      contentDescription = "Favorite",
+                                      tint = if (isFavorited) Color.Yellow else Color.White,
+                                      modifier =
+                                          Modifier.size(48.dp)
+                                              .testTag(
+                                                  if (isFavorited) "favorited_icon"
+                                                  else "unfavorited_icon"))
+                                }
+                          }
                     }
-                }
+              }
             }
+          }
         }
-    }
+      }
 }
 
 @Composable

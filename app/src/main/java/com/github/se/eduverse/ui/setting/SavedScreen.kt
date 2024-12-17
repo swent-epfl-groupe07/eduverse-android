@@ -25,75 +25,63 @@ fun SavedScreen(
     viewModel: ProfileViewModel,
     userId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 ) {
-    val favoritePublications by viewModel.favoritePublications.collectAsState()
-    var selectedPublication by remember { mutableStateOf<com.github.se.eduverse.model.Publication?>(null) }
+  val favoritePublications by viewModel.favoritePublications.collectAsState()
+  var selectedPublication by remember {
+    mutableStateOf<com.github.se.eduverse.model.Publication?>(null)
+  }
 
-    LaunchedEffect(userId) {
-        viewModel.loadFavoritePublications(userId)
-    }
+  LaunchedEffect(userId) { viewModel.loadFavoritePublications(userId) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Saved Posts") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("back_button")
-                    ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.smallTopAppBarColors(
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Saved Posts") },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("back_button")) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                  }
+            },
+            colors =
+                TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    ) { paddingValues ->
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary))
+      }) { paddingValues ->
         if (favoritePublications.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentAlignment = Alignment.Center) {
                 Text(
                     text = "No saved posts yet",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("empty_saved_text")
-                )
-            }
+                    modifier = Modifier.testTag("empty_saved_text"))
+              }
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(1.dp),
-                horizontalArrangement = Arrangement.spacedBy(1.dp),
-                verticalArrangement = Arrangement.spacedBy(1.dp)
-            ) {
+          LazyVerticalGrid(
+              columns = GridCells.Fixed(3),
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentPadding = PaddingValues(1.dp),
+              horizontalArrangement = Arrangement.spacedBy(1.dp),
+              verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 items(favoritePublications) { publication ->
-                    PublicationItem(
-                        publication = publication,
-                        onClick = { selectedPublication = publication },
-                        modifier = Modifier.testTag("saved_publication_${publication.id}")
-                    )
+                  PublicationItem(
+                      publication = publication,
+                      onClick = { selectedPublication = publication },
+                      modifier = Modifier.testTag("saved_publication_${publication.id}"))
                 }
-            }
+              }
 
-            // Show detail dialog when a publication is selected
-            selectedPublication?.let { publication ->
-                PublicationDetailDialog(
-                    publication = publication,
-                    profileViewModel = viewModel,
-                    currentUserId = userId,
-                    onDismiss = { selectedPublication = null }
-                )
-            }
+          // Show detail dialog when a publication is selected
+          selectedPublication?.let { publication ->
+            PublicationDetailDialog(
+                publication = publication,
+                profileViewModel = viewModel,
+                currentUserId = userId,
+                onDismiss = { selectedPublication = null })
+          }
         }
-    }
+      }
 }
