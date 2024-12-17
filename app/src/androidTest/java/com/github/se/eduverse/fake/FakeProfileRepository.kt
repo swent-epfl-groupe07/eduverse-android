@@ -113,7 +113,7 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
-    TODO("Not yet implemented")
+    return false
   }
 
   override suspend fun updateFollowCounts(
