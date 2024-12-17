@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
+import com.github.se.eduverse.showToast
 import com.github.se.eduverse.ui.DeleteFileDialog
 import com.github.se.eduverse.ui.EditFileMenu
 import com.github.se.eduverse.ui.RenameFileDialog
@@ -183,7 +184,9 @@ fun CreateFolderScreen(
             Button(
                 onClick = {
                   // Because we have created the folder in db when calling getNewFolderUid :
-                  folderViewModel.deleteFolders(listOf(folder))
+                  folderViewModel.deleteFolders(listOf(folder)) {
+                    context.showToast("Couldn't properly delete created folder")
+                  }
 
                   // Because files and name are saveable :
                   files = emptyList()

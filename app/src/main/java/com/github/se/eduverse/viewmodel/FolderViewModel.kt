@@ -133,13 +133,17 @@ open class FolderViewModel(
    *
    * @param folders the folders to remove
    */
-  fun deleteFolders(folders: List<Folder>) {
-    viewModelScope.launch {
-      if (folders.contains(activeFolder.value)) selectFolder(null)
-      repository.deleteFolders(
-          folders,
-          { _folders.value -= folders },
-          { Log.e("FolderViewModel", "Exception $it while trying to delete folders") })
+  fun deleteFolders(folders: List<Folder>, onException: () -> Unit = {}) {
+    try {
+      viewModelScope.launch {
+        if (folders.contains(activeFolder.value)) selectFolder(null)
+        repository.deleteFolders(
+            folders,
+            { _folders.value -= folders },
+            { Log.e("FolderViewModel", "Exception $it while trying to delete folders") })
+      }
+    } catch (_: Exception) {
+      onException()
     }
   }
 
