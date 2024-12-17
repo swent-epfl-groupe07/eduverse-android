@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.ui.navigation.NavigationActions
+import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.profile.PublicationDetailDialog
 import com.github.se.eduverse.ui.profile.PublicationItem
 import com.github.se.eduverse.viewmodel.ProfileViewModel
@@ -34,20 +35,7 @@ fun SavedScreen(
 
   Scaffold(
       topBar = {
-        TopAppBar(
-            title = { Text("Saved Posts") },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("back_button")) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary))
+        TopNavigationBar(navigationActions, screenTitle = "Saved Posts")
       }) { paddingValues ->
         if (favoritePublications.isEmpty()) {
           Box(
