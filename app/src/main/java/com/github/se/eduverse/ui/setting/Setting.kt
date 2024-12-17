@@ -65,7 +65,6 @@ fun SettingsScreen(
                               fontWeight = FontWeight.Bold),
                       modifier = Modifier.padding(bottom = 16.dp))
 
-
                   Column(
                       modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                       verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -86,7 +85,6 @@ fun SettingsScreen(
                                           checkedTrackColor = MaterialTheme.colorScheme.secondary),
                                   modifier = Modifier.testTag("confidentialityToggle"))
                             }
-
 
                         Text(
                             text =
@@ -113,7 +111,8 @@ fun SettingsScreen(
                       navigationActions,
                       Screen.NOTIFICATIONS,
                       context)
-                  SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, Screen.SAVED, context)
+                  SettingsOption(
+                      "Saved", Icons.Default.Bookmark, navigationActions, Screen.SAVED, context)
                   SettingsOption(
                       "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
                   SettingsOption(
