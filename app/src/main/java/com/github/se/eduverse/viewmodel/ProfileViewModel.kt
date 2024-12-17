@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-open class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
+open class ProfileViewModel(val repository: ProfileRepository) : ViewModel() {
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
   open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
   private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
