@@ -33,41 +33,44 @@ fun SavedScreen(
 
   LaunchedEffect(userId) { viewModel.loadFavoritePublications(userId) }
 
-  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = stringResource(R.string.saved_posts_title)) }) {
-      paddingValues ->
-    if (favoritePublications.isEmpty()) {
-      Box(
-          modifier = Modifier.fillMaxSize().padding(paddingValues),
-          contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(R.string.saved_posts_empty),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("empty_saved_text"))
-          }
-    } else {
-      LazyVerticalGrid(
-          columns = GridCells.Fixed(3),
-          modifier = Modifier.fillMaxSize().padding(paddingValues),
-          contentPadding = PaddingValues(1.dp),
-          horizontalArrangement = Arrangement.spacedBy(1.dp),
-          verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            items(favoritePublications) { publication ->
-              PublicationItem(
-                  publication = publication,
-                  onClick = { selectedPublication = publication },
-                  modifier = Modifier.testTag("saved_publication_${publication.id}"))
-            }
-          }
+  Scaffold(
+      topBar = {
+        TopNavigationBar(
+            navigationActions, screenTitle = stringResource(R.string.saved_posts_title))
+      }) { paddingValues ->
+        if (favoritePublications.isEmpty()) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.saved_posts_empty),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("empty_saved_text"))
+              }
+        } else {
+          LazyVerticalGrid(
+              columns = GridCells.Fixed(3),
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentPadding = PaddingValues(1.dp),
+              horizontalArrangement = Arrangement.spacedBy(1.dp),
+              verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                items(favoritePublications) { publication ->
+                  PublicationItem(
+                      publication = publication,
+                      onClick = { selectedPublication = publication },
+                      modifier = Modifier.testTag("saved_publication_${publication.id}"))
+                }
+              }
 
-      // Show detail dialog when a publication is selected
-      selectedPublication?.let { publication ->
-        PublicationDetailDialog(
-            publication = publication,
-            profileViewModel = viewModel,
-            currentUserId = userId,
-            onDismiss = { selectedPublication = null })
+          // Show detail dialog when a publication is selected
+          selectedPublication?.let { publication ->
+            PublicationDetailDialog(
+                publication = publication,
+                profileViewModel = viewModel,
+                currentUserId = userId,
+                onDismiss = { selectedPublication = null })
+          }
+        }
       }
-    }
-  }
 }
