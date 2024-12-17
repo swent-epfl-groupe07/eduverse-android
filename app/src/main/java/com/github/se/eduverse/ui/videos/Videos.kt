@@ -30,6 +30,7 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.TabRow
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
@@ -293,6 +294,36 @@ fun VideoScreen(
                                           tint = Color.White,
                                           modifier = Modifier.size(48.dp))
                                     }
+
+                              val isFavorited = remember { mutableStateOf(false) }
+
+// Check if publication is favorited on initial load
+                              LaunchedEffect(publication.id) {
+                                  isFavorited.value = profileViewModel.repository.isPublicationFavorited(currentUserId, publication.id)
+                              }
+
+// Bookmark button
+                              IconButton(
+                                  onClick = {
+                                      profileViewModel.toggleFavorite(currentUserId, publication.id)
+                                      isFavorited.value = !isFavorited.value
+                                      Log.d("BOOKMARK", "Bookmark button clicked for publication: ${publication.id}")
+                                  },
+                                  modifier = Modifier
+                                      .align(Alignment.CenterEnd)
+                                      .offset(y = 256.dp)  // Positioned below the share button
+                                      .padding(12.dp)
+                                      .testTag("BookmarkButton_$page")
+                              ) {
+                                  Icon(
+                                      imageVector = Icons.Default.BookmarkAdd,
+                                      contentDescription = "Bookmark",
+                                      tint = if (isFavorited.value) Color.Yellow else Color.White,
+                                      modifier = Modifier
+                                          .size(48.dp)
+                                          .testTag(if (isFavorited.value) "BookmarkedIcon_$page" else "UnbookmarkedIcon_$page")
+                                  )
+                              }
                               }
                         }
 
