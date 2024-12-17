@@ -77,7 +77,7 @@ class FakeProfileRepository : ProfileRepository {
       defaultUsername: String,
       photoUrl: String
   ): Profile {
-    TODO("Not yet implemented")
+    return Profile(id = userId)
   }
 
   override suspend fun updateUsername(userId: String, newUsername: String) {
