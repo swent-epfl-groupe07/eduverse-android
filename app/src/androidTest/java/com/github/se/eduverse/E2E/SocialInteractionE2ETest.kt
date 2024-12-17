@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.github.se.eduverse.fake.FakeProfileRepository
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.SettingsRepository
@@ -38,7 +39,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.mock
 
 class SocialInteractionE2ETest {
 
@@ -178,7 +178,7 @@ fun TestNavigation2(
 }
 
 @HiltViewModel
-class FakeProfileViewModel @Inject constructor() : ProfileViewModel(mock()) {
+class FakeProfileViewModel @Inject constructor() : ProfileViewModel(FakeProfileRepository()) {
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
   override val profileState: StateFlow<ProfileUiState> = _profileState
 

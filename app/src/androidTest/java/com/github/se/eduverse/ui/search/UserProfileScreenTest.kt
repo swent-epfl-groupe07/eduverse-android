@@ -4,10 +4,12 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.fake.FakeProfileRepository
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.SettingsRepository
+import com.github.se.eduverse.repository.ProfileRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
@@ -31,12 +33,14 @@ class UserProfileScreenTest {
 
   private lateinit var fakeViewModel: FakeProfileViewModel
   private lateinit var fakeNavigationActions: FakeNavigationActions
+  private lateinit var fakeRepository: FakeProfileRepository
   private val testUserId = "test_user_id"
   private lateinit var settingsViewModel: SettingsViewModel
 
   @Before
   fun setup() {
-    fakeViewModel = FakeProfileViewModel()
+    fakeRepository = FakeProfileRepository()
+    fakeViewModel = FakeProfileViewModel(fakeRepository)
     fakeNavigationActions = FakeNavigationActions()
 
     val fakeSettingsRepository =
@@ -47,7 +51,8 @@ class UserProfileScreenTest {
     settingsViewModel = SettingsViewModel(fakeSettingsRepository, mock())
   }
 
-  class FakeProfileViewModel : ProfileViewModel(mock()) {
+  class FakeProfileViewModel(override val repository: ProfileRepository) :
+      ProfileViewModel(repository) {
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 

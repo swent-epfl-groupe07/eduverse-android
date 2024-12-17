@@ -67,6 +67,7 @@ import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.quizz.QuizScreen
+import com.github.se.eduverse.ui.saved.SavedScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
@@ -502,5 +503,9 @@ fun EduverseApp(
               folderViewModel,
               videoViewModel)
         }
+
+    composable(Screen.SAVED) {
+      SavedScreen(navigationActions = navigationActions, viewModel = profileViewModel)
+    }
   }
 }
