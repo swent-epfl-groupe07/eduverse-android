@@ -81,6 +81,27 @@ class VideoScreenTest {
   }
 
   @Test
+  fun testForYouTextAndSearchIconAreDisplayed() {
+    // Set the content for the test
+    composeTestRule.setContent {
+      VideoScreen(
+          navigationActions = fakeNavigationActions,
+          publicationViewModel = fakePublicationViewModel,
+          profileViewModel = fakeProfileViewModel,
+          commentsViewModel = fakeCommentsViewModel,
+          "")
+    }
+
+    composeTestRule.waitForIdle()
+    // Assert that the "For you" text element is displayed
+    composeTestRule.onNodeWithTag("ForYouText").assertIsDisplayed()
+
+    composeTestRule.waitForIdle()
+    // Assert that the search icon element is displayed
+    composeTestRule.onNodeWithTag("SearchIcon").assertIsDisplayed()
+  }
+
+  @Test
   fun testVerticalPagerIsDisplayedWhenPublicationsAreNotEmpty() {
     // Non-empty list of publications
     val publications =

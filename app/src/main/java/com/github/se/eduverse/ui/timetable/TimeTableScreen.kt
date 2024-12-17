@@ -65,7 +65,8 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.theme.blue
-import com.github.se.eduverse.ui.theme.orange
+import com.github.se.eduverse.ui.theme.blue_sky
+import com.github.se.eduverse.ui.theme.gray
 import com.github.se.eduverse.ui.theme.transparentButtonColor
 import com.github.se.eduverse.viewmodel.TimeTableViewModel
 import com.github.se.eduverse.viewmodel.TodoListViewModel
@@ -109,7 +110,7 @@ fun TimeTableScreen(
                       showDialog = true
                     },
                     modifier = Modifier.fillMaxWidth(0.45f).testTag("addTaskButton"),
-                    colors = orange) {
+                    colors = blue) {
                       Text("Add task")
                     }
                 Button(
@@ -118,7 +119,7 @@ fun TimeTableScreen(
                       showDialog = true
                     },
                     modifier = Modifier.fillMaxWidth(0.82f).testTag("addEventButton"),
-                    colors = blue) {
+                    colors = blue_sky) {
                       Text("Add event")
                     }
               }
@@ -201,13 +202,11 @@ fun TableColumn(width: Float, content: List<Scheduled>, navigate: (Scheduled) ->
           for (i in 0..23) {
             Row(
                 modifier =
-                    Modifier.border(width = 0.5.dp, color = Color.LightGray)
-                        .height(50.dp)
-                        .fillMaxWidth()) {}
+                    Modifier.border(width = 0.5.dp, color = gray).height(50.dp).fillMaxWidth()) {}
           }
         }
     val openedButton = emptyList<Scheduled>().toMutableList()
-    val unseenButtons = content.toMutableList() // copy
+    val unseenButtons = content.toMutableList()
     var lastButtonEnd = 0f
     content.forEach { new ->
       openedButton.removeAll { old -> old.start.timeInMillis + old.length < new.start.timeInMillis }
@@ -238,7 +237,7 @@ fun TableColumn(width: Float, content: List<Scheduled>, navigate: (Scheduled) ->
                   .padding(1.dp)
                   .testTag("buttonOf${new.name}"),
           shape = RoundedCornerShape(5.dp),
-          colors = if (new.type == ScheduledType.TASK) orange else blue,
+          colors = if (new.type == ScheduledType.TASK) blue else blue_sky,
           contentPadding = PaddingValues(1.dp)) {
             Text(new.name, modifier = Modifier.fillMaxSize())
           }

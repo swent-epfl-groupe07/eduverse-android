@@ -149,12 +149,6 @@ class SettingsScreenTest {
 
     // Act: Click the add account button
     composeTestRule.onNodeWithTag("addAccountButton").performClick()
-
-    // Assert: Since Toasts are hard to test, verify that navigateTo was not called with a specific
-    // route
-    // Alternatively, refactor the code to allow injecting a Toast handler and verify its invocation
-    // For example:
-    // verify { fakeNavigationActions.navigateTo(any()) wasNot Called }
   }
 
   /** Test to verify that the theme dropdown displays the correct current selection. */
