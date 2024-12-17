@@ -4,10 +4,12 @@ import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.InvalidClassException
 import java.util.Calendar
 import java.util.HashMap
+import kotlinx.coroutines.tasks.await
 
 class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository {
   private val folderNameText = "name"
@@ -97,18 +99,30 @@ class FolderRepositoryImpl(private val db: FirebaseFirestore) : FolderRepository
   }
 
   /**
-   * Remove a folder from the database.
+   * Remove some folders from the database.
    *
-   * @param folder the folder to delete
-   * @param onSuccess code executed if the folder is successfully deleted
-   * @param onFailure code executed if the folder can't be deleted
+   * @param folders the folders to delete
+   * @param onSuccess code executed if the folders are successfully deleted
+   * @param onFailure code executed if the folders can't be deleted
    */
-  override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-    db.collection(collectionPath)
-        .document(folder.id)
-        .delete()
-        .addOnSuccessListener { onSuccess() }
-        .addOnFailureListener(onFailure)
+  override suspend fun deleteFolders(
+      folders: List<Folder>,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    if (folders.isEmpty()) return
+    val batch = db.batch()
+
+    val documents =
+        db.collection(collectionPath)
+            .whereIn(FieldPath.documentId(), folders.map { it.id })
+            .get()
+            .await()
+            .documents
+
+    documents.forEach { batch.delete(db.collection(collectionPath).document(it.id)) }
+
+    batch.commit().addOnSuccessListener { onSuccess() }.addOnFailureListener(onFailure)
   }
 
   /**
