@@ -1,46 +1,143 @@
-# eduverse-android
+# Eduverse
+**The Ultimate Social Network for Educational TikTok-Style Videos and Productivity Tools**
 
-See the figma design [here](https://www.figma.com/team_invite/redeem/Afl7aNWvQYdQ7eYX3Ms4yy)
+## See the figma design [here](https://www.figma.com/team_invite/redeem/Afl7aNWvQYdQ7eYX3Ms4yy)
 
-## description
-Introducing EduVerse, the ultimate educational app designed to elevate your learning experience. Whether you’re tackling difficult subjects or simply looking to make studying more efficient and enjoyable, EduVerse is here to support you every step of the way.
+## 🌟 Description
 
-Why EduVerse?
+Eduverse is a groundbreaking platform that redefines how we learn and connect. Combining the addictive charm of **TikTok-style videos** with the functionality of a **social network**, Eduverse creates a hub where education meets entertainment. Users can **create, share, and engage** in an interactive community while leveraging powerful tools designed to boost productivity and organization.
 
-EduVerse transforms learning by blending modern technology with an intuitive design. Imagine an app that not only helps you understand your coursework but makes it fun and accessible. Whether you’re watching short, TikTok-style educational videos on subjects like Algebra or Calculus, taking interactive quizzes to test your knowledge, or chatting with an AI tutor to clarify difficult concepts, EduVerse has it all.
+Whether you're a student, educator, or lifelong learner, Eduverse delivers a personalized, dynamic, and collaborative learning experience.
 
-Here’s what you’ll love about EduVerse:
+## 🚀 Why Choose Eduverse?
 
-1. Engaging Course Videos
+### 🎥 **Revolutionizing Learning with Educational TikTok Styled Videos**
+Experience learning like never before with short, subject-focused TikTok styled videos:
+- Swipe through **short, subject-focused videos** tailored to your interests and learning goals.
+- Engage with bite-sized lessons that make learning fun and accessible.
 
-With a TikTok-inspired interface, EduVerse brings learning to life through bite-sized, subject-specific videos. Want to brush up on Calculus? Need a quick refresher on algebraic formulas? You can explore a world of educational videos created for your specific courses, making learning feel fresh and exciting.
+### 🌐 **A Social Network for Learners**
+Collaborate and connect with a vibrant community:
+- Follow creators, share your own content, and build connections with a global community.
+- Interact with peers by commenting, liking, and saving your favorite videos.
+- Create your personal learning network with ease.
 
-2. Quizzes to Reinforce Learning
+### 🤖 **AI-Powered Learning Assistance**
+With EduVerse’s intelligent AI tools, learning becomes easier:
+- Solve equations, understand concepts, and get personalized study tips in real-time.
+- Use AI-generated quizzes to test your knowledge on various topics.
+- Access tools like the **AI assistant** to enhance your learning experience.
 
-Don’t just watch—test your knowledge! EduVerse offers customized quizzes for each course, allowing you to gauge your progress and master topics one step at a time. The quizzes adapt to the courses you choose when setting up your profile, making each quiz session personal and relevant.
+### 📚 **Comprehensive Learning Tools**
+Go beyond videos with powerful practical, organizational and productivity features:
+- Organize your studies with features like the **To-Do List**, **Study Timer**, and **Timetable**.
+- Utilize advanced tools such as the **scientific calculator**, **PDF generator**, and **folders** for file management.
+- Download videos and resources for offline learning, ensuring access anytime, anywhere.
 
-3. AI-Powered Chat Assistant
+## ✨ Features and Functionalities
 
-Stuck on a problem? Need help reviewing a concept? Our AI chat is like having a personal tutor at your fingertips. Whether you need to solve complex equations, get clarifications on a subject, or simply ask for study tips, EduVerse’s AI assistant is ready to help.
+### 1. **Interactive TikTok-Styled Learning Videos**
+- **TikTok-Inspired Interface**: Short-form educational videos tailored to various subjects.
+- **Subject Categorization**: Organize videos by topics and difficulty for focused learning.
+- **Video Interactions**: You can Like, Comment, Share and Save any Post.
+- **Global and Followings feed**: You can scroll over the global and your followings feeds.
+- **Search Content**: You can search specific content through our global database.
 
-4. A Hub of Useful Tools
+### 2. **AI Powered Quiz System**
+- **Wide Choice of Quizzes**: Questions are generated following a topic, a number of questions and a difficulty that you choose.
+- **Quiz Analytics**: Detailed breakdown with correct/incorrect answers and Scores.
+- **AI generated questions**: Questions are generated with AI.
 
-No more switching between apps! With EduVerse, everything you need is in one place. The app’s student hub provides useful tools like a calculator, study planner, unit converter, and more—designed to make your academic life simpler and more organized.
+### 3. **AI Learning Assistant**
+- **Personalized Assistance**: Tailored responses based on user input.
+- **Advanced Capabilities**: Solve equations, explain concepts, and provide study tips.
+- **Multilingual Support**: Understand and respond in multiple languages.
 
-5. Personalized for YOU
+### 4. **Comprehensive Dashboard**
+- **Widgets Overview**: Support adding or retrieving from the dashboard widgets like the Calculator, the AI assistant, the AI generated Quizzes, the PDF generator, the Folders, the ToDo List, The Study Timer and the TimeTable.
 
-From the moment you log in via Google, EduVerse personalizes your experience. Choose your school, your academic level, and the courses you’re enrolled in, and you’ll be served content that matches your needs. It’s not just an app—it’s a tailored learning companion.
+### 5. **Scientific Calculator**
+- **Basic Computations**: Supports basic calculations and all elementary operations.
+- **Advanced Functions**: Supports all logarithmic, exponential and trigonometric operations.
+- **Unit Conversion**: Quick conversion of units across various fields.
 
-Reliable, Even Offline
+### 6. **PDF Generator**
+- **Content Conversion**: Transform texts, documents and images into PDFs.
+- **AI Powered Generation**: Uses AI to summarize files and to extract texts from images.
 
-One of EduVerse’s standout features is its offline functionality. You can continue to access pre-downloaded videos, quizzes, and some AI features even without internet connectivity. So, whether you’re on a long commute or in an area with spotty Wi-Fi, EduVerse ensures that learning never stops.
+### 7. **Camera Feature**
+- **Photos and Videos**: Ability to take Photos and Videos
+- **Photo Editing**: Crop, resize, and enhance images for clarity.
+- **Direct Upload in the video feed**: directly post photos or videos which will appear in the videos feed and on your profile.
 
-Seamless Integration with Google Firebase
+### 8. **Course Folder and File Management**
+- **Nested Folders**: Organize content into subfolders for easy access to courses files.
+- **Upload Files**: Ability to upload and export files in your course folders.
+- **File Sharing**: Share files with classmates via integrated tools.
+- **Archived Folder**: You can archive previous course folders and find them in the Archive.
 
-Behind the scenes, EduVerse integrates with Google Firebase for secure and reliable data management. Your user profile, video content, and course data are all stored in the cloud, making sure that your learning experience is smooth and that you can pick up where you left off, whether online or offline.
+### 9. **To-Do List**
+- **Add ToDo**: Offer the ability to add ToDo's.
+- **See Completed and ongoing ToDo's**: You can see ongoing ToDos in a screen and your completed ones in another.
+- **Fetched with Study timer**: See how much time did you spend in a ToDo.
 
-Get Started with EduVerse Today!
+### 10. **Study Timer Productivity Tool**
+- **Session Tracking**: Keep track of how much time did you spend in a ToDo.
+- **Break Suggestions**: Timed short and long breaks for better focus and reduced burnout.
+- **Work Time Setting**: Set your work time and your break cycles as you want for each ToDo.
 
-EduVerse is not just another educational app—it’s a revolution in how students learn, engage, and succeed. Ready to experience learning like never before? Join the EduVerse community, and take your education into your own hands!
+### 11. **Task Scheduler and Timetable**
+- **Visual Scheduler**: Drag-and-drop interface for easy scheduling.
+- **Conflict Alerts**: Warns of overlapping events or deadlines.
+- **ToDo's Integration**: Syncs with ToDos for tasks scheduling.
 
-Download EduVerse, log in with Google, and get started on your personalized learning journey today.
+### 12. **Profile Management**
+- **User Profile Interface**: Presence of Tiktok inspired Profile interface with your name and your profile picture, your followers and your followings.
+- **Your Publications**: You can find your posted publications in the Videos feed.
+- **Follow System**: You can follow or unfollow users.
+
+### 13. **Saved Content**
+- **Bookmarked publications Page**: A dedicated Screen to manage saved resources.
+
+### 14. **Gallery for Media Management**
+- **Save Photo or Videos**: You can save Photos or Videos in your Gallery
+- **Quick Upload and Export**: Quickly upload and export Pictures or Videos.
+
+### 15. **ExoPlayer Integration**
+- **Advanced Playback**: Presence of a comprehensive playback system.
+- **Playback Flexibility**: Jump to any moment in the video to start playing.
+
+### 16. **Firebase Features**
+- **User Authentication**: Secure login via Google and email.
+- **Real-Time Database**: Efficient data storage and retrieval.
+- **Analytics**: Track user engagement and behavior.
+
+### 17. **Notifications Center**
+- **Customizable Alerts**: Set preferences for notifications.
+- **Silent Mode**: Mute notifications during focus sessions.
+- **Activity Summary**: Weekly summaries of app usage and achievements.
+
+### 18. **Theme Customization**
+- **Dark and Light Modes**: Seamless switching for better visibility.
+- **Accent Colors**: Personalize the app’s appearance.
+
+## 🛠️ Technical Highlights
+
+Eduverse is built with modern tools and technologies for a seamless user experience:
+
+- **Jetpack Compose:** Simplifies UI development with dynamic, responsive interfaces.
+- **Kotlin Coroutines:** Ensures smooth and efficient handling of asynchronous tasks.
+- **MVVM Architecture:** Provides a modular, testable, and scalable codebase.
+- **Material Design 3:** Offers a sleek, user-friendly, and accessible app design.  
+
+## 🚀 How to Run the App
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/eduverse-android.git
+   cd eduverse-android
+   
+2. Open the project in Android Studio.
+3. Add the google-services.json file to the app/ directory.
+4. Sync Gradle to download and install dependencies.
+5. Run the app on an emulator or a connected device.
