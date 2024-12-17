@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.fake.FakeProfileRepository
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
@@ -31,16 +32,18 @@ import org.mockito.Mockito.mock
 class ProfileScreenTest {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
+    private lateinit var fakeProfileRepository: FakeProfileRepository
   private lateinit var fakeViewModel: FakeProfileViewModel
   private lateinit var fakeNavigationActions: FakeNavigationActions
 
   @Before
   fun setup() {
-    fakeViewModel = FakeProfileViewModel()
+      fakeProfileRepository = FakeProfileRepository()
+    fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
     fakeNavigationActions = FakeNavigationActions()
   }
 
-  class FakeProfileViewModel : ProfileViewModel(mock()) {
+    class FakeProfileViewModel(fakeRepository: FakeProfileRepository) : ProfileViewModel(fakeRepository) {
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     override val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
@@ -448,7 +451,7 @@ class ProfileScreenTest {
             likes = 10)
 
     // Créer une instance simulée du ViewModel
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -488,7 +491,7 @@ class ProfileScreenTest {
             likedBy = listOf("currentUser"),
             likes = 42)
 
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -525,7 +528,7 @@ class ProfileScreenTest {
             likedBy = emptyList(),
             likes = 10)
 
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -575,7 +578,7 @@ class ProfileScreenTest {
             likedBy = listOf("currentUser"),
             likes = 10)
 
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -625,7 +628,7 @@ class ProfileScreenTest {
             likedBy = emptyList(),
             likes = 5)
 
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -680,7 +683,7 @@ class ProfileScreenTest {
             likedBy = listOf("currentUser"),
             likes = 10)
 
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -928,7 +931,7 @@ class ProfileScreenTest {
             userId = "currentUser", // Same as currentUserId to test owner case
             title = "Test Publication",
             mediaType = MediaType.PHOTO)
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -950,7 +953,7 @@ class ProfileScreenTest {
             userId = "otherUser", // Different from currentUserId
             title = "Test Publication",
             mediaType = MediaType.PHOTO)
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -972,7 +975,7 @@ class ProfileScreenTest {
             userId = "currentUser",
             title = "Test Publication",
             mediaType = MediaType.PHOTO)
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -1003,7 +1006,7 @@ class ProfileScreenTest {
             userId = "currentUser",
             title = "Test Publication",
             mediaType = MediaType.PHOTO)
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
 
     composeTestRule.setContent {
       PublicationDetailDialog(
@@ -1029,7 +1032,7 @@ class ProfileScreenTest {
             userId = "currentUser",
             title = "Test Publication",
             mediaType = MediaType.PHOTO)
-    val fakeViewModel = FakeProfileViewModel()
+    val fakeViewModel = FakeProfileViewModel(fakeProfileRepository)
     var dialogDismissed = false
 
     composeTestRule.setContent {

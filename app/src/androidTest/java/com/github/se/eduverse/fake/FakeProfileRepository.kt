@@ -91,19 +91,18 @@ class FakeProfileRepository : ProfileRepository {
       collectionName: String,
       publicationId: String
   ) {
-    TODO("Not yet implemented")
+
   }
 
   override suspend fun incrementLikes(publicationId: String, userId: String) {
-    TODO("Not yet implemented")
+
   }
 
   override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {
-    TODO("Not yet implemented")
   }
 
   override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
-    TODO("Not yet implemented")
+
   }
 
   override suspend fun getAllPublications(): List<Publication> {
