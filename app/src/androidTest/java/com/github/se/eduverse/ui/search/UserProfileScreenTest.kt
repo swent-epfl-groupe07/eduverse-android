@@ -8,8 +8,8 @@ import com.github.se.eduverse.fake.FakeProfileRepository
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
-import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.repository.ProfileRepository
+import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
