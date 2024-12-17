@@ -75,11 +75,12 @@ fun UserProfileScreen(
   val likedPublications by viewModel.likedPublications.collectAsState(initial = emptyList())
   val followActionState by viewModel.followActionState.collectAsState()
   val context = LocalContext.current
-  val isPrivate by settingsViewModel.privacySettings.collectAsState()
+  var isProfilePrivate by remember { mutableStateOf(false) }
 
   LaunchedEffect(userId) {
     viewModel.loadProfile(userId)
     viewModel.loadLikedPublications(userId)
+    isProfilePrivate = settingsViewModel.getPrivacySettingsDirect(userId)
   }
 
   Scaffold(
@@ -141,7 +142,7 @@ fun UserProfileScreen(
                             label = "Followers",
                             count = profile.followers,
                             onClick = {
-                              if (isPrivate && currentUserId != profile.id) {
+                              if (isProfilePrivate && currentUserId != profile.id) {
                                 Toast.makeText(
                                         context,
                                         "Cannot access followers. This profile is private.",
@@ -156,7 +157,7 @@ fun UserProfileScreen(
                             label = "Following",
                             count = profile.following,
                             onClick = {
-                              if (isPrivate && currentUserId != profile.id) {
+                              if (isProfilePrivate && currentUserId != profile.id) {
                                 Toast.makeText(
                                         context,
                                         "Cannot access following. This profile is private.",
@@ -252,7 +253,7 @@ fun UserProfileScreen(
                       }
 
                   // Check if profile is private and current user is not the owner
-                  if (isPrivate && currentUserId != profile.id) {
+                  if (isProfilePrivate && currentUserId != profile.id) {
                     Box(
                         modifier =
                             Modifier.fillMaxSize()

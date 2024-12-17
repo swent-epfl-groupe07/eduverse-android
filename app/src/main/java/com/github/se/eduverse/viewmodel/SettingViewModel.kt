@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 open class SettingsViewModel(
-    private val settingsRepository: SettingsRepository,
+    val settingsRepository: SettingsRepository,
     private val auth: FirebaseAuth,
     private val setAppThemeIsDarkMode: (Boolean) -> Unit = { isAppInDarkMode = it }
 ) : ViewModel() {
@@ -103,5 +103,9 @@ open class SettingsViewModel(
     } else {
       Log.e("SettingsViewModel", "User is not authenticated while updating selected theme")
     }
+  }
+
+  suspend fun getPrivacySettingsDirect(userId: String): Boolean {
+    return settingsRepository.getPrivacySettings(userId)
   }
 }
