@@ -89,7 +89,7 @@ fun SettingsScreen(
               navigationActions,
               Screen.NOTIFICATIONS,
               context)
-          SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, null, context)
+        SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, Screen.SAVED, context)
           SettingsOption(
               "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
           SettingsOption(
