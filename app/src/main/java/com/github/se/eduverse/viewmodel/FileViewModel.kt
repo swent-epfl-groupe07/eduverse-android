@@ -3,12 +3,14 @@ package com.github.se.eduverse.viewmodel
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.model.MyFile
 import com.github.se.eduverse.repository.FileRepository
+import com.github.se.eduverse.showToast
 import java.io.File
 import java.nio.file.Files
 import java.util.Calendar
@@ -146,4 +148,38 @@ open class FileViewModel(val fileRepository: FileRepository) {
         onSuccess = onSuccess,
         onFailure = { Log.e("Delete File", "Can't delete file at $fileId: $it") })
   }
+
+    /**
+     * Download a file from firebase
+     *
+     * @param fileId the id of the file to download
+     * @param context the context in which we download
+     */
+    fun downloadFile(fileId: String, context: Context) {
+        fileRepository.accessFile(
+            fileId = fileId,
+            onSuccess = { storageRef, suffix ->
+                try {
+                    val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    val fileName = fileId + suffix
+                    val localFile = File(directory, fileName)
+                    storageRef
+                        .getFile(localFile)
+                        .addOnSuccessListener {
+                            context.showToast("Successfully downloaded file $fileName")
+                        }
+                        .addOnFailureListener {
+                            Log.e("Open File", "Opening of file ${storageRef.name} failed: $it")
+                            context.showToast("Can't access file")
+                            localFile.delete()
+                        }
+                } catch (_: Exception) {
+                    context.showToast("Failed to download file")
+                }
+            },
+            onFailure = {
+                Log.e("Access File", "Access of file at $fileId failed: $it")
+                context.showToast("Can't access file")
+            })
+    }
 }
