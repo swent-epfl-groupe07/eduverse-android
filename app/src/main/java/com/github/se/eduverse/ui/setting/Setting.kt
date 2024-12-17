@@ -32,130 +32,162 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     systemTheme: String = if (isSystemInDarkTheme()) Theme.DARK else Theme.LIGHT
 ) {
-  val context = LocalContext.current
+    val context = LocalContext.current
 
-  val privacySettings by settingsViewModel.privacySettings.collectAsState()
-  val selectedTheme by settingsViewModel.selectedTheme.collectAsState()
-  val selectedLanguage by settingsViewModel.selectedLanguage.collectAsState()
+    val privacySettings by settingsViewModel.privacySettings.collectAsState()
+    val selectedTheme by settingsViewModel.selectedTheme.collectAsState()
+    val selectedLanguage by settingsViewModel.selectedLanguage.collectAsState()
 
-  var isThemeDropdownExpanded by remember { mutableStateOf(false) }
-  var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
+    var isThemeDropdownExpanded by remember { mutableStateOf(false) }
+    var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
 
-  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) { padding ->
-    Column(
-        modifier =
-            Modifier.fillMaxSize()
+    Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(padding),
-        verticalArrangement = Arrangement.SpaceBetween) {
-          // Confidentiality Toggle Section
-          Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(
-                text = "Confidentiality:",
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(vertical = 8.dp))
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth().padding(top = 4.dp).testTag("confidentialityToggle"),
-                verticalAlignment = Alignment.CenterVertically) {
-                  Text(
-                      text = if (privacySettings) "Private" else "Public",
-                      modifier = Modifier.weight(1f).testTag("confidentialityToggleState"),
-                      color = MaterialTheme.colorScheme.primary)
-                  Switch(
-                      checked = privacySettings,
-                      onCheckedChange = { settingsViewModel.updatePrivacySettings(it) },
-                      colors =
-                          SwitchDefaults.colors(
-                              checkedThumbColor = MaterialTheme.colorScheme.primary,
-                              checkedTrackColor = MaterialTheme.colorScheme.secondary))
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Confidentiality Toggle Section
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Text(
+                    text = "Confidentialité:",
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .testTag("confidentialityToggle"),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (privacySettings) "Privé" else "Public",
+                        modifier = Modifier.weight(1f).testTag("confidentialityToggleState"),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Switch(
+                        checked = privacySettings,
+                        onCheckedChange = { settingsViewModel.updatePrivacySettings(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.secondary
+                        )
+                    )
                 }
-            Text(
-                text =
-                    if (privacySettings)
-                        "Only you and your followers can see your profile and posts."
-                    else "Your profile and posts are visible to everyone.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
-          }
+                Text(
+                    text = if (privacySettings)
+                        "Seuls toi et tes abonnés peuvent voir ton profil et tes publications."
+                    else
+                        "Ton profil et tes publications sont visibles par tout le monde.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                )
+            }
 
-          Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-          // Notifications, Saved, Archive, and Gallery Fields
-          SettingsOption(
-              "Notifications",
-              Icons.Default.Notifications,
-              navigationActions,
-              Screen.NOTIFICATIONS,
-              context)
-          SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, null, context)
-          SettingsOption(
-              "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
-          SettingsOption(
-              "Gallery", Icons.Default.PhotoLibrary, navigationActions, Screen.GALLERY, context)
+            // Notifications, Saved, Archive, Gallery, et Vidéos Hors Ligne Fields
+            SettingsOption(
+                "Notifications",
+                Icons.Default.Notifications,
+                navigationActions,
+                Screen.NOTIFICATIONS,
+                context
+            )
+            SettingsOption("Saved", Icons.Default.Bookmark, navigationActions, null, context)
+            SettingsOption(
+                "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context
+            )
+            SettingsOption(
+                "Gallery", Icons.Default.PhotoLibrary, navigationActions, Screen.GALLERY, context
+            )
+            SettingsOption(
+                "Offline videos",
+                Icons.Default.PlayArrow,
+                navigationActions,
+                Screen.OFFLINE_VIDEOS,
+                context
+            )
 
-          Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-          // Theme and Language Dropdowns
-          SettingsDropdown(
-              label = "Theme",
-              selectedOption = selectedTheme,
-              options = listOf(Theme.LIGHT, Theme.DARK, "System Default"),
-              onOptionSelected = {
-                if (it == "System Default") {
-                  settingsViewModel.updateSelectedTheme(systemTheme)
-                } else {
-                  settingsViewModel.updateSelectedTheme(it)
+            // Theme and Language Dropdowns
+            SettingsDropdown(
+                label = "Thème",
+                selectedOption = selectedTheme,
+                options = listOf(Theme.LIGHT, Theme.DARK, "Système"),
+                onOptionSelected = {
+                    if (it == "Système") {
+                        settingsViewModel.updateSelectedTheme(systemTheme)
+                    } else {
+                        settingsViewModel.updateSelectedTheme(it)
+                    }
+                },
+                isExpanded = isThemeDropdownExpanded,
+                onExpandChange = { isThemeDropdownExpanded = it },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .testTag("themeDropdown")
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SettingsDropdown(
+                label = "Langue",
+                selectedOption = selectedLanguage,
+                options = listOf("Français", "English"),
+                onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
+                isExpanded = isLanguageDropdownExpanded,
+                onExpandChange = { isLanguageDropdownExpanded = it },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .testTag("languageDropdown")
+            )
+
+            Spacer(modifier = Modifier.height(120.dp))
+
+            // Add Account and Log Out Buttons
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Button(
+                    onClick = { showNotImplementedToast(context) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("addAccountButton"),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = "Add Account",
+                        modifier = Modifier.padding(end = 8.dp),
+                        tint = Color.White
+                    )
+                    Text(text = "Ajouter un compte", color = Color.White)
                 }
-              },
-              isExpanded = isThemeDropdownExpanded,
-              onExpandChange = { isThemeDropdownExpanded = it },
-              modifier = Modifier.padding(horizontal = 16.dp).testTag("themeDropdown"))
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          SettingsDropdown(
-              label = "Language",
-              selectedOption = selectedLanguage,
-              options = listOf("Français", "English"),
-              onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
-              isExpanded = isLanguageDropdownExpanded,
-              onExpandChange = { isLanguageDropdownExpanded = it },
-              modifier = Modifier.padding(horizontal = 16.dp).testTag("languageDropdown"))
-
-          Spacer(modifier = Modifier.height(120.dp))
-
-          // Add Account and Log Out Buttons
-          Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Button(
-                onClick = { showNotImplementedToast(context) },
-                modifier = Modifier.fillMaxWidth().testTag("addAccountButton"),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary)) {
-                  Icon(
-                      imageVector = Icons.Default.PersonAdd,
-                      contentDescription = "Add Account",
-                      modifier = Modifier.padding(end = 8.dp),
-                      tint = Color.White)
-                  Text(text = "Add Account", color = Color.White)
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { logout(navigationActions) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("logoutButton"),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4DEE8))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Log Out",
+                        modifier = Modifier.padding(end = 8.dp),
+                        tint = Color.Black
+                    )
+                    Text(text = "Se Déconnecter", color = Color.Black)
                 }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { logout(navigationActions) },
-                modifier = Modifier.fillMaxWidth().testTag("logoutButton"),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4DEE8))) {
-                  Icon(
-                      imageVector = Icons.Default.ExitToApp,
-                      contentDescription = "Log Out",
-                      modifier = Modifier.padding(end = 8.dp),
-                      tint = Color.Black)
-                  Text(text = "Log Out", color = Color.Black)
-                }
-          }
+            }
         }
-  }
+    }
 }
 
 @Composable
@@ -166,30 +198,37 @@ fun SettingsOption(
     route: String?,
     context: android.content.Context
 ) {
-  Row(
-      modifier =
-          Modifier.fillMaxWidth()
-              .clickable {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
                 if (route != null) {
-                  navigationActions.navigateTo(route)
+                    navigationActions.navigateTo(route)
                 } else {
-                  showNotImplementedToast(context)
+                    showNotImplementedToast(context)
                 }
-              }
-              .padding(16.dp)
-              .testTag("settingsOption_$title"),
-      verticalAlignment = Alignment.CenterVertically) {
+            }
+            .padding(16.dp)
+            .testTag("settingsOption_$title"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(end = 16.dp))
-        Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.primary)
+            modifier = Modifier.padding(end = 16.dp)
+        )
+        Text(
+            title,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary
+        )
         Icon(
             imageVector = Icons.Default.ArrowForward,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.tertiary)
-      }
+            tint = MaterialTheme.colorScheme.tertiary
+        )
+    }
 }
 
 @Composable
@@ -203,42 +242,53 @@ fun SettingsDropdown(
     modifier: Modifier = Modifier,
     dropdownwidth: Dp = 380.dp
 ) {
-  Box(modifier = modifier.width(dropdownwidth).clickable { onExpandChange(!isExpanded) }) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-          Text(
-              text = "$label: $selectedOption",
-              modifier = Modifier.weight(1f),
-              color = MaterialTheme.colorScheme.primary)
-          Icon(
-              imageVector = Icons.Filled.ArrowDropDown,
-              contentDescription = null,
-              tint = MaterialTheme.colorScheme.tertiary)
+    Box(
+        modifier = modifier
+            .width(dropdownwidth)
+            .clickable { onExpandChange(!isExpanded) }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "$label: $selectedOption",
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.primary
+            )
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary
+            )
         }
-    DropdownMenu(
-        expanded = isExpanded,
-        onDismissRequest = { onExpandChange(false) },
-        modifier = Modifier.width(dropdownwidth)) {
-          options.forEach { option ->
-            DropdownMenuItem(
-                text = { Text(option) },
-                onClick = {
-                  onOptionSelected(option)
-                  onExpandChange(false)
-                },
-                modifier = Modifier.testTag("dropdownOption_$label$option"))
-          }
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { onExpandChange(false) },
+            modifier = Modifier.width(dropdownwidth)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        onExpandChange(false)
+                    },
+                    modifier = Modifier.testTag("dropdownOption_${label}_$option")
+                )
+            }
         }
-  }
+    }
 }
 
 fun logout(navigationActions: NavigationActions) {
-  FirebaseAuth.getInstance().signOut()
-  navigationActions.navigateTo(Screen.AUTH)
+    FirebaseAuth.getInstance().signOut()
+    navigationActions.navigateTo(Screen.AUTH)
 }
 
 // Helper function to show a toast
 fun showNotImplementedToast(context: android.content.Context) {
-  Toast.makeText(context, "Functionality not yet implemented", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "Fonctionnalité non encore implémentée", Toast.LENGTH_SHORT).show()
 }

@@ -1,3 +1,4 @@
+// MainActivity.kt
 package com.github.se.eduverse
 
 import android.Manifest
@@ -10,12 +11,18 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.TopAppBar
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -62,6 +69,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.notifications.NotificationsScreen
+import com.github.se.eduverse.ui.offline.OfflineScreen
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
@@ -94,128 +102,132 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
+import java.io.File
 
 var isAppInDarkMode by mutableStateOf(false)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-  private var cameraPermissionGranted by mutableStateOf(false)
-  private var audioPermissionGranted by mutableStateOf(false)
-  private var notificationPermissionGranted by mutableStateOf(false)
+    private var cameraPermissionGranted by mutableStateOf(false)
+    private var audioPermissionGranted by mutableStateOf(false)
+    private var notificationPermissionGranted by mutableStateOf(false)
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-    val notificationData =
-        if (intent.getBooleanExtra("isNotification", false)) {
-          try {
-            NotificationData(
-                isNotification = true,
-                notificationType =
-                    NotificationType.valueOf(intent.getStringExtra("type") ?: "DEFAULT"),
-                objectId = intent.getStringExtra("objectId"))
-          } catch (e: Exception) {
-            NotificationData(false)
-          }
-        } else {
-          NotificationData(false)
-        }
-
-    val sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
-
-    // Retrieve the saved instance or use default
-    val json = sharedPreferences.getString("notifAuthKey", null)
-    val notifAuthorizations =
-        if (json != null) {
-          Json.decodeFromString<NotifAuthorizations>(json)
-        } else {
-          NotifAuthorizations(true, true) // Default value
-        }
-
-    // Handling permissions
-    val requestPermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            permissions ->
-          // Update variables based on granted permissions
-          cameraPermissionGranted =
-              permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
-          audioPermissionGranted =
-              permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionGranted =
-                permissions[Manifest.permission.POST_NOTIFICATIONS] ?: notificationPermissionGranted
-          }
-
-          // Now that permissions are handled, you can set the content
-          setContent {
-            EduverseTheme(darkTheme = isAppInDarkMode) {
-              Surface(modifier = Modifier.fillMaxSize()) {
-                EduverseApp(
-                    cameraPermissionGranted = cameraPermissionGranted,
-                    notificationData,
-                    notifAuthorizations)
-              }
+        val notificationData =
+            if (intent.getBooleanExtra("isNotification", false)) {
+                try {
+                    NotificationData(
+                        isNotification = true,
+                        notificationType =
+                        NotificationType.valueOf(intent.getStringExtra("type") ?: "DEFAULT"),
+                        objectId = intent.getStringExtra("objectId")
+                    )
+                } catch (e: Exception) {
+                    NotificationData(false)
+                }
+            } else {
+                NotificationData(false)
             }
-          }
-        }
 
-    // Check the status of each permission individually
-    val cameraPermissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-    val audioPermissionStatus =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        val sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
 
-    // Notification permission is checked only for Android 13+
-    val notificationPermissionStatus =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+        // Retrieve the saved instance or use default
+        val json = sharedPreferences.getString("notifAuthKey", null)
+        val notifAuthorizations =
+            if (json != null) {
+                Json.decodeFromString<NotifAuthorizations>(json)
+            } else {
+                NotifAuthorizations(true, true) // Default value
+            }
+
+        // Handling permissions
+        val requestPermissionsLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+                // Update variables based on granted permissions
+                cameraPermissionGranted =
+                    permissions[Manifest.permission.CAMERA] ?: cameraPermissionGranted
+                audioPermissionGranted =
+                    permissions[Manifest.permission.RECORD_AUDIO] ?: audioPermissionGranted
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionGranted =
+                        permissions[Manifest.permission.POST_NOTIFICATIONS]
+                            ?: notificationPermissionGranted
+                }
+
+                // Now that permissions are handled, you can set the content
+                setContent {
+                    EduverseTheme(darkTheme = isAppInDarkMode) {
+                        Surface(modifier = Modifier.fillMaxSize()) {
+                            EduverseApp(
+                                cameraPermissionGranted = cameraPermissionGranted,
+                                notificationData,
+                                notifAuthorizations
+                            )
+                        }
+                    }
+                }
+            }
+
+        // Check the status of each permission individually
+        val cameraPermissionStatus =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val audioPermissionStatus =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+
+        // Notification permission is checked only for Android 13+
+        val notificationPermissionStatus =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                PackageManager.PERMISSION_GRANTED
+            }
+
+        // Create a list to store permissions to request
+        val permissionsToRequest = mutableListOf<String>()
+
+        if (cameraPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+            cameraPermissionGranted = true
         } else {
-          PackageManager.PERMISSION_GRANTED
+            permissionsToRequest.add(Manifest.permission.CAMERA)
         }
 
-    // Create a list to store permissions to request
-    val permissionsToRequest = mutableListOf<String>()
-
-    if (cameraPermissionStatus == PackageManager.PERMISSION_GRANTED) {
-      cameraPermissionGranted = true
-    } else {
-      permissionsToRequest.add(Manifest.permission.CAMERA)
-    }
-
-    if (audioPermissionStatus == PackageManager.PERMISSION_GRANTED) {
-      audioPermissionGranted = true
-    } else {
-      permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
-    }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      if (notificationPermissionStatus == PackageManager.PERMISSION_GRANTED) {
-        notificationPermissionGranted = true
-      } else {
-        permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
-      }
-    }
-
-    if (permissionsToRequest.isEmpty()) {
-      // All permissions are already granted, you can set the content
-      setContent {
-        EduverseTheme(darkTheme = isAppInDarkMode) {
-          Surface(modifier = Modifier.fillMaxSize()) {
-            EduverseApp(
-                cameraPermissionGranted = cameraPermissionGranted,
-                notificationData,
-                notifAuthorizations)
-          }
+        if (audioPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+            audioPermissionGranted = true
+        } else {
+            permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
         }
-      }
-    } else {
-      // Request only the missing permissions
-      requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (notificationPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionGranted = true
+            } else {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        if (permissionsToRequest.isEmpty()) {
+            // All permissions are already granted, you can set the content
+            setContent {
+                EduverseTheme(darkTheme = isAppInDarkMode) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        EduverseApp(
+                            cameraPermissionGranted = cameraPermissionGranted,
+                            notificationData,
+                            notifAuthorizations
+                        )
+                    }
+                }
+            }
+        } else {
+            // Request only the missing permissions
+            requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
+        }
     }
-  }
 }
 
 @SuppressLint("ComposableDestinationInComposeScope")
@@ -225,279 +237,354 @@ fun EduverseApp(
     notificationData: NotificationData,
     notifAuthorizations: NotifAuthorizations
 ) {
-  val firestore = FirebaseFirestore.getInstance()
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
-  val dashboardViewModel = DashboardViewModel(dashboardRepo)
-  val profileRepo =
-      ProfileRepositoryImpl(
-          firestore = FirebaseFirestore.getInstance(), storage = FirebaseStorage.getInstance())
-  val profileViewModel = ProfileViewModel(profileRepo)
-  val CommentsRepository = CommentsRepositoryImpl(FirebaseFirestore.getInstance())
-  val CommentsViewModel = CommentsViewModel(CommentsRepository, profileRepo)
-  val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
-  val pomodoroViewModel: TimerViewModel = viewModel()
-  val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
-  val fileViewModel = FileViewModel(fileRepo)
-  val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-  val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
-  val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
-  val videoViewModel = VideoViewModel(videoRepo, fileRepo)
-  val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
-  val timeTableRepo = TimeTableRepositoryImpl(firestore)
-  val notifRepo = NotificationRepository(LocalContext.current, notifAuthorizations)
-  val timeTableViewModel = TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
-  val pdfGeneratorViewModel: PdfGeneratorViewModel =
-      viewModel(factory = PdfGeneratorViewModel.Factory)
-  val aiAssistantRepository =
-      AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
-
-  val mediaCacheManager = MediaCacheManager(LocalContext.current)
-  val pubRepo = PublicationRepository(firestore)
-  val publicationViewModel = PublicationViewModel(pubRepo, mediaCacheManager)
-
-  val settingsRepo = SettingsRepository(firestore)
-  val settingsViewModel = SettingsViewModel(settingsRepo, FirebaseAuth.getInstance())
-
-  notificationData.viewModel =
-      when (notificationData.notificationType) {
-        NotificationType.TASK,
-        NotificationType.EVENT -> timeTableViewModel
-        NotificationType.DEFAULT,
-        null -> null
-      }
-
-  NavHost(navController = navController, startDestination = Route.LOADING) {
-    navigation(
-        startDestination = Screen.LOADING,
-        route = Route.LOADING,
-    ) {
-      composable(Screen.LOADING) { LoadingScreen(navigationActions, notificationData) }
-    }
-
-    navigation(
-        startDestination = Screen.AUTH,
-        route = Route.AUTH,
-    ) {
-      composable(Screen.AUTH) { SignInScreen(navigationActions) }
-    }
-
-    navigation(
-        startDestination = Screen.DASHBOARD,
-        route = Route.DASHBOARD,
-    ) {
-      composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
-      composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
-      composable(Screen.PDF_GENERATOR) {
-        PdfGeneratorScreen(navigationActions, pdfGeneratorViewModel, folderViewModel)
-      }
-      composable(Screen.SEARCH) {
-        SearchProfileScreen(navigationActions, viewModel = profileViewModel)
-      }
-      composable(Screen.TIME_TABLE) {
-        TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
-      }
-      composable(Screen.DETAILS_EVENT) { DetailsEventScreen(timeTableViewModel, navigationActions) }
-      composable(Screen.DETAILS_TASKS) {
-        DetailsTasksScreen(timeTableViewModel, todoListViewModel, navigationActions)
-      }
-    }
-
-    composable(
-        route = Screen.USER_PROFILE.route,
-        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
-          val userId =
-              backStackEntry.arguments?.getString("userId")
-                  ?: return@composable // Handle missing userId
-
-          UserProfileScreen(
-              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
-        }
-
-    navigation(
-        startDestination = Screen.VIDEOS,
-        route = Route.VIDEOS,
-    ) {
-      composable(Screen.VIDEOS) {
-        VideoScreen(
-            navigationActions,
-            publicationViewModel,
-            profileViewModel,
-            CommentsViewModel,
+    val firestore = FirebaseFirestore.getInstance()
+    val navController = rememberNavController()
+    val navigationActions = NavigationActions(navController)
+    val dashboardRepo = DashboardRepositoryImpl(firestore = firestore)
+    val dashboardViewModel = DashboardViewModel(dashboardRepo)
+    val profileRepo =
+        ProfileRepositoryImpl(
+            firestore = FirebaseFirestore.getInstance(),
+            storage = FirebaseStorage.getInstance()
         )
-      }
-    }
+    val profileViewModel = ProfileViewModel(profileRepo)
+    val commentsRepository = CommentsRepositoryImpl(FirebaseFirestore.getInstance())
+    val commentsViewModel = CommentsViewModel(commentsRepository, profileRepo)
+    val folderViewModel: FolderViewModel = viewModel(factory = FolderViewModel.Factory)
+    val pomodoroViewModel: TimerViewModel = viewModel()
+    val fileRepo = FileRepositoryImpl(db = firestore, storage = FirebaseStorage.getInstance())
+    val fileViewModel = FileViewModel(fileRepo)
+    val photoRepo = PhotoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+    val photoViewModel = PhotoViewModel(photoRepo, fileRepo)
+    val videoRepo = VideoRepository(FirebaseFirestore.getInstance(), FirebaseStorage.getInstance())
+    val videoViewModel = VideoViewModel(videoRepo, fileRepo)
+    val todoListViewModel: TodoListViewModel = viewModel(factory = TodoListViewModel.Factory)
+    val timeTableRepo = TimeTableRepositoryImpl(firestore)
+    val notifRepo = NotificationRepository(LocalContext.current, notifAuthorizations)
+    val timeTableViewModel =
+        TimeTableViewModel(timeTableRepo, notifRepo, FirebaseAuth.getInstance())
+    val pdfGeneratorViewModel: PdfGeneratorViewModel =
+        viewModel(factory = PdfGeneratorViewModel.Factory)
+    val aiAssistantRepository =
+        AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
 
-    navigation(startDestination = Screen.ASSISTANT, route = Route.ASSISTANT) {
-      composable(Screen.ASSISTANT) {
-        AiAssistantScreen(
-            navigationActions = navigationActions,
-            viewModel = AiAssistantViewModel(aiAssistantRepository))
-      }
-    }
+    val mediaCacheManager = MediaCacheManager(LocalContext.current)
+    val pubRepo = PublicationRepository(firestore)
+    val publicationViewModel = PublicationViewModel(pubRepo, mediaCacheManager)
 
-    navigation(
-        startDestination = Screen.CALCULATOR,
-        route = Route.CALCULATOR,
-    ) {
-      composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
-    }
+    val settingsRepo = SettingsRepository(firestore)
+    val settingsViewModel = SettingsViewModel(settingsRepo, FirebaseAuth.getInstance())
 
-    navigation(
-        startDestination = Screen.QUIZZ,
-        route = Route.QUIZZ,
-    ) {
-      composable(Screen.QUIZZ) {
-        QuizScreen(navigationActions, QuizzRepository(OkHttpClient(), BuildConfig.OPENAI_API_KEY))
-      }
-    }
+    notificationData.viewModel =
+        when (notificationData.notificationType) {
+            NotificationType.TASK,
+            NotificationType.EVENT -> timeTableViewModel
 
-    navigation(
-        startDestination = Screen.CAMERA,
-        route = Route.CAMERA,
-    ) {
-      composable(Screen.CAMERA) {
-        if (cameraPermissionGranted) {
-          CameraScreen(navigationActions)
-        } else {
-          PermissionDeniedScreen(navigationActions)
-        }
-      }
-    }
-
-    composable(
-        route = Screen.FOLLOWERS.route,
-        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
-          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-          FollowListScreen(
-              navigationActions = navigationActions,
-              viewModel = profileViewModel,
-              userId = userId,
-              isFollowersList = true)
+            NotificationType.DEFAULT,
+            null -> null
         }
 
-    composable(
-        route = Screen.FOLLOWING.route,
-        arguments = listOf(navArgument("userId") { type = NavType.StringType })) { backStackEntry ->
-          val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-          FollowListScreen(
-              navigationActions = navigationActions,
-              viewModel = profileViewModel,
-              userId = userId,
-              isFollowersList = false)
+    NavHost(navController = navController, startDestination = Route.LOADING) {
+        // Navigation pour Loading Screen
+        navigation(
+            startDestination = Screen.LOADING,
+            route = Route.LOADING,
+        ) {
+            composable(Screen.LOADING) { LoadingScreen(navigationActions, notificationData) }
         }
 
-    navigation(
-        startDestination = Screen.PROFILE,
-        route = Route.PROFILE,
-    ) {
-      composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+        // Navigation pour Authentification
+        navigation(
+            startDestination = Screen.AUTH,
+            route = Route.AUTH,
+        ) {
+            composable(Screen.AUTH) { SignInScreen(navigationActions) }
+        }
 
-      composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
+        // Navigation pour Dashboard et ses sous-écrans
+        navigation(
+            startDestination = Screen.DASHBOARD,
+            route = Route.DASHBOARD,
+        ) {
+            composable(Screen.DASHBOARD) { DashboardScreen(navigationActions, dashboardViewModel) }
+            composable(Screen.TODO_LIST) { TodoListScreen(navigationActions, todoListViewModel) }
+            composable(Screen.PDF_GENERATOR) {
+                PdfGeneratorScreen(navigationActions, pdfGeneratorViewModel, folderViewModel)
+            }
+            composable(Screen.SEARCH) {
+                SearchProfileScreen(navigationActions, viewModel = profileViewModel)
+            }
+            composable(Screen.TIME_TABLE) {
+                TimeTableScreen(timeTableViewModel, todoListViewModel, navigationActions)
+            }
+            composable(Screen.DETAILS_EVENT) {
+                DetailsEventScreen(
+                    timeTableViewModel,
+                    navigationActions
+                )
+            }
+            composable(Screen.DETAILS_TASKS) {
+                DetailsTasksScreen(timeTableViewModel, todoListViewModel, navigationActions)
+            }
+        }
 
-      composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+        composable(
+            route = Screen.USER_PROFILE.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId =
+                backStackEntry.arguments?.getString("userId")
+                    ?: return@composable // Handle missing userId
 
-      composable(Screen.GALLERY) {
-        val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        GalleryScreen(
-            ownerId = ownerId,
-            photoViewModel = photoViewModel,
-            videoViewModel,
-            folderViewModel,
-            navigationActions)
-        Log.d("GalleryScreen", "Current Owner ID: $ownerId")
-      }
+            UserProfileScreen(
+                navigationActions = navigationActions, viewModel = profileViewModel, userId = userId
+            )
+        }
 
-      composable(Screen.NOTIFICATIONS) {
-        NotificationsScreen(notifAuthorizations, navigationActions)
-      }
-    }
+        navigation(
+            startDestination = Screen.VIDEOS,
+            route = Route.VIDEOS,
+        ) {
+            composable(Screen.VIDEOS) {
+                VideoScreen(
+                    navigationActions,
+                    publicationViewModel,
+                    profileViewModel,
+                    commentsViewModel,
+                )
+            }
+        }
 
-    navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {
-      composable(Screen.ARCHIVE) { ArchiveScreen(navigationActions, folderViewModel) }
-    }
+        navigation(startDestination = Screen.ASSISTANT, route = Route.ASSISTANT) {
+            composable(Screen.ASSISTANT) {
+                AiAssistantScreen(
+                    navigationActions = navigationActions,
+                    viewModel = AiAssistantViewModel(aiAssistantRepository)
+                )
+            }
+        }
 
-    navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
-      composable(Screen.LIST_FOLDERS) { ListFoldersScreen(navigationActions, folderViewModel) }
-      composable(Screen.CREATE_FOLDER) {
-        CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
-      }
-      composable(Screen.FOLDER) { FolderScreen(navigationActions, folderViewModel, fileViewModel) }
-      composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
-    }
+        navigation(
+            startDestination = Screen.CALCULATOR,
+            route = Route.CALCULATOR,
+        ) {
+            composable(Screen.CALCULATOR) { CalculatorScreen(navigationActions) }
+        }
 
-    navigation(
-        startDestination = Screen.POMODORO,
-        route = Route.POMODORO,
-    ) {
-      composable(Screen.POMODORO) {
-        PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
-      }
-      composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
-    }
+        navigation(
+            startDestination = Screen.QUIZZ,
+            route = Route.QUIZZ,
+        ) {
+            composable(Screen.QUIZZ) {
+                QuizScreen(
+                    navigationActions,
+                    QuizzRepository(OkHttpClient(), BuildConfig.OPENAI_API_KEY)
+                )
+            }
+        }
 
-    // video
-    composable(
-        "picTaken/{photoPath}?videoPath={videoPath}",
-        arguments =
-            listOf(
+        navigation(
+            startDestination = Screen.CAMERA,
+            route = Route.CAMERA,
+        ) {
+            composable(Screen.CAMERA) {
+                if (cameraPermissionGranted) {
+                    CameraScreen(navigationActions)
+                } else {
+                    PermissionDeniedScreen(navigationActions)
+                }
+            }
+        }
+
+        composable(
+            route = Screen.FOLLOWERS.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            FollowListScreen(
+                navigationActions = navigationActions,
+                viewModel = profileViewModel,
+                userId = userId,
+                isFollowersList = true
+            )
+        }
+
+        composable(
+            route = Screen.FOLLOWING.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            FollowListScreen(
+                navigationActions = navigationActions,
+                viewModel = profileViewModel,
+                userId = userId,
+                isFollowersList = false
+            )
+        }
+
+        navigation(
+            startDestination = Screen.PROFILE,
+            route = Route.PROFILE,
+        ) {
+            composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+
+            composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
+
+            composable(Screen.OFFLINE_VIDEOS) {
+                OfflineScreen(mediaCacheManager = MediaCacheManager(LocalContext.current))
+            }
+
+            composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+
+            composable(Screen.GALLERY) {
+                val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                GalleryScreen(
+                    ownerId = ownerId,
+                    photoViewModel = photoViewModel,
+                    videoViewModel,
+                    folderViewModel,
+                    navigationActions
+                )
+                Log.d("GalleryScreen", "Current Owner ID: $ownerId")
+            }
+
+            composable(Screen.NOTIFICATIONS) {
+                NotificationsScreen(notifAuthorizations, navigationActions)
+            }
+        }
+
+        navigation(startDestination = Screen.ARCHIVE, route = Route.ARCHIVE) {
+            composable(Screen.ARCHIVE) { ArchiveScreen(navigationActions, folderViewModel) }
+        }
+
+        navigation(startDestination = Screen.LIST_FOLDERS, route = Route.LIST_FOLDERS) {
+            composable(Screen.LIST_FOLDERS) {
+                ListFoldersScreen(
+                    navigationActions,
+                    folderViewModel
+                )
+            }
+            composable(Screen.CREATE_FOLDER) {
+                CreateFolderScreen(navigationActions, folderViewModel, fileViewModel)
+            }
+            composable(Screen.FOLDER) {
+                FolderScreen(
+                    navigationActions,
+                    folderViewModel,
+                    fileViewModel
+                )
+            }
+            composable(Screen.CREATE_FILE) { CreateFileScreen(navigationActions, fileViewModel) }
+        }
+
+        navigation(
+            startDestination = Screen.POMODORO,
+            route = Route.POMODORO,
+        ) {
+            composable(Screen.POMODORO) {
+                PomodoroScreen(navigationActions, pomodoroViewModel, todoListViewModel)
+            }
+            composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
+        }
+
+        composable(
+            "picTaken/{photoPath}?videoPath={videoPath}",
+            arguments = listOf(
                 navArgument("photoPath") {
-                  type = NavType.StringType
-                  nullable = true
+                    type = NavType.StringType
+                    nullable = true
                 },
                 navArgument("videoPath") {
-                  type = NavType.StringType
-                  nullable = true
-                })) { backStackEntry ->
-          // Get photo and video paths from arguments
-          val photoPath = backStackEntry.arguments?.getString("photoPath")
-          val videoPath = backStackEntry.arguments?.getString("videoPath")
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            // Get photo and video paths from arguments
+            val photoPath = backStackEntry.arguments?.getString("photoPath")
+            val videoPath = backStackEntry.arguments?.getString("videoPath")
 
-          // Create the corresponding files if the paths exist
-          val photoFile = photoPath?.let { File(it) }
-          val videoFile = videoPath?.let { File(it) }
+            // Create the corresponding files if the paths exist
+            val photoFile = photoPath?.let { File(it) }
+            val videoFile = videoPath?.let { File(it) }
 
-          // Call PicTakenScreen with the photo and video files
-          PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
-        }
-    composable(
-        route = "cropPhotoScreen/{photoPath}",
-        arguments = listOf(navArgument("photoPath") { type = NavType.StringType })) { backStackEntry
-          ->
-          val photoPath = backStackEntry.arguments?.getString("photoPath") ?: ""
-          val photoFile = File(photoPath)
-          CropPhotoScreen(
-              photoFile = photoFile,
-              photoViewModel = photoViewModel,
-              navigationActions = navigationActions)
+            // Call PicTakenScreen with the photo and video files
+            PicTakenScreen(photoFile, videoFile, navigationActions, photoViewModel, videoViewModel)
         }
 
-    composable(
-        "nextScreen/{photoPath}/{videoPath}",
-        arguments =
-            listOf(
+        composable(
+            route = "cropPhotoScreen/{photoPath}",
+            arguments = listOf(navArgument("photoPath") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val photoPath = backStackEntry.arguments?.getString("photoPath") ?: ""
+            val photoFile = File(photoPath)
+            CropPhotoScreen(
+                photoFile = photoFile,
+                photoViewModel = photoViewModel,
+                navigationActions = navigationActions
+            )
+        }
+
+        composable(
+            "nextScreen/{photoPath}/{videoPath}",
+            arguments = listOf(
                 navArgument("photoPath") {
-                  nullable = true
-                  type = NavType.StringType
+                    nullable = true
+                    type = NavType.StringType
                 },
                 navArgument("videoPath") {
-                  nullable = true
-                  type = NavType.StringType
-                })) { backStackEntry ->
-          val photoPath = backStackEntry.arguments?.getString("photoPath")
-          val videoPath = backStackEntry.arguments?.getString("videoPath")
+                    nullable = true
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val photoPath = backStackEntry.arguments?.getString("photoPath")
+            val videoPath = backStackEntry.arguments?.getString("videoPath")
 
-          val photoFile = if (photoPath != null) File(photoPath) else null
-          val videoFile = if (videoPath != null) File(videoPath) else null
+            val photoFile = if (photoPath != null) File(photoPath) else null
+            val videoFile = if (videoPath != null) File(videoPath) else null
 
-          NextScreen(
-              photoFile = photoFile,
-              videoFile = videoFile,
-              navigationActions = navigationActions,
-              photoViewModel,
-              folderViewModel,
-              videoViewModel)
+            NextScreen(
+                photoFile = photoFile,
+                videoFile = videoFile,
+                navigationActions = navigationActions,
+                photoViewModel,
+                folderViewModel,
+                videoViewModel
+            )
         }
-  }
+
+        composable(
+            route = "details/{publicationId}",
+            arguments = listOf(navArgument("publicationId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val publicationId = backStackEntry.arguments?.getString("publicationId")
+                ?: return@composable // Gérer le cas où publicationId est nul
+
+            DetailsScreen(publicationId = publicationId, navigationActions = navigationActions)
+        }
+    }
+}
+
+@Composable
+fun DetailsScreen(
+    publicationId: String,
+    navigationActions: NavigationActions
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Détails de la Publication") }
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Text(text = "Détails de la publication ID: $publicationId")
+        }
+    }
 }

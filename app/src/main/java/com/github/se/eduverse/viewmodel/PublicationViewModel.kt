@@ -91,27 +91,39 @@ open class PublicationViewModel(
     viewModelScope.launch {
       try {
         mediaCacheManager.cleanCache()
+        Log.d("CACHE", "Cache cleaned. Checking for cached files...")
 
         if (mediaCacheManager.hasCachedFiles()) {
-          Log.d("CACHE", "Cached files exist, skipping caching")
+          Log.d("CACHE", "Cached files still exist after cleaning, skipping caching")
           return@launch
         }
 
         val cachePublications = repository.loadCachePublications(limit = 50)
         cachePublications.forEach { publication ->
-          val mediaFileName =
-              "${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
-          val metadataFileName = "${publication.id}_metadata.json"
-          mediaCacheManager.savePublicationToCache(
-              publication = publication,
-              mediaUrl = publication.mediaUrl,
-              mediaFileName = mediaFileName,
-              metadataFileName = metadataFileName)
+          val timestampedMediaFileName =
+            "${System.currentTimeMillis()}_${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
+
+
+          val success = mediaCacheManager.savePublicationToCache(
+            publication = publication,
+            mediaUrl = publication.mediaUrl,
+            mediaFileName = timestampedMediaFileName,
+            metadataFileName = "${publication.id}_metadata.json"
+          )
+
+
+          if (success) {
+            Log.d("CACHE_SAVE", "Successfully cached: $timestampedMediaFileName")
+          } else {
+            Log.e("CACHE_ERROR", "Failed to cache: $timestampedMediaFileName")
+          }
         }
+
         Log.d("CACHE", "Successfully cached ${cachePublications.size} publications")
       } catch (e: Exception) {
         Log.e("CACHE_ERROR", "Failed to cache publications: ${e.message}")
       }
     }
   }
+
 }
