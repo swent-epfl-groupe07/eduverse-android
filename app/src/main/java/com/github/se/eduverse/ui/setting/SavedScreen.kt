@@ -9,7 +9,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.se.eduverse.R
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
 import com.github.se.eduverse.ui.profile.PublicationDetailDialog
@@ -31,14 +33,14 @@ fun SavedScreen(
 
   LaunchedEffect(userId) { viewModel.loadFavoritePublications(userId) }
 
-  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = "Saved Posts") }) {
+  Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = stringResource(R.string.saved_posts_title)) }) {
       paddingValues ->
     if (favoritePublications.isEmpty()) {
       Box(
           modifier = Modifier.fillMaxSize().padding(paddingValues),
           contentAlignment = Alignment.Center) {
             Text(
-                text = "No saved posts yet",
+                text = stringResource(R.string.saved_posts_empty),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("empty_saved_text"))
