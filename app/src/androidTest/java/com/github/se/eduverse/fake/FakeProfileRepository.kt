@@ -6,6 +6,20 @@ import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
 
 class FakeProfileRepository : ProfileRepository {
+  private val favoritedPublications =
+      mutableSetOf<String>() // Set of publication IDs that are favorited
+  private val favoritePublications = mutableListOf<Publication>()
+  private val favoriteIds = mutableListOf<String>()
+
+  // Helper method for tests to set favorite status
+  fun setPublicationFavoriteStatus(publicationId: String, isFavorited: Boolean) {
+    if (isFavorited) {
+      favoritedPublications.add(publicationId)
+    } else {
+      favoritedPublications.remove(publicationId)
+    }
+  }
+
   override suspend fun getProfile(userId: String): Profile? {
     return null
   }
@@ -23,7 +37,7 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun removeFromFavorites(userId: String, publicationId: String) {
-    TODO("Not yet implemented")
+    favoritedPublications.remove(publicationId)
   }
 
   override suspend fun getFavoritePublicationsIds(userId: String): List<String> {
@@ -31,7 +45,7 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun isPublicationFavorited(userId: String, publicationId: String): Boolean {
-    TODO("Not yet implemented")
+    return favoritedPublications.contains(publicationId)
   }
 
   override suspend fun getFavoritePublications(favoriteIds: List<String>): List<Publication> {
@@ -63,7 +77,7 @@ class FakeProfileRepository : ProfileRepository {
       defaultUsername: String,
       photoUrl: String
   ): Profile {
-    TODO("Not yet implemented")
+    return Profile(id = userId)
   }
 
   override suspend fun updateUsername(userId: String, newUsername: String) {
@@ -78,28 +92,20 @@ class FakeProfileRepository : ProfileRepository {
       userId: String,
       collectionName: String,
       publicationId: String
-  ) {
-    TODO("Not yet implemented")
-  }
+  ) {}
 
-  override suspend fun incrementLikes(publicationId: String, userId: String) {
-    TODO("Not yet implemented")
-  }
+  override suspend fun incrementLikes(publicationId: String, userId: String) {}
 
-  override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {
-    TODO("Not yet implemented")
-  }
+  override suspend fun removeFromLikedPublications(userId: String, publicationId: String) {}
 
-  override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {
-    TODO("Not yet implemented")
-  }
+  override suspend fun decrementLikesAndRemoveUser(publicationId: String, userId: String) {}
 
   override suspend fun getAllPublications(): List<Publication> {
-    TODO("Not yet implemented")
+    return listOf(Publication())
   }
 
   override suspend fun getUserLikedPublicationsIds(userId: String): List<String> {
-    TODO("Not yet implemented")
+    return listOf("publication1")
   }
 
   override suspend fun isFollowing(followerId: String, targetUserId: String): Boolean {
@@ -107,7 +113,7 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun toggleFollow(followerId: String, targetUserId: String): Boolean {
-    TODO("Not yet implemented")
+    return false
   }
 
   override suspend fun updateFollowCounts(
@@ -131,6 +137,6 @@ class FakeProfileRepository : ProfileRepository {
   }
 
   override suspend fun addToFavorites(userId: String, publicationId: String) {
-    TODO("Not yet implemented")
+    favoritedPublications.add(publicationId)
   }
 }
