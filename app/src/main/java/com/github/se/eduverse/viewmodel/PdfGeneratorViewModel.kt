@@ -318,7 +318,7 @@ class PdfGeneratorViewModel(
       onFailure: (String) -> Unit
   ) {
     try {
-      _transcriptionFile.value = File.createTempFile("transcription", ".txt", context.cacheDir)
+      _transcriptionFile.value = File.createTempFile("transcription", ".txt")
       onSuccess(transcriptionFile.value!!)
     } catch (e: Exception) {
       Log.e("createTranscriptionFile", "Failed to create transcription file", e)
