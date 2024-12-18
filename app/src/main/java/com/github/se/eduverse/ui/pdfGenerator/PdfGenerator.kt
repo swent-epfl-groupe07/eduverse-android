@@ -106,92 +106,103 @@ fun PdfGeneratorScreen(
             modifier = Modifier.fillMaxSize().padding(pd),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally) {
-              item {OptionCard(
-                  testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
-                  optionName = "Text to PDF",
-                  explanation = "Converts a .txt file to PDF",
-                  icon = Icons.AutoMirrored.Filled.TextSnippet,
-                  onClick = {
-                    currentPdfGeneratorOption = PdfGeneratorOption.TEXT_TO_PDF
-                    inputFileMIMEType = "text/plain"
-                    showInfoWindow = true
-                  },
-                  optionEnabled =
-                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)}
-              item{OptionCard(
-                  testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
-                  optionName = "Image to PDF",
-                  explanation = "Converts an image to PDF",
-                  icon = Icons.Default.Image,
-                  onClick = {
-                    currentPdfGeneratorOption = PdfGeneratorOption.IMAGE_TO_PDF
-                    inputFileMIMEType = "image/*"
-                    showInfoWindow = true
-                  },
-                  optionEnabled =
-                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)}
-            item{OptionCard(
-                  testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
-                  optionName = "Doc to PDF",
-                  explanation = "Converts a document to PDF",
-                  icon = Icons.Default.PictureAsPdf,
-                  onClick = {
-                    if (!context.isNetworkAvailable()) {
-                      showOfflineToast(context)
-                    } else {
-                      currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
-                      inputFileMIMEType = "*/*"
+              item {
+                OptionCard(
+                    testTag = PdfGeneratorOption.TEXT_TO_PDF.name,
+                    optionName = "Text to PDF",
+                    explanation = "Converts a .txt file to PDF",
+                    icon = Icons.AutoMirrored.Filled.TextSnippet,
+                    onClick = {
+                      currentPdfGeneratorOption = PdfGeneratorOption.TEXT_TO_PDF
+                      inputFileMIMEType = "text/plain"
                       showInfoWindow = true
-                    }
-                  },
-                  optionEnabled =
-                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)}
-            item{OptionCard(
-                  testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
-                  optionName = "Summarize file",
-                  explanation = "Generates a summary of a file",
-                  icon = Icons.Default.Summarize,
-                  onClick = {
-                    if (!context.isNetworkAvailable()) {
-                      showOfflineToast(context)
-                    } else {
-                      currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
-                      inputFileMIMEType = "application/pdf"
+                    },
+                    optionEnabled =
+                        pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              }
+              item {
+                OptionCard(
+                    testTag = PdfGeneratorOption.IMAGE_TO_PDF.name,
+                    optionName = "Image to PDF",
+                    explanation = "Converts an image to PDF",
+                    icon = Icons.Default.Image,
+                    onClick = {
+                      currentPdfGeneratorOption = PdfGeneratorOption.IMAGE_TO_PDF
+                      inputFileMIMEType = "image/*"
                       showInfoWindow = true
-                    }
-                  },
-                  optionEnabled =
-                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)}
-            item{OptionCard(
-                  testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
-                  optionName = "Extract text",
-                  explanation = "Extracts text from an image",
-                  icon = Icons.Default.Abc,
-                  onClick = {
-                    currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
-                    inputFileMIMEType = "image/*"
-                    showInfoWindow = true
-                  },
-                  optionEnabled =
-                      pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)}
-                item{OptionCard(
-                testTag = PdfGeneratorOption.TRANSCRIBE_SPEECH.name,
-                optionName = "Speech to PDF",
-                explanation = "Transcribes speech to text",
-                icon = Icons.Default.Mic,
-                onClick = {
-                    if (SpeechRecognizer.isRecognitionAvailable(context)) {
+                    },
+                    optionEnabled =
+                        pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              }
+              item {
+                OptionCard(
+                    testTag = PdfGeneratorOption.DOCUMENT_TO_PDF.name,
+                    optionName = "Doc to PDF",
+                    explanation = "Converts a document to PDF",
+                    icon = Icons.Default.PictureAsPdf,
+                    onClick = {
+                      if (!context.isNetworkAvailable()) {
+                        showOfflineToast(context)
+                      } else {
+                        currentPdfGeneratorOption = PdfGeneratorOption.DOCUMENT_TO_PDF
+                        inputFileMIMEType = "*/*"
+                        showInfoWindow = true
+                      }
+                    },
+                    optionEnabled =
+                        pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              }
+              item {
+                OptionCard(
+                    testTag = PdfGeneratorOption.SUMMARIZE_FILE.name,
+                    optionName = "Summarize file",
+                    explanation = "Generates a summary of a file",
+                    icon = Icons.Default.Summarize,
+                    onClick = {
+                      if (!context.isNetworkAvailable()) {
+                        showOfflineToast(context)
+                      } else {
+                        currentPdfGeneratorOption = PdfGeneratorOption.SUMMARIZE_FILE
+                        inputFileMIMEType = "application/pdf"
+                        showInfoWindow = true
+                      }
+                    },
+                    optionEnabled =
+                        pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              }
+              item {
+                OptionCard(
+                    testTag = PdfGeneratorOption.EXTRACT_TEXT.name,
+                    optionName = "Extract text",
+                    explanation = "Extracts text from an image",
+                    icon = Icons.Default.Abc,
+                    onClick = {
+                      currentPdfGeneratorOption = PdfGeneratorOption.EXTRACT_TEXT
+                      inputFileMIMEType = "image/*"
+                      showInfoWindow = true
+                    },
+                    optionEnabled =
+                        pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              }
+              item {
+                OptionCard(
+                    testTag = PdfGeneratorOption.TRANSCRIBE_SPEECH.name,
+                    optionName = "Speech to PDF",
+                    explanation = "Transcribes speech to text",
+                    icon = Icons.Default.Mic,
+                    onClick = {
+                      if (SpeechRecognizer.isRecognitionAvailable(context)) {
                         currentPdfGeneratorOption = PdfGeneratorOption.TRANSCRIBE_SPEECH
                         showTranscriptionDialog = true
-                    } else {
+                      } else {
                         // Show toast if speech recognition is not provided by the device
                         context.showToast(
                             "Cannot use this tool. Speech recognition not supported by your device.")
-                    }
-                },
-                optionEnabled =
-                pdfConversionState.value ==
-                        PdfGeneratorViewModel.PdfGenerationState.Ready)}
+                      }
+                    },
+                    optionEnabled =
+                        pdfConversionState.value == PdfGeneratorViewModel.PdfGenerationState.Ready)
+              }
             }
       }
 
@@ -452,7 +463,7 @@ fun OptionCard(
       modifier =
           Modifier.fillMaxWidth()
               .padding(8.dp)
-              .height(130.dp)
+              .height(110.dp)
               .shadow(elevation = 8.dp, shape = RoundedCornerShape(12.dp), clip = false)
               .background(
                   Brush.horizontalGradient(
