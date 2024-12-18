@@ -23,6 +23,7 @@ import junit.framework.TestCase
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -306,6 +307,29 @@ class PdfGeneratorInstrumentationTest {
 
     // Check that the temp file has been deleted after the failure
     assert(!tempFile.exists())
+    pdfDocument.close()
+  }
+
+  @Test
+  fun testSavePdfToDeviceWithInvalidDirectory() {
+    val pdfDocument = PdfDocument()
+    val pageInfo = PdfDocument.PageInfo.Builder(100, 100, 1).create()
+    val page = pdfDocument.startPage(pageInfo)
+    pdfDocument.finishPage(page)
+
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    val invalidDirectory = File("/invalid/directory")
+    var exceptionThrown: Exception? = null
+
+    pdfRepository.savePdfToDevice(
+        tempFile!!,
+        "testPdf",
+        invalidDirectory,
+        { fail("Expected failure for invalid directory") },
+        { e -> exceptionThrown = e })
+
+    assertNotNull(exceptionThrown)
+    assertFalse(tempFile.exists()) // Ensure temp file was deleted
     pdfDocument.close()
   }
 

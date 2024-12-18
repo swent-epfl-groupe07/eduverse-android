@@ -9,6 +9,7 @@ import java.io.InputStream
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import org.junit.After
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -100,5 +101,13 @@ class PdfRepositoryTest {
     pdfRepository.deleteTempPdfFile(tempFile)
 
     assertTrue(!tempFile.exists())
+  }
+
+  @Test
+  fun `test convertImageToPdf with null Uri`() {
+    val exception =
+        assertThrows(Exception::class.java) { pdfRepository.convertImageToPdf(null, context) }
+    assertEquals(
+        "The selected image cannot be decoded, please try with another image.", exception.message)
   }
 }
