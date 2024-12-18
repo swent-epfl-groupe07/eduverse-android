@@ -220,43 +220,40 @@ open class ProfileRepositoryImpl(
     }
   }
 
-    override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
-        return try {
-            val listId = usersCollection
-                .document(userId)
-                .collection("searchHistory")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(limit.toLong())
-                .get()
-                .await()
-                .documents
-                .mapNotNull {
-                    it.getString("id")
-                }.distinct()
-            profilesCollection
-                .whereIn(FieldPath.documentId(), listId)
-                .get()
-                .await()
-                .documents
-                .mapNotNull { it.toObject(Profile::class.java) }
-        } catch (e: Exception) {
-            Log.e("LOAD_HISTORY", "Failed to load search history: ${e.message}")
-            emptyList()
-        }
+  override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
+    return try {
+      val listId =
+          usersCollection
+              .document(userId)
+              .collection("searchHistory")
+              .orderBy("timestamp", Query.Direction.DESCENDING)
+              .limit(limit.toLong())
+              .get()
+              .await()
+              .documents
+              .mapNotNull { it.getString("id") }
+              .distinct()
+      profilesCollection
+          .whereIn(FieldPath.documentId(), listId)
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.toObject(Profile::class.java) }
+    } catch (e: Exception) {
+      Log.e("LOAD_HISTORY", "Failed to load search history: ${e.message}")
+      emptyList()
     }
+  }
 
-    override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
-        usersCollection
-            .document(userId)
-            .collection("searchHistory")
-            .add(hashMapOf(
-                "timestamp" to System.currentTimeMillis(),
-                "id" to searchedProfileId
-            ))
-            .await()
-    }
+  override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
+    usersCollection
+        .document(userId)
+        .collection("searchHistory")
+        .add(hashMapOf("timestamp" to System.currentTimeMillis(), "id" to searchedProfileId))
+        .await()
+  }
 
-    override suspend fun createProfile(
+  override suspend fun createProfile(
       userId: String,
       defaultUsername: String,
       photoUrl: String

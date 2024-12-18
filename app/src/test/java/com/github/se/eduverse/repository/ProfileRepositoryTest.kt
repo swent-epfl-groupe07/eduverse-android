@@ -1377,7 +1377,8 @@ class ProfileRepositoryImplTest {
 
     whenever(mockCollectionRef.document("testUser")).thenReturn(mockDocumentRef)
     whenever(mockDocumentRef.collection("searchHistory")).thenReturn(mockCollectionRef)
-    whenever(mockCollectionRef.orderBy("timestamp", Query.Direction.DESCENDING)).thenReturn(mockQuery)
+    whenever(mockCollectionRef.orderBy("timestamp", Query.Direction.DESCENDING))
+        .thenReturn(mockQuery)
     whenever(mockQuery.limit(5)).thenReturn(mockQuery)
     whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
     whenever(mockQuerySnapshot.documents).then {

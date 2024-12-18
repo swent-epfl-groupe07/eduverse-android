@@ -792,7 +792,8 @@ class ProfileViewModelTest {
 
   @Test
   fun `addProfileToHistory handles error gracefully`() = runTest {
-    `when`(mockRepository.addProfileToHistory(anyString(), anyString())).thenThrow(RuntimeException("message"))
+    `when`(mockRepository.addProfileToHistory(anyString(), anyString()))
+        .thenThrow(RuntimeException("message"))
 
     profileViewModel.addProfileToHistory("", "")
     advanceUntilIdle()

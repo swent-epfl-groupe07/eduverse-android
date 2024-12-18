@@ -189,15 +189,20 @@ open class ProfileViewModel(open val repository: ProfileRepository) : ViewModel(
     if (userId == null) return
 
     searchJob?.cancel()
-    searchJob = viewModelScope.launch {
-      _searchState.value = SearchProfileState.Loading
-      try {
-        val results = repository.loadSearchHistory(userId)
-        _searchState.value = SearchProfileState.Success(results)
-      } catch (e: Exception) {
-        _searchState.value = SearchProfileState.Error(e.message ?: "Load history failed")
-      }
-    }
+    searchJob =
+        viewModelScope.launch {
+          _searchState.value = SearchProfileState.Loading
+          try {
+            val results = repository.loadSearchHistory(userId)
+            if (results.isEmpty()) {
+              _searchState.value = SearchProfileState.Idle
+            } else {
+              _searchState.value = SearchProfileState.Success(results)
+            }
+          } catch (e: Exception) {
+            _searchState.value = SearchProfileState.Error(e.message ?: "Load history failed")
+          }
+        }
   }
 
   open fun addProfileToHistory(userId: String, searchedProfileId: String) {
