@@ -8,6 +8,7 @@ import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -30,10 +31,10 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.TabRow
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Comment
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,11 +56,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
@@ -69,6 +73,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.SubcomposeAsyncImage
+import com.github.se.eduverse.R
 import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.showToast
@@ -166,6 +171,37 @@ fun VideoScreen(
       sheetState = sheetState,
       scrimColor = Color.Black.copy(alpha = 0.32f)) {
         Scaffold(
+            topBar = {
+              Box(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .background(
+                              Brush.horizontalGradient(
+                                  colors =
+                                      listOf(
+                                          MaterialTheme.colorScheme.secondary,
+                                          MaterialTheme.colorScheme.primary)))
+                          .height(56.dp)) {
+                    Text(
+                        "For you",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge.copy(color = Color.White),
+                        modifier =
+                            Modifier.align(Alignment.TopCenter)
+                                .padding(top = 16.dp)
+                                .testTag("ForYouText"))
+
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.White,
+                        modifier =
+                            Modifier.align(Alignment.TopEnd)
+                                .padding(top = 16.dp, end = 16.dp)
+                                .size(32.dp)
+                                .testTag("SearchIcon"))
+                  }
+            },
             bottomBar = {
               BottomNavigationMenu(
                   onTabSelect = { route -> navigationActions.navigateTo(route) },
@@ -266,12 +302,12 @@ fun VideoScreen(
                                         Modifier.align(Alignment.CenterEnd)
                                             .offset(y = 128.dp)
                                             .padding(12.dp)
+                                            .size(52.dp)
                                             .testTag("CommentButton_$page")) {
-                                      Icon(
-                                          imageVector = Icons.Default.Comment,
+                                      Image(
+                                          painter = painterResource(id = R.drawable.comment),
                                           contentDescription = "Comment",
-                                          tint = Color.White,
-                                          modifier = Modifier.size(48.dp))
+                                          modifier = Modifier.size(52.dp))
                                     }
 
                                 // Share button
@@ -286,12 +322,47 @@ fun VideoScreen(
                                         Modifier.align(Alignment.CenterEnd)
                                             .offset(y = 192.dp)
                                             .padding(12.dp)
+                                            .size(48.dp)
                                             .testTag("ShareButton_$page")) {
-                                      Icon(
-                                          imageVector = Icons.Default.Share,
+                                      Image(
+                                          painter = painterResource(id = R.drawable.share2),
                                           contentDescription = "Share",
-                                          tint = Color.White,
                                           modifier = Modifier.size(48.dp))
+                                    }
+
+                                val isFavorited = remember { mutableStateOf(false) }
+
+                                // Check if publication is favorited on initial load
+                                LaunchedEffect(publication.id) {
+                                  isFavorited.value =
+                                      profileViewModel.repository.isPublicationFavorited(
+                                          currentUserId, publication.id)
+                                }
+
+                                // Bookmark button
+                                IconButton(
+                                    onClick = {
+                                      profileViewModel.toggleFavorite(currentUserId, publication.id)
+                                      isFavorited.value = !isFavorited.value
+                                      Log.d(
+                                          "BOOKMARK",
+                                          "Bookmark button clicked for publication: ${publication.id}")
+                                    },
+                                    modifier =
+                                        Modifier.align(Alignment.CenterEnd)
+                                            .offset(y = 256.dp) // Positioned below the share button
+                                            .padding(12.dp)
+                                            .testTag("BookmarkButton_$page")) {
+                                      Icon(
+                                          imageVector = Icons.Default.BookmarkAdd,
+                                          contentDescription = "Bookmark",
+                                          tint =
+                                              if (isFavorited.value) Color.Yellow else Color.White,
+                                          modifier =
+                                              Modifier.size(48.dp)
+                                                  .testTag(
+                                                      if (isFavorited.value) "BookmarkedIcon_$page"
+                                                      else "UnbookmarkedIcon_$page"))
                                     }
                               }
                         }

@@ -264,6 +264,7 @@ fun FolderScreen(
                                 modifiedFile = it
                                 renameDialogOpen = true
                               },
+                              onDownload = { fileViewModel.downloadFile(it.id, context) },
                               onDelete = {
                                 modifiedFile = it
                                 deleteDialogOpen = true

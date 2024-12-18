@@ -95,9 +95,9 @@ fun DashboardScreen(
                           tint = MaterialTheme.colorScheme.onPrimary)
                     }
               },
-              backgroundColor = MaterialTheme.colorScheme.primary,
+              backgroundColor = Color.Transparent,
               contentColor = MaterialTheme.colorScheme.onPrimary,
-              elevation = 4.dp)
+              elevation = 0.dp)
         },
         bottomBar = {
           BottomNavigationMenu(
