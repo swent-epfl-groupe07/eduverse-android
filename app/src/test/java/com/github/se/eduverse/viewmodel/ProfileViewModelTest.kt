@@ -746,6 +746,60 @@ class ProfileViewModelTest {
     assertEquals(errorMessage, (state as FavoriteActionState.Error).message)
   }
 
+  @Test
+  fun `loadSearchHistory loads history successfully`() = runTest {
+    val userId = "testUser"
+    val history = listOf(Profile(id = "1"), Profile(id = "2"))
+
+    `when`(mockRepository.loadSearchHistory(userId)).thenReturn(history)
+
+    profileViewModel.loadSearchHistory(userId)
+    advanceUntilIdle()
+
+    assertEquals(SearchProfileState.Success(history), profileViewModel.searchState.value)
+  }
+
+  @Test
+  fun `loadSearchHistory does nothing on null username`() = runTest {
+    profileViewModel.loadSearchHistory(null)
+    advanceUntilIdle()
+
+    assertEquals(SearchProfileState.Idle, profileViewModel.searchState.value)
+  }
+
+  @Test
+  fun `loadSearchHistory handles error gracefully`() = runTest {
+    val userId = "testUser"
+
+    `when`(mockRepository.loadSearchHistory(userId)).thenThrow(RuntimeException("message"))
+
+    profileViewModel.loadSearchHistory(userId)
+    advanceUntilIdle()
+
+    assertEquals(SearchProfileState.Error("message"), profileViewModel.searchState.value)
+  }
+
+  @Test
+  fun `addProfileToHistory add profile successfully`() = runTest {
+    val userId = "userId"
+    val searchedProfileId = "searchedProfileId"
+
+    profileViewModel.addProfileToHistory(userId, searchedProfileId)
+    advanceUntilIdle()
+
+    verify(mockRepository).addProfileToHistory(userId, searchedProfileId)
+  }
+
+  @Test
+  fun `addProfileToHistory handles error gracefully`() = runTest {
+    `when`(mockRepository.addProfileToHistory(anyString(), anyString())).thenThrow(RuntimeException("message"))
+
+    profileViewModel.addProfileToHistory("", "")
+    advanceUntilIdle()
+
+    assertEquals("Failed to add profile to history: message", profileViewModel.error.value)
+  }
+
   @After
   fun tearDown() {
     Dispatchers.resetMain()
