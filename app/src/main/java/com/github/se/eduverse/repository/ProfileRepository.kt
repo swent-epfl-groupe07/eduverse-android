@@ -30,6 +30,8 @@ interface ProfileRepository {
 
   suspend fun searchProfiles(query: String, limit: Int = 20): List<Profile>
 
+  suspend fun loadSearchHistory(userId: String, limit: Int = 5): List<Profile>
+
   suspend fun createProfile(userId: String, defaultUsername: String, photoUrl: String = ""): Profile
 
   suspend fun updateUsername(userId: String, newUsername: String)
@@ -79,6 +81,7 @@ open class ProfileRepositoryImpl(
   private val publicationsCollection = firestore.collection("publications")
   private val favoritesCollection = firestore.collection("favorites")
   private val followersCollection = firestore.collection("followers")
+    private val historyCollection = firestore.collection("searchHistory")
 
   private val usersCollection = firestore.collection("users")
 
@@ -214,7 +217,18 @@ open class ProfileRepositoryImpl(
     }
   }
 
-  override suspend fun createProfile(
+    override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
+        return try {
+            val list: List<Profile> = (historyCollection.document(userId).get().await().get("history")
+                ?: emptyList<Profile>()) as List<Profile>
+            list.take(limit)
+        } catch (e: Exception) {
+            Log.e("LOAD_HISTORY", "Failed to load search history: ${e.message}")
+            emptyList()
+        }
+    }
+
+    override suspend fun createProfile(
       userId: String,
       defaultUsername: String,
       photoUrl: String
