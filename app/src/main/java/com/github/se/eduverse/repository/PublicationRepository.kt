@@ -38,9 +38,8 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
   }
 
   open suspend fun loadCachePublications(limit: Long = 50): List<Publication> {
-    lateinit var coll: List<Publication>
-    try {
-      coll =
+    return try {
+      val publications =
           db.collection("publications")
               .orderBy("id")
               .limit(limit)
@@ -50,10 +49,14 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
               .mapNotNull { it.toObject(Publication::class.java) }
               .shuffled()
 
-      Log.d("CACHING", "media were cached succesfully=")
+      publications.forEach {
+        Log.d("CACHE_DEBUG", "Fetched publication ID: ${it.id}, mediaUrl: ${it.mediaUrl}")
+      }
+
+      publications
     } catch (e: Exception) {
-      return emptyList()
+      Log.e("CACHE_ERROR", "Failed to load publications: ${e.message}")
+      emptyList()
     }
-    return coll
   }
 }

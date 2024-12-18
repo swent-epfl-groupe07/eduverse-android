@@ -62,6 +62,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.notifications.NotificationsScreen
+import com.github.se.eduverse.ui.offline.OfflineScreen
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
@@ -399,6 +400,8 @@ fun EduverseApp(
       composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
+
+      composable(Screen.OFFLINE_VIDEOS) { OfflineScreen({ navigationActions.goBack() }) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
