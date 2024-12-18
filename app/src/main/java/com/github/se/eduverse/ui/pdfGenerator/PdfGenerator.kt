@@ -378,7 +378,7 @@ fun PdfGeneratorScreen(
   // Show the transcription dialog when the user selects the speech to text option
   if (showTranscriptionDialog) {
     var transcriptionFile: File? = null
-    converterViewModel.createTranscriptionFile(context, { transcriptionFile = it }) {
+    converterViewModel.createTranscriptionFile({ transcriptionFile = it }) {
       showTranscriptionDialog = false
       context.showToast("Error creating transcription file: $it")
     }
