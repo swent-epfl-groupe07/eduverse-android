@@ -5,7 +5,9 @@ import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -81,7 +83,6 @@ open class ProfileRepositoryImpl(
   private val publicationsCollection = firestore.collection("publications")
   private val favoritesCollection = firestore.collection("favorites")
   private val followersCollection = firestore.collection("followers")
-    private val historyCollection = firestore.collection("searchHistory")
 
   private val usersCollection = firestore.collection("users")
 
@@ -219,9 +220,23 @@ open class ProfileRepositoryImpl(
 
     override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
         return try {
-            val list: List<Profile> = (historyCollection.document(userId).get().await().get("history")
-                ?: emptyList<Profile>()) as List<Profile>
-            list.take(limit)
+            val listId = usersCollection
+                .document(userId)
+                .collection("searchHistory")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+                .documents
+                .mapNotNull {
+                    it.getString("id")
+                }
+            profilesCollection
+                .whereIn(FieldPath.documentId(), listId)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { it.toObject(Profile::class.java) }
         } catch (e: Exception) {
             Log.e("LOAD_HISTORY", "Failed to load search history: ${e.message}")
             emptyList()
