@@ -287,9 +287,7 @@ class PdfGeneratorViewModelTest {
   fun `test createTranscriptionFile success`() = runTest {
     var transcriptionFile: File? = null
     viewModel.createTranscriptionFile(
-        context,
-        { file -> transcriptionFile = file },
-        { fail("Expected success but got failure: $it") })
+        { file -> transcriptionFile = file }, { fail("Expected success but got failure: $it") })
     assertNotNull(transcriptionFile)
     assertTrue(transcriptionFile!!.exists())
     transcriptionFile?.delete()
@@ -299,9 +297,7 @@ class PdfGeneratorViewModelTest {
   fun `test resetTranscriptionFile`() = runTest {
     var transcriptionFile: File? = null
     viewModel.createTranscriptionFile(
-        context,
-        { file -> transcriptionFile = file },
-        { fail("Expected success but got failure: $it") })
+        { file -> transcriptionFile = file }, { fail("Expected success but got failure: $it") })
     assertTrue(transcriptionFile!!.exists())
     assertEquals(transcriptionFile, viewModel.transcriptionFile.value)
 
