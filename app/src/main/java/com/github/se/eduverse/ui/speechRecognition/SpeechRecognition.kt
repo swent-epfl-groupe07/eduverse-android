@@ -117,6 +117,7 @@ fun SpeechRecognitionDialog(
             onRecordingChanged = { isRecording = it },
             onResult = onResult,
             onRmsChanged = { rmsLevel = it })
+
     speechRecognizer.setRecognitionListener(recognitionListener)
 
     // Clean up the SpeechRecognizer when the composable is disposed
@@ -162,8 +163,10 @@ fun SpeechRecognitionDialog(
             onClick = {
               if (isRecording) {
                 speechRecognizer.stopListening()
+                isRecording = false
               } else {
                 speechRecognizer.startListening(recognizerIntent)
+                isRecording = true
               }
             },
             modifier = Modifier.fillMaxWidth().testTag("speechDialogRecordButton")) {
@@ -222,7 +225,7 @@ fun EnableAudioPermissionDialog(context: Context, onDismiss: () -> Unit) {
  * @param isRecording The flag to indicate if the recording is in progress
  */
 @Composable
-fun AnimatedMicroIcon(rmsLevel: Float = 0f, isRecording: Boolean = false) {
+fun AnimatedMicroIcon(rmsLevel: Float, isRecording: Boolean = false) {
   // Animate opacity of the icon based on the RMS level of the audio input when recording
   val animatedAlpha by
       animateFloatAsState(
