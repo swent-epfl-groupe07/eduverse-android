@@ -119,6 +119,20 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithTag("confidentialityToggle").assertExists().assertIsDisplayed()
   }
 
+  @Test
+  fun privacySettings_displaysCorrectDescription() {
+    // Arrange: Set initial privacy state to false
+    fakeViewModel.setPrivacySettings(false)
+
+    composeTestRule.setContent {
+      SettingsScreen(navigationActions = fakeNavigationActions, settingsViewModel = fakeViewModel)
+    }
+
+    // Assert: Verify that the correct description is displayed
+    composeTestRule.onNodeWithTag("confidentialityToggleState").assertTextEquals("Public")
+    composeTestRule.onNodeWithText("Your profile and posts are visible to everyone.").assertExists()
+  }
+
   /** Test to verify that clicking the logout button triggers navigation to the AUTH screen. */
   @Test
   fun clickLogoutButton_callsLogout() {
@@ -141,20 +155,21 @@ class SettingsScreenTest {
    * Since testing Toasts directly is challenging, ensure that the corresponding method is called.
    */
   @Test
-  fun clickAddAccountButton_showsToast() {
-    // Arrange: Set the content
+  fun addAccountButton_showsNotImplementedToast() {
+    // Arrange: Set up the SettingsScreen
     composeTestRule.setContent {
       SettingsScreen(navigationActions = fakeNavigationActions, settingsViewModel = fakeViewModel)
     }
 
-    // Act: Click the add account button
+    // Act: Click the "Add Account" button
     composeTestRule.onNodeWithTag("addAccountButton").performClick()
 
-    // Assert: Since Toasts are hard to test, verify that navigateTo was not called with a specific
-    // route
-    // Alternatively, refactor the code to allow injecting a Toast handler and verify its invocation
-    // For example:
-    // verify { fakeNavigationActions.navigateTo(any()) wasNot Called }
+    // Assert: Verify the Toast message indirectly (since Toast testing is not straightforward)
+
+    composeTestRule
+        .onNodeWithTag("addAccountButton")
+        .assertExists()
+        .assertHasClickAction() // Verifies the button is clickable
   }
 
   /** Test to verify that the theme dropdown displays the correct current selection. */

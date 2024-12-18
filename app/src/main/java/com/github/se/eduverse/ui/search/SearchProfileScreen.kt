@@ -1,5 +1,6 @@
 package com.github.se.eduverse.ui.search
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,6 +26,7 @@ import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
+import com.google.firebase.auth.FirebaseAuth
 
 const val TAG_SEARCH_FIELD = "search_field"
 const val TAG_LOADING_INDICATOR = "loading_indicator"
@@ -37,21 +41,44 @@ const val TAG_PROFILE_STATS = "profile_stats"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchProfileScreen(navigationActions: NavigationActions, viewModel: ProfileViewModel) {
+fun SearchProfileScreen(
+    navigationActions: NavigationActions,
+    viewModel: ProfileViewModel,
+    currentUserId: String? = FirebaseAuth.getInstance().currentUser?.uid
+) {
   var searchQuery by remember { mutableStateOf("") }
   val searchState by viewModel.searchState.collectAsState()
+
+  LaunchedEffect(Unit) { viewModel.loadSearchHistory(currentUserId) }
 
   Scaffold(
       topBar = {
         TopAppBar(
-            title = { Text("Search Users") },
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary))),
+            title = {
+              Text(
+                  "Search Users",
+                  style = MaterialTheme.typography.titleLarge,
+                  color = MaterialTheme.colorScheme.onPrimary)
+            },
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() },
                   modifier = Modifier.testTag("search_back_button")) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary)
                   }
-            })
+            },
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent))
       }) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
           TextField(
@@ -90,7 +117,12 @@ fun SearchProfileScreen(navigationActions: NavigationActions, viewModel: Profile
                       items(items = state.profiles, key = { it.id }) { profile ->
                         ProfileSearchItem(
                             profile = profile,
-                            onClick = { navigationActions.navigateToUserProfile(profile.id) })
+                            onClick = {
+                              if (currentUserId != null) {
+                                viewModel.addProfileToHistory(currentUserId, profile.id)
+                              }
+                              navigationActions.navigateToUserProfile(profile.id)
+                            })
                       }
                     }
               }

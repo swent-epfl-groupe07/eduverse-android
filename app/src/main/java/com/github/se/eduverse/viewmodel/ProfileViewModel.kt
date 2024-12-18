@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.util.query
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-open class ProfileViewModel(private val repository: ProfileRepository) : ViewModel() {
+open class ProfileViewModel(open val repository: ProfileRepository) : ViewModel() {
   private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
   open val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
   private val _likedPublications = MutableStateFlow<List<Publication>>(emptyList())
@@ -34,7 +35,7 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
       _deletePublicationState.asStateFlow()
 
   private val _favoritePublications = MutableStateFlow<List<Publication>>(emptyList())
-  val favoritePublications: StateFlow<List<Publication>> = _favoritePublications.asStateFlow()
+  open val favoritePublications: StateFlow<List<Publication>> = _favoritePublications.asStateFlow()
 
   private val _favoriteActionState = MutableStateFlow<FavoriteActionState>(FavoriteActionState.Idle)
   val favoriteActionState: StateFlow<FavoriteActionState> = _favoriteActionState.asStateFlow()
@@ -182,6 +183,36 @@ open class ProfileViewModel(private val repository: ProfileRepository) : ViewMod
             _searchState.value = SearchProfileState.Error(e.message ?: "Search failed")
           }
         }
+  }
+
+  open fun loadSearchHistory(userId: String? = FirebaseAuth.getInstance().currentUser?.uid) {
+    if (userId == null) return
+
+    searchJob?.cancel()
+    searchJob =
+        viewModelScope.launch {
+          _searchState.value = SearchProfileState.Loading
+          try {
+            val results = repository.loadSearchHistory(userId)
+            if (results.isEmpty()) {
+              _searchState.value = SearchProfileState.Idle
+            } else {
+              _searchState.value = SearchProfileState.Success(results)
+            }
+          } catch (e: Exception) {
+            _searchState.value = SearchProfileState.Error(e.message ?: "Load history failed")
+          }
+        }
+  }
+
+  open fun addProfileToHistory(userId: String, searchedProfileId: String) {
+    viewModelScope.launch {
+      try {
+        repository.addProfileToHistory(userId, searchedProfileId)
+      } catch (e: Exception) {
+        _error.value = "Failed to add profile to history: ${e.message}"
+      }
+    }
   }
 
   override fun onCleared() {

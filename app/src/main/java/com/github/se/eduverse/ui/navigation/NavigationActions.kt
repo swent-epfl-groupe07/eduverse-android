@@ -58,6 +58,7 @@ object Screen {
   const val QUIZZ = "Quizz screen"
   const val ASSISTANT = "Assistant screen"
   const val OFFLINE_VIDEOS = "Offline Video Screen"
+  const val SAVED = "Saved screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"

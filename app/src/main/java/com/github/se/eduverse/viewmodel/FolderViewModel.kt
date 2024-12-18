@@ -6,6 +6,7 @@ import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
@@ -18,6 +19,7 @@ import com.google.firebase.firestore.firestore
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 open class FolderViewModel(
     val repository: FolderRepository,
@@ -127,16 +129,22 @@ open class FolderViewModel(
   }
 
   /**
-   * Remove a folder from the list of existing folders.
+   * Remove some folders from the list of existing folders.
    *
-   * @param folder the folder to remove
+   * @param folders the folders to remove
    */
-  fun deleteFolder(folder: Folder) {
-    if (activeFolder.value == folder) selectFolder(null)
-    repository.deleteFolder(
-        folder,
-        { _folders.value -= folder },
-        { Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}") })
+  fun deleteFolders(folders: List<Folder>, onException: () -> Unit = {}) {
+    try {
+      viewModelScope.launch {
+        if (folders.contains(activeFolder.value)) selectFolder(null)
+        repository.deleteFolders(
+            folders,
+            { _folders.value -= folders },
+            { Log.e("FolderViewModel", "Exception $it while trying to delete folders") })
+      }
+    } catch (_: Exception) {
+      onException()
+    }
   }
 
   /**

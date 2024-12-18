@@ -20,6 +20,7 @@ import com.github.se.eduverse.viewmodel.FileViewModel
 import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,6 +28,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 
 class CreateFolderTest {
   private lateinit var folderRepository: FolderRepository
@@ -144,11 +146,11 @@ class CreateFolderTest {
   }
 
   @Test
-  fun assertCancelWorks() {
+  fun assertCancelWorks() = runBlocking {
     var test_del = false
     var test_nav = false
 
-    `when`(folderRepository.deleteFolder(any(), any(), any())).then {
+    `when`(folderRepository.deleteFolders(any(), any(), any())).then {
       test_del = true
       null
     }
@@ -265,5 +267,15 @@ class CreateFolderTest {
 
     composeTestRule.onNodeWithTag("file").performClick()
     assert(test)
+  }
+
+  @Test
+  fun downloadFileWorkLikeExpected() {
+    composeTestRule.onNodeWithTag("editButton").performClick()
+
+    composeTestRule.onNodeWithTag("download").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("download").performClick()
+
+    verify(fileRepository).accessFile(any(), any(), any())
   }
 }
