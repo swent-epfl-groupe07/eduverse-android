@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.github.se.eduverse.model.MediaCacheManager
 import com.github.se.eduverse.model.NotifAuthorizations
 import com.github.se.eduverse.model.NotificationData
 import com.github.se.eduverse.model.NotificationType
@@ -66,6 +67,7 @@ import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.profile.ProfileScreen
 import com.github.se.eduverse.ui.quizz.QuizScreen
+import com.github.se.eduverse.ui.saved.SavedScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.ui.setting.SettingsScreen
@@ -252,8 +254,9 @@ fun EduverseApp(
   val aiAssistantRepository =
       AiAssistantRepository(client = OkHttpClient(), apiKey = BuildConfig.OPENAI_API_KEY)
 
+  val mediaCacheManager = MediaCacheManager(LocalContext.current)
   val pubRepo = PublicationRepository(firestore)
-  val publicationViewModel = PublicationViewModel(pubRepo)
+  val publicationViewModel = PublicationViewModel(pubRepo, mediaCacheManager)
 
   val settingsRepo = SettingsRepository(firestore)
   val settingsViewModel = SettingsViewModel(settingsRepo, FirebaseAuth.getInstance())
@@ -497,5 +500,9 @@ fun EduverseApp(
               folderViewModel,
               videoViewModel)
         }
+
+    composable(Screen.SAVED) {
+      SavedScreen(navigationActions = navigationActions, viewModel = profileViewModel)
+    }
   }
 }

@@ -14,7 +14,11 @@ interface FolderRepository {
 
   fun updateFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
-  fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  suspend fun deleteFolders(
+      folders: List<Folder>,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun getNewUid(): String
 }

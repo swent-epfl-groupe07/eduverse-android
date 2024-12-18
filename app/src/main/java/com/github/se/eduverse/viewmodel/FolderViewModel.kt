@@ -6,6 +6,7 @@ import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
@@ -18,6 +19,7 @@ import com.google.firebase.firestore.firestore
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 open class FolderViewModel(
     val repository: FolderRepository,
@@ -41,9 +43,8 @@ open class FolderViewModel(
         }
   }
 
-  private var _folders: MutableStateFlow<MutableList<Folder>> =
-      MutableStateFlow(emptyList<Folder>().toMutableList())
-  open val folders: StateFlow<MutableList<Folder>> = _folders
+  private var _folders: MutableStateFlow<List<Folder>> = MutableStateFlow(emptyList())
+  open val folders: StateFlow<List<Folder>> = _folders
 
   private var _activeFolder: MutableStateFlow<Folder?> =
       MutableStateFlow(savedStateHandle["activeFolder"])
@@ -119,7 +120,7 @@ open class FolderViewModel(
   open fun addFolder(folder: Folder) {
     repository.addFolder(
         folder,
-        { _folders.value.add(folder) },
+        { _folders.value += folder },
         {
           Log.e(
               "FolderViewModel",
@@ -128,16 +129,22 @@ open class FolderViewModel(
   }
 
   /**
-   * Remove a folder from the list of existing folders.
+   * Remove some folders from the list of existing folders.
    *
-   * @param folder the folder to remove
+   * @param folders the folders to remove
    */
-  fun deleteFolder(folder: Folder) {
-    if (activeFolder.value == folder) selectFolder(null)
-    repository.deleteFolder(
-        folder,
-        { _folders.value.remove(folder) },
-        { Log.e("FolderViewModel", "Exception $it while trying to delete folder ${folder.name}") })
+  fun deleteFolders(folders: List<Folder>, onException: () -> Unit = {}) {
+    try {
+      viewModelScope.launch {
+        if (folders.contains(activeFolder.value)) selectFolder(null)
+        repository.deleteFolders(
+            folders,
+            { _folders.value -= folders },
+            { Log.e("FolderViewModel", "Exception $it while trying to delete folders") })
+      }
+    } catch (_: Exception) {
+      onException()
+    }
   }
 
   /**
@@ -150,8 +157,7 @@ open class FolderViewModel(
         folder,
         {
           try {
-
-            _folders.value[_folders.value.indexOfFirst { it.id == folder.id }] = folder
+            _folders.value = _folders.value.map { if (it.id == folder.id) folder else it }
             if (activeFolder.value != null && activeFolder.value!!.id == folder.id)
                 selectFolder(folder)
           } catch (_: IndexOutOfBoundsException) {
@@ -173,11 +179,8 @@ open class FolderViewModel(
    */
   fun archiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are not archived, remove the archived folder
-    val index = _folders.value.indexOfFirst { it.id == folder.id }
-    if (index != -1 && !_folders.value[index].archived) {
-      _folders.value.removeAt(index)
-    }
     folder.archived = true
+    _folders.value = _folders.value.filter { !it.archived }
     updateFolder(folder)
   }
 
@@ -188,11 +191,8 @@ open class FolderViewModel(
    */
   fun unarchiveFolder(folder: Folder = activeFolder.value!!) {
     // If folders are archived, remove the unarchived folder
-    val index = _folders.value.indexOfFirst { it.id == folder.id }
-    if (_folders.value[index].archived) {
-      _folders.value.removeAt(index)
-    }
     folder.archived = false
+    _folders.value = _folders.value.filter { it.archived }
     updateFolder(folder)
   }
 
@@ -273,7 +273,7 @@ open class FolderViewModel(
       repository.addFolder(
           folder,
           {
-            _folders.value.add(folder)
+            _folders.value += folder
             onSuccess(folder)
           },
           {

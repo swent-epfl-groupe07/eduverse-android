@@ -108,7 +108,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
           painter = painterResource(id = R.drawable.trip_origin),
           contentDescription = "Recording Indicator",
           modifier =
-              Modifier.size(120.dp)
+              Modifier.size(100.dp)
                   .align(Alignment.BottomCenter)
                   .padding(bottom = 16.dp)
                   .testTag("recordingIndicator")
@@ -132,7 +132,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
           painter = painterResource(id = R.drawable.radio_button_checked),
           contentDescription = if (isVideoMode) "Start/Stop video recording" else "Take a photo",
           modifier =
-              Modifier.size(120.dp)
+              Modifier.size(100.dp)
                   .align(Alignment.BottomCenter)
                   .clickable {
                     if (isVideoMode) {
@@ -262,7 +262,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
         modifier =
             Modifier.align(Alignment.TopStart)
                 .padding(16.dp)
-                .size(32.dp)
+                .size(22.dp)
                 .clickable { navigationActions.goBack() }
                 .testTag("closeButton"))
 
@@ -273,7 +273,7 @@ fun CameraScreen(navigationActions: NavigationActions) {
         modifier =
             Modifier.align(Alignment.TopEnd)
                 .padding(16.dp)
-                .size(32.dp)
+                .size(28.dp)
                 .clickable {
                   cameraSelector =
                       if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {

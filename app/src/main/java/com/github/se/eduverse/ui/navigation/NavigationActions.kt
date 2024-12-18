@@ -56,6 +56,7 @@ object Screen {
   const val NOTIFICATIONS = "Notifications screen"
   const val QUIZZ = "Quizz screen"
   const val ASSISTANT = "Assistant screen"
+  const val SAVED = "Saved screen"
 
   object USER_PROFILE {
     const val route = "user_profile/{userId}"
@@ -97,9 +98,9 @@ object TopLevelDestinations {
 val LIST_TOP_LEVEL_DESTINATION =
     listOf(
         TopLevelDestinations.DASHBOARD,
-        TopLevelDestinations.FOLDERS,
         TopLevelDestinations.CAMERA,
         TopLevelDestinations.VIDEOS,
+        TopLevelDestinations.FOLDERS,
         TopLevelDestinations.PROFILE)
 
 open class NavigationActions(
