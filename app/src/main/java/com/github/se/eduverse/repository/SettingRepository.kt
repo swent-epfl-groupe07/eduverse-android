@@ -4,9 +4,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
-class SettingsRepository(private val firestore: FirebaseFirestore) {
+open class SettingsRepository(private val firestore: FirebaseFirestore) {
 
-  suspend fun setPrivacySettings(userId: String, value: Boolean) {
+  open suspend fun setPrivacySettings(userId: String, value: Boolean) {
     try {
       val data = mapOf("privacySettings" to value)
       firestore.collection("user_settings").document(userId).set(data, SetOptions.merge()).await()
@@ -16,7 +16,7 @@ class SettingsRepository(private val firestore: FirebaseFirestore) {
     }
   }
 
-  suspend fun getPrivacySettings(userId: String): Boolean {
+  open suspend fun getPrivacySettings(userId: String): Boolean {
     return try {
       val documentSnapshot = firestore.collection("user_settings").document(userId).get().await()
 
@@ -28,7 +28,7 @@ class SettingsRepository(private val firestore: FirebaseFirestore) {
     }
   }
 
-  suspend fun getSelectedLanguage(userId: String): String {
+  open suspend fun getSelectedLanguage(userId: String): String {
     return try {
       val documentSnapshot = firestore.collection("user_settings").document(userId).get().await()
 
@@ -40,7 +40,7 @@ class SettingsRepository(private val firestore: FirebaseFirestore) {
     }
   }
 
-  suspend fun setSelectedLanguage(userId: String, language: String) {
+  open suspend fun setSelectedLanguage(userId: String, language: String) {
     try {
       val data = mapOf("selectedLanguage" to language)
       firestore.collection("user_settings").document(userId).set(data, SetOptions.merge()).await()
@@ -50,7 +50,7 @@ class SettingsRepository(private val firestore: FirebaseFirestore) {
     }
   }
 
-  suspend fun getSelectedTheme(userId: String): String {
+  open suspend fun getSelectedTheme(userId: String): String {
     return try {
       val documentSnapshot = firestore.collection("user_settings").document(userId).get().await()
 
@@ -62,7 +62,7 @@ class SettingsRepository(private val firestore: FirebaseFirestore) {
     }
   }
 
-  suspend fun setSelectedTheme(userId: String, theme: String) {
+  open suspend fun setSelectedTheme(userId: String, theme: String) {
     try {
       val data = mapOf("selectedTheme" to theme)
       firestore.collection("user_settings").document(userId).set(data, SetOptions.merge()).await()

@@ -75,7 +75,8 @@ fun SettingsScreen(
                               Text(
                                   text = if (privacySettings) "Private" else "Public",
                                   color = MaterialTheme.colorScheme.primary,
-                                  style = MaterialTheme.typography.bodyLarge)
+                                  style = MaterialTheme.typography.bodyLarge,
+                                  modifier = Modifier.testTag("confidentialityToggleState"))
                               Switch(
                                   checked = privacySettings,
                                   onCheckedChange = { settingsViewModel.updatePrivacySettings(it) },
