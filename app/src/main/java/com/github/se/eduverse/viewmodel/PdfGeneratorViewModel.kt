@@ -309,14 +309,9 @@ class PdfGeneratorViewModel(
   /**
    * Create a temporary file to store the transcribed text
    *
-   * @param context The context of the application
    * @param onFailure The callback to handle the case where the file creation fails
    */
-  fun createTranscriptionFile(
-      context: Context,
-      onSuccess: (File) -> Unit,
-      onFailure: (String) -> Unit
-  ) {
+  fun createTranscriptionFile(onSuccess: (File) -> Unit, onFailure: (String) -> Unit) {
     try {
       _transcriptionFile.value = File.createTempFile("transcription", ".txt")
       onSuccess(transcriptionFile.value!!)
