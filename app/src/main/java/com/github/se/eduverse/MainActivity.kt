@@ -101,9 +101,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
-import java.io.File
 
 var isAppInDarkMode by mutableStateOf(false)
 
@@ -406,9 +406,7 @@ fun EduverseApp(
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
 
-        composable(Screen.OFFLINE_VIDEOS) {
-            OfflineScreen({ navigationActions.goBack() })
-        }
+      composable(Screen.OFFLINE_VIDEOS) { OfflineScreen({ navigationActions.goBack() }) }
 
       composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
 
@@ -518,37 +516,25 @@ fun EduverseApp(
       SavedScreen(navigationActions = navigationActions, viewModel = profileViewModel)
     }
   }
-    composable(
-        route = "details/{publicationId}",
-        arguments = listOf(navArgument("publicationId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val publicationId = backStackEntry.arguments?.getString("publicationId")
-            ?: return@composable // Gérer le cas où publicationId est nul
+  composable(
+      route = "details/{publicationId}",
+      arguments = listOf(navArgument("publicationId") { type = NavType.StringType })) {
+          backStackEntry ->
+        val publicationId =
+            backStackEntry.arguments?.getString("publicationId")
+                ?: return@composable // Gérer le cas où publicationId est nul
 
         DetailsScreen(publicationId = publicationId, navigationActions = navigationActions)
-    }
+      }
 }
 
-
-
 @Composable
-fun DetailsScreen(
-    publicationId: String,
-    navigationActions: NavigationActions
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Détails de la Publication") }
-            )
+fun DetailsScreen(publicationId: String, navigationActions: NavigationActions) {
+  Scaffold(topBar = { TopAppBar(title = { Text("Détails de la Publication") }) }) { paddingValues ->
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+          Text(text = "Détails de la publication ID: $publicationId")
         }
-    ) { paddingValues ->
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            Text(text = "Détails de la publication ID: $publicationId")
-        }
-    }}
+  }
+}

@@ -101,16 +101,14 @@ open class PublicationViewModel(
         val cachePublications = repository.loadCachePublications(limit = 50)
         cachePublications.forEach { publication ->
           val timestampedMediaFileName =
-            "${System.currentTimeMillis()}_${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
+              "${System.currentTimeMillis()}_${publication.id}_media.${if (publication.mediaType == MediaType.VIDEO) "mp4" else "jpg"}"
 
-
-          val success = mediaCacheManager.savePublicationToCache(
-            publication = publication,
-            mediaUrl = publication.mediaUrl,
-            mediaFileName = timestampedMediaFileName,
-            metadataFileName = "${publication.id}_metadata.json"
-          )
-
+          val success =
+              mediaCacheManager.savePublicationToCache(
+                  publication = publication,
+                  mediaUrl = publication.mediaUrl,
+                  mediaFileName = timestampedMediaFileName,
+                  metadataFileName = "${publication.id}_metadata.json")
 
           if (success) {
             Log.d("CACHE_SAVE", "Successfully cached: $timestampedMediaFileName")
@@ -125,5 +123,4 @@ open class PublicationViewModel(
       }
     }
   }
-
 }

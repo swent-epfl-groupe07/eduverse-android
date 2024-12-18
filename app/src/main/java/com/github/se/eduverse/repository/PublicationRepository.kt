@@ -37,27 +37,26 @@ open class PublicationRepository(private val db: FirebaseFirestore) {
     }
   }
 
-    open suspend fun loadCachePublications(limit: Long = 50): List<Publication> {
-        return try {
-            val publications =
-                db.collection("publications")
-                    .orderBy("id")
-                    .limit(limit)
-                    .get()
-                    .await()
-                    .documents
-                    .mapNotNull { it.toObject(Publication::class.java) }
-                    .shuffled()
+  open suspend fun loadCachePublications(limit: Long = 50): List<Publication> {
+    return try {
+      val publications =
+          db.collection("publications")
+              .orderBy("id")
+              .limit(limit)
+              .get()
+              .await()
+              .documents
+              .mapNotNull { it.toObject(Publication::class.java) }
+              .shuffled()
 
-            publications.forEach {
-                Log.d("CACHE_DEBUG", "Fetched publication ID: ${it.id}, mediaUrl: ${it.mediaUrl}")
-            }
+      publications.forEach {
+        Log.d("CACHE_DEBUG", "Fetched publication ID: ${it.id}, mediaUrl: ${it.mediaUrl}")
+      }
 
-            publications
-        } catch (e: Exception) {
-            Log.e("CACHE_ERROR", "Failed to load publications: ${e.message}")
-            emptyList()
-        }
+      publications
+    } catch (e: Exception) {
+      Log.e("CACHE_ERROR", "Failed to load publications: ${e.message}")
+      emptyList()
     }
-
+  }
 }

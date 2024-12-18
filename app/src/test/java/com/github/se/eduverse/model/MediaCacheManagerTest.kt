@@ -6,7 +6,6 @@ import io.mockk.*
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.*
 import org.junit.Assert.*
@@ -62,44 +61,45 @@ class MediaCacheManagerTest {
   }
 
   @Test
-  fun `savePublicationToCache should save media and metadata with timestamped filenames`() = runTest {
-    val publication = Publication(
-      id = "1",
-      userId = "user1",
-      title = "Test Publication",
-      mediaUrl = "https://example.com/media.mp4",
-      thumbnailUrl = "https://example.com/thumbnail.jpg",
-      mediaType = MediaType.VIDEO,
-      timestamp = System.currentTimeMillis()
-    )
-    val mediaContent = "Sample media content"
-    val metadataJson = "{\"id\":\"1\",\"title\":\"Test Publication\"}"
-    val inputStream = ByteArrayInputStream(mediaContent.toByteArray())
+  fun `savePublicationToCache should save media and metadata with timestamped filenames`() =
+      runTest {
+        val publication =
+            Publication(
+                id = "1",
+                userId = "user1",
+                title = "Test Publication",
+                mediaUrl = "https://example.com/media.mp4",
+                thumbnailUrl = "https://example.com/thumbnail.jpg",
+                mediaType = MediaType.VIDEO,
+                timestamp = System.currentTimeMillis())
+        val mediaContent = "Sample media content"
+        val metadataJson = "{\"id\":\"1\",\"title\":\"Test Publication\"}"
+        val inputStream = ByteArrayInputStream(mediaContent.toByteArray())
 
-    coEvery { downloader.openStream(publication.mediaUrl) } returns inputStream
-    every { serializer.serialize(publication) } returns metadataJson
+        coEvery { downloader.openStream(publication.mediaUrl) } returns inputStream
+        every { serializer.serialize(publication) } returns metadataJson
 
-    val result = mediaCacheManager.savePublicationToCache(
-      publication,
-      publication.mediaUrl,
-      "media.mp4",
-      "metadata.json"
-    )
+        val result =
+            mediaCacheManager.savePublicationToCache(
+                publication, publication.mediaUrl, "media.mp4", "metadata.json")
 
-    assertTrue(result)
-    val savedMediaFile = temporaryFolder.root.listFiles()?.first { it.name.contains("media.mp4") }
-    val savedMetadataFile = temporaryFolder.root.listFiles()?.first { it.name.contains("metadata.json") }
+        assertTrue(result)
+        val savedMediaFile =
+            temporaryFolder.root.listFiles()?.first { it.name.contains("media.mp4") }
+        val savedMetadataFile =
+            temporaryFolder.root.listFiles()?.first { it.name.contains("metadata.json") }
 
-    assertNotNull(savedMediaFile)
-    assertNotNull(savedMetadataFile)
-    assertEquals(mediaContent, savedMediaFile!!.readText())
-    assertEquals(metadataJson, savedMetadataFile!!.readText())
-  }
+        assertNotNull(savedMediaFile)
+        assertNotNull(savedMetadataFile)
+        assertEquals(mediaContent, savedMediaFile!!.readText())
+        assertEquals(metadataJson, savedMetadataFile!!.readText())
+      }
 
   @Test
   fun `cleanCache should delete expired files`() = runTest {
     val currentTime = System.currentTimeMillis()
-    val expiredFile = File(temporaryFolder.root, "${currentTime - 3 * 24 * 60 * 60 * 1000}_expired.mp4")
+    val expiredFile =
+        File(temporaryFolder.root, "${currentTime - 3 * 24 * 60 * 60 * 1000}_expired.mp4")
     val validFile = File(temporaryFolder.root, "${currentTime}_valid.mp4")
     expiredFile.writeText("Expired file content")
     validFile.writeText("Valid file content")

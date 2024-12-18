@@ -42,230 +42,211 @@ fun OfflineScreen(
     getCachedFilesFun: (Context) -> List<File> = ::getCachedFiles,
     checkConnectionFun: (Context) -> Boolean = ::checkConnection
 ) {
-    val context = LocalContext.current
-    val cachedFiles = remember { mutableStateOf<List<File>>(emptyList()) }
-    val isConnected = remember { mutableStateOf(checkConnectionFun(context)) }
-    val sheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+  val context = LocalContext.current
+  val cachedFiles = remember { mutableStateOf<List<File>>(emptyList()) }
+  val isConnected = remember { mutableStateOf(checkConnectionFun(context)) }
+  val sheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
-    LaunchedEffect(Unit) {
-        cachedFiles.value = getCachedFilesFun(context)
-    }
+  LaunchedEffect(Unit) { cachedFiles.value = getCachedFilesFun(context) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Offline Media",
-                        modifier = Modifier.testTag("OfflineMediaTitle")
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onGoBack,
-                        modifier = Modifier.testTag("BackButton")
-                    ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Go Back")
-                    }
-                },
-                modifier = Modifier.testTag("TopAppBar")
-            )
-        }
-    ) { paddingValues ->
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Offline Media", modifier = Modifier.testTag("OfflineMediaTitle")) },
+            navigationIcon = {
+              IconButton(onClick = onGoBack, modifier = Modifier.testTag("BackButton")) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Go Back")
+              }
+            },
+            modifier = Modifier.testTag("TopAppBar"))
+      }) { paddingValues ->
         if (cachedFiles.value.isNotEmpty()) {
-            val pagerState = rememberPagerState()
-            ModalBottomSheetLayout(
-                sheetState = sheetState,
-                sheetContent = { Spacer(modifier = Modifier.height(1.dp)) }
-            ) {
+          val pagerState = rememberPagerState()
+          ModalBottomSheetLayout(
+              sheetState = sheetState,
+              sheetContent = { Spacer(modifier = Modifier.height(1.dp)) }) {
                 VerticalPager(
                     count = cachedFiles.value.size,
                     state = pagerState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .testTag("MediaPager")
-                ) { page ->
-                    val file = cachedFiles.value[page]
-                    val isLiked = remember { mutableStateOf(false) }
+                    modifier =
+                        Modifier.fillMaxSize().padding(paddingValues).testTag("MediaPager")) { page
+                      ->
+                      val file = cachedFiles.value[page]
+                      val isLiked = remember { mutableStateOf(false) }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black)
-                            .pointerInput(Unit) {
-                                detectTapGestures(onDoubleTap = {
-                                    if (isConnected.value) {
-                                        Toast.makeText(
-                                            context,
-                                            "You're online! Keep your offline videos for when you don't have a connection!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        Toast.makeText(context, "Action unavailable offline", Toast.LENGTH_SHORT).show()
-                                    }
-                                })
+                      Box(
+                          modifier =
+                              Modifier.fillMaxSize()
+                                  .background(Color.Black)
+                                  .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onDoubleTap = {
+                                          if (isConnected.value) {
+                                            Toast.makeText(
+                                                    context,
+                                                    "You're online! Keep your offline videos for when you don't have a connection!",
+                                                    Toast.LENGTH_SHORT)
+                                                .show()
+                                          } else {
+                                            Toast.makeText(
+                                                    context,
+                                                    "Action unavailable offline",
+                                                    Toast.LENGTH_SHORT)
+                                                .show()
+                                          }
+                                        })
+                                  }
+                                  .testTag("MediaItem")) {
+                            if (file.name.endsWith(".mp4")) {
+                              CachedVideoPlayer(file, context)
+                            } else {
+                              CachedImageDisplay(file)
                             }
-                            .testTag("MediaItem")
-                    ) {
-                        if (file.name.endsWith(".mp4")) {
-                            CachedVideoPlayer(file, context)
-                        } else {
-                            CachedImageDisplay(file)
-                        }
 
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .padding(12.dp)
-                        ) {
-                            IconButton(
-                                onClick = {
+                            Column(modifier = Modifier.align(Alignment.CenterEnd).padding(12.dp)) {
+                              IconButton(
+                                  onClick = {
                                     if (isConnected.value) {
-                                        isLiked.value = !isLiked.value
-                                        Toast.makeText(
-                                            context,
-                                            "You're online! Keep your offline videos for when you don't have a connection!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                      isLiked.value = !isLiked.value
+                                      Toast.makeText(
+                                              context,
+                                              "You're online! Keep your offline videos for when you don't have a connection!",
+                                              Toast.LENGTH_SHORT)
+                                          .show()
                                     } else {
-                                        Toast.makeText(context, "Action unavailable offline", Toast.LENGTH_SHORT).show()
+                                      Toast.makeText(
+                                              context,
+                                              "Action unavailable offline",
+                                              Toast.LENGTH_SHORT)
+                                          .show()
                                     }
-                                },
-                                modifier = Modifier.testTag("LikeButton")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Favorite,
-                                    contentDescription = "Like",
-                                    tint = if (isConnected.value) {
-                                        if (isLiked.value) Color.Red else Color.White
-                                    } else Color.Gray,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            IconButton(
-                                onClick = {
+                                  },
+                                  modifier = Modifier.testTag("LikeButton")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Favorite,
+                                        contentDescription = "Like",
+                                        tint =
+                                            if (isConnected.value) {
+                                              if (isLiked.value) Color.Red else Color.White
+                                            } else Color.Gray,
+                                        modifier = Modifier.size(48.dp))
+                                  }
+                              Spacer(modifier = Modifier.height(12.dp))
+                              IconButton(
+                                  onClick = {
                                     if (isConnected.value) {
-                                        Toast.makeText(
-                                            context,
-                                            "You're online! Keep your offline videos for when you don't have a connection!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                      Toast.makeText(
+                                              context,
+                                              "You're online! Keep your offline videos for when you don't have a connection!",
+                                              Toast.LENGTH_SHORT)
+                                          .show()
                                     } else {
-                                        Toast.makeText(context, "Action unavailable offline", Toast.LENGTH_SHORT).show()
+                                      Toast.makeText(
+                                              context,
+                                              "Action unavailable offline",
+                                              Toast.LENGTH_SHORT)
+                                          .show()
                                     }
-                                },
-                                modifier = Modifier.testTag("CommentButton")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Comment,
-                                    contentDescription = "Comment",
-                                    tint = if (isConnected.value) Color.White else Color.Gray,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            IconButton(
-                                onClick = {
+                                  },
+                                  modifier = Modifier.testTag("CommentButton")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Comment,
+                                        contentDescription = "Comment",
+                                        tint = if (isConnected.value) Color.White else Color.Gray,
+                                        modifier = Modifier.size(48.dp))
+                                  }
+                              Spacer(modifier = Modifier.height(12.dp))
+                              IconButton(
+                                  onClick = {
                                     if (isConnected.value) {
-                                        Toast.makeText(
-                                            context,
-                                            "You're online! Keep your offline videos for when you don't have a connection!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                      Toast.makeText(
+                                              context,
+                                              "You're online! Keep your offline videos for when you don't have a connection!",
+                                              Toast.LENGTH_SHORT)
+                                          .show()
                                     } else {
-                                        Toast.makeText(context, "Action unavailable offline", Toast.LENGTH_SHORT).show()
+                                      Toast.makeText(
+                                              context,
+                                              "Action unavailable offline",
+                                              Toast.LENGTH_SHORT)
+                                          .show()
                                     }
-                                },
-                                modifier = Modifier.testTag("ShareButton")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = "Share",
-                                    tint = if (isConnected.value) Color.White else Color.Gray,
-                                    modifier = Modifier.size(48.dp)
-                                )
+                                  },
+                                  modifier = Modifier.testTag("ShareButton")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = "Share",
+                                        tint = if (isConnected.value) Color.White else Color.Gray,
+                                        modifier = Modifier.size(48.dp))
+                                  }
                             }
-                        }
+                          }
                     }
-                }
-            }
+              }
         } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("NoOfflineMediaBox"),
-                contentAlignment = Alignment.Center
-            ) {
+          Box(
+              modifier = Modifier.fillMaxSize().testTag("NoOfflineMediaBox"),
+              contentAlignment = Alignment.Center) {
                 Text(
                     "No offline media available",
                     color = Color.Gray,
-                    modifier = Modifier.testTag("NoOfflineMediaText")
-                )
-            }
+                    modifier = Modifier.testTag("NoOfflineMediaText"))
+              }
         }
-    }
+      }
 }
 
 @Composable
 fun CachedImageDisplay(file: File) {
-    SubcomposeAsyncImage(
-        model = file,
-        contentDescription = "Cached Image",
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("CachedImageDisplay"),
-        contentScale = ContentScale.Crop
-    )
+  SubcomposeAsyncImage(
+      model = file,
+      contentDescription = "Cached Image",
+      modifier = Modifier.fillMaxSize().testTag("CachedImageDisplay"),
+      contentScale = ContentScale.Crop)
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun CachedVideoPlayer(file: File, context: Context) {
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(Uri.fromFile(file))
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-            repeatMode = ExoPlayer.REPEAT_MODE_ONE
+  val exoPlayer = remember {
+    ExoPlayer.Builder(context).build().apply {
+      val mediaItem = MediaItem.fromUri(Uri.fromFile(file))
+      setMediaItem(mediaItem)
+      prepare()
+      playWhenReady = true
+      repeatMode = ExoPlayer.REPEAT_MODE_ONE
+    }
+  }
+
+  DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
+
+  AndroidView(
+      factory = {
+        PlayerView(context).apply {
+          player = exoPlayer
+          useController = false
+          layoutParams =
+              android.view.ViewGroup.LayoutParams(
+                  android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                  android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+          resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
         }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose { exoPlayer.release() }
-    }
-
-    AndroidView(
-        factory = {
-            PlayerView(context).apply {
-                player = exoPlayer
-                useController = false
-                layoutParams = android.view.ViewGroup.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                )
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            }
-        },
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("CachedVideoPlayer")
-    )
+      },
+      modifier = Modifier.fillMaxSize().testTag("CachedVideoPlayer"))
 }
 
 fun getCachedFiles(context: Context): List<File> {
-    val cacheDir = context.cacheDir
-    return cacheDir.listFiles { file ->
-        file.name.endsWith(".jpg") || file.name.endsWith(".mp4")
-    }?.toList() ?: emptyList()
+  val cacheDir = context.cacheDir
+  return cacheDir
+      .listFiles { file -> file.name.endsWith(".jpg") || file.name.endsWith(".mp4") }
+      ?.toList() ?: emptyList()
 }
 
 fun checkConnection(context: Context): Boolean {
-    val connectivityManager =
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
-    val network = connectivityManager.activeNetwork
-    val capabilities = connectivityManager.getNetworkCapabilities(network)
-    return capabilities != null && capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+  val connectivityManager =
+      context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+  val network = connectivityManager.activeNetwork
+  val capabilities = connectivityManager.getNetworkCapabilities(network)
+  return capabilities != null &&
+      capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
