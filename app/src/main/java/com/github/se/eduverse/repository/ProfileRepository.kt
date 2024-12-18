@@ -34,6 +34,8 @@ interface ProfileRepository {
 
   suspend fun loadSearchHistory(userId: String, limit: Int = 5): List<Profile>
 
+  suspend fun addProfileToHistory(userId: String, searchedProfileId: String)
+
   suspend fun createProfile(userId: String, defaultUsername: String, photoUrl: String = ""): Profile
 
   suspend fun updateUsername(userId: String, newUsername: String)
@@ -230,7 +232,7 @@ open class ProfileRepositoryImpl(
                 .documents
                 .mapNotNull {
                     it.getString("id")
-                }
+                }.distinct()
             profilesCollection
                 .whereIn(FieldPath.documentId(), listId)
                 .get()
@@ -241,6 +243,17 @@ open class ProfileRepositoryImpl(
             Log.e("LOAD_HISTORY", "Failed to load search history: ${e.message}")
             emptyList()
         }
+    }
+
+    override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
+        usersCollection
+            .document(userId)
+            .collection("searchHistory")
+            .add(hashMapOf(
+                "timestamp" to System.currentTimeMillis(),
+                "id" to searchedProfileId
+            ))
+            .await()
     }
 
     override suspend fun createProfile(
