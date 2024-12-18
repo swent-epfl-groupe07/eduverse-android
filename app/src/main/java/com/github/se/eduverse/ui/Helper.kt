@@ -214,7 +214,12 @@ fun RenameFileDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 }
 
 @Composable
-fun EditFileMenu(modifier: Modifier, onRename: () -> Unit, onDelete: () -> Unit) {
+fun EditFileMenu(
+    modifier: Modifier,
+    onRename: () -> Unit,
+    onDownload: () -> Unit,
+    onDelete: () -> Unit
+) {
   var expanded by remember { mutableStateOf(false) }
 
   Box(modifier) {
@@ -232,6 +237,13 @@ fun EditFileMenu(modifier: Modifier, onRename: () -> Unit, onDelete: () -> Unit)
               modifier = Modifier.fillMaxWidth().testTag("rename"),
               onClick = {
                 onRename()
+                expanded = false
+              })
+          DropdownMenuItem(
+              text = { Text("Download", modifier = Modifier.fillMaxWidth()) },
+              modifier = Modifier.fillMaxWidth().testTag("download"),
+              onClick = {
+                onDownload()
                 expanded = false
               })
           DropdownMenuItem(

@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -163,7 +164,7 @@ class ArchiveScreenTest {
   }
 
   @Test
-  fun deleteDialogWorks() {
+  fun deleteDialogWorks() = runBlocking {
     launch()
 
     composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
@@ -210,7 +211,7 @@ class ArchiveScreenTest {
     composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
 
-    verify(0) { folderRepository.deleteFolder(any(), any(), any()) }
+    verify(0) { folderRepository.deleteFolders(any(), any(), any()) }
 
     composeTestRule.onNodeWithTag("delete").performClick()
     composeTestRule.waitForIdle()
@@ -222,6 +223,6 @@ class ArchiveScreenTest {
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
     composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
 
-    verify(1) { folderRepository.deleteFolder(any(), any(), any()) }
+    verify(1) { folderRepository.deleteFolders(any(), any(), any()) }
   }
 }
