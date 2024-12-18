@@ -137,7 +137,7 @@ class MediaCacheManager(
     return if (file.exists()) file else null
   }
 
-  fun <T> getPublicationFromCache(metadataFileName: String, clazz: Class<T>): T? {
+  private fun <T> getPublicationFromCache(metadataFileName: String, clazz: Class<T>): T? {
     val metadataFile = File(context.cacheDir, metadataFileName)
     if (!metadataFile.exists()) {
       return null
@@ -195,6 +195,4 @@ class MediaCacheManager(
     Log.d("CACHE_CHECK", "Has cached files: $hasRecentFiles")
     return hasRecentFiles
   }
-
-
 }

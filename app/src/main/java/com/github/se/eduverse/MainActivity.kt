@@ -431,7 +431,7 @@ fun EduverseApp(
             composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
 
             composable(Screen.OFFLINE_VIDEOS) {
-                OfflineScreen(mediaCacheManager = MediaCacheManager(LocalContext.current))
+                 OfflineScreen({ navigationActions.goBack() })
             }
 
             composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
