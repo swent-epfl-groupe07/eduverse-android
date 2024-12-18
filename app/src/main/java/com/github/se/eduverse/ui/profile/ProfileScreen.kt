@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -25,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -98,6 +100,15 @@ fun ProfileScreen(
   Scaffold(
       topBar = {
         TopAppBar(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary)))
+                    .testTag("topNavigationBar"),
             title = {
               when (uiState) {
                 is ProfileUiState.Success -> {
@@ -119,17 +130,16 @@ fun ProfileScreen(
                             }
                       }
                 }
-                else ->
-                    Text(
-                        "Profile",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.testTag("profile_title_default"))
+                else -> {
+                  Text(
+                      "Profile",
+                      style = MaterialTheme.typography.titleLarge,
+                      color = MaterialTheme.colorScheme.onPrimary,
+                      modifier = Modifier.testTag("profile_title_default"))
+                }
               }
             },
-            colors =
-                TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary),
+            colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
             actions = {
               IconButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTING) },
@@ -345,6 +355,15 @@ fun PublicationDetailDialog(
   val likeCount = remember { mutableStateOf(publication.likes) }
   var showDeleteDialog by remember { mutableStateOf(false) }
   val deleteState by profileViewModel.deletePublicationState.collectAsState()
+  val favoriteState by profileViewModel.favoriteActionState.collectAsState()
+
+  // Track if publication is favorited
+  var isFavorited by remember { mutableStateOf(false) }
+
+  // Check if publication is favorited on initial load
+  LaunchedEffect(publication.id) {
+    isFavorited = profileViewModel.repository.isPublicationFavorited(currentUserId, publication.id)
+  }
 
   var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -353,7 +372,7 @@ fun PublicationDetailDialog(
     when (deleteState) {
       is DeletePublicationState.Success -> {
         errorMessage = null
-        onDismiss() // Close the dialog after successful deletion
+        onDismiss()
         profileViewModel.resetDeleteState()
       }
       is DeletePublicationState.Error -> {
@@ -412,7 +431,6 @@ fun PublicationDetailDialog(
                       }
                     },
                     actions = {
-                      // Only show delete option if the current user owns the publication
                       if (publication.userId == currentUserId) {
                         IconButton(
                             onClick = { showDeleteDialog = true },
@@ -450,42 +468,64 @@ fun PublicationDetailDialog(
                         }
                       }
 
-                      // Icon and Counter
+                      // Action Buttons Column
                       Column(
                           modifier =
                               Modifier.align(Alignment.CenterEnd)
                                   .padding(16.dp)
-                                  .testTag("like_section"),
-                          horizontalAlignment = Alignment.CenterHorizontally) {
+                                  .testTag("action_buttons"),
+                          horizontalAlignment = Alignment.CenterHorizontally,
+                          verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // Like Button
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                              IconButton(
+                                  onClick = {
+                                    if (isLiked.value) {
+                                      profileViewModel.removeLike(currentUserId, publication.id)
+                                      isLiked.value = false
+                                      likeCount.value -= 1
+                                    } else {
+                                      profileViewModel.likeAndAddToFavorites(
+                                          currentUserId, publication.id)
+                                      isLiked.value = true
+                                      likeCount.value += 1
+                                    }
+                                  },
+                                  modifier = Modifier.testTag("like_button")) {
+                                    Icon(
+                                        imageVector = Icons.Default.Favorite,
+                                        contentDescription = "Like",
+                                        tint = if (isLiked.value) Color.Red else Color.White,
+                                        modifier =
+                                            Modifier.size(48.dp)
+                                                .testTag(
+                                                    if (isLiked.value) "liked_icon"
+                                                    else "unliked_icon"))
+                                  }
+                              Text(
+                                  text = likeCount.value.toString(),
+                                  style = MaterialTheme.typography.bodyMedium,
+                                  color = Color.White,
+                                  modifier = Modifier.testTag("like_count_${publication.id}"))
+                            }
+
+                            // Favorite Button
                             IconButton(
                                 onClick = {
-                                  if (isLiked.value) {
-                                    profileViewModel.removeLike(currentUserId, publication.id)
-                                    isLiked.value = false
-                                    likeCount.value -= 1
-                                  } else {
-                                    profileViewModel.likeAndAddToFavorites(
-                                        currentUserId, publication.id)
-                                    isLiked.value = true
-                                    likeCount.value += 1
-                                  }
+                                  profileViewModel.toggleFavorite(currentUserId, publication.id)
+                                  isFavorited = !isFavorited
                                 },
-                                modifier = Modifier.testTag("like_button")) {
+                                modifier = Modifier.testTag("favorite_button")) {
                                   Icon(
-                                      imageVector = Icons.Default.Favorite,
-                                      contentDescription = "Like",
-                                      tint = if (isLiked.value) Color.Red else Color.White,
+                                      imageVector = Icons.Default.BookmarkAdd,
+                                      contentDescription = "Favorite",
+                                      tint = if (isFavorited) Color.Yellow else Color.White,
                                       modifier =
                                           Modifier.size(48.dp)
                                               .testTag(
-                                                  if (isLiked.value) "liked_icon"
-                                                  else "unliked_icon"))
+                                                  if (isFavorited) "favorited_icon"
+                                                  else "unfavorited_icon"))
                                 }
-                            Text(
-                                text = likeCount.value.toString(),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White,
-                                modifier = Modifier.testTag("like_count_${publication.id}"))
                           }
                     }
               }

@@ -20,6 +20,7 @@ import com.github.se.eduverse.viewmodel.FolderViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Rule
@@ -152,7 +153,7 @@ class ListFoldersTest {
   }
 
   @Test
-  fun deleteDialogWorks() {
+  fun deleteDialogWorks() = runBlocking {
     composeTestRule.onNodeWithTag("delete").assertIsNotDisplayed()
     composeTestRule.onNodeWithTag("cancel").assertIsNotDisplayed()
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
@@ -197,7 +198,7 @@ class ListFoldersTest {
     composeTestRule.onNodeWithTag("confirm").assertIsNotDisplayed()
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(2)
 
-    verify(0) { folderRepository.deleteFolder(any(), any(), any()) }
+    verify(0) { folderRepository.deleteFolders(any(), any(), any()) }
 
     composeTestRule.onNodeWithTag("delete").performClick()
     composeTestRule.waitForIdle()
@@ -209,6 +210,6 @@ class ListFoldersTest {
     composeTestRule.onAllNodesWithTag("checked").assertCountEquals(0)
     composeTestRule.onAllNodesWithTag("unchecked").assertCountEquals(0)
 
-    verify(1) { folderRepository.deleteFolder(any(), any(), any()) }
+    verify(1) { folderRepository.deleteFolders(any(), any(), any()) }
   }
 }

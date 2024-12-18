@@ -1,5 +1,6 @@
 package com.github.se.eduverse.viewmodel
 
+import android.os.Looper
 import com.github.se.eduverse.model.FilterTypes
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.model.MyFile
@@ -7,15 +8,30 @@ import com.github.se.eduverse.repository.FolderRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import java.util.Calendar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
+@ExperimentalCoroutinesApi
+@RunWith(RobolectricTestRunner::class)
 class FolderViewModelTest {
+  private val testDispatcher = StandardTestDispatcher()
+
   private lateinit var folderRepository: FolderRepository
   private lateinit var auth: FirebaseAuth
   private lateinit var currentUser: FirebaseUser
@@ -31,6 +47,8 @@ class FolderViewModelTest {
 
   @Before
   fun setUp() {
+    Dispatchers.setMain(testDispatcher)
+
     file1.creationTime.set(3, 1)
     file2.creationTime.set(3, 2)
     file3.creationTime.set(3, 3)
@@ -78,6 +96,11 @@ class FolderViewModelTest {
     folderViewModel = FolderViewModel(folderRepository, auth)
   }
 
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+  }
+
   @Test
   fun addFolderTest() {
     folderViewModel.addFolder(folder2)
@@ -87,16 +110,36 @@ class FolderViewModelTest {
   }
 
   @Test
-  fun removeFolderTest() {
+  fun removeFolderTest() = runTest {
     folderViewModel.addFolder(folder2)
     folderViewModel.selectFolder(folder)
 
-    folderViewModel.deleteFolder(folder)
+    folderViewModel.deleteFolders(listOf(folder))
+    shadowOf(Looper.getMainLooper()).idle()
+    delay(100) // Because the first async task start a second one
+    shadowOf(Looper.getMainLooper()).idle()
+
     assertEquals(folderViewModel.folders.value.size, 1)
     assertSame(folderViewModel.folders.value[0], folder2)
     assertNull(folderViewModel.activeFolder.value)
 
-    folderViewModel.deleteFolder(folder2)
+    folderViewModel.deleteFolders(listOf(folder2))
+    shadowOf(Looper.getMainLooper()).idle()
+    delay(100) // Because the first async task start a second one
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertEquals(folderViewModel.folders.value.size, 0)
+  }
+
+  @Test
+  fun removeManyFoldersTest() = runTest {
+    folderViewModel.addFolder(folder2)
+
+    folderViewModel.deleteFolders(listOf(folder, folder2))
+    shadowOf(Looper.getMainLooper()).idle()
+    delay(100) // Because the first async task start a second one
+    shadowOf(Looper.getMainLooper()).idle()
+
     assertEquals(folderViewModel.folders.value.size, 0)
   }
 
@@ -257,7 +300,11 @@ class MockFolderRepository(private val folder: Folder, private val archivedFolde
     onSuccess()
   }
 
-  override fun deleteFolder(folder: Folder, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+  override suspend fun deleteFolders(
+      folders: List<Folder>,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
     onSuccess()
   }
 

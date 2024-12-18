@@ -137,8 +137,6 @@ android {
             arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
         }
     }
-
-
 }
 
 sonar {
@@ -154,11 +152,12 @@ sonar {
 
 
 dependencies {
+    implementation("androidx.room:room-runtime:2.5.2")
+    kapt("androidx.room:room-compiler:2.5.2")
+
+
     implementation("androidx.media:media:1.6.0")
-
-
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
-
 
     //implementation("io.coil-kt:coil-compose:2.1.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
@@ -183,10 +182,6 @@ dependencies {
     // Moshi
     implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
     implementation("com.airbnb.android:lottie-compose:6.0.0")
-
-
-
-
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
@@ -259,14 +254,6 @@ dependencies {
     androidTestImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("io.mockk:mockk:1.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
-
-
-
-
-
-
-
-
 
     // Test UI
     androidTestImplementation(libs.androidx.junit)
