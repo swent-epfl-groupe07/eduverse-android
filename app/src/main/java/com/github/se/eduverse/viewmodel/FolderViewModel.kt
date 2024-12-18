@@ -63,7 +63,7 @@ open class FolderViewModel(
    *
    * @param folder the value to set
    */
-  fun selectFolder(folder: Folder?) {
+  open fun selectFolder(folder: Folder?) {
     _activeFolder.value = folder
     savedStateHandle["activeFolder"] = folder
   }
@@ -168,7 +168,7 @@ open class FolderViewModel(
   }
 
   /** Get new ID for a folder. */
-  fun getNewUid(): String {
+  open fun getNewUid(): String {
     return repository.getNewUid()
   }
 
