@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.util.query
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
@@ -182,6 +183,21 @@ open class ProfileViewModel(open val repository: ProfileRepository) : ViewModel(
             _searchState.value = SearchProfileState.Error(e.message ?: "Search failed")
           }
         }
+  }
+
+  open fun loadSearchHistory(userId: String? = FirebaseAuth.getInstance().currentUser?.uid) {
+    if (userId == null) return
+
+    searchJob?.cancel()
+    searchJob = viewModelScope.launch {
+      _searchState.value = SearchProfileState.Loading
+      try {
+        val results = emptyList<Profile>()
+        _searchState.value = SearchProfileState.Success(results)
+      } catch (e: Exception) {
+        _searchState.value = SearchProfileState.Error(e.message ?: "Load history failed")
+      }
+    }
   }
 
   override fun onCleared() {
