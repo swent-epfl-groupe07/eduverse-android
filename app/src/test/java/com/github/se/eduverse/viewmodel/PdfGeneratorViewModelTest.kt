@@ -63,7 +63,12 @@ class PdfGeneratorViewModelTest {
     folderRepository = mock(FolderRepository::class.java)
     viewModel =
         PdfGeneratorViewModel(
-            pdfRepository, openAiRepository, convertApiRepository, fileRepository, folderRepository, mockIoDispatcher)
+            pdfRepository,
+            openAiRepository,
+            convertApiRepository,
+            fileRepository,
+            folderRepository,
+            mockIoDispatcher)
     pdfDocument = mock(PdfDocument::class.java)
     `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test", context)).thenReturn(file)
     `when`(pdfRepository.readTextFromPdfFile(uri, context, viewModel.MAX_SUMMARY_INPUT_SIZE))

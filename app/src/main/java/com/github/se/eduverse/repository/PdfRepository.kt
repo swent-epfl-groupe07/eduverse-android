@@ -326,7 +326,9 @@ class PdfRepositoryImpl : PdfRepository {
     try {
       // Get file extension from uri, through the uri path if not null, otherwise by querying the
       // content resolver
-      val documentType = if (uri!!.scheme == "file") uri.path?.substringAfterLast(".") else getFileExtensionFromUri(context, uri!!)
+      val documentType =
+          if (uri!!.scheme == "file") uri.path?.substringAfterLast(".")
+          else getFileExtensionFromUri(context, uri!!)
       tempFile = File.createTempFile("tempDocument", ".$documentType", context.externalCacheDir)
 
       // Make sure the input stream is correctly closed

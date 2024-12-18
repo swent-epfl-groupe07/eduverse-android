@@ -116,7 +116,8 @@ class PdfGeneratorScreenTest {
 
     // Mock pdf repository methods
     `when`(mockPdfRepository.convertTextToPdf(any(), any())).thenReturn(PdfDocument())
-    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any(), any())).thenReturn(File("test.pdf"))
+    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any(), any()))
+        .thenReturn(File("test.pdf"))
     `when`(mockPdfRepository.deleteTempPdfFile(any())).then {
       deleted = true
       // Check that view model's current file is the one being deleted
