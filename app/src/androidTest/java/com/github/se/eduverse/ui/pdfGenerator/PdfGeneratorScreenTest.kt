@@ -176,6 +176,12 @@ class PdfGeneratorScreenTest {
         .assertTextContains("Extract text")
         .assertTextContains("Extracts text from an image")
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name).assertHasClickAction()
+    composeTestRule
+        .onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name)
+        .assertTextContains("Speech to PDF")
+        .assertTextContains("Transcribes speech to text")
   }
 
   @Test
