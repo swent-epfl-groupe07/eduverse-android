@@ -5,7 +5,9 @@ import android.util.Log
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -29,6 +31,10 @@ interface ProfileRepository {
   suspend fun updateProfileImage(userId: String, imageUrl: String)
 
   suspend fun searchProfiles(query: String, limit: Int = 20): List<Profile>
+
+  suspend fun loadSearchHistory(userId: String, limit: Int = 5): List<Profile>
+
+  suspend fun addProfileToHistory(userId: String, searchedProfileId: String)
 
   suspend fun createProfile(userId: String, defaultUsername: String, photoUrl: String = ""): Profile
 
@@ -212,6 +218,39 @@ open class ProfileRepositoryImpl(
       Log.e("SEARCH_PROFILES", "Failed to search profiles: ${e.message}")
       emptyList()
     }
+  }
+
+  override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
+    return try {
+      val listId =
+          usersCollection
+              .document(userId)
+              .collection("searchHistory")
+              .orderBy("timestamp", Query.Direction.DESCENDING)
+              .limit(limit.toLong())
+              .get()
+              .await()
+              .documents
+              .mapNotNull { it.getString("id") }
+              .distinct()
+      profilesCollection
+          .whereIn(FieldPath.documentId(), listId)
+          .get()
+          .await()
+          .documents
+          .mapNotNull { it.toObject(Profile::class.java) }
+    } catch (e: Exception) {
+      Log.e("LOAD_HISTORY", "Failed to load search history: ${e.message}")
+      emptyList()
+    }
+  }
+
+  override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
+    usersCollection
+        .document(userId)
+        .collection("searchHistory")
+        .add(hashMapOf("timestamp" to System.currentTimeMillis(), "id" to searchedProfileId))
+        .await()
   }
 
   override suspend fun createProfile(

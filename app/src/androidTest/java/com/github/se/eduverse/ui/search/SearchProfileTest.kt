@@ -9,13 +9,16 @@ import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 class SearchProfileScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
@@ -151,6 +154,19 @@ class SearchProfileScreenTest {
 
     composeTestRule.onNodeWithTag(TAG_SEARCH_FIELD).performTextInput("TestQuery")
     assert(searchQuery == "testquery") { "Search query should be converted to lowercase" }
+  }
+
+  @Test
+  fun emptyQuery_displaysHistory() = runTest {
+    whenever(mockRepository.loadSearchHistory(any(), any())).thenReturn(listOf(Profile(id = "id")))
+    val vm = ProfileViewModel(mockRepository)
+    composeTestRule.setContent {
+      SearchProfileScreen(
+          navigationActions = mockNavigationActions, viewModel = vm, currentUserId = "user")
+    }
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag(TAG_PROFILE_ITEM + "_id").assertIsDisplayed()
   }
 }
 

@@ -26,6 +26,7 @@ import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
+import com.google.firebase.auth.FirebaseAuth
 
 const val TAG_SEARCH_FIELD = "search_field"
 const val TAG_LOADING_INDICATOR = "loading_indicator"
@@ -40,9 +41,15 @@ const val TAG_PROFILE_STATS = "profile_stats"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchProfileScreen(navigationActions: NavigationActions, viewModel: ProfileViewModel) {
+fun SearchProfileScreen(
+    navigationActions: NavigationActions,
+    viewModel: ProfileViewModel,
+    currentUserId: String? = FirebaseAuth.getInstance().currentUser?.uid
+) {
   var searchQuery by remember { mutableStateOf("") }
   val searchState by viewModel.searchState.collectAsState()
+
+  LaunchedEffect(Unit) { viewModel.loadSearchHistory(currentUserId) }
 
   Scaffold(
       topBar = {
@@ -110,7 +117,12 @@ fun SearchProfileScreen(navigationActions: NavigationActions, viewModel: Profile
                       items(items = state.profiles, key = { it.id }) { profile ->
                         ProfileSearchItem(
                             profile = profile,
-                            onClick = { navigationActions.navigateToUserProfile(profile.id) })
+                            onClick = {
+                              if (currentUserId != null) {
+                                viewModel.addProfileToHistory(currentUserId, profile.id)
+                              }
+                              navigationActions.navigateToUserProfile(profile.id)
+                            })
                       }
                     }
               }
