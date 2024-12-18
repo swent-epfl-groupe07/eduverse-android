@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.fake.FakeProfileRepository
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
+import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.ui.dashboard.DashboardScreen
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
@@ -26,6 +27,8 @@ import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
+import com.github.se.eduverse.viewmodel.SettingsViewModel
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.mockk.mockk
 import io.mockk.unmockkAll
@@ -36,6 +39,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.mock
 
 class SocialInteractionE2ETest {
 
@@ -44,10 +48,16 @@ class SocialInteractionE2ETest {
   private lateinit var dashboardViewModel: FakeDashboardViewModel
   private lateinit var viewModel: FakeProfileViewModel
   private lateinit var navigationActions: FakeProfileNavigationActions
+  private var settingViewModel = mock(SettingsViewModel::class.java)
 
   @Before
   fun setup() {
-    MockFirebaseAuth.setup()
+
+    val mockAuth = mock(FirebaseAuth::class.java)
+    // Pass the mocked Firestore to the repository
+    val settingsRepository = FakeSettingsRepository()
+
+    settingViewModel = SettingsViewModel(settingsRepository = settingsRepository, auth = mockAuth)
     // Initialize all view models
     dashboardViewModel = FakeDashboardViewModel()
     viewModel = FakeProfileViewModel()
@@ -57,6 +67,7 @@ class SocialInteractionE2ETest {
       TestNavigation2(
           dashboardViewModel = dashboardViewModel,
           viewModel = viewModel,
+          settingViewModel,
           navigationActions = navigationActions)
     }
   }
@@ -144,6 +155,7 @@ class SocialInteractionE2ETest {
 fun TestNavigation2(
     dashboardViewModel: FakeDashboardViewModel,
     viewModel: FakeProfileViewModel,
+    settingsViewModel: SettingsViewModel,
     navigationActions: FakeProfileNavigationActions
 ) {
   var currentScreen by remember { mutableStateOf("DASHBOARD") }
@@ -159,6 +171,7 @@ fun TestNavigation2(
         UserProfileScreen(
             navigationActions = navigationActions,
             viewModel = viewModel,
+            settingsViewModel = settingsViewModel,
             userId = "test_user_id",
             currentUserId = "current_user_id")
     else -> DashboardScreen(viewModel = dashboardViewModel, navigationActions = navigationActions)
@@ -282,4 +295,39 @@ class FakeProfileNavigationActions : NavigationActions(mockk(relaxed = true)) {
   }
 
   override fun currentRoute(): String = _currentRoute.value
+}
+
+class FakeSettingsRepository : SettingsRepository(mock()) {
+
+  private val userSettings = mutableMapOf<String, MutableMap<String, Any>>()
+
+  override suspend fun setPrivacySettings(userId: String, value: Boolean) {
+    val userSetting = userSettings[userId] ?: mutableMapOf()
+    userSetting["privacySettings"] = value
+    userSettings[userId] = userSetting
+  }
+
+  override suspend fun getPrivacySettings(userId: String): Boolean {
+    return userSettings[userId]?.get("privacySettings") as? Boolean ?: false
+  }
+
+  override suspend fun getSelectedLanguage(userId: String): String {
+    return userSettings[userId]?.get("selectedLanguage") as? String ?: "English"
+  }
+
+  override suspend fun setSelectedLanguage(userId: String, language: String) {
+    val userSetting = userSettings[userId] ?: mutableMapOf()
+    userSetting["selectedLanguage"] = language
+    userSettings[userId] = userSetting
+  }
+
+  override suspend fun getSelectedTheme(userId: String): String {
+    return userSettings[userId]?.get("selectedTheme") as? String ?: "Light"
+  }
+
+  override suspend fun setSelectedTheme(userId: String, theme: String) {
+    val userSetting = userSettings[userId] ?: mutableMapOf()
+    userSetting["selectedTheme"] = theme
+    userSettings[userId] = userSetting
+  }
 }
