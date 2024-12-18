@@ -319,6 +319,18 @@ class DisplayFolderTest {
   }
 
   @Test
+  fun downloadFileWorkLikeExpected() {
+    composeTestRule.onAllNodesWithTag("editButton").assertCountEquals(3)
+
+    composeTestRule.onAllNodesWithTag("editButton").onFirst().performClick()
+
+    composeTestRule.onNodeWithTag("download").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("download").performClick()
+
+    verify(fileRepository).accessFile(any(), any(), any())
+  }
+
+  @Test
   fun archiveButtonTest() {
     composeTestRule.onNodeWithTag("archive").performClick()
     verify(2) { folderRepository.updateFolder(any(), any(), any()) }

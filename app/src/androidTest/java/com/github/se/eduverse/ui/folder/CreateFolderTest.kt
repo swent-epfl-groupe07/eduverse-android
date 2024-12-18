@@ -28,6 +28,7 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
 
 class CreateFolderTest {
   private lateinit var folderRepository: FolderRepository
@@ -266,5 +267,15 @@ class CreateFolderTest {
 
     composeTestRule.onNodeWithTag("file").performClick()
     assert(test)
+  }
+
+  @Test
+  fun downloadFileWorkLikeExpected() {
+    composeTestRule.onNodeWithTag("editButton").performClick()
+
+    composeTestRule.onNodeWithTag("download").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("download").performClick()
+
+    verify(fileRepository).accessFile(any(), any(), any())
   }
 }
