@@ -117,4 +117,29 @@ class FileViewModelTest {
 
     verify(fileRepository, times(1)).deleteFile(any(), any(), any())
   }
+
+  @Test
+  fun downloadFileTest() {
+    val storageReference = mock(StorageReference::class.java)
+    val context = mock(Context::class.java)
+    val task = mock(FileDownloadTask::class.java)
+
+    var test = false
+    var message = ""
+
+    `when`(fileRepository.accessFile(any(), any(), any())).then {
+      val callback = it.getArgument<(StorageReference, String) -> Unit>(1)
+      callback(storageReference, ".pdf")
+    }
+    `when`(storageReference.getFile(any<File>())).thenReturn(task)
+    `when`(task.addOnSuccessListener(any())).thenReturn(task)
+    `when`(task.addOnFailureListener(any())).then {
+      test = true
+      null
+    }
+
+    fileViewModel.downloadFile("file", context)
+
+    assert(test)
+  }
 }
