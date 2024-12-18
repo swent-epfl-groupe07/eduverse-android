@@ -1,5 +1,6 @@
 import android.app.Activity
 import android.app.Instrumentation
+import android.content.Context
 import android.content.Intent
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -17,6 +18,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.api.SUPPORTED_CONVERSION_TYPES
 import com.github.se.eduverse.model.Folder
 import com.github.se.eduverse.repository.ConvertApiRepository
@@ -67,6 +70,7 @@ class PdfGeneratorScreenTest {
   private lateinit var folderViewModel: FolderViewModel
   private lateinit var auth: FirebaseAuth
   private lateinit var currentUser: FirebaseUser
+  private lateinit var mockContext: Context
 
   private var deleted = false
   private val folders =
@@ -81,6 +85,13 @@ class PdfGeneratorScreenTest {
     // Initialize the Intent
     Intents.init()
 
+    // Grant audio recording permission
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    instrumentation.uiAutomation
+        .executeShellCommand(
+            "pm grant ${BuildConfig.APPLICATION_ID} android.permission.RECORD_AUDIO")
+        .close()
+
     // Mock the dependencies
     mockNavigationActions = mock(NavigationActions::class.java)
     mockPdfRepository = mock(PdfRepository::class.java)
@@ -90,6 +101,7 @@ class PdfGeneratorScreenTest {
     mockFolderRepository = mock(FolderRepository::class.java)
     auth = mock(FirebaseAuth::class.java)
     currentUser = mock(FirebaseUser::class.java)
+    mockContext = mock(Context::class.java)
 
     // Mock the current authenticated user retrieval
     `when`(auth.currentUser).thenReturn(currentUser)
@@ -175,6 +187,12 @@ class PdfGeneratorScreenTest {
         .assertTextContains("Extract text")
         .assertTextContains("Extracts text from an image")
     composeTestRule.onNodeWithTag("pdfNameInputDialog").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name).assertHasClickAction()
+    composeTestRule
+        .onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name)
+        .assertTextContains("Speech to PDF")
+        .assertTextContains("Transcribes speech to text")
   }
 
   @Test
@@ -592,6 +610,26 @@ class PdfGeneratorScreenTest {
     composeTestRule.onNodeWithTag("dismissCreateFolderButton").assertHasClickAction()
   }
 
+  @Test
+  fun testClickingOnTranscribeSpeechOption_correctlyDisplaysSpeechRecognitionDialog() {
+    composeTestRule.setContent { PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel) }
+    composeTestRule.onNodeWithTag(PdfGeneratorOption.TRANSCRIBE_SPEECH.name).performClick()
+    composeTestRule.onNodeWithTag("speechDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("permissionDialog").assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogTitle").assertTextEquals("Speech to PDF transcriber")
+    composeTestRule.onNodeWithTag("speechDialogDescription").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("speechDialogDescription")
+        .assertTextEquals(
+            "Use the bottom button to capture your speech. Each successful recording is transcribed as a new paragraph into a PDF file. Record as many times as needed in order to add multiple paragraphs. Press 'Generate PDF' to finish the transcription and generate the PDF file. \n⚠\uFE0F Pressing 'Cancel' discards all transcribed text.")
+    composeTestRule.onNodeWithTag("transcriptionFinishButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("transcriptionFinishButton").assertTextEquals("Generate PDF")
+    composeTestRule.onNodeWithTag("transcriptionFinishButton").assertHasClickAction()
+    composeTestRule.onNodeWithTag("speechDialogDismissButton").performClick()
+    composeTestRule.onNodeWithTag("speechDialog").assertIsNotDisplayed()
+  }
+
   private fun initialStepsOfPdfGeneration(option: String) {
     composeTestRule.setContent {
       PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel, folderViewModel)
@@ -614,7 +652,6 @@ class PdfGeneratorScreenTest {
     // Simulate the file picker intent
     val expectedUri = Uri.parse("content://test-uri")
     val resultIntent = Intent().apply { data = expectedUri }
-    Intent().apply { data = expectedUri }
     Intents.intending(hasAction(Intent.ACTION_OPEN_DOCUMENT))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent))
   }

@@ -63,6 +63,14 @@ class FakeProfileRepository : ProfileRepository {
 
   override suspend fun searchProfiles(query: String, limit: Int): List<Profile> = emptyList()
 
+  override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
+    TODO("Not yet implemented")
+  }
+
+  override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
+    TODO("Not yet implemented")
+  }
+
   override suspend fun createProfile(
       userId: String,
       defaultUsername: String,

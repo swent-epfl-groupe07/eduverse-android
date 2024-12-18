@@ -1,6 +1,7 @@
 package com.github.se.eduverse.ui.camera
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -62,16 +63,26 @@ fun PermissionDeniedScreen(navigationActions: NavigationActions) {
                   text = "Camera permission is required.",
                   modifier = Modifier.testTag("PermissionMessage"))
               Spacer(modifier = Modifier.height(16.dp))
-              Button(
-                  onClick = {
-                    context.startActivity(
-                        Intent(
-                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                            Uri.parse("package:${context.packageName}")))
-                  },
-                  modifier = Modifier.testTag("EnableButton")) {
-                    Text("Enable")
-                  }
+              EnablePermissionButton(context)
             }
+      }
+}
+
+/**
+ * Button to navigate to the app settings to enable permissions
+ *
+ * @param context the context of the app
+ */
+@Composable
+fun EnablePermissionButton(context: Context) {
+  Button(
+      onClick = {
+        context.startActivity(
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:${context.packageName}")))
+      },
+      modifier = Modifier.testTag("EnableButton")) {
+        Text("Enable")
       }
 }

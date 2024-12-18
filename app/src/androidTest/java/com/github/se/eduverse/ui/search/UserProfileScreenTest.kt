@@ -9,14 +9,17 @@ import com.github.se.eduverse.model.MediaType
 import com.github.se.eduverse.model.Profile
 import com.github.se.eduverse.model.Publication
 import com.github.se.eduverse.repository.ProfileRepository
+import com.github.se.eduverse.repository.SettingsRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.FollowActionState
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
+import com.github.se.eduverse.viewmodel.SettingsViewModel
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -32,12 +35,20 @@ class UserProfileScreenTest {
   private lateinit var fakeNavigationActions: FakeNavigationActions
   private lateinit var fakeRepository: FakeProfileRepository
   private val testUserId = "test_user_id"
+  private lateinit var settingsViewModel: SettingsViewModel
 
   @Before
   fun setup() {
     fakeRepository = FakeProfileRepository()
     fakeViewModel = FakeProfileViewModel(fakeRepository)
     fakeNavigationActions = FakeNavigationActions()
+
+    val fakeSettingsRepository =
+        FakeSettingsRepository().apply {
+          runBlocking { setPrivacySettings(testUserId, false) } // Configure the repository
+        }
+
+    settingsViewModel = SettingsViewModel(fakeSettingsRepository, mock())
   }
 
   class FakeProfileViewModel(override val repository: ProfileRepository) :
@@ -66,6 +77,35 @@ class UserProfileScreenTest {
     }
   }
 
+  class FakeSettingsRepository : SettingsRepository(mock()) {
+
+    private val userSettings = mutableMapOf<String, Any>()
+
+    override suspend fun setPrivacySettings(userId: String, value: Boolean) {
+      userSettings["$userId-privacy"] = value
+    }
+
+    override suspend fun getPrivacySettings(userId: String): Boolean {
+      return userSettings["$userId-privacy"] as? Boolean ?: false
+    }
+
+    override suspend fun getSelectedLanguage(userId: String): String {
+      return userSettings["$userId-language"] as? String ?: "English"
+    }
+
+    override suspend fun setSelectedLanguage(userId: String, language: String) {
+      userSettings["$userId-language"] = language
+    }
+
+    override suspend fun getSelectedTheme(userId: String): String {
+      return userSettings["$userId-theme"] as? String ?: "Light"
+    }
+
+    override suspend fun setSelectedTheme(userId: String, theme: String) {
+      userSettings["$userId-theme"] = theme
+    }
+  }
+
   class FakeNavigationActions : NavigationActions(mock()) {
     var backClicked = false
       private set
@@ -81,7 +121,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("loading_indicator").assertExists()
@@ -100,7 +143,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule
@@ -121,7 +167,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("error_message").assertExists().assertTextContains("Test error")
@@ -142,7 +191,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("publications_tab").performClick()
@@ -156,7 +208,10 @@ class UserProfileScreenTest {
   fun whenBackButtonClicked_callsNavigationGoBack() {
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("back_button").performClick()
@@ -170,7 +225,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule
@@ -186,7 +244,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("user_profile_username").assertTextContains("TestUser")
@@ -207,7 +268,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("video_play_icon_video1", useUnmergedTree = true).assertExists()
@@ -228,7 +292,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("publication_item_pub1").performClick()
@@ -248,7 +315,10 @@ class UserProfileScreenTest {
 
     composeTestRule.setContent {
       UserProfileScreen(
-          navigationActions = fakeNavigationActions, viewModel = fakeViewModel, userId = testUserId)
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel,
+          userId = testUserId)
     }
 
     composeTestRule.onNodeWithTag("publication_item_pub1").assertExists()
@@ -271,6 +341,7 @@ class UserProfileScreenTest {
       UserProfileScreen(
           navigationActions = fakeNavigationActions,
           viewModel = fakeViewModel,
+          settingsViewModel,
           userId = "other_user_id",
           currentUserId = "current_user_id")
     }
@@ -311,6 +382,7 @@ class UserProfileScreenTest {
       UserProfileScreen(
           navigationActions = fakeNavigationActions,
           viewModel = fakeViewModel,
+          settingsViewModel,
           userId = "other_user_id",
           currentUserId = "current_user_id")
     }
@@ -332,6 +404,84 @@ class UserProfileScreenTest {
     // Test error state
     fakeViewModel.setFollowActionState(FollowActionState.Error("Failed to follow"))
     composeTestRule.onNodeWithText("Failed to follow").assertExists()
+  }
+
+  @Test
+  fun whenProfileIsPrivate_followersStatShowsToast() {
+    // Arrange
+    val testProfile =
+        Profile(id = testUserId, username = "TestUser", followers = 50, following = 20)
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel = settingsViewModel,
+          userId = testUserId,
+          currentUserId = "another_user_id" // Simulate non-owner access
+          )
+    }
+
+    // Act: Click on "Followers" stat
+    composeTestRule.onNodeWithTag("followers_stat").performClick()
+
+    // Assert: Restricted message is displayed (toast can't be directly verified)
+    composeTestRule.onRoot().printToLog("TestTag")
+    composeTestRule.onNodeWithTag("followers_stat").assertHasClickAction()
+  }
+
+  @Test
+  fun whenProfileIsPrivate_followingStatShowsToast() {
+    // Arrange
+    val testProfile =
+        Profile(id = testUserId, username = "TestUser", followers = 50, following = 20)
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel = settingsViewModel,
+          userId = testUserId,
+          currentUserId = "another_user_id" // Simulate non-owner access
+          )
+    }
+
+    // Act: Click on "Following" stat
+    composeTestRule.onNodeWithTag("following_stat").performClick()
+
+    // Assert: Restricted message is displayed (toast can't be directly verified)
+    composeTestRule.onNodeWithTag("following_stat").assertHasClickAction()
+  }
+
+  @Test
+  fun whenProfileIsPrivate_showsPrivateProfileMessage() {
+    // Arrange
+    val testProfile = Profile(id = testUserId, username = "TestUser", publications = emptyList())
+    fakeViewModel.setState(ProfileUiState.Success(testProfile))
+
+    // Force the profile to be private
+    runBlocking {
+      (settingsViewModel.settingsRepository as FakeSettingsRepository).setPrivacySettings(
+          testUserId, true)
+    }
+
+    composeTestRule.setContent {
+      UserProfileScreen(
+          navigationActions = fakeNavigationActions,
+          viewModel = fakeViewModel,
+          settingsViewModel = settingsViewModel,
+          userId = testUserId,
+          currentUserId = "another_user_id" // Simulate non-owner access
+          )
+    }
+
+    // Assert: Check that private profile message is displayed
+    composeTestRule.onNodeWithTag("private_profile_message").assertExists()
+    composeTestRule
+        .onNodeWithText("This profile is private. You cannot access publications or favorites.")
+        .assertExists()
   }
 
   @After

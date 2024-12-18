@@ -128,6 +128,14 @@ class ProfileRepositoryImplTest {
             return emptyList()
           }
 
+          override suspend fun loadSearchHistory(userId: String, limit: Int): List<Profile> {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
+            TODO("Not yet implemented")
+          }
+
           override suspend fun createProfile(
               userId: String,
               defaultUsername: String,
@@ -1358,6 +1366,76 @@ class ProfileRepositoryImplTest {
     assertEquals(5, result?.followers)
     assertEquals(3, result?.following)
     assertTrue(result?.isFollowedByCurrentUser ?: false)
+  }
+
+  @Test
+  fun `loadSearchHistory returns the history when not empty`() = runTest {
+    val userId = "testUser"
+
+    val mockQuery2 = mock(Query::class.java)
+    val mockQuerySnapshot2 = mock(QuerySnapshot::class.java)
+
+    whenever(mockCollectionRef.document("testUser")).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("searchHistory")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.orderBy("timestamp", Query.Direction.DESCENDING))
+        .thenReturn(mockQuery)
+    whenever(mockQuery.limit(5)).thenReturn(mockQuery)
+    whenever(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
+    whenever(mockQuerySnapshot.documents).then {
+      val l = emptyList<DocumentSnapshot>().toMutableList()
+      for (i in 1..5) {
+        val doc = mock(DocumentSnapshot::class.java)
+        whenever(doc.get("id")).thenReturn("$i")
+        l.add(doc)
+      }
+      l
+    }
+
+    whenever(mockCollectionRef.whereIn(any<FieldPath>(), any())).thenReturn(mockQuery2)
+    whenever(mockQuery2.get()).thenReturn(Tasks.forResult(mockQuerySnapshot2))
+    whenever(mockQuerySnapshot2.documents).then {
+      val l = emptyList<DocumentSnapshot>().toMutableList()
+      for (i in 1..5) {
+        val doc = mock(DocumentSnapshot::class.java)
+        whenever(doc.toObject(Profile::class.java)).thenReturn(Profile(id = "$i"))
+        l.add(doc)
+      }
+      l
+    }
+
+    val result = repository.loadSearchHistory(userId)
+
+    assertEquals(5, result.size)
+    assertEquals("1", result[0].id)
+    assertEquals("2", result[1].id)
+    assertEquals("3", result[2].id)
+    assertEquals("4", result[3].id)
+    assertEquals("5", result[4].id)
+  }
+
+  @Test
+  fun `loadSearchHistory returns an empty list on error`() = runTest {
+    val result = repository.loadSearchHistory("")
+    assertTrue(result.isEmpty())
+  }
+
+  @Test
+  fun `addProfileToHistory create the correct document`() = runTest {
+    val userId = "testUser"
+
+    whenever(mockCollectionRef.document(userId)).thenReturn(mockDocumentRef)
+    whenever(mockDocumentRef.collection("searchHistory")).thenReturn(mockCollectionRef)
+    whenever(mockCollectionRef.add(any())).then {
+      val map = it.getArgument<HashMap<String, Any>>(0)
+      assertEquals(2, map.size)
+      assertEquals(setOf("timestamp", "id"), map.keys)
+      assertEquals("mathieu", map.get("id"))
+      Tasks.forResult(null)
+    }
+
+    repository.addProfileToHistory(userId, "mathieu")
+
+    org.mockito.kotlin.verify(mockCollectionRef).add(any())
   }
 
   @After
