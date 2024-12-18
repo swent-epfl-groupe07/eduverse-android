@@ -76,9 +76,7 @@ class FakeProfileRepository : ProfileRepository {
     return emptyList()
   }
 
-  override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {
-
-  }
+  override suspend fun addProfileToHistory(userId: String, searchedProfileId: String) {}
 
   override suspend fun createProfile(
       userId: String,
