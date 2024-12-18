@@ -197,7 +197,7 @@ class FakeNavigationActions : NavigationActions(mockk(relaxed = true)) {
 // Update MockFirebaseAuth to use MockK consistently
 class MockFirebaseAuth {
   companion object {
-    private var mockAuth: FirebaseAuth? = null
+    var mockAuth: FirebaseAuth? = null
     private var mockUser: FirebaseUser? = null
 
     fun setup(isAuthenticated: Boolean = true) {

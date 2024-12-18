@@ -31,7 +31,7 @@ open class FileViewModel(val fileRepository: FileRepository) {
    *
    * @return The new file or null if there wasn't any
    */
-  fun getNewFile(): MyFile? {
+  open fun getNewFile(): MyFile? {
     val newFile = _newFile.value
     reset()
     return newFile
