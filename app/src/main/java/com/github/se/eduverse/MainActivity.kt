@@ -10,18 +10,12 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.TopAppBar
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -68,6 +62,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.notifications.NotificationsScreen
+import com.github.se.eduverse.ui.offline.OfflineScreen
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
@@ -515,26 +510,5 @@ fun EduverseApp(
     composable(Screen.SAVED) {
       SavedScreen(navigationActions = navigationActions, viewModel = profileViewModel)
     }
-  }
-  composable(
-      route = "details/{publicationId}",
-      arguments = listOf(navArgument("publicationId") { type = NavType.StringType })) {
-          backStackEntry ->
-        val publicationId =
-            backStackEntry.arguments?.getString("publicationId")
-                ?: return@composable // Gérer le cas où publicationId est nul
-
-        DetailsScreen(publicationId = publicationId, navigationActions = navigationActions)
-      }
-}
-
-@Composable
-fun DetailsScreen(publicationId: String, navigationActions: NavigationActions) {
-  Scaffold(topBar = { TopAppBar(title = { Text("Détails de la Publication") }) }) { paddingValues ->
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-          Text(text = "Détails de la publication ID: $publicationId")
-        }
   }
 }
