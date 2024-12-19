@@ -7,12 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.github.se.eduverse.fake.FakeProfileRepository
 import com.github.se.eduverse.model.Profile
@@ -23,10 +21,7 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopLevelDestination
 import com.github.se.eduverse.ui.profile.FollowListScreen
 import com.github.se.eduverse.ui.search.SearchProfileScreen
-import com.github.se.eduverse.ui.search.TAG_IDLE_MESSAGE
-import com.github.se.eduverse.ui.search.TAG_NO_RESULTS
 import com.github.se.eduverse.ui.search.TAG_PROFILE_ITEM
-import com.github.se.eduverse.ui.search.TAG_PROFILE_LIST
 import com.github.se.eduverse.ui.search.TAG_SEARCH_FIELD
 import com.github.se.eduverse.ui.search.UserProfileScreen
 import com.github.se.eduverse.viewmodel.ProfileUiState
@@ -55,204 +50,196 @@ class SocialInteractionE2ETest {
   private lateinit var navigationActions: FakeProfileNavigationActions
   private var settingViewModel = mock(SettingsViewModel::class.java)
 
-    @Before
-    fun setup() {
-        // Setup MockFirebaseAuth first
-        MockFirebaseAuth.setup()  // This will setup the Firebase mock with an authenticated user
+  @Before
+  fun setup() {
+    // Setup MockFirebaseAuth first
+    MockFirebaseAuth.setup() // This will setup the Firebase mock with an authenticated user
 
-        val mockAuth = mock(FirebaseAuth::class.java)
-        val settingsRepository = FakeSettingsRepository()
+    val mockAuth = mock(FirebaseAuth::class.java)
+    val settingsRepository = FakeSettingsRepository()
 
-        settingViewModel = SettingsViewModel(settingsRepository = settingsRepository, auth = mockAuth)
-        dashboardViewModel = FakeDashboardViewModel()
-        viewModel = FakeProfileViewModel()
-        navigationActions = FakeProfileNavigationActions()
+    settingViewModel = SettingsViewModel(settingsRepository = settingsRepository, auth = mockAuth)
+    dashboardViewModel = FakeDashboardViewModel()
+    viewModel = FakeProfileViewModel()
+    navigationActions = FakeProfileNavigationActions()
 
-        composeTestRule.setContent {
-            TestNavigation2(
-                dashboardViewModel = dashboardViewModel,
-                viewModel = viewModel,
-                settingViewModel,
-                navigationActions = navigationActions
-            )
-        }
+    composeTestRule.setContent {
+      TestNavigation2(
+          dashboardViewModel = dashboardViewModel,
+          viewModel = viewModel,
+          settingViewModel,
+          navigationActions = navigationActions)
     }
+  }
 
-    @After
-    fun tearDown() {
-        MockFirebaseAuth.cleanup()  // Add this to clean up the mocks
-        unmockkAll()
+  @After
+  fun tearDown() {
+    MockFirebaseAuth.cleanup() // Add this to clean up the mocks
+    unmockkAll()
+  }
+
+  @Test
+  fun testBasicSocialInteractionFlow() {
+    composeTestRule.apply {
+      navigateToUserProfile()
+      performBasicProfileActions()
+      returnToDashboard()
     }
+  }
 
-    @Test
-    fun testBasicSocialInteractionFlow() {
-        composeTestRule.apply {
-            navigateToUserProfile()
-            performBasicProfileActions()
-            returnToDashboard()
-        }
+  @Test
+  fun testFollowersInteractionFlow() {
+    composeTestRule.apply {
+      // Navigate to user profile
+      navigateToUserProfile()
+
+      // Click on followers count
+      navigateToFollowersList()
+
+      // Verify followers list screen
+      onNodeWithTag("follow_list").assertExists()
+
+      // Check follower items exist
+      onNodeWithTag("follow_list_item_test_follower_1").assertExists()
+
+      // Test follow back functionality
+      onNodeWithTag("follow_button_test_follower_1").performClick()
+      waitForIdle()
+      onNodeWithTag("follow_button_test_follower_1").assertTextContains("Follow Back")
+
+      // Navigate to follower's profile
+      onNodeWithTag("follow_list_item_test_follower_1").performClick()
+      waitForIdle()
+
+      // Verify on follower's profile
+      onNodeWithTag("user_profile_username").assertTextContains("TestUser")
+
+      // Return to previous screen
+      onNodeWithTag("back_button").performClick()
+      waitForIdle()
     }
+  }
 
-    @Test
-    fun testFollowersInteractionFlow() {
-        composeTestRule.apply {
-            // Navigate to user profile
-            navigateToUserProfile()
+  @Test
+  fun testFollowingInteractionFlow() {
+    composeTestRule.apply {
+      // Navigate to user profile
+      navigateToUserProfile()
 
-            // Click on followers count
-            navigateToFollowersList()
+      // Click on following count
+      navigateToFollowingList()
 
-            // Verify followers list screen
-            onNodeWithTag("follow_list").assertExists()
+      // Verify following list screen
+      onNodeWithTag("follow_list").assertExists()
 
-            // Check follower items exist
-            onNodeWithTag("follow_list_item_test_follower_1").assertExists()
+      // Check following items exist
+      onNodeWithTag("follow_list_item_test_following_1").assertExists()
 
-            // Test follow back functionality
-            onNodeWithTag("follow_button_test_follower_1").performClick()
-            waitForIdle()
-            onNodeWithTag("follow_button_test_follower_1")
-                .assertTextContains("Follow Back")
+      // Test unfollow functionality
+      onNodeWithTag("follow_button_test_following_1").performClick()
+      waitForIdle()
+      onNodeWithTag("follow_button_test_following_1").assertTextContains("Following")
 
-            // Navigate to follower's profile
-            onNodeWithTag("follow_list_item_test_follower_1").performClick()
-            waitForIdle()
+      // Navigate to following user's profile
+      onNodeWithTag("follow_list_item_test_following_1").performClick()
+      waitForIdle()
 
-            // Verify on follower's profile
-            onNodeWithTag("user_profile_username")
-                .assertTextContains("TestUser")
+      // Verify on following user's profile
+      onNodeWithTag("user_profile_username").assertTextContains("TestUser")
 
-            // Return to previous screen
-            onNodeWithTag("back_button").performClick()
-            waitForIdle()
-
-        }
+      // Return to previous screen
+      onNodeWithTag("back_button").performClick()
+      waitForIdle()
     }
+  }
 
-    @Test
-    fun testFollowingInteractionFlow() {
-        composeTestRule.apply {
-            // Navigate to user profile
-            navigateToUserProfile()
+  @Test
+  fun testFollowUnfollowCycle() {
+    composeTestRule.apply {
+      // Navigate to user profile
+      navigateToUserProfile()
 
-            // Click on following count
-            navigateToFollowingList()
+      // Initial follow
+      onNodeWithTag("follow_button").performClick()
+      waitForIdle()
+      onNodeWithTag("follow_button").assertTextContains("Unfollow")
 
-            // Verify following list screen
-            onNodeWithTag("follow_list").assertExists()
+      // Check followers count increased
+      onNodeWithTag("followers_stat").assertTextContains("101") // Initial 100 + 1
 
-            // Check following items exist
-            onNodeWithTag("follow_list_item_test_following_1").assertExists()
+      // Unfollow
+      onNodeWithTag("follow_button").performClick()
+      waitForIdle()
+      onNodeWithTag("follow_button").assertTextContains("Follow")
 
-            // Test unfollow functionality
-            onNodeWithTag("follow_button_test_following_1").performClick()
-            waitForIdle()
-            onNodeWithTag("follow_button_test_following_1")
-                .assertTextContains("Following")
-
-            // Navigate to following user's profile
-            onNodeWithTag("follow_list_item_test_following_1").performClick()
-            waitForIdle()
-
-            // Verify on following user's profile
-            onNodeWithTag("user_profile_username")
-                .assertTextContains("TestUser")
-
-            // Return to previous screen
-            onNodeWithTag("back_button").performClick()
-            waitForIdle()
-
-        }
+      // Check followers count decreased
+      onNodeWithTag("followers_stat").assertTextContains("100") // Back to initial value
     }
+  }
 
-    @Test
-    fun testFollowUnfollowCycle() {
-        composeTestRule.apply {
-            // Navigate to user profile
-            navigateToUserProfile()
+  @Test
+  fun testEmptyFollowLists() {
+    composeTestRule.apply {
+      // Set up view model with empty lists
+      viewModel.clearFollowLists()
 
-            // Initial follow
-            onNodeWithTag("follow_button").performClick()
-            waitForIdle()
-            onNodeWithTag("follow_button").assertTextContains("Unfollow")
+      // Navigate to user profile
+      navigateToUserProfile()
 
-            // Check followers count increased
-            onNodeWithTag("followers_stat")
-                .assertTextContains("101") // Initial 100 + 1
+      // Check empty followers list
+      navigateToFollowersList()
+      onNodeWithTag("empty_message").assertExists()
+      onNodeWithTag("empty_message").assertTextContains("No followers yet")
 
-            // Unfollow
-            onNodeWithTag("follow_button").performClick()
-            waitForIdle()
-            onNodeWithTag("follow_button").assertTextContains("Follow")
+      // Return to profile
+      onNodeWithTag("goBackButton").performClick()
+      waitForIdle()
 
-            // Check followers count decreased
-            onNodeWithTag("followers_stat")
-                .assertTextContains("100") // Back to initial value
-        }
+      // Check empty following list
+      navigateToFollowingList()
+      onNodeWithTag("empty_message").assertExists()
+      onNodeWithTag("empty_message").assertTextContains("Not following anyone")
     }
+  }
 
-    @Test
-    fun testEmptyFollowLists() {
-        composeTestRule.apply {
-            // Set up view model with empty lists
-            viewModel.clearFollowLists()
+  // Helper functions
+  private fun ComposeTestRule.navigateToUserProfile() {
+    onNodeWithTag("search_button").performClick()
+    navigationActions.navigateToSearch()
+    waitForIdle()
 
-            // Navigate to user profile
-            navigateToUserProfile()
+    onNodeWithTag(TAG_SEARCH_FIELD).performTextInput("test_user")
+    waitForIdle()
 
-            // Check empty followers list
-            navigateToFollowersList()
-            onNodeWithTag("empty_message").assertExists()
-            onNodeWithTag("empty_message").assertTextContains("No followers yet")
+    onNodeWithTag("${TAG_PROFILE_ITEM}_test_user_id").performClick()
+    navigationActions.navigateToUserProfile("test_user_id")
+    waitForIdle()
+  }
 
-            // Return to profile
-            onNodeWithTag("goBackButton").performClick()
-            waitForIdle()
+  private fun ComposeTestRule.performBasicProfileActions() {
+    onNodeWithTag("user_profile_screen_container").assertExists()
+    onNodeWithTag("user_profile_username").assertTextContains("TestUser")
+    onNodeWithTag("followers_stat").assertExists()
+    onNodeWithTag("following_stat").assertExists()
+  }
 
-            // Check empty following list
-            navigateToFollowingList()
-            onNodeWithTag("empty_message").assertExists()
-            onNodeWithTag("empty_message").assertTextContains("Not following anyone")
-        }
-    }
+  private fun ComposeTestRule.returnToDashboard() {
+    onNodeWithTag("back_button").performClick()
+    navigationActions.goBack()
+    waitForIdle()
+  }
 
-    // Helper functions
-    private fun ComposeTestRule.navigateToUserProfile() {
-        onNodeWithTag("search_button").performClick()
-        navigationActions.navigateToSearch()
-        waitForIdle()
+  private fun ComposeTestRule.navigateToFollowersList() {
+    onNodeWithTag("followers_stat").performClick()
+    navigationActions.navigateToFollowersList(navigationActions.currentUserId())
+    waitForIdle()
+  }
 
-        onNodeWithTag(TAG_SEARCH_FIELD).performTextInput("test_user")
-        waitForIdle()
-
-        onNodeWithTag("${TAG_PROFILE_ITEM}_test_user_id").performClick()
-        navigationActions.navigateToUserProfile("test_user_id")
-        waitForIdle()
-    }
-
-    private fun ComposeTestRule.performBasicProfileActions() {
-        onNodeWithTag("user_profile_screen_container").assertExists()
-        onNodeWithTag("user_profile_username").assertTextContains("TestUser")
-        onNodeWithTag("followers_stat").assertExists()
-        onNodeWithTag("following_stat").assertExists()
-    }
-
-    private fun ComposeTestRule.returnToDashboard() {
-        onNodeWithTag("back_button").performClick()
-        navigationActions.goBack()
-        waitForIdle()
-    }
-    private fun ComposeTestRule.navigateToFollowersList() {
-        onNodeWithTag("followers_stat").performClick()
-        navigationActions.navigateToFollowersList(navigationActions.currentUserId())
-        waitForIdle()
-    }
-
-    private fun ComposeTestRule.navigateToFollowingList() {
-        onNodeWithTag("following_stat").performClick()
-        navigationActions.navigateToFollowingList(navigationActions.currentUserId())
-        waitForIdle()
-    }
+  private fun ComposeTestRule.navigateToFollowingList() {
+    onNodeWithTag("following_stat").performClick()
+    navigationActions.navigateToFollowingList(navigationActions.currentUserId())
+    waitForIdle()
+  }
 }
 
 @Composable
@@ -269,27 +256,26 @@ fun TestNavigation2(
     currentScreen = navigationActions.currentRoute()
   }
 
-    when (currentScreen) {
-        "SEARCH" -> SearchProfileScreen(navigationActions = navigationActions, viewModel = viewModel)
-        "USER_PROFILE" ->
-            UserProfileScreen(
-                navigationActions = navigationActions,
-                viewModel = viewModel,
-                settingsViewModel = settingsViewModel,
-                userId = navigationActions.currentUserId(),
-                currentUserId = "current_user_id")
-        "FOLLOW_LIST" -> {
-            if (navigationActions is FakeProfileNavigationActions) {
-                FollowListScreen(
-                    navigationActions = navigationActions,
-                    viewModel = viewModel,
-                    userId = navigationActions.currentUserId(),
-                    isFollowersList = navigationActions.isFollowersList()
-                )
-            }
-        }
-        else -> DashboardScreen(viewModel = dashboardViewModel, navigationActions = navigationActions)
+  when (currentScreen) {
+    "SEARCH" -> SearchProfileScreen(navigationActions = navigationActions, viewModel = viewModel)
+    "USER_PROFILE" ->
+        UserProfileScreen(
+            navigationActions = navigationActions,
+            viewModel = viewModel,
+            settingsViewModel = settingsViewModel,
+            userId = navigationActions.currentUserId(),
+            currentUserId = "current_user_id")
+    "FOLLOW_LIST" -> {
+      if (navigationActions is FakeProfileNavigationActions) {
+        FollowListScreen(
+            navigationActions = navigationActions,
+            viewModel = viewModel,
+            userId = navigationActions.currentUserId(),
+            isFollowersList = navigationActions.isFollowersList())
+      }
     }
+    else -> DashboardScreen(viewModel = dashboardViewModel, navigationActions = navigationActions)
+  }
 }
 
 @HiltViewModel
@@ -384,84 +370,85 @@ class FakeProfileViewModel @Inject constructor() : ProfileViewModel(FakeProfileR
     }
   }
 
-    private var followers = mutableListOf(
-        Profile(
-            id = "test_follower_1",
-            username = "TestFollower1",
-            profileImageUrl = "",
-            followers = 50,
-            following = 30,
-            publications = listOf(),
-            isFollowedByCurrentUser = false
-        )
-    )
+  private var followers =
+      mutableListOf(
+          Profile(
+              id = "test_follower_1",
+              username = "TestFollower1",
+              profileImageUrl = "",
+              followers = 50,
+              following = 30,
+              publications = listOf(),
+              isFollowedByCurrentUser = false))
 
-    private var following = mutableListOf(
-        Profile(
-            id = "test_following_1",
-            username = "TestFollowing1",
-            profileImageUrl = "",
-            followers = 40,
-            following = 20,
-            publications = listOf(),
-            isFollowedByCurrentUser = true
-        )
-    )
+  private var following =
+      mutableListOf(
+          Profile(
+              id = "test_following_1",
+              username = "TestFollowing1",
+              profileImageUrl = "",
+              followers = 40,
+              following = 20,
+              publications = listOf(),
+              isFollowedByCurrentUser = true))
 
-    override suspend fun getFollowers(userId: String): List<Profile> = followers
+  override suspend fun getFollowers(userId: String): List<Profile> = followers
 
-    override suspend fun getFollowing(userId: String): List<Profile> = following
+  override suspend fun getFollowing(userId: String): List<Profile> = following
 
-    fun clearFollowLists() {
-        followers.clear()
-        following.clear()
-    }
+  fun clearFollowLists() {
+    followers.clear()
+    following.clear()
+  }
 }
 
 class FakeProfileNavigationActions : NavigationActions(mockk(relaxed = true)) {
-    private var _currentRoute = mutableStateOf("DASHBOARD")
-    private var _currentUserId = mutableStateOf("")
-    private var _isFollowersList = mutableStateOf(false)
+  private var _currentRoute = mutableStateOf("DASHBOARD")
+  private var _currentUserId = mutableStateOf("")
+  private var _isFollowersList = mutableStateOf(false)
 
-    fun navigateToSearch() {
-        _currentRoute.value = "SEARCH"
+  fun navigateToSearch() {
+    _currentRoute.value = "SEARCH"
+  }
+
+  override fun navigateToUserProfile(userId: String) {
+    _currentRoute.value = "USER_PROFILE"
+    _currentUserId.value = userId
+  }
+
+  override fun navigateToFollowersList(userId: String) {
+    _currentRoute.value = "FOLLOW_LIST"
+    _currentUserId.value = userId
+    _isFollowersList.value = true
+  }
+
+  override fun navigateToFollowingList(userId: String) {
+    _currentRoute.value = "FOLLOW_LIST"
+    _currentUserId.value = userId
+    _isFollowersList.value = false
+  }
+
+  override fun navigateTo(destination: TopLevelDestination) {
+    _currentRoute.value = destination.route
+  }
+
+  override fun navigateTo(route: String) {
+    _currentRoute.value = route
+  }
+
+  override fun goBack() {
+    when (_currentRoute.value) {
+      "FOLLOW_LIST" -> _currentRoute.value = "USER_PROFILE"
+      "USER_PROFILE",
+      "SEARCH" -> _currentRoute.value = "DASHBOARD"
     }
+  }
 
-    override fun navigateToUserProfile(userId: String) {
-        _currentRoute.value = "USER_PROFILE"
-        _currentUserId.value = userId
-    }
+  override fun currentRoute(): String = _currentRoute.value
 
-    override fun navigateToFollowersList(userId: String) {
-        _currentRoute.value = "FOLLOW_LIST"
-        _currentUserId.value = userId
-        _isFollowersList.value = true
-    }
+  fun currentUserId(): String = _currentUserId.value
 
-    override fun navigateToFollowingList(userId: String) {
-        _currentRoute.value = "FOLLOW_LIST"
-        _currentUserId.value = userId
-        _isFollowersList.value = false
-    }
-
-    override fun navigateTo(destination: TopLevelDestination) {
-        _currentRoute.value = destination.route
-    }
-
-    override fun navigateTo(route: String) {
-        _currentRoute.value = route
-    }
-
-    override fun goBack() {
-        when (_currentRoute.value) {
-            "FOLLOW_LIST" -> _currentRoute.value = "USER_PROFILE"
-            "USER_PROFILE", "SEARCH" -> _currentRoute.value = "DASHBOARD"
-        }
-    }
-
-    override fun currentRoute(): String = _currentRoute.value
-    fun currentUserId(): String = _currentUserId.value
-    fun isFollowersList(): Boolean = _isFollowersList.value
+  fun isFollowersList(): Boolean = _isFollowersList.value
 }
 
 class FakeSettingsRepository : SettingsRepository(mock()) {

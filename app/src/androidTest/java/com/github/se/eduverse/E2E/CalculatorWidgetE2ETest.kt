@@ -104,7 +104,9 @@ class CalculatorWidgetE2ETest {
       onNodeWithTag("resultText").assertTextContains("Undefined")
 
       // Verify navigation state
-      assert(navigationActions.currentRoute() == "CALCULATOR") { "Should still be on calculator screen" }
+      assert(navigationActions.currentRoute() == "CALCULATOR") {
+        "Should still be on calculator screen"
+      }
     }
   }
 
@@ -112,7 +114,9 @@ class CalculatorWidgetE2ETest {
   fun testNavigationStateChanges() {
     composeTestRule.apply {
       // Initial state should be dashboard
-      assert(navigationActions.currentRoute() == "DASHBOARD") { "Initial route should be dashboard" }
+      assert(navigationActions.currentRoute() == "DASHBOARD") {
+        "Initial route should be dashboard"
+      }
 
       // Add calculator and navigate to it
       addCalculatorWidget()
@@ -121,7 +125,9 @@ class CalculatorWidgetE2ETest {
       waitForIdle()
 
       // Verify navigation to calculator
-      assert(navigationActions.currentRoute() == "CALCULATOR") { "Route should be calculator after navigation" }
+      assert(navigationActions.currentRoute() == "CALCULATOR") {
+        "Route should be calculator after navigation"
+      }
 
       // Navigate back to dashboard
       onNodeWithTag("goBackButton").performClick()
