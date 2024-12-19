@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -43,160 +44,167 @@ fun SettingsScreen(
   var isLanguageDropdownExpanded by remember { mutableStateOf(false) }
 
   Scaffold(topBar = { TopNavigationBar(navigationActions, screenTitle = null) }) { padding ->
-    Column(
+    LazyColumn(
         modifier =
             Modifier.fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(padding),
         verticalArrangement = Arrangement.SpaceBetween) {
+          item {
+            // Confidentiality Toggle Section
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors =
+                    CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(4.dp)) {
+                  Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Confidentiality:",
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        style =
+                            MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(bottom = 16.dp))
 
-          // Confidentiality Toggle Section
-          Card(
-              modifier = Modifier.fillMaxWidth().padding(16.dp),
-              colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-              elevation = CardDefaults.cardElevation(4.dp)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                  Text(
-                      text = "Confidentiality:",
-                      fontSize = 20.sp,
-                      color = MaterialTheme.colorScheme.primary,
-                      style =
-                          MaterialTheme.typography.headlineMedium.copy(
-                              fontWeight = FontWeight.Bold),
-                      modifier = Modifier.padding(bottom = 16.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                          Row(
+                              modifier = Modifier.fillMaxWidth(),
+                              verticalAlignment = Alignment.CenterVertically,
+                              horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(
+                                    text = if (privacySettings) "Private" else "Public",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.testTag("confidentialityToggleState"))
+                                Switch(
+                                    checked = privacySettings,
+                                    onCheckedChange = {
+                                      settingsViewModel.updatePrivacySettings(it)
+                                    },
+                                    colors =
+                                        SwitchDefaults.colors(
+                                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                            checkedTrackColor =
+                                                MaterialTheme.colorScheme.secondary),
+                                    modifier = Modifier.testTag("confidentialityToggle"))
+                              }
 
-                  Column(
-                      modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                      verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                              Text(
-                                  text = if (privacySettings) "Private" else "Public",
-                                  color = MaterialTheme.colorScheme.primary,
-                                  style = MaterialTheme.typography.bodyLarge,
-                                  modifier = Modifier.testTag("confidentialityToggleState"))
-                              Switch(
-                                  checked = privacySettings,
-                                  onCheckedChange = { settingsViewModel.updatePrivacySettings(it) },
-                                  colors =
-                                      SwitchDefaults.colors(
-                                          checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                          checkedTrackColor = MaterialTheme.colorScheme.secondary),
-                                  modifier = Modifier.testTag("confidentialityToggle"))
-                            }
-
-                        Text(
-                            text =
-                                if (privacySettings) {
-                                  "Only you and your followers can see your profile and posts."
-                                } else {
-                                  "Your profile and posts are visible to everyone."
-                                },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
-                      }
-                }
-              }
-
-          // Notifications, Saved, Archive, and Gallery Fields
-          Card(
-              modifier = Modifier.fillMaxWidth().padding(16.dp),
-              colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-              elevation = CardDefaults.cardElevation(4.dp)) {
-                Column {
-                  SettingsOption(
-                      "Notifications",
-                      Icons.Default.Notifications,
-                      navigationActions,
-                      Screen.NOTIFICATIONS,
-                      context)
-                  SettingsOption(
-                      "Saved", Icons.Default.Bookmark, navigationActions, Screen.SAVED, context)
-                  SettingsOption(
-                      "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
-                  SettingsOption(
-                      "Gallery",
-                      Icons.Default.PhotoLibrary,
-                      navigationActions,
-                      Screen.GALLERY,
-                      context)
-                  SettingsOption(
-                      "Offline videos",
-                      Icons.Default.PlayArrow,
-                      navigationActions,
-                      Screen.OFFLINE_VIDEOS,
-                      context)
-                  Spacer(modifier = Modifier.height(16.dp))
-                }
-              }
-
-          // Theme and Language Dropdowns
-          Card(
-              modifier = Modifier.fillMaxWidth().padding(16.dp),
-              colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-              elevation = CardDefaults.cardElevation(4.dp)) {
-                Column {
-                  SettingsDropdown(
-                      label = "Theme",
-                      selectedOption = selectedTheme,
-                      options = listOf(Theme.LIGHT, Theme.DARK, "System Default"),
-                      onOptionSelected = {
-                        if (it == "System Default") {
-                          settingsViewModel.updateSelectedTheme(systemTheme)
-                        } else {
-                          settingsViewModel.updateSelectedTheme(it)
+                          Text(
+                              text =
+                                  if (privacySettings) {
+                                    "Only you and your followers can see your profile and posts."
+                                  } else {
+                                    "Your profile and posts are visible to everyone."
+                                  },
+                              style = MaterialTheme.typography.bodySmall,
+                              color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                         }
-                      },
-                      isExpanded = isThemeDropdownExpanded,
-                      onExpandChange = { isThemeDropdownExpanded = it },
-                      modifier = Modifier.padding(16.dp).testTag("themeDropdown"))
-
-                  SettingsDropdown(
-                      label = "Language",
-                      selectedOption = selectedLanguage,
-                      options = listOf("Français", "English"),
-                      onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
-                      isExpanded = isLanguageDropdownExpanded,
-                      onExpandChange = { isLanguageDropdownExpanded = it },
-                      modifier = Modifier.padding(16.dp).testTag("languageDropdown"))
+                  }
                 }
-              }
 
-          // Add Account and Log Out Buttons
-          Card(
-              modifier = Modifier.fillMaxWidth().padding(16.dp),
-              colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-              elevation = CardDefaults.cardElevation(4.dp)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                  Button(
-                      onClick = { showNotImplementedToast(context) },
-                      modifier = Modifier.fillMaxWidth().testTag("addAccountButton"),
-                      colors =
-                          ButtonDefaults.buttonColors(
-                              containerColor = MaterialTheme.colorScheme.secondary)) {
-                        Icon(
-                            imageVector = Icons.Default.PersonAdd,
-                            contentDescription = "Add Account",
-                            modifier = Modifier.padding(end = 8.dp),
-                            tint = Color.White)
-                        Text(text = "Add Account", color = Color.White)
-                      }
-                  Spacer(modifier = Modifier.height(8.dp))
-                  Button(
-                      onClick = { logout(navigationActions) },
-                      modifier = Modifier.fillMaxWidth().testTag("logoutButton"),
-                      colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4DEE8))) {
-                        Icon(
-                            imageVector = Icons.Default.ExitToApp,
-                            contentDescription = "Log Out",
-                            modifier = Modifier.padding(end = 8.dp),
-                            tint = Color.Black)
-                        Text(text = "Log Out", color = Color.Black)
-                      }
+            // Notifications, Saved, Archive, and Gallery Fields
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors =
+                    CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(4.dp)) {
+                  Column {
+                    SettingsOption(
+                        "Notifications",
+                        Icons.Default.Notifications,
+                        navigationActions,
+                        Screen.NOTIFICATIONS,
+                        context)
+                    SettingsOption(
+                        "Saved", Icons.Default.Bookmark, navigationActions, Screen.SAVED, context)
+                    SettingsOption(
+                        "Archive", Icons.Default.Archive, navigationActions, Route.ARCHIVE, context)
+                    SettingsOption(
+                        "Gallery",
+                        Icons.Default.PhotoLibrary,
+                        navigationActions,
+                        Screen.GALLERY,
+                        context)
+                    SettingsOption(
+                        "Offline videos",
+                        Icons.Default.PlayArrow,
+                        navigationActions,
+                        Screen.OFFLINE_VIDEOS,
+                        context)
+                  }
                 }
-              }
+
+            // Theme and Language Dropdowns
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors =
+                    CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(4.dp)) {
+                  Column {
+                    SettingsDropdown(
+                        label = "Theme",
+                        selectedOption = selectedTheme,
+                        options = listOf(Theme.LIGHT, Theme.DARK, "System Default"),
+                        onOptionSelected = {
+                          if (it == "System Default") {
+                            settingsViewModel.updateSelectedTheme(systemTheme)
+                          } else {
+                            settingsViewModel.updateSelectedTheme(it)
+                          }
+                        },
+                        isExpanded = isThemeDropdownExpanded,
+                        onExpandChange = { isThemeDropdownExpanded = it },
+                        modifier = Modifier.padding(16.dp).testTag("themeDropdown"))
+
+                    SettingsDropdown(
+                        label = "Language",
+                        selectedOption = selectedLanguage,
+                        options = listOf("Français", "English"),
+                        onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
+                        isExpanded = isLanguageDropdownExpanded,
+                        onExpandChange = { isLanguageDropdownExpanded = it },
+                        modifier = Modifier.padding(16.dp).testTag("languageDropdown"))
+                  }
+                }
+
+            // Add Account and Log Out Buttons
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                colors =
+                    CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(4.dp)) {
+                  Column(modifier = Modifier.padding(16.dp)) {
+                    Button(
+                        onClick = { showNotImplementedToast(context) },
+                        modifier = Modifier.fillMaxWidth().testTag("addAccountButton"),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary)) {
+                          Icon(
+                              imageVector = Icons.Default.PersonAdd,
+                              contentDescription = "Add Account",
+                              modifier = Modifier.padding(end = 8.dp),
+                              tint = Color.White)
+                          Text(text = "Add Account", color = Color.White)
+                        }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { logout(navigationActions) },
+                        modifier = Modifier.fillMaxWidth().testTag("logoutButton"),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4DEE8))) {
+                          Icon(
+                              imageVector = Icons.Default.ExitToApp,
+                              contentDescription = "Log Out",
+                              modifier = Modifier.padding(end = 8.dp),
+                              tint = Color.Black)
+                          Text(text = "Log Out", color = Color.Black)
+                        }
+                  }
+                }
+          }
         }
   }
 }
