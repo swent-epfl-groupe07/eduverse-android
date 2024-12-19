@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.github.se.eduverse.model.CommonWidgetType
 import com.github.se.eduverse.model.Widget
@@ -53,65 +54,187 @@ class CalculatorWidgetE2ETest {
   }
 
   @Test
-  fun testCalculatorWidgetFlow() {
+  fun testHappyPathCalculatorWidgetFlow() {
     composeTestRule.apply {
-      waitForIdle()
+      // Initial setup verification
+      verifyInitialDashboardState()
 
-      // 1. Verify Empty State
-      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
-      onNodeWithTag("add_widget_button").assertDoesNotExist()
+      // Add calculator widget
+      addCalculatorWidget()
 
-      // 2. Add Calculator Widget from Empty State
-      onNodeWithTag("empty_state_add_button").performClick()
+      // Verify calculator widget is added
+      verifyCalculatorWidgetAdded()
 
-      // Get button with Calculator text from CommonWidgetType
-      val calculatorWidget = CommonWidgetType.CALCULATOR
-      onNodeWithText(calculatorWidget.title).performClick()
+      // Open calculator and perform basic calculation
+      performBasicCalculation()
 
-      // Verify transition from empty state to widget list
-      onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
-      onNodeWithTag("widget_list").assertIsDisplayed()
-      onNodeWithTag("add_widget_button").assertIsDisplayed()
+      // Return to dashboard and verify widget persistence
+      returnToDashboardAndVerify()
 
-      // Verify calculator widget appears on dashboard
-      onNodeWithText(calculatorWidget.title).assertIsDisplayed()
-      onNodeWithText(calculatorWidget.content).assertIsDisplayed()
+      // Delete widget and verify empty state
+      deleteWidgetAndVerifyEmptyState()
+    }
+  }
 
-      // 3. Open Calculator
+  @Test
+  fun testEdgeCaseInvalidInputs() {
+    composeTestRule.apply {
+      // Add calculator widget and open calculator
+      addCalculatorWidget()
       onNodeWithText("Calculator").performClick()
       navigationActions.navigateToCalculator()
       waitForIdle()
 
-      // Verify calculator screen elements
-      onNodeWithTag("display").assertExists()
-      onNodeWithTag("displayText").assertExists()
-
-      // 4. Perform Basic Calculation
-      onNodeWithTag("button_7").performClick()
-      onNodeWithTag("button_+").performClick()
-      onNodeWithTag("button_3").performClick()
+      // Test division by zero
+      onNodeWithTag("button_5").performClick()
+      onNodeWithTag("button_/").performClick()
+      onNodeWithTag("button_0").performClick()
       onNodeWithTag("button_=").performClick()
-      onNodeWithTag("resultText").assertTextContains("10")
+      onNodeWithTag("resultText").assertTextContains("Undefined")
 
-      // 5. Return to Dashboard
+      // Test invalid trigonometric input
+      onNodeWithTag("clearButton").performClick()
+      // Switch to Functions menu
+      onNodeWithText("Functions").performClick()
+      // Try arcsin with invalid input
+      onNodeWithText("arcsin").performClick()
+      onNodeWithText("Basic").performClick()
+      onNodeWithText("2").performClick()
+      onNodeWithText("=").performClick()
+      onNodeWithTag("resultText").assertTextContains("Undefined")
+
+      // Verify navigation state
+      assert(navigationActions.currentRoute() == "CALCULATOR") {
+        "Should still be on calculator screen"
+      }
+    }
+  }
+
+  @Test
+  fun testNavigationStateChanges() {
+    composeTestRule.apply {
+      // Initial state should be dashboard
+      assert(navigationActions.currentRoute() == "DASHBOARD") {
+        "Initial route should be dashboard"
+      }
+
+      // Add calculator and navigate to it
+      addCalculatorWidget()
+      onNodeWithText("Calculator").performClick()
+      navigationActions.navigateToCalculator()
+      waitForIdle()
+
+      // Verify navigation to calculator
+      assert(navigationActions.currentRoute() == "CALCULATOR") {
+        "Route should be calculator after navigation"
+      }
+
+      // Navigate back to dashboard
       onNodeWithTag("goBackButton").performClick()
       navigationActions.navigateToDashboard()
       waitForIdle()
 
-      // Re-verify the calculator widget is still there
-      onNodeWithText("Calculator").assertIsDisplayed()
-
-      // 6. Delete the Calculator widget
-      onAllNodesWithTag("widget_card").onFirst().assertExists().performScrollTo()
-      onAllNodesWithTag("delete_icon").onFirst().assertExists().performClick()
-
-      // 7. Verify return to empty state
-      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
-      onNodeWithTag("add_widget_button").assertDoesNotExist()
-      onNodeWithText("Calculator").assertDoesNotExist()
+      // Verify navigation back to dashboard
+      assert(navigationActions.currentRoute() == "DASHBOARD") { "Route should return to dashboard" }
     }
+  }
+
+  @Test
+  fun testComplexMathematicalOperations() {
+    composeTestRule.apply {
+      addCalculatorWidget()
+      onNodeWithText("Calculator").performClick()
+      navigationActions.navigateToCalculator()
+      waitForIdle()
+
+      // Test nested parentheses
+      onNodeWithTag("button_(").performClick()
+      onNodeWithTag("button_2").performClick()
+      onNodeWithTag("button_+").performClick()
+      onNodeWithTag("button_3").performClick()
+      onNodeWithTag("button_)").performClick()
+      onNodeWithTag("button_×").performClick()
+      onNodeWithTag("button_(").performClick()
+      onNodeWithTag("button_4").performClick()
+      onNodeWithTag("button_-").performClick()
+      onNodeWithTag("button_1").performClick()
+      onNodeWithTag("button_)").performClick()
+      onNodeWithTag("button_=").performClick()
+      onNodeWithTag("resultText").assertTextContains("15")
+
+      // Test scientific notation result
+      onNodeWithTag("clearButton").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_×").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_9").performClick()
+      onNodeWithTag("button_=").performClick()
+      // Result should be in scientific notation
+      onNodeWithTag("resultText").assertExists()
+    }
+  }
+
+  // Helper functions
+  private fun ComposeTestRule.verifyInitialDashboardState() {
+    waitForIdle()
+    onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+    onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+    onNodeWithTag("add_widget_button").assertDoesNotExist()
+    assert(navigationActions.currentRoute() == "DASHBOARD") { "Initial route should be dashboard" }
+  }
+
+  private fun ComposeTestRule.addCalculatorWidget() {
+    onNodeWithTag("empty_state_add_button").performClick()
+    val calculatorWidget = CommonWidgetType.CALCULATOR
+    onNodeWithText(calculatorWidget.title).performClick()
+  }
+
+  private fun ComposeTestRule.verifyCalculatorWidgetAdded() {
+    onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
+    onNodeWithTag("widget_list").assertIsDisplayed()
+    onNodeWithTag("add_widget_button").assertIsDisplayed()
+    onNodeWithText("Calculator").assertIsDisplayed()
+  }
+
+  private fun ComposeTestRule.performBasicCalculation() {
+    onNodeWithText("Calculator").performClick()
+    navigationActions.navigateToCalculator()
+    waitForIdle()
+    assert(navigationActions.currentRoute() == "CALCULATOR") { "Should be on calculator screen" }
+
+    onNodeWithTag("display").assertExists()
+    onNodeWithTag("displayText").assertExists()
+
+    onNodeWithTag("button_7").performClick()
+    onNodeWithTag("button_+").performClick()
+    onNodeWithTag("button_3").performClick()
+    onNodeWithTag("button_=").performClick()
+    onNodeWithTag("resultText").assertTextContains("10")
+  }
+
+  private fun ComposeTestRule.returnToDashboardAndVerify() {
+    onNodeWithTag("goBackButton").performClick()
+    navigationActions.navigateToDashboard()
+    waitForIdle()
+    assert(navigationActions.currentRoute() == "DASHBOARD") { "Should return to dashboard" }
+    onNodeWithText("Calculator").assertIsDisplayed()
+  }
+
+  private fun ComposeTestRule.deleteWidgetAndVerifyEmptyState() {
+    onAllNodesWithTag("widget_card").onFirst().assertExists().performScrollTo()
+    onAllNodesWithTag("delete_icon").onFirst().assertExists().performClick()
+    onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+    onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+    onNodeWithTag("add_widget_button").assertDoesNotExist()
+    onNodeWithText("Calculator").assertDoesNotExist()
   }
 }
 

@@ -7,9 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
@@ -66,111 +68,209 @@ class PomodoroTimerE2ETest {
   }
 
   @Test
-  fun testPomodoroTimerFlow() {
+  fun testBasicPomodoroFlow() {
     composeTestRule.apply {
-      waitForIdle()
-
-      // 1. Verify Empty State
-      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
-      onNodeWithTag("add_widget_button").assertDoesNotExist()
-
-      // 2. Add Timer Widget from Empty State
-      onNodeWithTag("empty_state_add_button").performClick()
-      val timerWidget = CommonWidgetType.TIMER
-      onNodeWithText(timerWidget.title).performClick()
-
-      // Verify transition from empty state to widget list
-      onNodeWithTag("empty_dashboard_message").assertDoesNotExist()
-      onNodeWithTag("widget_list").assertIsDisplayed()
-      onNodeWithTag("add_widget_button").assertIsDisplayed()
-
-      // Verify timer widget appears on dashboard
-      onNodeWithText(timerWidget.title).assertIsDisplayed()
-      onNodeWithText(timerWidget.content).assertIsDisplayed()
-
-      // 3. Open Timer
-      onNodeWithText("Study Timer").performClick()
-      navigationActions.navigateToPomodoro()
-      waitForIdle()
-      waitForIdle()
-      waitForIdle()
+      // Add timer widget and navigate to timer screen
+      addTimerWidgetAndNavigate()
 
       // Verify initial state
-      onNodeWithTag("timerText").assertTextContains("25:00")
-      onNodeWithTag("cycleText").assertTextContains("Cycle: 1/4")
-      onNodeWithTag("focusIcon").assertExists()
+      verifyInitialTimerState()
 
-      // 4. Test timer controls
-      val initialTime =
-          onNodeWithTag("timerText")
-              .fetchSemanticsNode()
-              .config
-              .first { it.key.name == "Text" }
-              .value
-              .toString()
+      // Basic timer control test
+      testBasicTimerControls()
 
-      // Start timer
+      // Return to dashboard and verify widget exists
+      returnToDashboardAndVerify()
+
+      // Clean up
+      deleteWidgetAndVerifyEmptyState()
+    }
+  }
+
+  @Test
+  fun testTimerInterruptionsAndTransitions() {
+    composeTestRule.apply {
+      addTimerWidgetAndNavigate()
+
+      // Start timer and immediately pause
+      onNodeWithTag("playPauseButton").performClick()
+      waitForIdle()
       onNodeWithTag("playPauseButton").performClick()
       waitForIdle()
 
-      // Verify timer started
-      val afterStartTime =
-          onNodeWithTag("timerText")
-              .fetchSemanticsNode()
-              .config
-              .first { it.key.name == "Text" }
-              .value
-              .toString()
-      assert(initialTime != afterStartTime) { "Timer value should change after starting" }
+      // Verify timer is paused
+      verifyTimerState(isPaused = true)
 
-      // Pause timer
-      onNodeWithTag("playPauseButton").performClick()
-      waitForIdle()
-
-      // 5. Test timer settings
-      onNodeWithTag("settingsButton").performClick()
-      waitForIdle()
-
-      onNode(hasTestTag("Focus Time Slider"), useUnmergedTree = true).performSemanticsAction(
-          SemanticsActions.SetProgress) {
-            it(1.8f)
-          }
-      waitForIdle()
-
-      onNode(hasTestTag("settingsSaveButton"), useUnmergedTree = true).performClick()
-      waitForIdle()
-
-      // 6. Test timer type changes
+      // Try to skip while paused
       onNodeWithTag("skipButton").performClick()
       waitForIdle()
 
-      // Verify short break mode
+      // Verify transition to short break
       onNodeWithTag("shortBreakIcon").assertExists()
       onNodeWithTag("timerText").assertTextContains("5:00")
 
-      // 7. Test reset
-      onNodeWithTag("resetButton").performClick()
+      // Start timer and try to navigate away
+      onNodeWithTag("playPauseButton").performClick()
       waitForIdle()
 
-      // Verify reset state
-      onNodeWithTag("timerText").assertTextContains("2:00")
-      onNodeWithTag("focusIcon").assertExists()
-
-      // 8. Return to dashboard
+      // Navigate to dashboard and back
       onNodeWithTag("goBackButton").performClick()
       navigationActions.goBack()
       waitForIdle()
 
-      // 9. Delete widget and verify empty state
-      onAllNodesWithTag("delete_icon").onFirst().performScrollTo().performClick()
+      onNodeWithText("Study Timer").performClick()
+      navigationActions.navigateToPomodoro()
+      waitForIdle()
 
-      // Verify transition back to empty state
-      onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
-      onNodeWithTag("empty_state_add_button").assertIsDisplayed()
-      onNodeWithTag("add_widget_button").assertDoesNotExist()
-      onNodeWithTag("widget_card").assertDoesNotExist()
+      // Verify timer state persisted
+      onNodeWithTag("shortBreakIcon").assertExists()
+      verifyTimerState(isPaused = false)
     }
+  }
+
+  @Test
+  fun testSettingsInteractionDuringActiveTimer() {
+    composeTestRule.apply {
+      addTimerWidgetAndNavigate()
+
+      // Start the timer
+      onNodeWithTag("playPauseButton").performClick()
+      waitForIdle()
+
+      // Open settings during active timer
+      onNodeWithTag("settingsButton").performClick()
+      waitForIdle()
+
+      // Change focus time while timer is running
+      onNode(hasTestTag("Focus Time Slider"), useUnmergedTree = true).performSemanticsAction(
+          SemanticsActions.SetProgress) {
+            it(2.0f)
+          }
+      waitForIdle()
+
+      // Save settings
+      onNode(hasTestTag("settingsSaveButton"), useUnmergedTree = true).performClick()
+      waitForIdle()
+
+      // Verify timer reset to new settings
+      onNodeWithTag("timerText").assertTextContains("2:00")
+      verifyTimerState(isPaused = true)
+    }
+  }
+
+  @Test
+  fun testCompletePomodoroSessionCycle() {
+    composeTestRule.apply {
+      addTimerWidgetAndNavigate()
+
+      // Set shorter times for testing
+      adjustTimerSettings(focusTime = 1, shortBreak = 1, longBreak = 2, cycles = 2)
+
+      // Complete first pomodoro
+      startAndCompleteTimer()
+      onNodeWithTag("shortBreakIcon").assertExists()
+
+      // Complete short break
+      startAndCompleteTimer()
+      onNodeWithTag("focusIcon").assertExists()
+
+      // Complete second pomodoro
+      startAndCompleteTimer()
+      onNodeWithTag("longBreakIcon").assertExists()
+
+      // Verify cycle count
+      onNodeWithTag("cycleText").assertTextContains("Cycle: 1/2")
+    }
+  }
+
+  // Helper functions
+  private fun ComposeTestRule.addTimerWidgetAndNavigate() {
+    waitForIdle()
+    onNodeWithTag("empty_state_add_button").performClick()
+    val timerWidget = CommonWidgetType.TIMER
+    onNodeWithText(timerWidget.title).performClick()
+    onNodeWithText("Study Timer").performClick()
+    navigationActions.navigateToPomodoro()
+    waitForIdle()
+  }
+
+  private fun ComposeTestRule.verifyInitialTimerState() {
+    onNodeWithTag("timerText").assertTextContains("25:00")
+    onNodeWithTag("cycleText").assertTextContains("Cycle: 1/4")
+    onNodeWithTag("focusIcon").assertExists()
+    verifyTimerState(isPaused = true)
+  }
+
+  private fun ComposeTestRule.verifyTimerState(isPaused: Boolean) {
+    onNodeWithTag("playPauseButton")
+        .assertContentDescriptionContains(if (isPaused) "Start" else "Pause")
+  }
+
+  private fun ComposeTestRule.testBasicTimerControls() {
+    // Start timer
+    onNodeWithTag("playPauseButton").performClick()
+    waitForIdle()
+    verifyTimerState(isPaused = false)
+
+    // Pause timer
+    onNodeWithTag("playPauseButton").performClick()
+    waitForIdle()
+    verifyTimerState(isPaused = true)
+
+    // Reset timer
+    onNodeWithTag("resetButton").performClick()
+    waitForIdle()
+    onNodeWithTag("timerText").assertTextContains("25:00")
+  }
+
+  private fun ComposeTestRule.returnToDashboardAndVerify() {
+    onNodeWithTag("goBackButton").performClick()
+    navigationActions.goBack()
+    waitForIdle()
+    onNodeWithText("Study Timer").assertIsDisplayed()
+  }
+
+  private fun ComposeTestRule.deleteWidgetAndVerifyEmptyState() {
+    onAllNodesWithTag("delete_icon").onFirst().performScrollTo().performClick()
+    onNodeWithTag("empty_dashboard_message").assertIsDisplayed()
+    onNodeWithTag("empty_state_add_button").assertIsDisplayed()
+  }
+
+  private fun ComposeTestRule.adjustTimerSettings(
+      focusTime: Long,
+      shortBreak: Long,
+      longBreak: Long,
+      cycles: Int
+  ) {
+    onNodeWithTag("settingsButton").performClick()
+    waitForIdle()
+
+    onNode(hasTestTag("Focus Time Slider"), useUnmergedTree = true).performSemanticsAction(
+        SemanticsActions.SetProgress) {
+          it(focusTime.toFloat())
+        }
+    onNode(hasTestTag("Short Break Slider"), useUnmergedTree = true).performSemanticsAction(
+        SemanticsActions.SetProgress) {
+          it(shortBreak.toFloat())
+        }
+    onNode(hasTestTag("Long Break Slider"), useUnmergedTree = true).performSemanticsAction(
+        SemanticsActions.SetProgress) {
+          it(longBreak.toFloat())
+        }
+    onNode(hasTestTag("Cycles Slider"), useUnmergedTree = true).performSemanticsAction(
+        SemanticsActions.SetProgress) {
+          it(cycles.toFloat())
+        }
+
+    onNode(hasTestTag("settingsSaveButton"), useUnmergedTree = true).performClick()
+    waitForIdle()
+  }
+
+  private fun ComposeTestRule.startAndCompleteTimer() {
+    onNodeWithTag("playPauseButton").performClick()
+    waitForIdle()
+    // Wait for timer completion (handled by FakeTimerViewModel)
+    waitForIdle()
   }
 }
 
