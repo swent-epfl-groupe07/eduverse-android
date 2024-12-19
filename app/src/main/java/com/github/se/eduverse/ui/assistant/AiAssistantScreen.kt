@@ -4,19 +4,32 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.speechRecognition.SpeechRecognizerInterface
 import com.github.se.eduverse.viewmodel.AiAssistantViewModel
 import kotlinx.coroutines.launch
 
@@ -39,6 +52,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
   val focusManager = LocalFocusManager.current
   val scope = rememberCoroutineScope()
   var showDialog by remember { mutableStateOf(false) }
+  var showRecordDialog by remember { mutableStateOf(false) }
 
   // Show dialog if an error occurs
   LaunchedEffect(errorMessage) { if (errorMessage != null) showDialog = true }
@@ -136,6 +150,7 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                         placeholder = {
                           Text("Ask a question", color = MaterialTheme.colorScheme.onBackground)
                         },
+                        shape = CircleShape,
                         colors =
                             TextFieldDefaults.outlinedTextFieldColors(
                                 textColor = MaterialTheme.colorScheme.onBackground,
@@ -146,8 +161,8 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     Spacer(modifier = Modifier.width(8.dp))
 
                     // Button to send the question
-                    Button(
-                        onClick = {
+                    SendQuestionButton(
+                        onSend = {
                           focusManager.clearFocus()
                           if (userQuestion.isNotBlank()) {
                             scope.launch {
@@ -156,13 +171,35 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                             }
                           }
                         },
-                        modifier = Modifier.testTag("askAssistantButton"),
+                        Modifier.testTag("askAssistantButton"))
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // Button to record a question
+                    IconButton(
+                        onClick = { showRecordDialog = true },
+                        modifier = Modifier.testTag("voiceInputButton"),
                         colors =
-                            ButtonDefaults.buttonColors(
-                                backgroundColor = MaterialTheme.colorScheme.primary)) {
-                          Text("Send", color = MaterialTheme.colorScheme.onPrimary)
+                            IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary)) {
+                          Icon(
+                              imageVector = Icons.Default.Mic,
+                              contentDescription = "Voice input",
+                              tint = MaterialTheme.colorScheme.onBackground)
                         }
                   }
+
+              // Dialog for recording a question using speech recognition service
+              if (showRecordDialog) {
+                VoiceInputDialog(onDismiss = { showRecordDialog = false }) {
+                  if (it.isNotBlank()) {
+                    scope.launch {
+                      viewModel.sendQuestion(it)
+                      userQuestion = ""
+                    }
+                  }
+                }
+              }
 
               // AlertDialog for error messages
               if (showDialog) {
@@ -173,5 +210,46 @@ fun AiAssistantScreen(navigationActions: NavigationActions, viewModel: AiAssista
                     confirmButton = { Button(onClick = { showDialog = false }) { Text("OK") } })
               }
             }
+      }
+}
+
+/**
+ * Composable function that represents a button to send a question to the AI assistant.
+ *
+ * @param onSend Callback to send the question.
+ * @param modifier Modifier for styling the button.
+ */
+@Composable
+fun SendQuestionButton(onSend: () -> Unit, modifier: Modifier = Modifier) {
+  Button(onClick = { onSend() }, modifier = modifier) {
+    Text("Send", color = MaterialTheme.colorScheme.onPrimary)
+  }
+}
+
+/**
+ * Composable function that represents a dialog for recording a question using voice input.
+ *
+ * @param onDismiss Callback to dismiss the dialog.
+ * @param onSend Callback to send the recorded question.
+ */
+@Composable
+fun VoiceInputDialog(onDismiss: () -> Unit, onSend: (String) -> Unit) {
+  var question by remember { mutableStateOf("") }
+  SpeechRecognizerInterface(
+      context = LocalContext.current,
+      title = "Record your question",
+      description =
+          "Press the bottom button to record your question. The recorded question will be displayed. If you're happy with it, press the send button to submit it.\n\n" +
+              if (question.isNotEmpty()) {
+                "Recorded question: $question?"
+              } else "",
+      onResult = { question = it },
+      onDismiss = onDismiss) {
+        SendQuestionButton(
+            onSend = {
+              onSend(question)
+              onDismiss()
+            },
+            modifier = Modifier.width(100.dp).testTag("voiceInputDialogSendButton"))
       }
 }
