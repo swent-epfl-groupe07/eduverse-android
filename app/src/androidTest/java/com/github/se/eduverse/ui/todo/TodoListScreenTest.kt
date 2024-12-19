@@ -6,11 +6,14 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.platform.app.InstrumentationRegistry
+import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.model.Todo
 import com.github.se.eduverse.model.TodoStatus
 import com.github.se.eduverse.repository.TodoRepository
@@ -52,6 +55,13 @@ class TodoListScreenTest {
 
   @Before
   fun setUp() {
+    // Grant audio recording permission
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    instrumentation.uiAutomation
+        .executeShellCommand(
+            "pm grant ${BuildConfig.APPLICATION_ID} android.permission.RECORD_AUDIO")
+        .close()
+
     mockRepository = mock(TodoRepository::class.java)
     mockNavigationActions = mock(NavigationActions::class.java)
 
@@ -272,5 +282,26 @@ class TodoListScreenTest {
     composeTestRule.onNodeWithTag("currentTasksButton").assertIsNotEnabled()
     composeTestRule.onNodeWithTag("completedTasksButton").assertIsEnabled()
     todos = sampleTodos
+  }
+
+  @Test
+  fun testClickingVoiceInputButton_correctlyDisplaysRecordNameDialog() {
+    composeTestRule.onNodeWithTag("voiceInputButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("voiceInputButton").performClick()
+    composeTestRule.onNodeWithTag("speechDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogTitle").assertTextContains("Add a new task")
+    composeTestRule.onNodeWithTag("speechDialogDescription").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("speechDialogDescription")
+        .assertTextContains(
+            "Press the bottom button to record the name of the new task to add. The recorded name will be displayed below. If you're happy with it, press the add button to add the new task to your todo list.\n\n")
+    composeTestRule.onNodeWithTag("recordNameDialogAddButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("recordNameDialogAddButton").assertTextEquals("Add")
+    composeTestRule.onNodeWithTag("recordNameDialogAddButton").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("recordNameDialogAddButton").assertHasClickAction()
+    composeTestRule.onNodeWithTag("speechDialogDismissButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogDismissButton").performClick()
+    composeTestRule.onNodeWithTag("speechDialog").assertIsNotDisplayed()
   }
 }
