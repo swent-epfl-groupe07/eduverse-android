@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.rounded.Done
@@ -16,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
@@ -31,6 +34,7 @@ import com.github.se.eduverse.ui.navigation.BottomNavigationMenu
 import com.github.se.eduverse.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
+import com.github.se.eduverse.ui.speechRecognition.SpeechRecognizerInterface
 import com.github.se.eduverse.viewmodel.TodoListViewModel
 
 /** Composable that represents the user's todo list screen */
@@ -206,6 +210,7 @@ fun TodoItem(
 @Composable
 fun AddTodoEntry(onAdd: (String) -> Unit) {
   var name by remember { mutableStateOf("") }
+  var showRecordDialog by remember { mutableStateOf(false) }
   Card(
       modifier = Modifier.padding(8.dp).fillMaxWidth().testTag("addTodoEntry"),
       shape = RoundedCornerShape(16.dp)) {
@@ -234,11 +239,60 @@ fun AddTodoEntry(onAdd: (String) -> Unit) {
               singleLine = true,
               decorationBox = { innerTextField ->
                 if (name.isEmpty()) {
-                  Text(text = "Add a new Task", color = Color.Gray)
+                  Text(text = "Add a new task", color = Color.Gray)
                 }
                 innerTextField()
               })
+
+          // Button to record todo name
+          IconButton(
+              onClick = { showRecordDialog = true },
+              modifier = Modifier.testTag("voiceInputButton"),
+              colors =
+                  IconButtonColors(
+                      containerColor = MaterialTheme.colorScheme.secondary,
+                      contentColor = MaterialTheme.colorScheme.onSecondary,
+                      disabledContainerColor = Color.Transparent,
+                      disabledContentColor = Color.LightGray)) {
+                Icon(imageVector = Icons.Default.Mic, contentDescription = "Voice input")
+              }
+
+          // Dialog to record todo name
+          if (showRecordDialog) {
+            RecordNameDialog(onAdd = { onAdd(it) }, onDismiss = { showRecordDialog = false })
+          }
         }
+      }
+}
+
+/**
+ * Composable that displays a dialog to record the new todo name
+ *
+ * @param onAdd code executed when the record button is clicked
+ * @param onDismiss code executed when the dialog is dismissed
+ */
+@Composable
+fun RecordNameDialog(onAdd: (String) -> Unit, onDismiss: () -> Unit) {
+  var newName by remember { mutableStateOf("") }
+  SpeechRecognizerInterface(
+      context = LocalContext.current,
+      title = "Add a new task",
+      description =
+          "Press the bottom button to record the name of the new task to add. The recorded name will be displayed below. If you're happy with it, press the add button to add the new task to your todo list.\n\n" +
+              if (newName.isNotEmpty()) {
+                "New task name: $newName"
+              } else "",
+      onDismiss = { onDismiss() },
+      onResult = { newName = it }) {
+        Button(
+            onClick = {
+              onAdd(newName)
+              onDismiss()
+            },
+            modifier = Modifier.width(100.dp).testTag("recordNameDialogAddButton"),
+            enabled = newName.isNotEmpty()) {
+              Text("Add")
+            }
       }
 }
 
