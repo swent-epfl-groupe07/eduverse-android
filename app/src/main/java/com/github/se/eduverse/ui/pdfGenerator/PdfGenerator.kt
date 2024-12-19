@@ -272,7 +272,7 @@ fun PdfGeneratorScreen(
   }
 
   // Handle the different states of the PDF generation process
-  when (pdfConversionState.value) {
+  when (val conversionState = pdfConversionState.value) {
     is PdfGeneratorViewModel.PdfGenerationState.InProgress -> {
       LoadingIndicator { converterViewModel.abortPdfGeneration() }
     }
@@ -281,7 +281,7 @@ fun PdfGeneratorScreen(
       converterViewModel.setPdfGenerationStateToReady()
     }
     is PdfGeneratorViewModel.PdfGenerationState.Error -> {
-      context.showToast("Failed to generate PDF")
+      context.showToast("Error: ${conversionState.message}")
       converterViewModel.setPdfGenerationStateToReady()
     }
     is PdfGeneratorViewModel.PdfGenerationState.Ready -> {}

@@ -27,12 +27,14 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.shadows.ShadowToast
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
+@RunWith(RobolectricTestRunner::class)
 class PdfGeneratorViewModelTest {
 
   @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -49,6 +51,7 @@ class PdfGeneratorViewModelTest {
   private lateinit var folderRepository: FolderRepository
 
   private val testDispatcher = StandardTestDispatcher()
+  private val mockIoDispatcher = UnconfinedTestDispatcher()
 
   @Before
   fun setup() {
@@ -63,9 +66,14 @@ class PdfGeneratorViewModelTest {
     folderRepository = mock(FolderRepository::class.java)
     viewModel =
         PdfGeneratorViewModel(
-            pdfRepository, openAiRepository, convertApiRepository, fileRepository, folderRepository)
+            pdfRepository,
+            openAiRepository,
+            convertApiRepository,
+            fileRepository,
+            folderRepository,
+            mockIoDispatcher)
     pdfDocument = mock(PdfDocument::class.java)
-    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test")).thenReturn(file)
+    `when`(pdfRepository.writePdfDocumentToTempFile(pdfDocument, "test", context)).thenReturn(file)
     `when`(pdfRepository.readTextFromPdfFile(uri, context, viewModel.MAX_SUMMARY_INPUT_SIZE))
         .thenReturn("This is a test text.")
   }
@@ -83,10 +91,14 @@ class PdfGeneratorViewModelTest {
 
   @Test
   fun `test generatePdf when conversion error`() = runTest {
-    `when`(pdfRepository.convertImageToPdf(uri, context)).then { throw Exception() }
+    `when`(pdfRepository.convertImageToPdf(uri, context)).then {
+      throw Exception("Image conversion failed")
+    }
     viewModel.generatePdf(uri, context, PdfGeneratorOption.IMAGE_TO_PDF)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Image conversion failed"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -112,9 +124,39 @@ class PdfGeneratorViewModelTest {
   }
 
   @Test
+  fun `test generatePdf with DOCUMENT_TO_PDF option`() = runTest {
+    val document = mock(File::class.java)
+    `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(document)
+    `when`(convertApiRepository.convertToPdf(any(), any(), any())).thenReturn(file)
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.DOCUMENT_TO_PDF)
+    advanceUntilIdle()
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Success(file), viewModel.pdfGenerationState.value)
+  }
+
+  @Test
+  fun `test generatePdf with DOCUMENT_TO_PDF option on conversion failure`() = runTest {
+    val tempFile = mock<File>()
+    `when`(pdfRepository.getTempFileFromUri(uri, context)).thenReturn(tempFile)
+    `when`(convertApiRepository.convertToPdf(tempFile, "test", context)).then {
+      throw (Exception("Conversion error"))
+    }
+
+    viewModel.setNewFileName("test")
+    viewModel.generatePdf(uri, context, PdfGeneratorOption.DOCUMENT_TO_PDF)
+    advanceUntilIdle()
+
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error(
+            "Document conversion failed, please try again"),
+        viewModel.pdfGenerationState.value)
+  }
+
+  @Test
   fun `test generatePdf with SUMMARIZE_FILE option`() = runTest {
     val summary = "This is a summarized text."
-    `when`(pdfRepository.writeTextToPdf(summary)).thenReturn(pdfDocument)
+    `when`(pdfRepository.writeTextToPdf(summary, context)).thenReturn(pdfDocument)
     `when`(openAiRepository.summarizeText(any(), any(), any())).then {
       it.getArgument<(String?) -> Unit>(1)(summary)
     }
@@ -134,7 +176,9 @@ class PdfGeneratorViewModelTest {
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Summarization failed, please try again"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -146,25 +190,29 @@ class PdfGeneratorViewModelTest {
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.SUMMARIZE_FILE)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Summarization failed, please try again"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test generatePdf with EXTRACT_TEXT option on extraction failure`() = runTest {
     `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
-      it.getArgument<(Exception) -> Unit>(3)(Exception())
+      it.getArgument<(Exception) -> Unit>(3)(Exception("Text extraction failed"))
     }
 
     viewModel.setNewFileName("test")
     viewModel.generatePdf(uri, context, PdfGeneratorOption.EXTRACT_TEXT)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("Text extraction failed"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
   fun `test generatePdf with EXTRACT_TEXT option on extraction success`() = runTest {
     val extractedText = "Test extracted text."
-    `when`(pdfRepository.writeTextToPdf(extractedText)).thenReturn(pdfDocument)
+    `when`(pdfRepository.writeTextToPdf(extractedText, context)).thenReturn(pdfDocument)
     `when`(pdfRepository.extractTextFromImage(any(), any(), any(), any())).then {
       it.getArgument<(String) -> Unit>(2)(extractedText)
     }
@@ -186,7 +234,9 @@ class PdfGeneratorViewModelTest {
   fun `test generatePdf with NONE option throws exception`() = runTest {
     viewModel.generatePdf(uri, context, PdfGeneratorOption.NONE)
     advanceUntilIdle()
-    assertEquals(PdfGeneratorViewModel.PdfGenerationState.Error, viewModel.pdfGenerationState.value)
+    assertEquals(
+        PdfGeneratorViewModel.PdfGenerationState.Error("No converter option selected"),
+        viewModel.pdfGenerationState.value)
   }
 
   @Test
@@ -200,14 +250,34 @@ class PdfGeneratorViewModelTest {
   }
 
   @Test
-  fun `test savePdfToDevice calls repository`() {
-    val pdfFile = mock(File::class.java)
-    val fileName = "test.pdf"
-
+  fun `test savePdfToDevice on success`() {
+    val mockContext = RuntimeEnvironment.getApplication()
+    val fileName = "test"
+    `when`(pdfRepository.savePdfToDevice(any(), any(), any(), any(), any())).then {
+      val pdfFile = File("${it.getArgument<String>(1)}.pdf")
+      it.getArgument<(File) -> Unit>(3)(pdfFile)
+    }
     viewModel.setNewFileName(fileName)
-    viewModel.savePdfToDevice(pdfFile, context, file)
+    viewModel.savePdfToDevice(file, mockContext, viewModel.DEFAULT_DESTINATION_DIRECTORY)
+    val latestToast = ShadowToast.getTextOfLatestToast()
+    assertEquals(
+        "$fileName.pdf saved to device folder: ${viewModel.DEFAULT_DESTINATION_DIRECTORY.name}",
+        latestToast)
+  }
 
-    verify(pdfRepository).savePdfToDevice(eq(pdfFile), eq(fileName), eq(file), any(), any())
+  @Test
+  fun `test savePdfToDevice on failure`() {
+    val mockContext = RuntimeEnvironment.getApplication()
+    val fileName = "test"
+    `when`(pdfRepository.savePdfToDevice(any(), any(), any(), any(), any())).then {
+      it.getArgument<(Exception) -> Unit>(4)(Exception())
+    }
+    viewModel.setNewFileName(fileName)
+    viewModel.savePdfToDevice(file, mockContext, viewModel.DEFAULT_DESTINATION_DIRECTORY)
+    val latestToast = ShadowToast.getTextOfLatestToast()
+    assertEquals(
+        "Failed to save generated PDF to device folder: ${viewModel.DEFAULT_DESTINATION_DIRECTORY.name}",
+        latestToast)
   }
 
   @Test

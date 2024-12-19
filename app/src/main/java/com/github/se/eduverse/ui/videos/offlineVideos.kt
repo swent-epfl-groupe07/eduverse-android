@@ -1,4 +1,4 @@
-package com.github.se.eduverse.ui.offline
+package com.github.se.eduverse.ui.videos
 
 import android.content.Context
 import android.net.Uri
