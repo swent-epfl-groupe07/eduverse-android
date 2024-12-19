@@ -199,10 +199,6 @@ fun NextScreen(
                       }
                     }
               }
-          StyledButton(
-              text = " More options",
-              iconRes = R.drawable.more_horiz,
-              testTag = "moreOptionsButton") {}
           StyledButton(text = " Share to", iconRes = R.drawable.share, testTag = "shareToButton") {
             handleShare(bitmap, context, videoFile)
           }
