@@ -128,7 +128,8 @@ class PdfGeneratorScreenTest {
 
     // Mock pdf repository methods
     `when`(mockPdfRepository.convertTextToPdf(any(), any())).thenReturn(PdfDocument())
-    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any())).thenReturn(File("test.pdf"))
+    `when`(mockPdfRepository.writePdfDocumentToTempFile(any(), any(), any()))
+        .thenReturn(File("test.pdf"))
     `when`(mockPdfRepository.deleteTempPdfFile(any())).then {
       deleted = true
       // Check that view model's current file is the one being deleted
@@ -630,6 +631,10 @@ class PdfGeneratorScreenTest {
     composeTestRule.onNodeWithTag("speechDialog").assertIsNotDisplayed()
   }
 
+  /**
+   * Perform the initial steps of PDF generation (clicking on an option, confirming the info window,
+   * entering a file name, and confirming the PDF creation)
+   */
   private fun initialStepsOfPdfGeneration(option: String) {
     composeTestRule.setContent {
       PdfGeneratorScreen(mockNavigationActions, pdfGeneratorViewModel, folderViewModel)

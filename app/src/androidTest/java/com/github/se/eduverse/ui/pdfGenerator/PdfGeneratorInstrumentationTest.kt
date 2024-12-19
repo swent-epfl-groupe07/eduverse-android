@@ -2,12 +2,14 @@ package com.github.se.eduverse.ui.pdfGenerator
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.core.graphics.drawable.toBitmap
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.github.se.eduverse.R
 import com.github.se.eduverse.repository.ConvertApiRepository
 import com.github.se.eduverse.repository.FileRepository
@@ -20,7 +22,11 @@ import java.io.File
 import junit.framework.TestCase
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -61,9 +67,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -81,9 +87,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -103,9 +109,9 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -130,9 +136,33 @@ class PdfGeneratorInstrumentationTest {
 
     val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
 
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-    assertTrue(pdfFile.exists())
+    assertTrue(pdfFile!!.exists())
+
+    val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
+
+    assert(pdfDocument.pages.size > 1)
+
+    assertEquals(
+        testText.replace(" ", "").replace("\n", ""),
+        extractedText.replace("\n", "").replace(" ", ""))
+
+    textFile.delete()
+    pdfFile.delete()
+  }
+
+  @Test
+  fun testConvertTextToPdf_whenALineSpansMultiplePages() {
+    val textFile = File.createTempFile("test", ".txt")
+    val testText = "This is a very long line.".repeat(1000)
+    textFile.writeText(testText)
+
+    val pdfDocument: PdfDocument = pdfRepository.convertTextToPdf(Uri.fromFile(textFile), context)
+
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+
+    assertTrue(pdfFile!!.exists())
 
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
 
@@ -156,9 +186,9 @@ class PdfGeneratorInstrumentationTest {
       val pdfDocument: PdfDocument =
           pdfRepository.convertImageToPdf(Uri.fromFile(imageFile), context)
 
-      val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
+      val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
 
-      assertTrue(pdfFile.exists())
+      assertTrue(pdfFile!!.exists())
 
       assert(pdfDocument.pages.size == 1)
       assert(pdfDocument.pages[0].pageWidth == it.width)
@@ -170,11 +200,18 @@ class PdfGeneratorInstrumentationTest {
   }
 
   @Test
+  fun testConvertImageToPdf_onGetImageBitmapError() {
+    assertThrows(Exception::class.java) {
+      pdfRepository.convertImageToPdf(Uri.parse("invalid uri"), context)
+    }
+  }
+
+  @Test
   fun testWriteTextToPdf() {
     val text = "This is a test text."
-    val pdfDocument: PdfDocument = pdfRepository.writeTextToPdf(text)
-    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf")
-    assertTrue(pdfFile.exists())
+    val pdfDocument: PdfDocument = pdfRepository.writeTextToPdf(text, context)
+    val pdfFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    assertTrue(pdfFile!!.exists())
     val extractedText = pdfRepository.readTextFromPdfFile(Uri.fromFile(pdfFile), context)
     assertEquals(text.replace(" ", ""), extractedText.replace(" ", ""))
     pdfFile.delete()
@@ -191,6 +228,21 @@ class PdfGeneratorInstrumentationTest {
     TestCase.assertTrue(result.name.endsWith(".docx"))
     tempFile.delete()
     result.delete()
+  }
+
+  @Test
+  fun getTempFileFromUri_invalidUri_throwsException() {
+
+    val uri = Uri.parse("content://nonexistent/file.txt")
+
+    assertThrows(Exception::class.java) { pdfRepository.getTempFileFromUri(uri, context) }
+  }
+
+  @Test
+  fun getTempFileFromUri_invalidFileType_throwsException() {
+    val uri = Uri.parse("content://invalid/file.xy")
+
+    assertThrows(Exception::class.java) { pdfRepository.getTempFileFromUri(uri, context) }
   }
 
   @Test
@@ -211,28 +263,136 @@ class PdfGeneratorInstrumentationTest {
   }
 
   @Test
-  fun testExtractTextImage_onImageWithoutText() {
-    Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888).also {
-      it.eraseColor(0xFFFFFFFF.toInt())
-      val imageFile = File.createTempFile("test", ".png")
-      it.compress(Bitmap.CompressFormat.PNG, 100, imageFile.outputStream())
-
-      pdfRepository.extractTextFromImage(
-          Uri.fromFile(imageFile),
-          context,
-          {},
-          { e -> assertEquals("No text found on image", e.message) })
-
-      imageFile.delete()
+  fun testExtractTextImage_onGetImageBitmapError() {
+    assertThrows(Exception::class.java) {
+      pdfRepository.extractTextFromImage(Uri.parse("invalid uri"), context, {}, {})
     }
   }
 
   @Test
-  fun testExtractTextImage_onGetImageBitmapError() {
-    pdfRepository.extractTextFromImage(
-        Uri.parse("invalid uri"),
-        context,
-        {},
-        { assertEquals("Failed to get image bitmap", it.message) })
+  fun testReadTextFromPdfFile_readsTextSuccessfully() {
+    val pdfDocument = PdfDocument()
+    val pageInfo = PdfDocument.PageInfo.Builder(100, 100, 1).create()
+    val page = pdfDocument.startPage(pageInfo)
+    val canvas = page.canvas
+    val paint = Paint().apply { textSize = 12f }
+    canvas.drawText("Hello, world!", 10f, 10f, paint)
+    pdfDocument.finishPage(page)
+
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    val text = pdfRepository.readTextFromPdfFile(Uri.fromFile(tempFile), context)
+
+    assertEquals("Hello, world!".replace(" ", ""), text.replace(" ", ""))
+
+    tempFile?.delete()
+    pdfDocument.close()
+  }
+
+  @Test
+  fun testSavePdfToDevice_failsToSaveFile() {
+    val pdfDocument = PdfDocument()
+    val pageInfo = PdfDocument.PageInfo.Builder(100, 100, 1).create()
+    val page = pdfDocument.startPage(pageInfo)
+    pdfDocument.finishPage(page)
+
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    val destinationDirectory = File("/invalid/directory")
+
+    pdfRepository.savePdfToDevice(
+        tempFile!!,
+        "testPdf",
+        destinationDirectory,
+        { assertTrue(false) }, // Fail the test if onSuccess is called
+        { e -> assertTrue(e is Exception) })
+
+    // Check that the temp file has been deleted after the failure
+    assert(!tempFile.exists())
+    pdfDocument.close()
+  }
+
+  @Test
+  fun testSavePdfToDeviceWithInvalidDirectory() {
+    val pdfDocument = PdfDocument()
+    val pageInfo = PdfDocument.PageInfo.Builder(100, 100, 1).create()
+    val page = pdfDocument.startPage(pageInfo)
+    pdfDocument.finishPage(page)
+
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    val invalidDirectory = File("/invalid/directory")
+    var exceptionThrown: Exception? = null
+
+    pdfRepository.savePdfToDevice(
+        tempFile!!,
+        "testPdf",
+        invalidDirectory,
+        { fail("Expected failure for invalid directory") },
+        { e -> exceptionThrown = e })
+
+    assertNotNull(exceptionThrown)
+    assertFalse(tempFile.exists()) // Ensure temp file was deleted
+    pdfDocument.close()
+  }
+
+  @Test
+  fun testWritePdfDocumentToTempFile_failsToWriteFile() {
+    val pdfDocument = PdfDocument()
+    pdfDocument.close() // Close the document to make it invalid and fail to write
+    val tempFileName = "testPdf"
+
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, tempFileName, context)
+
+    assertEquals(tempFile, null)
+    // Check that the created temp file has been deleted after the failure
+    val cacheDir = context.externalCacheDir
+    val files = cacheDir?.listFiles() ?: arrayOf()
+    val containsTestPdf = files.any { it.name.contains("testPdf") && it.extension == "pdf" }
+    assertFalse(containsTestPdf)
+  }
+
+  @Test
+  fun testReadTextFromPdfFile_failsToReadText() {
+    val invalidUri = Uri.parse("content://invalid/uri")
+
+    val exception =
+        assertThrows(Exception::class.java) {
+          pdfRepository.readTextFromPdfFile(invalidUri, context)
+        }
+
+    assertEquals(
+        "Failed to read text from PDF file, please try with another file.", exception.message)
+  }
+
+  @Test
+  fun testReadTextFromPdfFile_failsWhenLimitIsExceeded() {
+    val pdfDocument = PdfDocument()
+    val pageInfo = PdfDocument.PageInfo.Builder(100, 100, 1).create()
+    val page = pdfDocument.startPage(pageInfo)
+    val canvas = page.canvas
+    val paint = Paint().apply { textSize = 12f }
+    canvas.drawText("Hello, world!", 10f, 10f, paint)
+    pdfDocument.finishPage(page)
+
+    val tempFile = pdfRepository.writePdfDocumentToTempFile(pdfDocument, "testPdf", context)
+    val exception =
+        assertThrows(Exception::class.java) {
+          pdfRepository.readTextFromPdfFile(Uri.fromFile(tempFile), context, 5)
+        }
+    assertEquals(
+        "The PDF file contains too much text (supported limit: 5 characters).", exception.message)
+    tempFile?.delete()
+    pdfDocument.close()
+  }
+
+  @Test
+  fun testConvertImageToPdf_whenIOExceptionIsThrown() {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    val invalidUri = Uri.parse("file://nonexistent.jpg")
+
+    try {
+      pdfRepository.convertImageToPdf(invalidUri, context)
+      fail("Expected an exception")
+    } catch (e: Exception) {
+      assertTrue(e.message!!.contains("Failed to read the image file, please try again."))
+    }
   }
 }
