@@ -3,6 +3,8 @@ package com.github.se.eduverse.ui.assistant
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
+import androidx.test.platform.app.InstrumentationRegistry
+import com.github.se.eduverse.BuildConfig
 import com.github.se.eduverse.repository.AiAssistantRepository
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.viewmodel.AiAssistantViewModel
@@ -73,6 +75,12 @@ class AiAssistantScreenTest {
   /** Sets up the test environment before each test. */
   @Before
   fun setUp() {
+    // Grant audio recording permission
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    instrumentation.uiAutomation
+        .executeShellCommand(
+            "pm grant ${BuildConfig.APPLICATION_ID} android.permission.RECORD_AUDIO")
+        .close()
     navController = Mockito.mock(NavHostController::class.java)
     navigationActions = NavigationActions(navController)
     fakeViewModel = FakeAiAssistantViewModel()
@@ -145,5 +153,25 @@ class AiAssistantScreenTest {
 
     fakeViewModel.setLoading(false)
     composeTestRule.onNodeWithTag("assistantLoadingIndicator").assertDoesNotExist()
+  }
+
+  @Test
+  fun testClickingOnVoiceInputButton_correctlyDisplaysDialog() {
+    composeTestRule.onNodeWithTag("voiceInputButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("voiceInputButton").performClick()
+    composeTestRule.onNodeWithTag("speechDialog").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogTitle").assertTextEquals("Record your question")
+    composeTestRule.onNodeWithTag("speechDialogDescription").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("speechDialogDescription")
+        .assertTextContains(
+            "Press the bottom button to record your question. The recorded question will be displayed. If you're happy with it, press the send button to submit it.\n\n")
+    composeTestRule.onNodeWithTag("voiceInputDialogSendButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("voiceInputDialogSendButton").assertTextEquals("Send")
+    composeTestRule.onNodeWithTag("voiceInputDialogSendButton").assertHasClickAction()
+    composeTestRule.onNodeWithTag("speechDialogDismissButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("speechDialogDismissButton").performClick()
+    composeTestRule.onNodeWithTag("speechDialog").assertIsNotDisplayed()
   }
 }
