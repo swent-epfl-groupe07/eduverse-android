@@ -19,7 +19,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import org.junit.*
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -348,5 +351,29 @@ class PdfGeneratorViewModelTest {
 
     viewModel.setNewFileName("test")
     viewModel.savePdfToFolder(folder, uri, context, {}, {})
+  }
+
+  @Test
+  fun `test createTranscriptionFile success`() = runTest {
+    var transcriptionFile: File? = null
+    viewModel.createTranscriptionFile(
+        { file -> transcriptionFile = file }, { fail("Expected success but got failure: $it") })
+    assertNotNull(transcriptionFile)
+    assertTrue(transcriptionFile!!.exists())
+    transcriptionFile?.delete()
+  }
+
+  @Test
+  fun `test resetTranscriptionFile`() = runTest {
+    var transcriptionFile: File? = null
+    viewModel.createTranscriptionFile(
+        { file -> transcriptionFile = file }, { fail("Expected success but got failure: $it") })
+    assertTrue(transcriptionFile!!.exists())
+    assertEquals(transcriptionFile, viewModel.transcriptionFile.value)
+
+    viewModel.resetTranscriptionFile()
+
+    assertNull(viewModel.transcriptionFile.value)
+    assertTrue(!transcriptionFile!!.exists())
   }
 }

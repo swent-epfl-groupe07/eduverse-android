@@ -69,6 +69,9 @@ class PdfGeneratorViewModel(
   private val _pdfGenerationState = MutableStateFlow<PdfGenerationState>(PdfGenerationState.Ready)
   val pdfGenerationState: StateFlow<PdfGenerationState> = _pdfGenerationState.asStateFlow()
 
+  private val _transcriptionFile = MutableStateFlow<File?>(null)
+  val transcriptionFile: StateFlow<File?> = _transcriptionFile.asStateFlow()
+
   var currentFile: File? = null
 
   var pdfGenerationJob: Job? = null
@@ -135,7 +138,8 @@ class PdfGeneratorViewModel(
                     pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
                 delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
               }
-              PdfGeneratorOption.TEXT_TO_PDF -> {
+              PdfGeneratorOption.TEXT_TO_PDF,
+              PdfGeneratorOption.TRANSCRIBE_SPEECH -> {
                 val pdfFile = pdfRepository.convertTextToPdf(uri, context)
                 currentFile =
                     pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
@@ -181,6 +185,7 @@ class PdfGeneratorViewModel(
 
   /** Set the PDF generation state to ready and reset the current file */
   fun setPdfGenerationStateToReady() {
+    resetTranscriptionFile()
     _pdfGenerationState.value = PdfGenerationState.Ready
   }
 
@@ -335,5 +340,26 @@ class PdfGeneratorViewModel(
           context.showToast("Failed to upload PDF to cloud storage")
           Log.e("savePdfToFolder", "Failed to upload pdf to firebase storage", it)
         })
+  }
+
+  /**
+   * Create a temporary file to store the transcribed text
+   *
+   * @param onFailure The callback to handle the case where the file creation fails
+   */
+  fun createTranscriptionFile(onSuccess: (File) -> Unit, onFailure: (String) -> Unit) {
+    try {
+      _transcriptionFile.value = File.createTempFile("transcription", ".txt")
+      onSuccess(transcriptionFile.value!!)
+    } catch (e: Exception) {
+      Log.e("createTranscriptionFile", "Failed to create transcription file", e)
+      onFailure(e.message.toString())
+    }
+  }
+
+  /** Deletes the temporary transcription file */
+  fun resetTranscriptionFile() {
+    transcriptionFile.value?.delete()
+    _transcriptionFile.value = null
   }
 }
