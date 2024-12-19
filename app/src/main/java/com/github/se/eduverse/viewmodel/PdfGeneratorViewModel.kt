@@ -24,6 +24,8 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import java.io.File
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -39,7 +41,8 @@ class PdfGeneratorViewModel(
     private val openAiRepository: OpenAiRepository,
     private val convertApiRepository: ConvertApiRepository,
     private val fileRepository: FileRepository,
-    private val folderRepository: FolderRepository
+    private val folderRepository: FolderRepository,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
   val DEFAULT_DESTINATION_DIRECTORY =
@@ -57,7 +60,7 @@ class PdfGeneratorViewModel(
 
     data class Success(val pdfFile: File) : PdfGenerationState()
 
-    data object Error : PdfGenerationState()
+    data class Error(val message: String = "Failed to generate PDF file") : PdfGenerationState()
   }
 
   private val _newFileName = MutableStateFlow<String>("")
@@ -79,10 +82,25 @@ class PdfGeneratorViewModel(
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            // Use a custom OkHttpClient for the conversion process to prevent okhttp socket timeout
+            // errors that prevent the conversion of large files to succeed even though the
+            // conversion process is still running on the server (also the latter already has a
+            // timeout of 1200 seconds so the client read timeout is set a little bit higher to
+            // account for overhead)
+            val conversionOkHttpClient =
+                OkHttpClient.Builder()
+                    .readTimeout(
+                        1250,
+                        TimeUnit
+                            .SECONDS) // makes sure the socket doesn't timeout too early for large
+                    // files conversion
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .build()
             return PdfGeneratorViewModel(
                 PdfRepositoryImpl(),
                 OpenAiRepository(OkHttpClient()),
-                ConvertApiRepository(OkHttpClient()),
+                ConvertApiRepository(conversionOkHttpClient),
                 FileRepositoryImpl(Firebase.firestore, Firebase.storage),
                 FolderRepositoryImpl(Firebase.firestore))
                 as T
@@ -116,25 +134,39 @@ class PdfGeneratorViewModel(
             when (converterOption) {
               PdfGeneratorOption.IMAGE_TO_PDF -> {
                 val pdfFile = pdfRepository.convertImageToPdf(uri, context)
-                currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+                currentFile =
+                    pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
                 delay(3000) // Simulate a delay to show the progress indicator(for testing purposes)
               }
               PdfGeneratorOption.TEXT_TO_PDF,
               PdfGeneratorOption.TRANSCRIBE_SPEECH -> {
                 val pdfFile = pdfRepository.convertTextToPdf(uri, context)
-                currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+                currentFile =
+                    pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
               }
               PdfGeneratorOption.DOCUMENT_TO_PDF -> {
                 val file = pdfRepository.getTempFileFromUri(uri, context)
                 val pdfFile =
-                    withContext(Dispatchers.IO) {
-                      convertApiRepository.convertToPdf(file, newFileName.value)
+                    withContext(dispatcher) {
+                      try {
+                        convertApiRepository.convertToPdf(file, newFileName.value, context)
+                      } catch (e: Exception) {
+                        Log.e(
+                            "convertApiRepository",
+                            "Document to PDF conversion failed for uri: ${uri!!}",
+                            e)
+                        if (e is IllegalArgumentException) {
+                          throw e
+                        } else {
+                          throw Exception("Document conversion failed, please try again")
+                        }
+                      }
                     }
                 currentFile = pdfFile
               }
               PdfGeneratorOption.SUMMARIZE_FILE -> {
                 val text = pdfRepository.readTextFromPdfFile(uri, context, MAX_SUMMARY_INPUT_SIZE)
-                getSummary(text)
+                getSummary(text, context)
               }
               PdfGeneratorOption.EXTRACT_TEXT -> {
                 extractTextToPdf(uri, context)
@@ -144,13 +176,9 @@ class PdfGeneratorViewModel(
             }
             currentFile?.let { file ->
               _pdfGenerationState.value = PdfGenerationState.Success(file)
-            } ?: { _pdfGenerationState.value = PdfGenerationState.Error }
+            } ?: { _pdfGenerationState.value = PdfGenerationState.Error() }
           } catch (e: Exception) {
-            Log.e("generatePdf", "Failed to generate pdf", e)
-            if (e is IllegalArgumentException) {
-              context.showToast(e.message.toString())
-            }
-            _pdfGenerationState.value = PdfGenerationState.Error
+            handleException(e)
           }
         }
   }
@@ -176,12 +204,9 @@ class PdfGeneratorViewModel(
               "${it.name} saved to device folder: ${DEFAULT_DESTINATION_DIRECTORY.name}")
         },
         {
-          Log.e(
-              "savePdfToDevice",
-              "Failed to save pdf to device folder: ${DEFAULT_DESTINATION_DIRECTORY.name}",
-              it)
+          Log.e("savePdfToDevice", "Failed to save pdf to device", it)
           context.showToast(
-              "Failed to save PDF to device folder: ${DEFAULT_DESTINATION_DIRECTORY.name}")
+              "Failed to save generated PDF to device folder: ${DEFAULT_DESTINATION_DIRECTORY.name}")
         })
   }
 
@@ -209,19 +234,22 @@ class PdfGeneratorViewModel(
    *
    * @param text The text to summarize
    */
-  private fun getSummary(text: String) {
-    openAiRepository.summarizeText(
-        text,
-        onSuccess = { summary ->
-          if (summary != null) {
-            val pdfFile = pdfRepository.writeTextToPdf(summary)
-            currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
-          } else throw Exception("Failed to generate summary")
-        },
-        onFailure = {
-          Log.e("getSummary", "Failed to get summary from openAi api", it)
-          throw it
-        })
+  private fun getSummary(text: String, context: Context) {
+    try {
+      openAiRepository.summarizeText(
+          text,
+          onSuccess = { summary ->
+            if (summary != null) {
+              val pdfFile = pdfRepository.writeTextToPdf(summary, context)
+              currentFile =
+                  pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
+            } else throw Exception("Generated summary is null")
+          },
+          onFailure = { throw it })
+    } catch (e: Exception) {
+      Log.e("getSummary", "Failed to get summary from openAi api", e)
+      throw Exception("Summarization failed, please try again")
+    }
   }
 
   /**
@@ -235,13 +263,21 @@ class PdfGeneratorViewModel(
         uri,
         context,
         onSuccess = { extractedText ->
-          val pdfFile = pdfRepository.writeTextToPdf(extractedText)
-          currentFile = pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value)
+          val pdfFile = pdfRepository.writeTextToPdf(extractedText, context)
+          currentFile =
+              pdfRepository.writePdfDocumentToTempFile(pdfFile, newFileName.value, context)
         },
-        onFailure = {
-          Log.e("extractTextFromImage", "Failed to extract text from image", it)
-          throw it
-        })
+        onFailure = { throw it })
+  }
+
+  /**
+   * Helper function to handle exceptions that occur during the PDF generation process
+   *
+   * @param e The exception that occurred
+   */
+  private fun handleException(e: Exception) {
+    Log.e("generatePdf", "PDF generation failed", e)
+    _pdfGenerationState.value = PdfGenerationState.Error(e.message ?: "Failed to generate PDF file")
   }
 
   /**
