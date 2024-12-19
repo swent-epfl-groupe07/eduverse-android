@@ -178,20 +178,6 @@ fun SettingsScreen(
                 elevation = CardDefaults.cardElevation(4.dp)) {
                   Column(modifier = Modifier.padding(16.dp)) {
                     Button(
-                        onClick = { showNotImplementedToast(context) },
-                        modifier = Modifier.fillMaxWidth().testTag("addAccountButton"),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary)) {
-                          Icon(
-                              imageVector = Icons.Default.PersonAdd,
-                              contentDescription = "Add Account",
-                              modifier = Modifier.padding(end = 8.dp),
-                              tint = Color.White)
-                          Text(text = "Add Account", color = Color.White)
-                        }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
                         onClick = { logout(navigationActions) },
                         modifier = Modifier.fillMaxWidth().testTag("logoutButton"),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4DEE8))) {
