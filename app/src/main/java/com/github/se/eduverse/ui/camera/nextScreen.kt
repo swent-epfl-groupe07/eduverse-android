@@ -99,8 +99,8 @@ fun NextScreen(
           modifier =
               Modifier.align(Alignment.TopStart)
                   .padding(top = 56.dp, start = 16.dp)
-                  .width(133.dp)
-                  .height(164.dp)
+                  .width(200.dp)
+                  .height(246.dp)
                   .clip(RoundedCornerShape(15.dp))
                   .background(color = Color(0xFFD9D9D9))
                   .testTag("previewImage"))
@@ -143,23 +143,6 @@ fun NextScreen(
                   .background(color = Color(0xFFD9D9D9))
                   .testTag("previewVideo"))
     }
-
-    // Other unchanged components
-    Text(
-        text = "Add description...",
-        color = Color.Gray,
-        fontSize = 24.sp,
-        modifier =
-            Modifier.align(Alignment.TopStart)
-                .padding(start = 16.dp, top = 240.dp)
-                .testTag("addDescriptionText"),
-        style =
-            TextStyle(
-                fontSize = 24.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.Normal,
-                letterSpacing = 0.24.sp,
-            ))
 
     Column(
         modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp, top = 320.dp),

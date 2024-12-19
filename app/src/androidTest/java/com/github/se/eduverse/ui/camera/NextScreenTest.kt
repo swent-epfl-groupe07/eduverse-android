@@ -99,14 +99,6 @@ class NextScreenTest {
   }
 
   @Test
-  fun testAddDescriptionTextIsDisplayed() {
-    composeTestRule
-        .onNodeWithTag("addDescriptionText")
-        .assertIsDisplayed()
-        .assertTextEquals("Add description...")
-  }
-
-  @Test
   fun testSaveButtonWorks() {
     assertNotNull(mockBitmap)
 

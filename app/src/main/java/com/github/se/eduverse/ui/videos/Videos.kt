@@ -34,7 +34,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -190,16 +189,6 @@ fun VideoScreen(
                             Modifier.align(Alignment.TopCenter)
                                 .padding(top = 16.dp)
                                 .testTag("ForYouText"))
-
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.White,
-                        modifier =
-                            Modifier.align(Alignment.TopEnd)
-                                .padding(top = 16.dp, end = 16.dp)
-                                .size(32.dp)
-                                .testTag("SearchIcon"))
                   }
             },
             bottomBar = {
