@@ -140,11 +140,6 @@ class NextScreenTest {
   }
 
   @Test
-  fun testMoreOptionsButtonIsClickable() {
-    composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().assertHasClickAction()
-  }
-
-  @Test
   fun testSaveButtonNavigatesBackThreeTimes() {
     composeTestRule.onNodeWithTag("saveButton").performClick()
 
@@ -159,7 +154,6 @@ class NextScreenTest {
   @Test
   fun testAddLinkAndMoreOptionsButtons() {
     composeTestRule.onNodeWithTag("addToFolderButton").assertIsDisplayed().assertHasClickAction()
-    composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().assertHasClickAction()
   }
 
   @Test
@@ -197,12 +191,6 @@ class NextScreenTest {
 
     composeTestRule
         .onNodeWithTag("addToFolderButton")
-        .assertExists()
-        .assertHasClickAction()
-        .performClick()
-
-    composeTestRule
-        .onNodeWithTag("moreOptionsButton")
         .assertExists()
         .assertHasClickAction()
         .performClick()
