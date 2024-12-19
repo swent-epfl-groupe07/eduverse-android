@@ -26,6 +26,7 @@ object Route {
   const val ARCHIVE = "Archive"
   const val QUIZZ = "Quizz"
   const val ASSISTANT = "Assistant"
+  const val OFFLINE_VIDEOS = "OfflineVideos"
 }
 
 object Screen {
@@ -56,6 +57,7 @@ object Screen {
   const val NOTIFICATIONS = "Notifications screen"
   const val QUIZZ = "Quizz screen"
   const val ASSISTANT = "Assistant screen"
+  const val OFFLINE_VIDEOS = "Offline Video Screen"
   const val SAVED = "Saved screen"
 
   object USER_PROFILE {

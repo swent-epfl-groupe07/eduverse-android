@@ -117,10 +117,6 @@ fun PicTakenScreen(
                               navigationActions.navigateTo("cropPhotoScreen/$encodedPath")
                             }
                             .testTag("cropIcon"))
-                Image(
-                    painter = painterResource(id = R.drawable.settings),
-                    contentDescription = "Filters",
-                    modifier = Modifier.size(36.dp).clickable {}.testTag("settingsIcon"))
               }
         } else if (videoFile != null) {
           // Use ExoPlayer to display the video in loop with ContentScale.Crop
