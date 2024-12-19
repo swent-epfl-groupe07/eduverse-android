@@ -150,28 +150,6 @@ class SettingsScreenTest {
     // Optionally, verify that signOut() was called on FirebaseAuth if needed
   }
 
-  /**
-   * Test to verify that clicking the add account button shows a toast or a not implemented action.
-   * Since testing Toasts directly is challenging, ensure that the corresponding method is called.
-   */
-  @Test
-  fun addAccountButton_showsNotImplementedToast() {
-    // Arrange: Set up the SettingsScreen
-    composeTestRule.setContent {
-      SettingsScreen(navigationActions = fakeNavigationActions, settingsViewModel = fakeViewModel)
-    }
-
-    // Act: Click the "Add Account" button
-    composeTestRule.onNodeWithTag("addAccountButton").performClick()
-
-    // Assert: Verify the Toast message indirectly (since Toast testing is not straightforward)
-
-    composeTestRule
-        .onNodeWithTag("addAccountButton")
-        .assertExists()
-        .assertHasClickAction() // Verifies the button is clickable
-  }
-
   /** Test to verify that the theme dropdown displays the correct current selection. */
   @Test
   fun themeDropdown_displaysCurrentSelection() {

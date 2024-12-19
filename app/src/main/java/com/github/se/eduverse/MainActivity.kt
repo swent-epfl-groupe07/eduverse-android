@@ -62,7 +62,6 @@ import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.Route
 import com.github.se.eduverse.ui.navigation.Screen
 import com.github.se.eduverse.ui.notifications.NotificationsScreen
-import com.github.se.eduverse.ui.offline.OfflineScreen
 import com.github.se.eduverse.ui.pdfGenerator.PdfGeneratorScreen
 import com.github.se.eduverse.ui.pomodoro.PomodoroScreen
 import com.github.se.eduverse.ui.profile.FollowListScreen
@@ -77,6 +76,7 @@ import com.github.se.eduverse.ui.timetable.DetailsEventScreen
 import com.github.se.eduverse.ui.timetable.DetailsTasksScreen
 import com.github.se.eduverse.ui.timetable.TimeTableScreen
 import com.github.se.eduverse.ui.todo.TodoListScreen
+import com.github.se.eduverse.ui.videos.OfflineScreen
 import com.github.se.eduverse.ui.videos.VideoScreen
 import com.github.se.eduverse.viewmodel.AiAssistantViewModel
 import com.github.se.eduverse.viewmodel.CommentsViewModel

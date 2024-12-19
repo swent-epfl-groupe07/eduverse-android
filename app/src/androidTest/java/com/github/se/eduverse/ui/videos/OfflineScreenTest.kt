@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.se.eduverse.ui.videos.OfflineScreen
 import java.io.File
 import org.junit.Rule
 import org.junit.Test

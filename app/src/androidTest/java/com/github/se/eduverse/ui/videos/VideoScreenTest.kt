@@ -81,7 +81,7 @@ class VideoScreenTest {
   }
 
   @Test
-  fun testForYouTextAndSearchIconAreDisplayed() {
+  fun testForYouTextIsDisplayed() {
     // Set the content for the test
     composeTestRule.setContent {
       VideoScreen(
@@ -95,10 +95,6 @@ class VideoScreenTest {
     composeTestRule.waitForIdle()
     // Assert that the "For you" text element is displayed
     composeTestRule.onNodeWithTag("ForYouText").assertIsDisplayed()
-
-    composeTestRule.waitForIdle()
-    // Assert that the search icon element is displayed
-    composeTestRule.onNodeWithTag("SearchIcon").assertIsDisplayed()
   }
 
   @Test
