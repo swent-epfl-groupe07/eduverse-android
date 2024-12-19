@@ -356,7 +356,7 @@ private fun ReorderableWidgetList(
                                 when (item.widgetType) {
                                   "TIMER" -> Icons.Default.Timer
                                   "CALCULATOR" -> Icons.Default.Calculate
-                                  "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
+                                  "PDF_GENERATOR" -> Icons.Default.PictureAsPdf
                                   "FOLDERS" -> Icons.Default.FolderOpen
                                   "TODO_LIST" -> Icons.Default.Checklist
                                   "TIME_TABLE" -> Icons.Default.DateRange
@@ -428,7 +428,7 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                                   when (widget.widgetType) {
                                     "TIMER" -> Icons.Default.Timer
                                     "CALCULATOR" -> Icons.Default.Calculate
-                                    "PDF_CONVERTER" -> Icons.Default.PictureAsPdf
+                                    "PDF_GENERATOR" -> Icons.Default.PictureAsPdf
                                     "FOLDERS" -> Icons.Default.FolderOpen
                                     "TODO_LIST" -> Icons.Default.Checklist
                                     "TIME_TABLE" -> Icons.Default.DateRange
