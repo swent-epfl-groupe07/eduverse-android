@@ -122,6 +122,13 @@ fun SettingsScreen(
                       navigationActions,
                       Screen.GALLERY,
                       context)
+                  SettingsOption(
+                      "Offline videos",
+                      Icons.Default.PlayArrow,
+                      navigationActions,
+                      Screen.OFFLINE_VIDEOS,
+                      context)
+                  Spacer(modifier = Modifier.height(16.dp))
                 }
               }
 
