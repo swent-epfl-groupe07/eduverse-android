@@ -149,11 +149,11 @@ open class NavigationActions(
     navController.popBackStack()
   }
 
-  fun navigateToFollowersList(userId: String) {
+  open fun navigateToFollowersList(userId: String) {
     navController.navigate(Screen.FOLLOWERS.createRoute(userId))
   }
 
-  fun navigateToFollowingList(userId: String) {
+  open fun navigateToFollowingList(userId: String) {
     navController.navigate(Screen.FOLLOWING.createRoute(userId))
   }
 
