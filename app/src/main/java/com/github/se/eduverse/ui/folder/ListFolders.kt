@@ -118,10 +118,10 @@ fun ListFoldersScreen(
               onConfirm = {
                 deleteDialogOpen = false
                 isSelectMode = false
-                selected = emptyList()
                 folderViewModel.deleteFolders(selected.map { folders[it] }) {
                   context.showToast("Failed to delete some folders")
                 }
+                selected = emptyList()
               })
         }
 
