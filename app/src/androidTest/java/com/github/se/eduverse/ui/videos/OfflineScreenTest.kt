@@ -48,6 +48,7 @@ class OfflineScreenTest {
     composeTestRule.onNodeWithTag("LikeButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("CommentButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("ShareButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("BookmarkButton").assertIsDisplayed()
   }
 
   @Test
@@ -90,6 +91,7 @@ class OfflineScreenTest {
     composeTestRule.onNodeWithTag("LikeButton").performClick()
     composeTestRule.onNodeWithTag("CommentButton").performClick()
     composeTestRule.onNodeWithTag("ShareButton").performClick()
+    composeTestRule.onNodeWithTag("BookmarkButton").performClick()
   }
 
   @Test
@@ -105,6 +107,7 @@ class OfflineScreenTest {
     composeTestRule.onNodeWithTag("LikeButton").performClick()
     composeTestRule.onNodeWithTag("CommentButton").performClick()
     composeTestRule.onNodeWithTag("ShareButton").performClick()
+    composeTestRule.onNodeWithTag("BookmarkButton").performClick()
   }
 
   @Test
