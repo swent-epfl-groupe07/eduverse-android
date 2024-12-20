@@ -362,6 +362,7 @@ private fun ReorderableWidgetList(
                                   "TIME_TABLE" -> Icons.Default.DateRange
                                   "QUIZZ" -> Icons.Default.Book
                                   "ASSISTANT" -> Icons.Default.Psychology
+                                  "GALLERY" -> Icons.Default.PhotoLibrary
                                   else -> Icons.Default.Widgets
                                 },
                             contentDescription = null,
@@ -434,6 +435,7 @@ private fun AddWidgetDialog(viewModel: DashboardViewModel, onDismiss: () -> Unit
                                     "TIME_TABLE" -> Icons.Default.DateRange
                                     "QUIZZ" -> Icons.Default.Book
                                     "ASSISTANT" -> Icons.Default.Psychology
+                                    "GALLERY" -> Icons.Default.PhotoLibrary
                                     else -> Icons.Default.Widgets
                                   },
                               contentDescription = null,
