@@ -23,6 +23,7 @@ import com.github.se.eduverse.ui.search.TAG_PROFILE_ITEM
 import com.github.se.eduverse.ui.search.TAG_PROFILE_LIST
 import com.github.se.eduverse.ui.search.TAG_SEARCH_FIELD
 import com.github.se.eduverse.ui.search.UserProfileScreen
+import com.github.se.eduverse.viewmodel.CommentsViewModel
 import com.github.se.eduverse.viewmodel.ProfileUiState
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.github.se.eduverse.viewmodel.SearchProfileState
@@ -36,6 +37,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class SocialInteractionE2ETest {
 
@@ -160,6 +162,7 @@ fun TestNavigation2(
             navigationActions = navigationActions,
             viewModel = viewModel,
             userId = "test_user_id",
+            commentsViewModel = CommentsViewModel(mock(), mock()),
             currentUserId = "current_user_id")
     else -> DashboardScreen(viewModel = dashboardViewModel, navigationActions = navigationActions)
   }

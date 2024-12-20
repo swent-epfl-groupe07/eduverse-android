@@ -12,10 +12,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.se.eduverse.R
+import com.github.se.eduverse.ui.gallery.PublicationItem
 import com.github.se.eduverse.ui.navigation.NavigationActions
 import com.github.se.eduverse.ui.navigation.TopNavigationBar
-import com.github.se.eduverse.ui.profile.PublicationDetailDialog
-import com.github.se.eduverse.ui.profile.PublicationItem
+import com.github.se.eduverse.ui.profile.PublicationDetailView
 import com.github.se.eduverse.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -57,7 +57,8 @@ fun SavedScreen(
               verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 items(favoritePublications) { publication ->
                   PublicationItem(
-                      publication = publication,
+                      publication.mediaType,
+                      publication.thumbnailUrl,
                       onClick = { selectedPublication = publication },
                       modifier = Modifier.testTag("saved_publication_${publication.id}"))
                 }
@@ -65,11 +66,12 @@ fun SavedScreen(
 
           // Show detail dialog when a publication is selected
           selectedPublication?.let { publication ->
-            PublicationDetailDialog(
+            PublicationDetailView(
                 publication = publication,
                 profileViewModel = viewModel,
                 currentUserId = userId,
-                onDismiss = { selectedPublication = null })
+                onDismiss = { selectedPublication = null },
+                onShowComments = {})
           }
         }
       }

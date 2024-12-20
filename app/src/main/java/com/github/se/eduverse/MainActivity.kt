@@ -313,7 +313,10 @@ fun EduverseApp(
                   ?: return@composable // Handle missing userId
 
           UserProfileScreen(
-              navigationActions = navigationActions, viewModel = profileViewModel, userId = userId)
+              navigationActions = navigationActions,
+              viewModel = profileViewModel,
+              commentsViewModel = CommentsViewModel,
+              userId = userId)
         }
 
     navigation(
@@ -393,11 +396,15 @@ fun EduverseApp(
         startDestination = Screen.PROFILE,
         route = Route.PROFILE,
     ) {
-      composable(Screen.PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+      composable(Screen.PROFILE) {
+        ProfileScreen(navigationActions, profileViewModel, CommentsViewModel)
+      }
 
       composable(Screen.SETTING) { SettingsScreen(navigationActions, settingsViewModel) }
 
-      composable(Screen.EDIT_PROFILE) { ProfileScreen(navigationActions, profileViewModel) }
+      composable(Screen.EDIT_PROFILE) {
+        ProfileScreen(navigationActions, profileViewModel, CommentsViewModel)
+      }
 
       composable(Screen.GALLERY) {
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
