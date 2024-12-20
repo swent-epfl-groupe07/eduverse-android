@@ -19,5 +19,6 @@ enum class CommonWidgetType(val title: String, val content: String, val route: S
   TODO_LIST("Todo List", "Access your todo list", Screen.TODO_LIST),
   TIME_TABLE("Time table", "Plan your activities for the week", Screen.TIME_TABLE),
   QUIZZ("Quiz generator", "Generate a quiz on the topic of your choice", Screen.QUIZZ),
-  ASSISTANT("Ai Assistant ", "Ask questions to your AI assistant", Screen.ASSISTANT)
+  ASSISTANT("Ai Assistant ", "Ask questions to your AI assistant", Screen.ASSISTANT),
+  GALLERY("Gallery", "View your saved images and videos", Screen.GALLERY)
 }
