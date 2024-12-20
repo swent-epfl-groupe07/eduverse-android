@@ -162,7 +162,7 @@ fun SettingsScreen(
                     SettingsDropdown(
                         label = "Language",
                         selectedOption = selectedLanguage,
-                        options = listOf("Français", "English"),
+                        options = listOf("English"),
                         onOptionSelected = { settingsViewModel.updateSelectedLanguage(it) },
                         isExpanded = isLanguageDropdownExpanded,
                         onExpandChange = { isLanguageDropdownExpanded = it },

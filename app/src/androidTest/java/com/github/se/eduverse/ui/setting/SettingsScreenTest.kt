@@ -172,20 +172,20 @@ class SettingsScreenTest {
   /** Test to verify that the language dropdown displays the correct current selection. */
   @Test
   fun languageDropdown_displaysCurrentSelection() {
-    // Arrange: Set the language to "Français"
-    fakeViewModel.setSelectedLanguage("Français")
+    // Arrange: Set the language to "English"
+    fakeViewModel.setSelectedLanguage("English")
 
     // Act: Set the content
     composeTestRule.setContent {
       SettingsScreen(navigationActions = fakeNavigationActions, settingsViewModel = fakeViewModel)
     }
 
-    // Assert: The language dropdown displays "Français"
+    // Assert: The language dropdown displays "English"
     composeTestRule
         .onNodeWithTag("languageDropdown")
         .assert(
             SemanticsMatcher.expectValue(
-                SemanticsProperties.Text, listOf(AnnotatedString("Language: Français"))))
+                SemanticsProperties.Text, listOf(AnnotatedString("Language: English"))))
   }
 
   /** Test to verify that the settings options are displayed correctly and navigable. */
